@@ -200,6 +200,22 @@ export default defineConfig({
                         link: '/plugins/bearer'
                     },
                     {
+                        text: 'Compress',
+                        link: '/plugins/compress'
+                    },
+                    {
+                        text: 'Helmet',
+                        link: '/plugins/helmet'
+                    },
+                    {
+                        text: 'IP',
+                        link: '/plugins/ip'
+                    },
+                    {
+                        text: 'Rate Limit',
+                        link: '/plugins/rate-limit'
+                    },
+                    {
                         text: 'CORS',
                         link: '/plugins/cors'
                     },
@@ -443,6 +459,22 @@ export default defineConfig({
                     {
                         text: 'Bearer',
                         link: '/plugins/bearer'
+                    },
+                    {
+                        text: 'Compress',
+                        link: '/plugins/compress'
+                    },
+                    {
+                        text: 'Helmet',
+                        link: '/plugins/helmet'
+                    },
+                    {
+                        text: 'IP',
+                        link: '/plugins/ip'
+                    },
+                    {
+                        text: 'Rate Limit',
+                        link: '/plugins/rate-limit'
                     },
                     {
                         text: 'CORS',
