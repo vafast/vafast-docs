@@ -1,0 +1,5 @@
+{
+    "build_command": "bun --bun run build",
+    "framework": "bun",
+    "output_dir": "docs/.vitepress/dist"
+}
