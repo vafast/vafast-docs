@@ -26,6 +26,7 @@ Vafast 旨在实现模块化和轻量化。
 
 ## 官方插件：
 
+-   [API Client](/plugins/api-client) - 现代化、类型安全的 API 客户端
 -   [Bearer](/plugins/bearer) - 自动获取 [Bearer](https://swagger.io/docs/specification/authentication/bearer-authentication/) 令牌
 -   [Compress](/plugins/compress) - 支持 Brotli、GZIP 和 Deflate 压缩算法
 -   [Helmet](/plugins/helmet) - 通过添加各种 HTTP 安全头部来增强 Web 应用的安全性

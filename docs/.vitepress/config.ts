@@ -170,15 +170,15 @@ export default defineConfig({
                     root: {
                         translations: {
                             button: {
-                                buttonText: '搜索文档',
-                                buttonAriaLabel: '搜索文档'
+                                buttonText: 'Search Docs',
+                                buttonAriaLabel: 'Search Docs'
                             },
                             modal: {
-                                noResultsText: '无法找到相关结果',
-                                resetButtonTitle: '清除查询条件',
+                                noResultsText: 'No results found',
+                                resetButtonTitle: 'Clear query',
                                 footer: {
-                                    selectText: '选择',
-                                    navigateText: '切换'
+                                    selectText: 'Select',
+                                    navigateText: 'Navigate'
                                 }
                             }
                         }
@@ -457,6 +457,10 @@ export default defineConfig({
                         link: '/plugins/overview'
                     },
                     {
+                        text: 'API Client',
+                        link: '/plugins/api-client'
+                    },
+                    {
                         text: 'Bearer',
                         link: '/plugins/bearer'
                     },
@@ -575,7 +579,7 @@ export default defineConfig({
         ],
         outline: {
             level: 2,
-            label: '页面导航'
+            label: 'Page Navigation'
         },
         socialLinks: [
             { icon: 'github', link: 'https://github.com/elysiajs/elysia' },
@@ -583,25 +587,25 @@ export default defineConfig({
             { icon: 'discord', link: 'https://discord.gg/eaFJ2KDJck' }
         ],
         editLink: {
-            text: '在 GitHub 上编辑此页面',
+            text: 'Edit this page on GitHub',
             pattern: 'https://github.com/zhcndoc/elysia/tree/main/docs/:path'
         },
         docFooter: {
-            prev: '上一页',
-            next: '下一页'
+            prev: 'Previous',
+            next: 'Next'
         },
         lastUpdated: {
-            text: '最后更新于',
+            text: 'Last updated',
             formatOptions: {
                 dateStyle: 'short',
                 timeStyle: 'medium'
             }
         },
-        langMenuLabel: '多语言',
-        returnToTopLabel: '回到顶部',
-        sidebarMenuLabel: '菜单',
-        darkModeSwitchLabel: '主题',
-        lightModeSwitchTitle: '切换到浅色模式',
-        darkModeSwitchTitle: '切换到深色模式'
+        langMenuLabel: 'Languages',
+        returnToTopLabel: 'Back to top',
+        sidebarMenuLabel: 'Menu',
+        darkModeSwitchLabel: 'Theme',
+        lightModeSwitchTitle: 'Switch to light mode',
+        darkModeSwitchTitle: 'Switch to dark mode'
     }
 })
