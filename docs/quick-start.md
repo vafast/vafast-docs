@@ -6,10 +6,10 @@ head:
       content: 快速入门 - Vafast
   - - meta
     - name: 'description'
-      content: Vafast 是一个高性能、类型安全的 TypeScript Web 框架。要开始，请使用 "bun create vafast my-app" 启动一个新项目，并使用 "bun dev" 启动开发服务器。
+      content: Vafast 是一个高性能、类型安全的 TypeScript Web 框架。要开始，请使用 "bun add vafast" 安装框架，并创建你的第一个应用。
   - - meta
     - property: 'og:description'
-      content: Vafast 是一个高性能、类型安全的 TypeScript Web 框架。要开始，请使用 "bun create vafast my-app" 启动一个新项目，并使用 "bun dev" 启动开发服务器。
+      content: Vafast 是一个高性能、类型安全的 TypeScript Web 框架。要开始，请使用 "bun add vafast" 安装框架，并创建你的第一个应用。
 ---
 
 <script setup>
@@ -20,7 +20,7 @@ import Tab from './components/fern/tab.vue'
 
 # 快速入门
 
-Vafast 是一个高性能、类型安全的 TypeScript Web 框架，专为现代 Web 应用设计。
+Vafast 是一个高性能、类型安全的 TypeScript Web 框架，专为 Bun 运行时设计。
 
 <Tab
 	id="quickstart"
@@ -94,15 +94,15 @@ bun add -d @types/bun
 创建一个新文件 `src/index.ts`，并添加以下代码：
 
 ```typescript
-import { Server } from 'vafast'
+import { Server, defineRoutes, createRouteHandler } from 'vafast'
 
-const routes: any[] = [
+const routes = defineRoutes([
   {
     method: 'GET',
     path: '/',
-    handler: () => new Response('Hello Vafast!')
+    handler: createRouteHandler(() => 'Hello Vafast!')
   }
-]
+])
 
 const server = new Server(routes)
 export default { fetch: server.fetch }
@@ -127,9 +127,30 @@ Vafast 也支持 Node.js 环境。
 首先安装 Node.js（推荐版本 18+），然后安装 Vafast：
 
 ```bash
-npm create vafast@latest my-app
-cd my-app
-npm run dev
+npm install vafast
+```
+
+创建一个新文件 `src/index.ts`：
+
+```typescript
+import { Server, defineRoutes, createRouteHandler } from 'vafast'
+
+const routes = defineRoutes([
+  {
+    method: 'GET',
+    path: '/',
+    handler: createRouteHandler(() => 'Hello Vafast!')
+  }
+])
+
+const server = new Server(routes)
+export default { fetch: server.fetch }
+```
+
+使用 Node.js 启动：
+
+```bash
+node --loader ts-node/esm src/index.ts
 ```
 
 </template>
@@ -139,14 +160,98 @@ npm run dev
 Vafast 基于 Web 标准构建，可以在任何支持 Web 标准的运行时中运行。
 
 ```bash
-npm create vafast@latest my-app
-cd my-app
-npm run dev
+npm install vafast
+```
+
+创建应用文件：
+
+```typescript
+import { Server, defineRoutes, createRouteHandler } from 'vafast'
+
+const routes = defineRoutes([
+  {
+    method: 'GET',
+    path: '/',
+    handler: createRouteHandler(() => 'Hello Vafast!')
+  }
+])
+
+const server = new Server(routes)
+export default { fetch: server.fetch }
 ```
 
 </template>
 
 </Tab>
+
+## 基础示例
+
+### 简单路由
+
+```typescript
+import { Server, defineRoutes, createRouteHandler } from 'vafast'
+
+const routes = defineRoutes([
+  {
+    method: 'GET',
+    path: '/',
+    handler: createRouteHandler(() => 'Hello Vafast!')
+  },
+  {
+    method: 'GET',
+    path: '/users',
+    handler: createRouteHandler(() => ['user1', 'user2', 'user3'])
+  }
+])
+
+const server = new Server(routes)
+export default { fetch: server.fetch }
+```
+
+### 带参数的路由
+
+```typescript
+const routes = defineRoutes([
+  {
+    method: 'GET',
+    path: '/users/:id',
+    handler: createRouteHandler(({ params }) => {
+      return `User ID: ${params.id}`
+    })
+  },
+  {
+    method: 'POST',
+    path: '/users',
+    handler: createRouteHandler(async ({ req }) => {
+      const body = await req.json()
+      return { success: true, user: body }
+    })
+  }
+])
+```
+
+### 使用 Schema 验证
+
+```typescript
+import { Type } from '@sinclair/typebox'
+
+const userSchema = Type.Object({
+  name: Type.String({ minLength: 1 }),
+  email: Type.String({ pattern: '^[^@]+@[^@]+\\.[^@]+$' }),
+  age: Type.Optional(Type.Number({ minimum: 0 }))
+})
+
+const routes = defineRoutes([
+  {
+    method: 'POST',
+    path: '/users',
+    handler: createRouteHandler(({ body }) => {
+      return { success: true, user: body }
+    }),
+    body: userSchema
+  }
+])
+```
 
 ## 下一步
 

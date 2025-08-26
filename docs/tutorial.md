@@ -9,10 +9,10 @@ head:
       content: 教程 - Vafast
   - - meta
     - name: 'description'
-      content: Vafast 是一个高性能、类型安全的 TypeScript Web 框架。要开始，请使用 "bun create vafast my-app" 启动一个新项目，并使用 "bun dev" 启动开发服务器。
+      content: Vafast 是一个高性能、类型安全的 TypeScript Web 框架。本教程将教你如何构建一个完整的 CRUD API 服务器。
   - - meta
     - property: 'og:description'
-      content: Vafast 是一个高性能、类型安全的 TypeScript Web 框架。要开始，请使用 "bun create vafast my-app" 启动一个新项目，并使用 "bun dev" 启动开发服务器。
+      content: Vafast 是一个高性能、类型安全的 TypeScript Web 框架。本教程将教你如何构建一个完整的 CRUD API 服务器。
 ---
 
 # Vafast 教程
@@ -93,14 +93,16 @@ powershell -c "irm bun.sh/install.ps1 | iex"
 ### 创建一个新项目
 
 ```bash
-# 创建一个新项目
-bun create vafast hi-vafast
-```
-
-进入项目目录：
-
-```bash
+# 创建一个新目录
+mkdir hi-vafast
 cd hi-vafast
+
+# 初始化项目
+bun init
+
+# 安装 Vafast
+bun add vafast
+bun add -d @types/bun
 ```
 
 ### 项目结构
@@ -119,7 +121,7 @@ hi-vafast/
 ### 启动开发服务器
 
 ```bash
-bun dev
+bun run --hot src/index.ts
 ```
 
 现在您应该能够在 [http://localhost:3000](http://localhost:3000) 看到 "Hello Vafast!" 消息。
@@ -150,43 +152,39 @@ const notes: Note[] = []
 现在让我们创建我们的 API 路由：
 
 ```typescript
-import { Server } from 'vafast'
+import { Server, defineRoutes, createRouteHandler } from 'vafast'
 
-const routes: any[] = [
+const routes = defineRoutes([
   // 获取所有笔记
   {
     method: 'GET',
     path: '/notes',
-    handler: () => {
-      return new Response(JSON.stringify(notes), {
-        headers: { 'Content-Type': 'application/json' }
-      })
-    }
+    handler: createRouteHandler(() => {
+      return notes
+    })
   },
   
   // 获取单个笔记
   {
     method: 'GET',
     path: '/notes/:id',
-    handler: (req: Request, params?: Record<string, string>) => {
-      const id = params?.id
+    handler: createRouteHandler(({ params }) => {
+      const id = params.id
       const note = notes.find(n => n.id === id)
       
       if (!note) {
         return new Response('Note not found', { status: 404 })
       }
       
-      return new Response(JSON.stringify(note), {
-        headers: { 'Content-Type': 'application/json' }
-      })
-    }
+      return note
+    })
   },
   
   // 创建笔记
   {
     method: 'POST',
     path: '/notes',
-    handler: async (req: Request) => {
+    handler: createRouteHandler(async ({ req }) => {
       const body = await req.json()
       const { title, content } = body
       
@@ -204,19 +202,16 @@ const routes: any[] = [
       
       notes.push(note)
       
-      return new Response(JSON.stringify(note), {
-        status: 201,
-        headers: { 'Content-Type': 'application/json' }
-      })
-    }
+      return note
+    })
   },
   
   // 更新笔记
   {
     method: 'PUT',
     path: '/notes/:id',
-    handler: async (req: Request, params?: Record<string, string>) => {
-      const id = params?.id
+    handler: createRouteHandler(async ({ req, params }) => {
+      const id = params.id
       const noteIndex = notes.findIndex(n => n.id === id)
       
       if (noteIndex === -1) {
@@ -237,18 +232,16 @@ const routes: any[] = [
         updatedAt: new Date()
       }
       
-      return new Response(JSON.stringify(notes[noteIndex]), {
-        headers: { 'Content-Type': 'application/json' }
-      })
-    }
+      return notes[noteIndex]
+    })
   },
   
   // 删除笔记
   {
     method: 'DELETE',
     path: '/notes/:id',
-    handler: (req: Request, params?: Record<string, string>) => {
-      const id = params?.id
+    handler: createRouteHandler(({ params }) => {
+      const id = params.id
       const noteIndex = notes.findIndex(n => n.id === id)
       
       if (noteIndex === -1) {
@@ -257,12 +250,10 @@ const routes: any[] = [
       
       const deletedNote = notes.splice(noteIndex, 1)[0]
       
-      return new Response(JSON.stringify(deletedNote), {
-        headers: { 'Content-Type': 'application/json' }
-      })
-    }
+      return deletedNote
+    })
   }
-]
+])
 
 const server = new Server(routes)
 export default { fetch: server.fetch }
@@ -273,7 +264,7 @@ export default { fetch: server.fetch }
 现在让我们测试我们的 API。重启开发服务器：
 
 ```bash
-bun dev
+bun run --hot src/index.ts
 ```
 
 #### 创建笔记
@@ -312,17 +303,19 @@ curl -X DELETE http://localhost:3000/notes/1234567890
 
 ## 添加中间件
 
-让我们添加一些中间件来增强我们的 API：
+让我们为我们的 API 添加一些中间件来增强功能：
 
 ### 1. 日志中间件
 
 ```typescript
 const logMiddleware = async (req: Request, next: () => Promise<Response>) => {
   const start = Date.now()
-  const response = await next()
-  const duration = Date.now() - start
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`)
   
-  console.log(`${req.method} ${req.url} - ${response.status} - ${duration}ms`)
+  const response = await next()
+  
+  const duration = Date.now() - start
+  console.log(`Response: ${response.status} (${duration}ms)`)
   
   return response
 }
@@ -336,67 +329,56 @@ const errorHandler = async (req: Request, next: () => Promise<Response>) => {
     return await next()
   } catch (error) {
     console.error('Error:', error)
-    return new Response('Internal Server Error', { status: 500 })
+    return new Response(
+      JSON.stringify({ 
+        error: 'Internal Server Error', 
+        message: error.message 
+      }), 
+      { 
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      }
+    )
   }
 }
 ```
 
-### 3. 应用中间件
+### 3. 使用中间件
 
 ```typescript
-const routes: any[] = [
+const routes = defineRoutes([
   {
     method: 'GET',
     path: '/notes',
     middleware: [logMiddleware, errorHandler],
-    handler: () => {
-      return new Response(JSON.stringify(notes), {
-        headers: { 'Content-Type': 'application/json' }
-      })
-    }
+    handler: createRouteHandler(() => {
+      return notes
+    })
   }
   // ... 其他路由
-]
+])
 ```
 
 ## 添加验证
 
-让我们为我们的 API 添加一些基本的验证：
+让我们为我们的 API 添加一些基本的验证。Vafast 集成了 TypeBox 进行 Schema 验证：
 
 ```typescript
-const validateNote = (data: any) => {
-  if (!data.title || typeof data.title !== 'string') {
-    throw new Error('Title is required and must be a string')
-  }
-  
-  if (!data.content || typeof data.content !== 'string') {
-    throw new Error('Content is required and must be a string')
-  }
-  
-  if (data.title.length > 100) {
-    throw new Error('Title must be less than 100 characters')
-  }
-  
-  if (data.content.length > 1000) {
-    throw new Error('Content must be less than 1000 characters')
-  }
-  
-  return true
-}
-```
+import { Type } from '@sinclair/typebox'
 
-然后在创建和更新笔记的路由中使用它：
+const noteSchema = Type.Object({
+  title: Type.String({ minLength: 1, maxLength: 100 }),
+  content: Type.String({ minLength: 1, maxLength: 1000 })
+})
 
-```typescript
-{
-  method: 'POST',
-  path: '/notes',
-  handler: async (req: Request) => {
-    try {
-      const body = await req.json()
-      validateNote(body)
-      
+const routes = defineRoutes([
+  {
+    method: 'POST',
+    path: '/notes',
+    handler: createRouteHandler(async ({ req, body }) => {
+      // body 已经通过验证，类型安全
       const { title, content } = body
+      
       const note: Note = {
         id: Date.now().toString(),
         title,
@@ -407,15 +389,11 @@ const validateNote = (data: any) => {
       
       notes.push(note)
       
-      return new Response(JSON.stringify(note), {
-        status: 201,
-        headers: { 'Content-Type': 'application/json' }
-      })
-    } catch (error) {
-      return new Response(error.message, { status: 400 })
-    }
+      return note
+    }),
+    body: noteSchema
   }
-}
+])
 ```
 
 ## 总结
@@ -424,7 +402,7 @@ const validateNote = (data: any) => {
 
 - ✅ 创建、读取、更新和删除笔记
 - ✅ 中间件支持（日志记录、错误处理）
-- ✅ 基本的数据验证
+- ✅ Schema 验证
 - ✅ 类型安全的 TypeScript 代码
 - ✅ 内存数据存储
 
