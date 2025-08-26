@@ -15,7 +15,6 @@ sidebar: false
 <template v-slot:type-1>
 
 ```typescript twoslash
-// @noErrors
 import { defineRoutes, createRouteHandler } from 'vafast'
 import { Type } from '@sinclair/typebox'
 
