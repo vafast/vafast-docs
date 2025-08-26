@@ -1,17 +1,5 @@
 ---
 title: 集成速查表 - Vafast
-head:
-  - - meta
-    - property: 'og:title'
-      content: 集成速查表 - Vafast
-
-  - - meta
-    - name: 'description'
-      content: Vafast 框架的集成速查表，包含常用库和工具的集成示例。
-
-  - - meta
-    - property: 'og:description'
-      content: Vafast 框架的集成速查表，包含常用库和工具的集成示例。
 ---
 
 # 集成速查表

@@ -3,26 +3,6 @@ title: Elysia 0.4 - 月夜的音乐会 (Moonlit Night Concert)
 sidebar: false
 editLink: false
 search: false
-head:
-  - - meta
-    - property: 'og:title'
-      content: 介绍 Elysia 0.4 - 月夜的音乐会 (Moonlit Night Concert)
-
-  - - meta
-    - name: 'description'
-      content: 介绍提前编译、TypeBox 0.26、按状态验证响应，以及分离 Elysia 函数。
-
-  - - meta
-    - property: 'og:description'
-      content: 介绍提前编译、TypeBox 0.26、按状态验证响应，以及分离 Elysia 函数。
-
-  - - meta
-    - property: 'og:image'
-      content: https://elysiajs.com/blog/elysia-04/moonlit-night-concert.webp
-
-  - - meta
-    - property: 'twitter:image'
-      content: https://elysiajs.com/blog/elysia-04/moonlit-night-concert.webp
 ---
 
 <script setup>

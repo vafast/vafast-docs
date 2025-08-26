@@ -3,26 +3,6 @@ title: Elysia 与 Supabase：您下一个以超音速构建的后端
 sidebar: false
 editLink: false
 search: false
-head:
-    - - meta
-      - property: 'og:title'
-        content: Elysia 与 Supabase：您下一个以超音速构建的后端
-
-    - - meta
-      - name: 'description'
-        content: Elysia 和 Supabase 结合，适合快速开发原型，时间少于一个小时，让我们看看如何利用这两者的优势。
-
-    - - meta
-      - property: 'og:description'
-        content: Elysia 和 Supabase 结合，适合快速开发原型，时间少于一个小时，让我们看看如何利用这两者的优势。
-
-    - - meta
-      - property: 'og:image'
-        content: https://elysiajs.com/blog/elysia-supabase/elysia-supabase.webp
-
-    - - meta
-      - property: 'twitter:image'
-        content: https://elysiajs.com/blog/elysia-supabase/elysia-supabase.webp
 ---
 
 <script setup>

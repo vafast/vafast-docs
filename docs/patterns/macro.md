@@ -1,17 +1,5 @@
 ---
 title: 中间件和装饰器 - Vafast
-head:
-  - - meta
-    - property: 'og:title'
-      content: 中间件和装饰器 - Vafast
-
-  - - meta
-    - name: 'description'
-      content: Vafast 提供了强大的中间件系统和请求装饰器，允许您为请求处理流程添加自定义逻辑和扩展功能。
-
-  - - meta
-    - property: 'og:description'
-      content: Vafast 提供了强大的中间件系统和请求装饰器，允许您为请求处理流程添加自定义逻辑和扩展功能。
 ---
 
 # 中间件和装饰器

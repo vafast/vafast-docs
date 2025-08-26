@@ -1,17 +1,5 @@
 ---
 title: 安装指南 - Vafast API 客户端
-head:
-  - - meta
-    - property: 'og:title'
-      content: 安装指南 - Vafast API 客户端
-
-  - - meta
-    - name: 'description'
-      content: 了解如何安装和配置 Vafast API 客户端，包括包管理器安装、手动安装和配置选项。
-
-  - - meta
-    - property: 'og:description'
-      content: 了解如何安装和配置 Vafast API 客户端，包括包管理器安装、手动安装和配置选项。
 ---
 
 # 安装指南

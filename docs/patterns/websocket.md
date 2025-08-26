@@ -1,17 +1,5 @@
 ---
 title: WebSocket - Vafast
-head:
-    - - meta
-      - property: 'title'
-        content: WebSocket - Vafast
-
-    - - meta
-      - name: 'description'
-        content: Vafast 的 WebSocket 实现。通过 Bun 的内置 WebSocket 支持实现实时通信。WebSocket 是一种用于客户端与服务器之间通信的实时协议。
-
-    - - meta
-      - name: 'og:description'
-        content: Vafast 的 WebSocket 实现。通过 Bun 的内置 WebSocket 支持实现实时通信。WebSocket 是一种用于客户端与服务器之间通信的实时协议。
 ---
 
 # WebSocket

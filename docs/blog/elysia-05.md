@@ -3,26 +3,6 @@ title: Elysia 0.5 - Radiant
 sidebar: false
 editLink: false
 search: false
-head:
-    - - meta
-      - property: 'og:title'
-        content: 介绍 Elysia 0.5 - Radiant
-
-    - - meta
-      - name: 'description'
-        content: 介绍静态代码分析、新路由 "Memoirist"、TypeBox 0.28、数字类型、内联模式、状态/装饰/模型/组重构，以及类型稳定性。
-
-    - - meta
-      - property: 'og:description'
-        content: 介绍静态代码分析、新路由 "Memoirist"、TypeBox 0.28、数字类型、内联模式、状态/装饰重构，以及类型稳定性。
-
-    - - meta
-      - property: 'og:image'
-        content: https://elysiajs.com/blog/elysia-05/radiant.webp
-
-    - - meta
-      - property: 'twitter:image'
-        content: https://elysiajs.com/blog/elysia-05/radiant.webp
 ---
 
 <script setup>

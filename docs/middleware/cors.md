@@ -1,17 +1,5 @@
 ---
 title: CORS 中间件 - ElysiaJS
-head:
-    - - meta
-      - property: 'og:title'
-        content: CORS 中间件 - ElysiaJS
-
-    - - meta
-      - name: 'description'
-        content: Elysia 的中间件，支持自定义跨源资源共享行为。首先通过 "bun add @elysiajs/cors" 安装中间件。
-
-    - - meta
-      - name: 'og:description'
-        content: Elysia 的中间件，支持自定义跨源资源共享行为。首先通过 "bun add @elysiajs/cors" 安装中间件。
 ---
 
 # CORS 中间件

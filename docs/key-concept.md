@@ -1,17 +1,5 @@
 ---
 title: 关键概念 - Vafast
-head:
-    - - meta
-      - property: 'og:title'
-        content: 关键概念 - Vafast
-
-    - - meta
-      - name: 'description'
-        content: 了解 Vafast 框架的核心概念，包括服务器架构、路由系统、中间件机制和类型系统。
-
-    - - meta
-      - property: 'og:description'
-        content: 了解 Vafast 框架的核心概念，包括服务器架构、路由系统、中间件机制和类型系统。
 ---
 
 # 关键概念

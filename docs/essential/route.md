@@ -1,15 +1,5 @@
 ---
 title: 路由 - Vafast
-head:
-  - - meta
-    - property: 'og:title'
-      content: 路由 - Vafast
-  - - meta
-    - name: 'description'
-      content: 为了确定对客户端的正确响应，web 服务器使用路径和 HTTP 方法来查找正确的资源。这个过程被称为"路由"。我们可以通过定义路由配置对象来定义路由，包括 HTTP 方法、路径和处理函数。
-  - - meta
-    - property: 'og:description'
-      content: 为了确定对客户端的正确响应，web 服务器使用路径和 HTTP 方法来查找正确的资源。这个过程被称为"路由"。我们可以通过定义路由配置对象来定义路由，包括 HTTP 方法、路径和处理函数。
 ---
 
 <script setup>

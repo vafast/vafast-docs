@@ -1,17 +1,5 @@
 ---
 title: Server Timing 中间件 - Vafast
-head:
-  - - meta
-    - property: 'og:title'
-      content: Server Timing 中间件 - Vafast
-
-  - - meta
-    - name: 'description'
-      content: Vafast 的中间件，提供服务器计时功能，帮助开发者监控和优化应用性能。开始时请使用 "bun add @vafast/server-timing" 安装中间件。
-
-  - - meta
-    - name: 'og:description'
-      content: Vafast 的中间件，提供服务器计时功能，帮助开发者监控和优化应用性能。开始时请使用 "bun add @vafast/server-timing" 安装中间件。
 ---
 
 # Server Timing 中间件

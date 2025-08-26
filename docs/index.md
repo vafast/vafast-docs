@@ -3,18 +3,7 @@ title: Vafast 中文文档
 titleTemplate: ':title - 高性能 TypeScript Web 框架'
 layout: page
 sidebar: false
-head:
-    - - meta
-      - property: 'og:title'
-        content: Vafast 中文文档 - 高性能 TypeScript Web 框架
 
-    - - meta
-      - name: 'description'
-        content: Vafast 是一个高性能、类型安全的 TypeScript Web 框架，专为现代 Web 应用设计。提供优秀的开发者体验、灵活的中间件系统、声明式路由支持和完整的类型安全。
-
-    - - meta
-      - property: 'og:description'
-        content: Vafast 是一个高性能、类型安全的 TypeScript Web 框架，专为现代 Web 应用设计。提供优秀的开发者体验、灵活的中间件系统、声明式路由支持和完整的类型安全。
 ---
 
 <script setup>

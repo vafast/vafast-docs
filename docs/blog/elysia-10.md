@@ -3,31 +3,6 @@ title: Elysia 1.0 - 倒下者的哀歌
 sidebar: false
 editLink: false
 search: false
-head:
-    - - meta
-      - property: 'og:title'
-        content: Elysia 1.0 - 倒下者的哀歌
-
-    - - meta
-      - name: 'description'
-        content: 介绍 Sucrose，一个更好的静态代码分析引擎，启动时间提高到 14 倍，移除 40 个路由/实例的限制，类型推断速度提高到 ~3.8 倍，Eden 条约 2，Hook 类型（重大变化），以及严格类型检查的内联错误。
-
-    - - meta
-      - property: 'og:description'
-        content: 介绍 Sucrose，一个更好的静态代码分析引擎，启动时间提高到 14 倍，移除 40 个路由/实例的限制，类型推断速度提高到 ~3.8 倍，Eden 条约 2，Hook 类型（重大变化），以及严格类型检查的内联错误。
-
-    - - meta
-      - property: 'og:image'
-        content: https://elysiajs.com/blog/elysia-10/lament-of-the-fallen.webp
-
-    - - meta
-      - property: 'twitter:image'
-        content: https://elysiajs.com/blog/elysia-10/lament-of-the-fallen.webp
-
-    - - script
-      - src: https://platform.twitter.com/widgets.js
-        async: true
-        charset: utf-8
 ---
 
 <script setup>

@@ -1,15 +1,5 @@
 ---
 title: 组件路由 - Vafast
-head:
-  - - meta
-    - property: 'og:title'
-      content: 组件路由 - Vafast
-  - - meta
-    - name: 'description'
-      content: 学习 Vafast 的组件路由系统，包括组件路由定义、嵌套组件路由、中间件支持和最佳实践。
-  - - meta
-    - property: 'og:description'
-      content: 学习 Vafast 的组件路由系统，包括组件路由定义、嵌套组件路由、中间件支持和最佳实践。
 ---
 
 # 组件路由

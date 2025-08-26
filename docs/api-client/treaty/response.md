@@ -1,17 +1,5 @@
 ---
 title: 响应处理 - Vafast 类型安全客户端
-head:
-  - - meta
-    - property: 'og:title'
-      content: 响应处理 - Vafast 类型安全客户端
-
-  - - meta
-    - name: 'description'
-      content: 学习如何在 Vafast 类型安全客户端中处理各种类型的响应，包括响应数据、错误处理、状态码等。
-
-  - - meta
-    - property: 'og:description'
-      content: 学习如何在 Vafast 类型安全客户端中处理各种类型的响应，包括响应数据、错误处理、状态码等。
 ---
 
 # 响应处理

@@ -1,17 +1,5 @@
 ---
 title: 测试 - Vafast
-head:
-    - - meta
-      - property: 'og:title'
-        content: 测试 - Vafast
-
-    - - meta
-      - name: 'description'
-        content: 您可以使用 `bun:test` 创建与 Vafast 的单元测试。Vafast 服务器实例具有一个 `fetch` 方法，它接受 `Request` 并返回 `Response`，与创建 HTTP 请求相同。
-
-    - - meta
-      - name: 'og:description'
-        content: 您可以使用 `bun:test` 创建与 Vafast 的单元测试。Vafast 服务器实例具有一个 `fetch` 方法，它接受 `Request` 并返回 `Response`，与创建 HTTP 请求相同。
 ---
 
 # 单元测试

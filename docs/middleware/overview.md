@@ -1,17 +1,5 @@
 ---
 title: 中间件概述 - Vafast
-head:
-    - - meta
-      - property: 'og:title'
-        content: 中间件概述 - Vafast
-
-    - - meta
-      - name: 'description'
-        content: Vafast 旨在实现模块化和轻量化，这就是为什么 Vafast 包含了涉及常见模式的预构建中间件，以方便开发者使用。Vafast 通过社区中间件进一步增强，使其更加个性化。
-
-    - - meta
-      - name: 'og:description'
-        content: Vafast 旨在实现模块化和轻量化，这就是为什么 Vafast 包含了涉及常见模式的预构建中间件，以方便开发者使用。Vafast 通过社区中间件进一步增强，使其更加个性化。
 ---
 
 # 概述

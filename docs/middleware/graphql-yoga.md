@@ -1,17 +1,5 @@
 ---
 title: GraphQL Yoga 中间件 - ElysiaJS
-head:
-    - - meta
-      - property: 'og:title'
-        content: GraphQL Yoga 中间件 - ElysiaJS
-
-    - - meta
-      - name: 'description'
-        content: Elysia 的中间件，添加对在 Elysia 服务器上使用 GraphQL Yoga 的支持。开始可以使用“bun add graphql graphql-yoga @elysiajs/graphql-yoga”安装此中间件。
-
-    - - meta
-      - name: 'og:description'
-        content: Elysia 的中间件，添加对在 Elysia 服务器上使用 GraphQL Yoga 的支持。开始可以使用“bun add graphql graphql-yoga @elysiajs/graphql-yoga”安装此中间件。
 ---
 
 # GraphQL Yoga 中间件

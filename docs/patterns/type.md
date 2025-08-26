@@ -1,17 +1,5 @@
 ---
 title: 类型 - Vafast
-head:
-    - - meta
-      - property: 'og:title'
-        content: 类型 - Vafast
-
-    - - meta
-      - name: 'description'
-        content: 模式是严格类型定义，用于推断 TypeScript 的类型和对传入请求及传出响应的数据验证。Vafast 的模式验证基于 Sinclair 的 TypeBox，这是一个用于数据验证的 TypeScript 库。
-
-    - - meta
-      - property: 'og:description'
-        content: 模式是严格类型定义，用于推断 TypeScript 的类型和对传入请求及传出响应的数据验证。Vafast 的模式验证基于 Sinclair 的 TypeBox，这是一个用于数据验证的 TypeScript 库。
 ---
 
 <script setup>

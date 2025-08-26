@@ -1,15 +1,5 @@
 ---
 title: 中间件系统 - Vafast
-head:
-  - - meta
-    - property: 'og:title'
-      content: 中间件系统 - Vafast
-  - - meta
-    - name: 'description'
-      content: 学习 Vafast 的中间件系统，包括中间件定义、执行顺序、错误处理和最佳实践。
-  - - meta
-    - property: 'og:description'
-      content: 学习 Vafast 的中间件系统，包括中间件定义、执行顺序、错误处理和最佳实践。
 ---
 
 # 中间件系统

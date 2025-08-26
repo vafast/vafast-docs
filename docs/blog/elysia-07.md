@@ -3,26 +3,6 @@ title: Elysia 0.7 - Stellar Stellar
 sidebar: false
 editLink: false
 search: false
-head:
-    - - meta
-      - property: 'og:title'
-        content: 介绍 Elysia 0.7 - Stellar Stellar
-
-    - - meta
-      - name: 'description'
-        content: 介绍高达 13 倍的更快类型推断。带有跟踪的声明式遥测。反应式 cookie 模型和 cookie 验证。支持 TypeBox 0.31 和自定义解码器。重写的 Web Socket。定义重映射和自定义后缀。为 Elysia 提供更坚实的基础，展望更光明的未来。
-
-    - - meta
-      - property: 'og:description'
-        content: 介绍高达 13 倍的更快类型推断。带有跟踪的声明式遥测。反应式 cookie 模型和 cookie 验证。支持 TypeBox 0.31 和自定义解码器。重写的 Web Socket。定义重映射和自定义后缀。为 Elysia 提供更坚实的基础，展望更光明的未来。
-
-    - - meta
-      - property: 'og:image'
-        content: https://elysiajs.com/blog/elysia-07/stellar-stellar.webp
-
-    - - meta
-      - property: 'twitter:image'
-        content: https://elysiajs.com/blog/elysia-07/stellar-stellar.webp
 ---
 
 <script setup>

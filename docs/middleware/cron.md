@@ -1,17 +1,5 @@
 ---
 title: Cron 中间件 - Vafast
-head:
-    - - meta
-      - property: 'og:title'
-        content: Cron 中间件 - Vafast
-
-    - - meta
-      - name: 'description'
-        content: 为 Vafast 添加运行 cronjob 支持的中间件。首先，通过 "bun add @vafast/cron" 安装该中间件。
-
-    - - meta
-      - name: 'og:description'
-        content: 为 Vafast 添加运行 cronjob 支持的中间件。首先，通过 "bun add @vafast/cron" 安装该中间件。
 ---
 
 # Cron 中间件

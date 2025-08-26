@@ -3,26 +3,6 @@ title: Elysia 0.3 - 大地の閾を探して [Looking for Edge of Ground]
 sidebar: false
 editLink: false
 search: false
-head:
-  - - meta
-    - property: 'og:title'
-      content: 介绍 Elysia 0.3 - 大地の閾を探して [Looking for Edge of Ground]
-
-  - - meta
-    - name: 'description'
-      content: 介绍 Elysia Fn，针对高可扩展性的 TypeScript 性能进行的类型重构，支持文件上传及验证，重构的 Eden 合同。
-
-  - - meta
-    - property: 'og:description'
-      content: 介绍 Elysia Fn，针对高可扩展性的 TypeScript 性能进行的类型重构，支持文件上传及验证，重构的 Eden 合同。
-
-  - - meta
-    - property: 'og:image'
-      content: https://elysiajs.com/blog/elysia-03/edge-of-ground.webp
-
-  - - meta
-    - property: 'twitter:image'
-      content: https://elysiajs.com/blog/elysia-03/edge-of-ground.webp
 ---
 
 <script setup>

@@ -1,17 +1,5 @@
 ---
 title: Expo 集成 - Vafast
-head:
-  - - meta
-    - property: 'og:title'
-      content: Expo 集成 - Vafast
-
-  - - meta
-    - name: 'description'
-      content: 在 Expo React Native 应用中集成 Vafast 框架，实现跨平台移动应用开发。
-
-  - - meta
-    - property: 'og:description'
-      content: 在 Expo React Native 应用中集成 Vafast 框架，实现跨平台移动应用开发。
 ---
 
 # Expo 集成

@@ -1,17 +1,5 @@
 ---
 title: 单元测试 - Vafast 类型安全客户端
-head:
-  - - meta
-    - property: 'og:title'
-      content: 单元测试 - Vafast 类型安全客户端
-
-  - - meta
-    - name: 'description'
-      content: 学习如何为 Vafast 类型安全客户端编写单元测试，包括测试策略、测试工具、测试用例等。
-
-  - - meta
-    - property: 'og:description'
-      content: 学习如何为 Vafast 类型安全客户端编写单元测试，包括测试策略、测试工具、测试用例等。
 ---
 
 # 单元测试

@@ -3,26 +3,6 @@ title: Elysia 0.8 - 施坦纳之门
 sidebar: false
 editLink: false
 search: false
-head:
-    - - meta
-      - property: 'og:title'
-        content: 介绍 Elysia 0.8 - 施坦纳之门
-
-    - - meta
-      - name: 'description'
-        content: 介绍宏 API，一种新的与 Elysia 交互的方式。新的生命周期、解析和映射响应，以更好地与 Elysia 互动。静态内容提前编译静态资源。默认属性、默认头，以及若干改进。
-
-    - - meta
-      - property: 'og:description'
-        content: 介绍宏 API，一种新的与 Elysia 交互的方式。新的生命周期、解析和映射响应，以更好地与 Elysia 互动。静态内容提前编译静态资源。默认属性、默认头，以及若干改进。
-
-    - - meta
-      - property: 'og:image'
-        content: https://elysiajs.com/blog/elysia-08/gate-of-steiner.webp
-
-    - - meta
-      - property: 'twitter:image'
-        content: https://elysiajs.com/blog/elysia-08/gate-of-steiner.webp
 ---
 
 <script setup>

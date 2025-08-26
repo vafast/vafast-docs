@@ -1,17 +1,5 @@
 ---
 title: Cookie 处理 - Vafast
-head:
-  - - meta
-    - property: 'og:title'
-      content: Cookie 处理 - Vafast
-
-  - - meta
-    - name: 'description'
-      content: Vafast 提供了简单而强大的 Cookie 处理功能，支持读取、设置和删除 Cookie，以及各种 Cookie 属性的配置。
-
-  - - meta
-    - property: 'og:description'
-      content: Vafast 提供了简单而强大的 Cookie 处理功能，支持读取、设置和删除 Cookie，以及各种 Cookie 属性的配置。
 ---
 
 # Cookie 处理

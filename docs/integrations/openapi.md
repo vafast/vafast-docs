@@ -1,17 +1,5 @@
 ---
 title: OpenAPI - Vafast
-head:
-  - - meta
-    - property: 'og:title'
-      content: OpenAPI - Vafast
-
-  - - meta
-    - name: 'description'
-      content: Vafast 提供了一流的支持，并默认遵循 OpenAPI 模式。只需使用 Vafast Swagger 中间件的一行代码，便能允许任何 Vafast 服务器自动生成 Swagger 页面并作为文档提供。
-
-  - - meta
-    - property: 'og:description'
-      content: Vafast 提供了一流的支持，并默认遵循 OpenAPI 模式。只需使用 Vafast Swagger 中间件的一行代码，便能允许任何 Vafast 服务器自动生成 Swagger 页面并作为文档提供。
 ---
 
 # OpenAPI

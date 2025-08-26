@@ -1,17 +1,5 @@
 ---
 title: 最佳实践 - ElysiaJS
-head:
-    - - meta
-      - property: 'og:title'
-        content: 最佳实践 - ElysiaJS
-
-    - - meta
-      - name: 'description'
-        content: Elysia 是一个与模式无关的框架，我们将决定采用何种编码模式的权力交给您和您的团队。然而，我们发现有一些团队在 Elysia 上使用 MVC 模式（模型-视图-控制器），并且发现很难解耦和处理类型。本页面为使用 Elysia 的 MVC 模式指南。
-
-    - - meta
-      - property: 'og:description'
-        content: Elysia 是一个与模式无关的框架，我们将决定采用何种编码模式的权力交给您和您的团队。然而，我们发现有一些团队在 Elysia 上使用 MVC 模式（模型-视图-控制器），并且发现很难解耦和处理类型。本页面为使用 Elysia 的 MVC 模式指南。
 ---
 
 # 最佳实践

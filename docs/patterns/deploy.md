@@ -1,17 +1,5 @@
 ---
 title: 部署到生产环境 - Vafast
-head:
-  - - meta
-    - property: 'og:title'
-      content: 部署到生产环境 - Vafast
-
-  - - meta
-    - name: 'description'
-      content: 本页面是关于如何将 Vafast 部署到生产环境的指南
-
-  - - meta
-    - property: 'og:description'
-      content: Vafast 可以通过将对象传递给构造函数来进行配置。我们可以通过将对象传递给构造函数来配置 Vafast 的行为。
 ---
 
 # 部署到生产环境

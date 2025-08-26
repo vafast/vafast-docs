@@ -3,26 +3,6 @@ title: Elysia 1.2 - 你与我
 sidebar: false
 editLink: false
 search: false
-head:
-    - - meta
-      - property: 'og:title'
-        content: Elysia 1.2 - 你与我
-
-    - - meta
-      - name: 'description'
-        content: 介绍适配器以支持通用运行时，具有解析功能的对象宏，带自定义名称的解析器，生命周期的 WebSocket，具有递归类型的 TypeBox 0.34，以及 Eden 验证推断。
-
-    - - meta
-      - property: 'og:description'
-        content: 介绍适配器以支持通用运行时，具有解析功能的对象宏，带自定义名称的解析器，生命周期的 WebSocket，具有递归类型的 TypeBox 0.34，以及 Eden 验证推断。
-
-    - - meta
-      - property: 'og:image'
-        content: https://elysiajs.com/blog/elysia-12/elysia-12.webp
-
-    - - meta
-      - property: 'twitter:image'
-        content: https://elysiajs.com/blog/elysia-12/elysia-12.webp
 ---
 
 <script setup>

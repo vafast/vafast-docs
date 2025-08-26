@@ -1,17 +1,5 @@
 ---
 title: Bearer 中间件 - Vafast
-head:
-  - - meta
-    - property: 'og:title'
-      content: Bearer 中间件 - Vafast
-
-  - - meta
-    - name: 'description'
-      content: Vafast 的中间件，用于获取根据 RFC6750 指定的 Bearer 令牌。首先通过 "bun add @vafast/bearer" 安装该中间件。
-
-  - - meta
-    - name: 'og:description'
-      content: Vafast 的中间件，用于获取根据 RFC6750 指定的 Bearer 令牌。首先通过 "bun add @vafast/bearer" 安装该中间件。
 ---
 
 # Bearer 中间件

@@ -1,15 +1,5 @@
 ---
 title: 快速入门 - Vafast
-head:
-  - - meta
-    - property: 'og:title'
-      content: 快速入门 - Vafast
-  - - meta
-    - name: 'description'
-      content: Vafast 是一个高性能、类型安全的 TypeScript Web 框架。要开始，请使用 "bun add vafast" 安装框架，并创建你的第一个应用。
-  - - meta
-    - property: 'og:description'
-      content: Vafast 是一个高性能、类型安全的 TypeScript Web 框架。要开始，请使用 "bun add vafast" 安装框架，并创建你的第一个应用。
 ---
 
 <script setup>

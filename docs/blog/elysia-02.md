@@ -3,26 +3,6 @@ title: Elysia 0.2 - 祝福
 sidebar: false
 editLink: false
 search: false
-head:
-  - - meta
-    - property: 'og:title'
-      content: 介绍 Elysia 0.2 - 祝福
-
-  - - meta
-    - name: 'description'
-      content: 介绍 Elysia 0.2，带来更多改进，主要集中在 TypeScript 性能、类型推断、更好的自动补全以及一些新功能，以减少样板代码。
-
-  - - meta
-    - property: 'og:description'
-      content: 介绍 Elysia 0.2，带来更多改进，主要集中在 TypeScript 性能、类型推断、更好的自动补全以及一些新功能，以减少样板代码。
-
-  - - meta
-    - property: 'og:image'
-      content: https://elysiajs.com/blog/elysia-02/blessing.webp
-
-  - - meta
-    - property: 'twitter:image'
-      content: https://elysiajs.com/blog/elysia-02/blessing.webp
 ---
 
 <script setup>

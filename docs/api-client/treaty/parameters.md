@@ -1,17 +1,5 @@
 ---
 title: 参数处理 - Vafast 类型安全客户端
-head:
-  - - meta
-    - property: 'og:title'
-      content: 参数处理 - Vafast 类型安全客户端
-
-  - - meta
-    - name: 'description'
-      content: 学习如何在 Vafast 类型安全客户端中处理各种类型的参数，包括路径参数、查询参数、请求体等。
-
-  - - meta
-    - property: 'og:description'
-      content: 学习如何在 Vafast 类型安全客户端中处理各种类型的参数，包括路径参数、查询参数、请求体等。
 ---
 
 # 参数处理

@@ -1,17 +1,5 @@
 ---
 title: Drizzle 集成 - Vafast
-head:
-  - - meta
-    - property: 'og:title'
-      content: Drizzle 集成 - Vafast
-
-  - - meta
-    - name: 'description'
-      content: 在 Vafast 应用中集成 Drizzle ORM，实现类型安全的数据库操作。
-
-  - - meta
-    - property: 'og:description'
-      content: 在 Vafast 应用中集成 Drizzle ORM，实现类型安全的数据库操作。
 ---
 
 # Drizzle 集成

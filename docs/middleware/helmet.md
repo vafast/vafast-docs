@@ -1,17 +1,5 @@
 ---
 title: Helmet 中间件 - Vafast
-head:
-  - - meta
-    - property: 'og:title'
-      content: Helmet 中间件 - Vafast
-
-  - - meta
-    - name: 'description'
-      content: Vafast 的安全头中间件，通过添加各种 HTTP 安全头部来增强 Web 应用的安全性，包括 CSP、HSTS、XSS 保护等。
-
-  - - meta
-    - name: 'og:description'
-      content: Vafast 的安全头中间件，通过添加各种 HTTP 安全头部来增强 Web 应用的安全性，包括 CSP、HSTS、XSS 保护等。
 ---
 
 # Helmet 中间件

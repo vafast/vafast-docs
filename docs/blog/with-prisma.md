@@ -3,27 +3,6 @@ title: 用 Elysia 加速你的下一个 Prisma 服务器
 sidebar: false
 editLink: false
 search: false
-head:
-    - - meta
-      - property: 'og:title'
-        content: 用 Elysia 加速你的下一个 Prisma 服务器
-
-    - - meta
-      - name: 'description'
-        content: 在 Bun 和 Elysia 的支持下，我们进入了一个全新的开发者体验时代。通过 Prisma，我们可以加速与数据库的交互，而 Elysia 加速了我们在开发者体验和性能方面创建后台 Web 服务器的过程。
-
-
-    - - meta
-      - property: 'og:description'
-        content: 在 Bun 和 Elysia 的支持下，我们进入了一个全新的开发者体验时代。通过 Prisma，我们可以加速与数据库的交互，而 Elysia 加速了我们在开发者体验和性能方面创建后台 Web 服务器的过程。
-
-    - - meta
-      - property: 'og:image'
-        content: https://elysiajs.com/blog/with-prisma/prism.webp
-
-    - - meta
-      - property: 'twitter:image'
-        content: https://elysiajs.com/blog/with-prisma/prism.webp
 ---
 
 <script setup>

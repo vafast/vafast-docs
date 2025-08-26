@@ -1,15 +1,5 @@
 ---
 title: API 参考 - Vafast
-head:
-  - - meta
-    - property: 'og:title'
-      content: API 参考 - Vafast
-  - - meta
-    - name: 'description'
-      content: Vafast 框架的完整 API 参考，包括 Server、ComponentServer、路由配置、中间件类型和工具函数。
-  - - meta
-    - property: 'og:description'
-      content: Vafast 框架的完整 API 参考，包括 Server、ComponentServer、路由配置、中间件类型和工具函数。
 ---
 
 # API 参考

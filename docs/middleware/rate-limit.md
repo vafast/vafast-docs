@@ -1,17 +1,5 @@
 ---
 title: Rate Limit 中间件 - Vafast
-head:
-  - - meta
-    - property: 'og:title'
-      content: Rate Limit 中间件 - Vafast
-
-  - - meta
-    - name: 'description'
-      content: Vafast 的中间件，提供灵活的速率限制功能，保护 API 免受滥用。开始时请使用 "bun add @vafast/rate-limit" 安装中间件。
-
-  - - meta
-    - name: 'og:description'
-      content: Vafast 的中间件，提供灵活的速率限制功能，保护 API 免受滥用。开始时请使用 "bun add @vafast/rate-limit" 安装中间件。
 ---
 
 # Rate Limit 中间件

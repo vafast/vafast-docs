@@ -6,18 +6,6 @@ editLink: false
 search: false
 gitChangelog: false
 authors: []
-head:
-    - - meta
-      - property: 'og:title'
-        content: 博客 - ElysiaJS
-
-    - - meta
-      - name: 'description'
-        content: ElysiaJS 的更新，由核心维护者发布
-
-    - - meta
-      - property: 'og:description'
-        content: ElysiaJS 的更新，由核心维护者发布
 ---
 
 <script setup>

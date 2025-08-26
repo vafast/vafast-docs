@@ -1,17 +1,5 @@
 ---
 title: Trace - Vafast
-head:
-    - - meta
-      - property: 'og:title'
-        content: Trace - Vafast
-
-    - - meta
-      - name: 'description'
-        content: Trace 是一个用于测量服务器性能的 API。它使我们能够与每个请求处理阶段的持续时间进行交互，并测量每个函数的性能，以识别服务器的性能瓶颈。
-
-    - - meta
-      - name: 'og:description'
-        content: Trace 是一个用于测量服务器性能的 API。它使我们能够与每个请求处理阶段的持续时间进行交互，并测量每个函数的性能，以识别服务器的性能瓶颈。
 ---
 
 # Trace

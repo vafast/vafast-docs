@@ -1,17 +1,5 @@
 ---
 title: OpenTelemetry 中间件 - Vafast
-head:
-  - - meta
-    - property: 'og:title'
-      content: OpenTelemetry 中间件 - Vafast
-
-  - - meta
-    - name: 'description'
-      content: Vafast 的中间件，增加对 OpenTelemetry 的支持。开始时请使用 "bun add @vafast/opentelemetry" 安装中间件。
-
-  - - meta
-    - name: 'og:description'
-      content: Vafast 的中间件，增加对 OpenTelemetry 的支持。开始时请使用 "bun add @vafast/opentelemetry" 安装中间件。
 ---
 
 # OpenTelemetry 中间件

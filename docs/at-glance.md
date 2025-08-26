@@ -1,17 +1,5 @@
 ---
 title: 简介 - Vafast
-head:
-    - - meta
-      - property: 'og:title'
-        content: 简介 - Vafast
-
-    - - meta
-      - name: 'description'
-        content: 设计注重高性能，广泛支持 TypeScript，现代 JavaScript API，优化用于 Bun。提供完整的类型安全和灵活的中间件系统，同时保持出色的性能。
-
-    - - meta
-      - property: 'og:description'
-        content: 设计注重高性能，广泛支持 TypeScript，现代 JavaScript API，优化用于 Bun。提供完整的类型安全和灵活的中间件系统，同时保持出色的性能。
 ---
 
 <script setup>

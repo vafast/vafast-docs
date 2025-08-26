@@ -3,26 +3,6 @@ title: Elysia 1.3 和科学巫术
 sidebar: false
 editLink: false
 search: false
-head:
-    - - meta
-      - property: 'og:title'
-        content: Elysia 1.3 和科学巫术
-
-    - - meta
-      - name: 'description'
-        content: 近乎 0 的开销规范化，配合精确镜像、Bun 系统路由器、独立验证器、减少一半的类型实例化，以及显著降低内存使用和快速启动大型应用的时间
-
-    - - meta
-      - property: 'og:description'
-        content: 近乎 0 的开销规范化，配合精确镜像、Bun 系统路由器、独立验证器、减少一半的类型实例化，以及显著降低内存使用和快速启动大型应用的时间
-
-    - - meta
-      - property: 'og:image'
-        content: https://elysiajs.com/blog/elysia-13/elysia-13.webp
-
-    - - meta
-      - property: 'twitter:image'
-        content: https://elysiajs.com/blog/elysia-13/elysia-13.webp
 ---
 
 <script setup>

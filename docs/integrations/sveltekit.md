@@ -1,17 +1,5 @@
 ---
 title: SvelteKit 集成 - Vafast
-head:
-  - - meta
-    - property: 'og:title'
-      content: SvelteKit 集成 - Vafast
-
-  - - meta
-    - name: 'description'
-      content: 在 SvelteKit 应用中集成 Vafast 框架，实现现代化的全栈开发体验。
-
-  - - meta
-    - property: 'og:description'
-      content: 在 SvelteKit 应用中集成 Vafast 框架，实现现代化的全栈开发体验。
 ---
 
 # SvelteKit 集成

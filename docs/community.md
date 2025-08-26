@@ -1,15 +1,5 @@
 ---
 title: 社区 - Vafast
-head:
-  - - meta
-    - property: 'og:title'
-      content: 社区 - Vafast
-  - - meta
-    - name: 'description'
-      content: 加入 Vafast 社区，获取帮助、分享经验、参与讨论和贡献代码。
-  - - meta
-    - property: 'og:description'
-      content: 加入 Vafast 社区，获取帮助、分享经验、参与讨论和贡献代码。
 ---
 
 # 社区

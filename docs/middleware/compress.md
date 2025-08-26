@@ -1,17 +1,5 @@
 ---
 title: Compress 中间件 - Vafast
-head:
-  - - meta
-    - property: 'og:title'
-      content: Compress 中间件 - Vafast
-
-  - - meta
-    - name: 'description'
-      content: Vafast 的压缩中间件，支持 Brotli、GZIP 和 Deflate 压缩算法，自动根据客户端的 accept-encoding 头部选择合适的压缩方式。
-
-  - - meta
-    - name: 'og:description'
-      content: Vafast 的压缩中间件，支持 Brotli、GZIP 和 Deflate 压缩算法，自动根据客户端的 accept-encoding 头部选择合适的压缩方式。
 ---
 
 # Compress 中间件

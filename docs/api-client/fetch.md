@@ -1,17 +1,5 @@
 ---
 title: 基础用法 - Vafast API 客户端
-head:
-  - - meta
-    - property: 'og:title'
-      content: 基础用法 - Vafast API 客户端
-
-  - - meta
-    - name: 'description'
-      content: 学习 Vafast API 客户端的基础用法，包括 HTTP 请求方法、参数处理、错误处理和响应处理。
-
-  - - meta
-    - property: 'og:description'
-      content: 学习 Vafast API 客户端的基础用法，包括 HTTP 请求方法、参数处理、错误处理和响应处理。
 ---
 
 # 基础用法

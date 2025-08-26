@@ -1,17 +1,5 @@
 ---
 title: WebSocket 支持 - Vafast 类型安全客户端
-head:
-  - - meta
-    - property: 'og:title'
-      content: WebSocket 支持 - Vafast 类型安全客户端
-
-  - - meta
-    - name: 'description'
-      content: 学习如何在 Vafast 类型安全客户端中使用 WebSocket 进行实时通信，包括连接管理、消息处理、类型安全等。
-
-  - - meta
-    - property: 'og:description'
-      content: 学习如何在 Vafast 类型安全客户端中使用 WebSocket 进行实时通信，包括连接管理、消息处理、类型安全等。
 ---
 
 # WebSocket 支持

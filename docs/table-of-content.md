@@ -1,15 +1,5 @@
 ---
 title: 目录 - Vafast
-head:
-  - - meta
-    - property: 'og:title'
-      content: 目录 - Vafast
-  - - meta
-    - name: 'description'
-      content: 学习 Vafast 没有正确或有序的方法，然而，我们建议您**首先完成基础章节**，因为该章节简要涵盖了 Vafast 的大部分特性和基础，然后再跳转到其他您感兴趣的主题。一旦您完成了基础章节，您可以跳转到任何您感兴趣的主题。然而，我们建议按照章节的顺序进行，因为它可能会参考之前的章节。
-  - - meta
-    - property: 'og:description'
-      content: 学习 Vafast 没有正确或有序的方法，然而，我们建议您**首先完成基础章节**，因为该章节简要涵盖了 Vafast 的大部分特性和基础，然后再跳转到其他您感兴趣的主题。一旦您完成了基础章节，您可以跳转到任何您感兴趣的主题。然而，我们建议按照章节的顺序进行，因为它可能会参考之前的章节。
 ---
 
 <script setup>

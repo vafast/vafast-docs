@@ -1,17 +1,5 @@
 ---
 title: 类型安全客户端概述 - Vafast
-head:
-  - - meta
-    - property: 'og:title'
-      content: 类型安全客户端概述 - Vafast
-
-  - - meta
-    - name: 'description'
-      content: Vafast 类型安全客户端提供了完整的端到端类型安全，让您能够以类型安全的方式与 Vafast 服务器进行交互。
-
-  - - meta
-    - property: 'og:description'
-      content: Vafast 类型安全客户端提供了完整的端到端类型安全，让您能够以类型安全的方式与 Vafast 服务器进行交互。
 ---
 
 # 类型安全客户端概述

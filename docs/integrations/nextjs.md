@@ -1,17 +1,5 @@
 ---
 title: Next.js 集成 - Vafast
-head:
-  - - meta
-    - property: 'og:title'
-      content: Next.js 集成 - Vafast
-
-  - - meta
-    - name: 'description'
-      content: 在 Next.js 应用中集成 Vafast 框架，实现全栈 TypeScript 开发。
-
-  - - meta
-    - property: 'og:description'
-      content: 在 Next.js 应用中集成 Vafast 框架，实现全栈 TypeScript 开发。
 ---
 
 # Next.js 集成

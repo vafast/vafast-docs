@@ -1,17 +1,5 @@
 ---
 title: 验证 - Vafast
-head:
-    - - meta
-      - property: 'og:title'
-        content: 验证 - Vafast
-
-    - - meta
-      - name: 'description'
-        content: Schema 是严格类型的定义，用于推断 TypeScript 的类型和对传入请求及传出响应的数据验证。Vafast 的模式验证基于 Sinclair 的 TypeBox，一个用于数据验证的 TypeScript 库。
-
-    - - meta
-      - property: 'og:description'
-        content: Schema 是严格类型的定义，用于推断 TypeScript 的类型和对传入请求及传出响应的数据验证。Vafast 的模式验证基于 Sinclair 的 TypeBox，一个用于数据验证的 TypeScript 库。
 ---
 
 <script setup>

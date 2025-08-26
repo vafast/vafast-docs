@@ -1,17 +1,5 @@
 ---
 title: 配置选项 - Vafast 类型安全客户端
-head:
-  - - meta
-    - property: 'og:title'
-      content: 配置选项 - Vafast 类型安全客户端
-
-  - - meta
-    - name: 'description'
-      content: 了解 Vafast 类型安全客户端的所有配置选项，包括基础配置、高级配置和自定义配置。
-
-  - - meta
-    - property: 'og:description'
-      content: 了解 Vafast 类型安全客户端的所有配置选项，包括基础配置、高级配置和自定义配置。
 ---
 
 # 配置选项

@@ -1,17 +1,5 @@
 ---
 title: API 客户端概述 - Vafast
-head:
-  - - meta
-    - property: 'og:title'
-      content: API 客户端概述 - Vafast
-
-      - - meta
-      - name: 'description'
-        content: Vafast API 客户端是一个现代化、类型安全的 API 客户端中间件，专为 Vafast 框架设计，提供完整的 HTTP 和 WebSocket 支持。
-
-  - - meta
-    - property: 'og:description'
-      content: Vafast API 客户端是一个现代化、类型安全的 API 客户端中间件，专为 Vafast 框架设计，提供完整的 HTTP 和 WebSocket 支持。
 ---
 
 # API 客户端概述

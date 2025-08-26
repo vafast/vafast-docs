@@ -1,17 +1,5 @@
 ---
 title: React Email 集成 - Vafast
-head:
-  - - meta
-    - property: 'og:title'
-      content: React Email 集成 - Vafast
-
-  - - meta
-    - name: 'description'
-      content: 在 Vafast 应用中集成 React Email，实现类型安全的邮件模板和发送功能。
-
-  - - meta
-    - property: 'og:description'
-      content: 在 Vafast 应用中集成 React Email，实现类型安全的邮件模板和发送功能。
 ---
 
 # React Email 集成

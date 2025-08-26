@@ -1,17 +1,5 @@
 ---
 title: Swagger 中间件 - Vafast
-head:
-  - - meta
-    - property: 'og:title'
-      content: Swagger 中间件 - Vafast
-
-  - - meta
-    - name: 'description'
-      content: Vafast 的中间件，提供 Swagger/OpenAPI 文档生成和 UI 展示功能，支持 Scalar 和 Swagger UI 两种界面。开始时请使用 "bun add @vafast/swagger" 安装中间件。
-
-  - - meta
-    - name: 'og:description'
-      content: Vafast 的中间件，提供 Swagger/OpenAPI 文档生成和 UI 展示功能，支持 Scalar 和 Swagger UI 两种界面。开始时请使用 "bun add @vafast/swagger" 安装中间件。
 ---
 
 # Swagger 中间件

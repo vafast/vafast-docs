@@ -1,17 +1,5 @@
 ---
 title: Better Auth 集成 - Vafast
-head:
-  - - meta
-    - property: 'og:title'
-      content: Better Auth 集成 - Vafast
-
-  - - meta
-    - name: 'description'
-      content: 在 Vafast 中集成 Better Auth 进行身份验证和授权管理，支持多种认证方式包括 OAuth、密码、魔法链接等。
-
-  - - meta
-    - property: 'og:description'
-      content: 在 Vafast 中集成 Better Auth 进行身份验证和授权管理，支持多种认证方式包括 OAuth、密码、魔法链接等。
 ---
 
 # Better Auth 集成

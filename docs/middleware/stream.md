@@ -1,17 +1,5 @@
 ---
 title: 流中间件 - ElysiaJS
-head:
-    - - meta
-      - property: 'og:title'
-        content: 流中间件 - ElysiaJS
-
-    - - meta
-      - name: 'description'
-        content: Elysia 的中间件，添加对流响应和服务器推送事件的支持，例如 OpenAI 集成。首先通过 "bun add @elysiajs/stream" 安装中间件。
-
-    - - meta
-      - name: 'og:description'
-        content: Elysia 的中间件，添加对流响应和服务器推送事件的支持，例如 OpenAI 集成。首先通过 "bun add @elysiajs/stream" 安装中间件。
 ---
 
 # 流中间件

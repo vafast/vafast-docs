@@ -1,17 +1,5 @@
 ---
 title: Static 中间件 - Vafast
-head:
-  - - meta
-    - property: 'og:title'
-      content: Static 中间件 - Vafast
-
-  - - meta
-    - name: 'description'
-      content: Vafast 的中间件，提供高性能的静态文件服务功能，支持缓存、ETag 和智能路由。开始时请使用 "bun add @vafast/static" 安装中间件。
-
-  - - meta
-    - name: 'og:description'
-      content: Vafast 的中间件，提供高性能的静态文件服务功能，支持缓存、ETag 和智能路由。开始时请使用 "bun add @vafast/static" 安装中间件。
 ---
 
 # Static 中间件

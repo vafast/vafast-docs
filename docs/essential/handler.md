@@ -1,17 +1,5 @@
 ---
 title: 处理程序 - Vafast
-head:
-    - - meta
-      - property: 'og:title'
-        content: 处理程序 - Vafast
-
-    - - meta
-      - name: 'description'
-        content: 处理程序是响应每个路由请求的函数。接受请求信息并返回响应给客户端。处理程序可以通过 createRouteHandler 创建并注册到路由中。
-
-    - - meta
-      - property: 'og:description'
-        content: 处理程序是响应每个路由请求的函数。接受请求信息并返回响应给客户端。处理程序可以通过 createRouteHandler 创建并注册到路由中。
 ---
 
 <script setup>

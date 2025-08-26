@@ -3,16 +3,6 @@ title: 教程 - Vafast
 next:
   text: '关键概念'
   link: '/key-concept'
-head:
-  - - meta
-    - property: 'og:title'
-      content: 教程 - Vafast
-  - - meta
-    - name: 'description'
-      content: Vafast 是一个高性能、类型安全的 TypeScript Web 框架。本教程将教你如何构建一个完整的 CRUD API 服务器。
-  - - meta
-    - property: 'og:description'
-      content: Vafast 是一个高性能、类型安全的 TypeScript Web 框架。本教程将教你如何构建一个完整的 CRUD API 服务器。
 ---
 
 # Vafast 教程

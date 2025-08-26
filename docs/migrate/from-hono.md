@@ -6,18 +6,6 @@ prev:
 next:
   text: '教程'
   link: '/tutorial'
-head:
-    - - meta
-      - property: 'og:title'
-        content: 从 Hono 迁移 - Vafast
-
-    - - meta
-      - name: 'description'
-        content: 本指南适用于希望了解 Hono 与 Vafast 之间差异的 Hono 用户，包括语法，以及如何通过示例将应用程序从 Hono 迁移到 Vafast。
-
-    - - meta
-      - property: 'og:description'
-        content: 本指南适用于希望了解 Hono 与 Vafast 之间差异的 Hono 用户，包括语法，以及如何通过示例将应用程序从 Hono 迁移到 Vafast。
 ---
 
 <script setup>

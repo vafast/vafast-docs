@@ -1,17 +1,5 @@
 ---
 title: IP 中间件 - Vafast
-head:
-  - - meta
-    - property: 'og:title'
-      content: IP 中间件 - Vafast
-
-  - - meta
-    - name: 'description'
-      content: Vafast 的 IP 地址获取中间件，支持从各种代理头部中提取真实的客户端 IP 地址，适用于反向代理、CDN 和负载均衡器环境。
-
-  - - meta
-    - name: 'og:description'
-      content: Vafast 的 IP 地址获取中间件，支持从各种代理头部中提取真实的客户端 IP 地址，适用于反向代理、CDN 和负载均衡器环境。
 ---
 
 # IP 中间件

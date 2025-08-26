@@ -1,15 +1,5 @@
 ---
 title: 路由指南 - Vafast
-head:
-  - - meta
-    - property: 'og:title'
-      content: 路由指南 - Vafast
-  - - meta
-    - name: 'description'
-      content: 学习 Vafast 的路由系统，包括基本路由、嵌套路由、动态路由、中间件和类型安全。
-  - - meta
-    - property: 'og:description'
-      content: 学习 Vafast 的路由系统，包括基本路由、嵌套路由、动态路由、中间件和类型安全。
 ---
 
 # 路由指南

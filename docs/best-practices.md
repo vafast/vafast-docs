@@ -1,15 +1,5 @@
 ---
 title: 最佳实践 - Vafast
-head:
-  - - meta
-    - property: 'og:title'
-      content: 最佳实践 - Vafast
-  - - meta
-    - name: 'description'
-      content: Vafast 框架开发的最佳实践，包括项目结构、代码组织、性能优化、安全性和测试策略。
-  - - meta
-    - property: 'og:description'
-      content: Vafast 框架开发的最佳实践，包括项目结构、代码组织、性能优化、安全性和测试策略。
 ---
 
 # 最佳实践

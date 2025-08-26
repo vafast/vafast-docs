@@ -1,17 +1,5 @@
 ---
 title: 测试指南 - Vafast API 客户端
-head:
-  - - meta
-    - property: 'og:title'
-      content: 测试指南 - Vafast API 客户端
-
-  - - meta
-    - name: 'description'
-      content: 学习如何测试 Vafast API 客户端，包括单元测试、集成测试和端到端测试的最佳实践。
-
-  - - meta
-    - property: 'og:description'
-      content: 学习如何测试 Vafast API 客户端，包括单元测试、集成测试和端到端测试的最佳实践。
 ---
 
 # 测试指南

@@ -1,17 +1,5 @@
 ---
 title: Apollo GraphQL 中间件 - ElysiaJS
-head:
-    - - meta
-      - property: 'og:title'
-        content: Apollo GraphQL 中间件 - ElysiaJS
-
-    - - meta
-      - name: 'description'
-        content: Elysia 的中间件，用于在 Elysia 服务器上添加对 GraphQL Apollo 的支持。通过 "bun add graphql @elysiajs/apollo @apollo/server" 安装中间件。
-
-    - - meta
-      - name: 'og:description'
-        content: Elysia 的中间件，用于在 Elysia 服务器上添加对 GraphQL Apollo 的支持。通过 "bun add graphql @elysiajs/apollo @apollo/server" 安装中间件。
 ---
 
 # GraphQL Apollo 中间件

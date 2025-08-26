@@ -1,17 +1,5 @@
 ---
 title: HTML 中间件 - Vafast
-head:
-    - - meta
-      - property: 'og:title'
-        content: HTML 中间件 - Vafast
-
-    - - meta
-      - name: 'description'
-        content: 为 Vafast 添加 HTML 返回快捷支持的中间件。首先通过 "bun add @vafast/html" 安装中间件。
-
-    - - meta
-      - name: 'og:description'
-        content: 为 Vafast 添加 HTML 返回快捷支持的中间件。首先通过 "bun add @vafast/html" 安装中间件。
 ---
 
 # HTML 中间件

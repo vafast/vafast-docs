@@ -3,26 +3,6 @@ title: Elysia 0.6 - 这个游戏
 sidebar: false
 editLink: false
 search: false
-head:
-    - - meta
-      - property: 'og:title'
-        content: 介绍 Elysia 0.6 - 这个游戏
-
-    - - meta
-      - name: 'description'
-        content: 介绍重新设计的插件模型、动态模式、更好的开发者体验（通过声明式自定义错误）、可自定义的宽松和严格路径映射、TypeBox 0.30 和 WinterCG 框架的互操作性。再一次推动可能性的边界。
-
-    - - meta
-      - property: 'og:description'
-        content: 介绍重新设计的插件模型、动态模式、更好的开发者体验（通过声明式自定义错误）、可自定义的宽松和严格路径映射、TypeBox 0.30 和 WinterCG 框架的互操作性。再一次推动可能性的边界。
-
-    - - meta
-      - property: 'og:image'
-        content: https://elysiajs.com/blog/elysia-06/this-game.webp
-
-    - - meta
-      - property: 'twitter:image'
-        content: https://elysiajs.com/blog/elysia-06/this-game.webp
 ---
 
 <script setup>

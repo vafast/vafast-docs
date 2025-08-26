@@ -3,26 +3,6 @@ title: Elysia 1.1 - 大人的乐园
 sidebar: false
 editLink: false
 search: false
-head:
-    - - meta
-      - property: 'og:title'
-        content: Elysia 1.1 - 大人的乐园
-
-    - - meta
-      - name: 'description'
-        content: 介绍 OpenTelemetry 和 Trace v2。数据强制和规范化。Guard 插件和批量转换。可选路径参数。装饰器和响应状态协调。生成器响应流。
-
-    - - meta
-      - property: 'og:description'
-        content: 介绍 OpenTelemetry 和 Trace v2。数据强制和规范化。Guard 插件和批量转换。可选路径参数。装饰器和响应状态协调。生成器响应流。
-
-    - - meta
-      - property: 'og:image'
-        content: https://elysiajs.com/blog/elysia-11/elysia-11.webp
-
-    - - meta
-      - property: 'twitter:image'
-        content: https://elysiajs.com/blog/elysia-11/elysia-11.webp
 ---
 
 <script setup>

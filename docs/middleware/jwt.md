@@ -1,17 +1,5 @@
 ---
 title: JWT 中间件 - Vafast
-head:
-    - - meta
-      - property: 'og:title'
-        content: JWT 中间件 - Vafast
-
-    - - meta
-      - name: 'description'
-        content: Vafast 的中间件，增加在 Vafast 服务器中使用 JWT (JSON Web Token) 的支持。开始安装中间件使用 "bun add @vafast/jwt"。
-
-    - - meta
-      - name: 'og:description'
-        content: Vafast 的中间件，增加在 Vafast 服务器中使用 JWT (JSON Web Token) 的支持。开始安装中间件使用 "bun add @vafast/jwt"。
 ---
 
 # JWT 中间件
