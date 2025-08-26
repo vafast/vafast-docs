@@ -54,14 +54,14 @@ type Middleware = (req: Request, next: () => Promise<Response>) => Promise<Respo
 中间件按照数组中的顺序执行，形成一个执行链：
 
 ```typescript
-const routes: any[] = [
+const routes = defineRoutes([
   {
     method: 'GET',
     path: '/admin',
     middleware: [authMiddleware, logMiddleware, rateLimitMiddleware],
-    handler: () => new Response('Admin panel')
+    handler: createRouteHandler(() => 'Admin panel')
   }
-]
+])
 ```
 
 执行顺序：
@@ -114,24 +114,24 @@ const authMiddleware = async (req: Request, next: () => Promise<Response>) => {
     // 将用户信息添加到请求中
     ;(req as any).user = user
     
-    return next()
+    return await next()
   } catch (error) {
     return new Response('Invalid token', { status: 401 })
   }
 }
 
 // 使用示例
-const routes: any[] = [
+const routes = defineRoutes([
   {
     method: 'GET',
     path: '/profile',
     middleware: [authMiddleware],
-    handler: (req: Request) => {
+    handler: createRouteHandler(({ req }) => {
       const user = (req as any).user
-      return new Response(`Hello ${user.name}`)
-    }
+      return `Hello ${user.name}`
+    })
   }
-]
+])
 ```
 
 ### 3. CORS 中间件
@@ -235,18 +235,18 @@ const userSchema = {
   age: { type: 'number', min: 18 }
 }
 
-const routes: any[] = [
+const routes = defineRoutes([
   {
     method: 'POST',
     path: '/users',
     middleware: [validateBody(userSchema)],
-    handler: (req: Request) => {
+    handler: createRouteHandler(({ req }) => {
       const userData = (req as any).validatedBody
       // 处理验证后的数据...
       return new Response('User created', { status: 201 })
-    }
+    })
   }
-]
+])
 ```
 
 ## 中间件组合
@@ -278,14 +278,14 @@ const combinedMiddleware = combineMiddleware(
   rateLimitMiddleware
 )
 
-const routes: any[] = [
+const routes = defineRoutes([
   {
     method: 'GET',
     path: '/api/users',
     middleware: [combinedMiddleware],
-    handler: () => new Response('Users')
+    handler: createRouteHandler(() => new Response('Users'))
   }
-]
+])
 ```
 
 ### 条件中间件
@@ -306,14 +306,14 @@ const adminOnly = conditionalMiddleware(
   authMiddleware
 )
 
-const routes: any[] = [
+const routes = defineRoutes([
   {
     method: 'GET',
     path: '/admin/users',
     middleware: [adminOnly],
-    handler: () => new Response('Admin users')
+    handler: createRouteHandler(() => new Response('Admin users'))
   }
-]
+])
 ```
 
 ## 全局中间件
@@ -321,7 +321,7 @@ const routes: any[] = [
 您可以为整个应用或特定路径前缀应用中间件：
 
 ```typescript
-const routes: any[] = [
+const routes = defineRoutes([
   {
     path: '/api',
     middleware: [logMiddleware, corsMiddleware], // 应用到所有 /api 路由
@@ -329,16 +329,16 @@ const routes: any[] = [
       {
         method: 'GET',
         path: '/users',
-        handler: () => new Response('Users')
+        handler: createRouteHandler(() => new Response('Users'))
       },
       {
         method: 'GET',
         path: '/posts',
-        handler: () => new Response('Posts')
+        handler: createRouteHandler(() => new Response('Posts'))
       }
     ]
   }
-]
+])
 ```
 
 ## 中间件最佳实践
@@ -390,20 +390,20 @@ const safeMiddleware = (middleware: any) => {
 }
 
 // 使用安全中间件
-const routes: any[] = [
+const routes = defineRoutes([
   {
     method: 'GET',
     path: '/api/users',
     middleware: [safeMiddleware(authMiddleware)],
-    handler: () => new Response('Users')
+    handler: createRouteHandler(() => new Response('Users'))
   }
-]
+])
 ```
 
 ### 3. 中间件顺序
 
 ```typescript
-const routes: any[] = [
+const routes = defineRoutes([
   {
     method: 'GET',
     path: '/api/users',
@@ -414,9 +414,9 @@ const routes: any[] = [
       authMiddleware,       // 4. 身份验证
       errorHandler          // 5. 错误处理
     ],
-    handler: () => new Response('Users')
+    handler: createRouteHandler(() => new Response('Users'))
   }
-]
+])
 ```
 
 ### 4. 中间件测试

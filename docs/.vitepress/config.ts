@@ -337,16 +337,8 @@ export default defineConfig({
                         link: '/essential/handler'
                     },
                     {
-                        text: '生命周期',
-                        link: '/essential/life-cycle'
-                    },
-                    {
                         text: '验证',
                         link: '/essential/validation'
-                    },
-                    {
-                        text: '插件',
-                        link: '/essential/plugin'
                     },
                     {
                         text: '最佳实践',

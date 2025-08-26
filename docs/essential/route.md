@@ -14,229 +14,229 @@ head:
 
 <script setup>
 import Playground from '../components/nearl/playground.vue'
-import { Server } from 'vafast'
+import { Server, defineRoutes, createRouteHandler } from 'vafast'
 
-const demo1 = new Server([
+const demo1 = new Server(defineRoutes([
   {
     method: 'GET',
     path: '/',
-    handler: () => '你好'
+    handler: createRouteHandler(() => '你好')
   },
   {
     method: 'GET',
     path: '/hi',
-    handler: () => '嗨'
+    handler: createRouteHandler(() => '嗨')
   }
-])
+]))
 
-const demo2 = new Server([
+const demo2 = new Server(defineRoutes([
   {
     method: 'GET',
     path: '/',
-    handler: () => '你好'
+    handler: createRouteHandler(() => '你好')
   },
   {
     method: 'POST',
     path: '/hi',
-    handler: () => '嗨'
+    handler: createRouteHandler(() => '嗨')
   }
-])
+]))
 
-const demo3 = new Server([
+const demo3 = new Server(defineRoutes([
   {
     method: 'GET',
     path: '/id',
-    handler: () => `id: undefined`
+    handler: createRouteHandler(() => `id: undefined`)
   },
   {
     method: 'GET',
     path: '/id/:id',
-    handler: (req, params) => `id: ${params?.id}`
+    handler: createRouteHandler(({ params }) => `id: ${params.id}`)
   }
-])
+]))
 
-const demo4 = new Server([
+const demo4 = new Server(defineRoutes([
   {
     method: 'GET',
     path: '/',
-    handler: () => '嗨'
+    handler: createRouteHandler(() => '嗨')
   },
   {
     method: 'POST',
     path: '/',
-    handler: () => '嗨'
+    handler: createRouteHandler(() => '嗨')
   }
-])
+]))
 
-const demo5 = new Server([
+const demo5 = new Server(defineRoutes([
   {
     method: 'GET',
     path: '/',
-    handler: () => '你好'
+    handler: createRouteHandler(() => '你好')
   },
   {
     method: 'GET',
     path: '/hi',
-    handler: () => new Response('路由未找到 :(', { status: 404 })
+    handler: createRouteHandler(() => new Response('路由未找到 :(', { status: 404 }))
   }
-])
+]))
 
-const demo6 = new Server([
+const demo6 = new Server(defineRoutes([
   {
     method: 'GET',
     path: '/id/:id',
-    handler: (req, params) => params?.id
+    handler: createRouteHandler(({ params }) => params.id)
   },
   {
     method: 'GET',
     path: '/id/123',
-    handler: () => '123'
+    handler: createRouteHandler(() => '123')
   },
   {
     method: 'GET',
     path: '/id/anything',
-    handler: () => 'anything'
+    handler: createRouteHandler(() => 'anything')
   },
   {
     method: 'GET',
     path: '/id',
-    handler: () => new Response('Not found', { status: 404 })
+    handler: createRouteHandler(() => new Response('Not found', { status: 404 }))
   },
   {
     method: 'GET',
     path: '/id/anything/test',
-    handler: () => new Response('Not found', { status: 404 })
+    handler: createRouteHandler(() => new Response('Not found', { status: 404 }))
   }
-])
+]))
 
-const demo7 = new Server([
+const demo7 = new Server(defineRoutes([
   {
     method: 'GET',
     path: '/id/:id',
-    handler: (req, params) => params?.id
+    handler: createRouteHandler(({ params }) => params.id)
   },
   {
     method: 'GET',
     path: '/id/123',
-    handler: () => '123'
+    handler: createRouteHandler(() => '123')
   },
   {
     method: 'GET',
     path: '/id/anything',
-    handler: () => 'anything'
+    handler: createRouteHandler(() => 'anything')
   },
   {
     method: 'GET',
     path: '/id',
-    handler: () => new Response('Not found', { status: 404 })
+    handler: createRouteHandler(() => new Response('Not found', { status: 404 }))
   },
   {
     method: 'GET',
     path: '/id/:id/:name',
-    handler: (req, params) => `${params?.id} ${params?.name}`
+    handler: createRouteHandler(({ params }) => `${params.id} ${params.name}`)
   }
-])
+]))
 
-const demo8 = new Server([
+const demo8 = new Server(defineRoutes([
   {
     method: 'GET',
     path: '/get',
-    handler: () => 'hello'
+    handler: createRouteHandler(() => 'hello')
   },
   {
     method: 'POST',
     path: '/post',
-    handler: () => 'hi'
+    handler: createRouteHandler(() => 'hi')
   }
-])
+]))
 
-const demo9 = new Server([
+const demo9 = new Server(defineRoutes([
   {
     method: 'GET',
     path: '/id/:id',
-    handler: (req, params) => params?.id
+    handler: createRouteHandler(({ params }) => params.id)
   },
   {
     method: 'GET',
     path: '/id/123',
-    handler: () => '123'
+    handler: createRouteHandler(() => '123')
   },
   {
     method: 'GET',
     path: '/id/anything',
-    handler: () => 'anything'
+    handler: createRouteHandler(() => 'anything')
   },
   {
     method: 'GET',
     path: '/id',
-    handler: () => new Response('Not found', { status: 404 })
+    handler: createRouteHandler(() => new Response('Not found', { status: 404 }))
   },
   {
     method: 'GET',
     path: '/id/:id/:name',
-    handler: (req, params) => `${params?.id}/${params?.name}`
+    handler: createRouteHandler(({ params }) => `${params.id}/${params.name}`)
   }
-])
+]))
 
-const demo10 = new Server([
+const demo10 = new Server(defineRoutes([
   {
     method: 'GET',
     path: '/id/1',
-    handler: () => '静态路径'
+    handler: createRouteHandler(() => '静态路径')
   },
   {
     method: 'GET',
     path: '/id/:id',
-    handler: () => '动态路径'
+    handler: createRouteHandler(() => '动态路径')
   }
-])
+]))
 
-const demo11 = new Server([
+const demo11 = new Server(defineRoutes([
   {
     method: 'POST',
     path: '/user/sign-in',
-    handler: () => '登录'
+    handler: createRouteHandler(() => '登录')
   },
   {
     method: 'POST',
     path: '/user/sign-up',
-    handler: () => '注册'
+    handler: createRouteHandler(() => '注册')
   },
   {
     method: 'POST',
     path: '/user/profile',
-    handler: () => '个人资料'
+    handler: createRouteHandler(() => '个人资料')
   }
-])
+]))
 
-const demo12 = new Server([
+const demo12 = new Server(defineRoutes([
   {
     path: '/user',
     children: [
       {
         method: 'POST',
         path: '/sign-in',
-        handler: () => '登录'
+        handler: createRouteHandler(() => '登录')
       },
       {
         method: 'POST',
         path: '/sign-up',
-        handler: () => '注册'
+        handler: createRouteHandler(() => '注册')
       },
       {
         method: 'POST',
         path: '/profile',
-        handler: () => '个人资料'
+        handler: createRouteHandler(() => '个人资料')
       }
     ]
   }
-])
+]))
 
-const demo13 = new Server([
+const demo13 = new Server(defineRoutes([
   {
     method: 'GET',
     path: '/',
-    handler: () => '你好，世界'
+    handler: createRouteHandler(() => '你好，世界')
   },
   {
     path: '/user',
@@ -244,21 +244,21 @@ const demo13 = new Server([
       {
         method: 'POST',
         path: '/sign-in',
-        handler: () => '登录'
+        handler: createRouteHandler(() => '登录')
       },
       {
         method: 'POST',
         path: '/sign-up',
-        handler: () => '注册'
+        handler: createRouteHandler(() => '注册')
       },
       {
         method: 'POST',
         path: '/profile',
-        handler: () => '个人资料'
+        handler: createRouteHandler(() => '个人资料')
       }
     ]
   }
-])
+]))
 </script>
 
 # 路由
@@ -272,15 +272,15 @@ Web 服务器使用请求的 **路径和 HTTP 方法** 来查找正确的资源�
 ### 定义路由
 
 ```typescript
-import { Server } from 'vafast'
+import { Server, defineRoutes, createRouteHandler } from 'vafast'
 
-const routes: any[] = [
+const routes = defineRoutes([
   {
     method: 'GET',
     path: '/',
-    handler: () => 'Hello World'
+    handler: createRouteHandler(() => 'Hello World')
   }
-]
+])
 
 const server = new Server(routes)
 export default { fetch: server.fetch }
@@ -291,243 +291,279 @@ export default { fetch: server.fetch }
 Vafast 支持所有标准的 HTTP 方法：
 
 ```typescript
-const routes: any[] = [
+const routes = defineRoutes([
   {
     method: 'GET',     // 获取资源
     path: '/users',
-    handler: () => 'Get users'
+    handler: createRouteHandler(() => 'Get users')
   },
   {
     method: 'POST',    // 创建资源
     path: '/users',
-    handler: async (req) => 'Create user'
+    handler: createRouteHandler(() => 'Create user')
   },
   {
     method: 'PUT',     // 更新资源
     path: '/users/:id',
-    handler: async (req) => 'Update user'
+    handler: createRouteHandler(() => 'Update user')
   },
   {
     method: 'DELETE',  // 删除资源
     path: '/users/:id',
-    handler: () => 'Delete user'
+    handler: createRouteHandler(() => 'Delete user')
   },
   {
-    method: 'PATCH',   // 部分更新
+    method: 'PATCH',   // 部分更新资源
     path: '/users/:id',
-    handler: () => 'Patch user'
+    handler: createRouteHandler(() => 'Patch user')
   }
-]
+])
 ```
-
-## 动态路由
 
 ### 路径参数
 
-```typescript
-{
-  method: 'GET',
-  path: '/users/:id',
-  handler: (req, params) => `User ID: ${params?.id}`
-}
-```
-
-### 多个参数
+路径参数允许您捕获 URL 中的动态值：
 
 ```typescript
-{
-  method: 'GET',
-  path: '/users/:userId/posts/:postId',
-  handler: (req, params) => `User ${params?.userId}, Post ${params?.postId}`
-}
-```
-
-## 嵌套路由
-
-Vafast 支持嵌套路由结构：
-
-```typescript
-const routes: any[] = [
+const routes = defineRoutes([
   {
-    path: '/api',
-    children: [
-      {
-        method: 'GET',
-        path: '/users',
-        handler: () => 'Users API'
-      },
-      {
-        method: 'GET',
-        path: '/posts',
-        handler: () => 'Posts API'
-      }
-    ]
+    method: 'GET',
+    path: '/users/:id',
+    handler: createRouteHandler(({ params }) => {
+      return `User ID: ${params.id}`
+    })
+  },
+  {
+    method: 'GET',
+    path: '/posts/:postId/comments/:commentId',
+    handler: createRouteHandler(({ params }) => {
+      return `Post: ${params.postId}, Comment: ${params.commentId}`
+    })
   }
-]
+])
+```
+
+### 查询参数
+
+查询参数通过 `query` 对象访问：
+
+```typescript
+const routes = defineRoutes([
+  {
+    method: 'GET',
+    path: '/search',
+    handler: createRouteHandler(({ query }) => {
+      const { q, page = '1', limit = '10' } = query
+      return `Search: ${q}, Page: ${page}, Limit: ${limit}`
+    })
+  }
+])
+```
+
+### 请求体
+
+POST、PUT、PATCH 请求的请求体通过 `body` 对象访问：
+
+```typescript
+const routes = defineRoutes([
+  {
+    method: 'POST',
+    path: '/users',
+    handler: createRouteHandler(async ({ body }) => {
+      return `Created user: ${body.name}`
+    })
+  }
+])
 ```
 
 ## 路由优先级
 
-Vafast 按照以下优先级匹配路由：
-
-1. **静态路径** - 完全匹配的路径
-2. **动态路径** - 包含参数的路径
-3. **嵌套路径** - 子路由
-
-### 示例
-
-<Playground :demo="demo10" />
-
-在这个示例中：
-- `/id/1` 是静态路径，优先级最高
-- `/id/:id` 是动态路径，匹配其他 ID 值
-
-## 路由组织
-
-### 按功能分组
+Vafast 使用智能路由匹配算法，静态路径优先于动态路径：
 
 ```typescript
-const userRoutes = [
+const routes = defineRoutes([
   {
-    method: 'POST',
-    path: '/sign-in',
-    handler: () => '登录'
+    method: 'GET',
+    path: '/users/123',        // 静态路径 - 优先级高
+    handler: createRouteHandler(() => 'Specific user')
   },
   {
-    method: 'POST',
-    path: '/sign-up',
-    handler: () => '注册'
-  },
-  {
-    method: 'POST',
-    path: '/profile',
-    handler: () => '个人资料'
+    method: 'GET',
+    path: '/users/:id',        // 动态路径 - 优先级低
+    handler: createRouteHandler(({ params }) => `User ${params.id}`)
   }
-]
+])
+```
 
-const routes: any[] = [
+## 嵌套路由
+
+Vafast 支持嵌套路由结构，使用 `children` 属性：
+
+```typescript
+const routes = defineRoutes([
   {
-    path: '/user',
-    children: userRoutes
-  }
-]
-```
-
-<Playground :demo="demo11" />
-
-### 使用嵌套路由
-
-<Playground :demo="demo12" />
-
-## 错误处理
-
-### 404 错误
-
-```typescript
-{
-  method: 'GET',
-  path: '/not-found',
-  handler: () => new Response('Not found', { status: 404 })
-}
-```
-
-<Playground :demo="demo5" />
-
-## 完整示例
-
-<Playground :demo="demo13" />
-
-这个示例展示了如何组合多个路由，包括：
-- 根路径处理
-- 用户相关路由的嵌套组织
-- 清晰的代码结构
-
-## 最佳实践
-
-### 1. 路由命名
-
-使用描述性的路径名称：
-
-```typescript
-// 好的做法
-{
-  method: 'GET',
-  path: '/users/:id/profile',
-  handler: () => 'User profile'
-}
-
-// 避免
-{
-  method: 'GET',
-  path: '/u/:i/p',
-  handler: () => 'User profile'
-}
-```
-
-### 2. 路由组织
-
-按功能模块组织路由：
-
-```typescript
-const routes: any[] = [
-  {
-    path: '/api/v1',
+    path: '/api',
     children: [
       {
-        path: '/users',
+        path: '/v1',
         children: [
-          { method: 'GET', path: '/', handler: () => 'List users' },
-          { method: 'POST', path: '/', handler: () => 'Create user' },
-          { method: 'GET', path: '/:id', handler: () => 'Get user' }
+          {
+            method: 'GET',
+            path: '/users',
+            handler: createRouteHandler(() => 'API v1 users')
+          }
         ]
       },
       {
-        path: '/posts',
+        path: '/v2',
         children: [
-          { method: 'GET', path: '/', handler: () => 'List posts' },
-          { method: 'POST', path: '/', handler: () => 'Create post' }
+          {
+            method: 'GET',
+            path: '/users',
+            handler: createRouteHandler(() => 'API v2 users')
+          }
         ]
       }
     ]
   }
-]
+])
 ```
 
-### 3. 参数验证
+## 路由配置选项
 
-在路由处理函数中验证参数：
+每个路由可以配置以下选项：
 
 ```typescript
-{
-  method: 'GET',
-  path: '/users/:id',
-  handler: (req, params) => {
-    const id = params?.id
-    
-    if (!id || isNaN(Number(id))) {
-      return new Response('Invalid user ID', { status: 400 })
-    }
-    
-    return `User ID: ${id}`
+const routes = defineRoutes([
+  {
+    method: 'GET',
+    path: '/protected',
+    handler: createRouteHandler(() => 'Protected content'),
+    middleware: [authMiddleware],  // 路由级中间件
+    body: userSchema,             // 请求体验证
+    query: querySchema,           // 查询参数验证
+    params: paramsSchema          // 路径参数验证
   }
-}
+])
 ```
 
-## 总结
+## 最佳实践
 
-Vafast 的路由系统提供了：
+### 1. 使用描述性路径
 
-- ✅ 完整的 HTTP 方法支持
-- ✅ 动态路径参数
-- ✅ 嵌套路由结构
-- ✅ 清晰的路由优先级
-- ✅ 灵活的路由组织
-- ✅ 类型安全的参数访问
+```typescript
+// ✅ 好的
+path: '/users/:id/profile'
+path: '/posts/:postId/comments'
 
-### 下一步
+// ❌ 不好的
+path: '/u/:i'
+path: '/p/:p/c'
+```
 
-- 查看 [中间件系统](/middleware) 了解如何增强路由功能
-- 学习 [处理程序](/essential/handler) 了解路由处理函数的详细用法
-- 探索 [最佳实践](/essential/best-practice) 获取更多开发建议
+### 2. 保持路由结构清晰
 
-如果您有任何问题，请查看我们的 [社区页面](/community) 或 [GitHub 仓库](https://github.com/vafast/vafast)。
+```typescript
+const routes = defineRoutes([
+  // 用户相关路由
+  {
+    path: '/users',
+    children: [
+      {
+        method: 'GET',
+        path: '/',
+        handler: createRouteHandler(() => 'List users')
+      },
+      {
+        method: 'POST',
+        path: '/',
+        handler: createRouteHandler(() => 'Create user')
+      },
+      {
+        method: 'GET',
+        path: '/:id',
+        handler: createRouteHandler(({ params }) => `User ${params.id}`)
+      }
+    ]
+  },
+  
+  // 文章相关路由
+  {
+    path: '/posts',
+    children: [
+      {
+        method: 'GET',
+        path: '/',
+        handler: createRouteHandler(() => 'List posts')
+      },
+      {
+        method: 'POST',
+        path: '/',
+        handler: createRouteHandler(() => 'Create post')
+      }
+    ]
+  }
+])
+```
+
+### 3. 使用适当的 HTTP 方法
+
+```typescript
+const routes = defineRoutes([
+  {
+    method: 'GET',     // 获取数据
+    path: '/users',
+    handler: createRouteHandler(() => 'Get users')
+  },
+  {
+    method: 'POST',    // 创建数据
+    path: '/users',
+    handler: createRouteHandler(() => 'Create user')
+  },
+  {
+    method: 'PUT',     // 完全更新
+    path: '/users/:id',
+    handler: createRouteHandler(() => 'Update user')
+  },
+  {
+    method: 'PATCH',   // 部分更新
+    path: '/users/:id',
+    handler: createRouteHandler(() => 'Patch user')
+  },
+  {
+    method: 'DELETE',  // 删除数据
+    path: '/users/:id',
+    handler: createRouteHandler(() => 'Delete user')
+  }
+])
+```
+
+## 测试路由
+
+您可以使用 Playground 组件来测试不同的路由配置：
+
+<Playground :demo="demo1" />
+
+<Playground :demo="demo2" />
+
+<Playground :demo="demo3" />
+
+<Playground :demo="demo4" />
+
+<Playground :demo="demo5" />
+
+<Playground :demo="demo6" />
+
+<Playground :demo="demo7" />
+
+<Playground :demo="demo8" />
+
+<Playground :demo="demo9" />
+
+<Playground :demo="demo10" />
+
+<Playground :demo="demo11" />
+
+<Playground :demo="demo12" />
+
+<Playground :demo="demo13" />
