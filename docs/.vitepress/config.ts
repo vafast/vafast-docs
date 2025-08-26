@@ -381,54 +381,50 @@ export default defineConfig({
                 ]
             },
             {
-                text: 'Eden',
+                text: 'API 客户端',
                 collapsed: true,
                 items: [
                     {
                         text: '概述',
-                        link: '/eden/overview.md'
+                        link: '/api-client/overview.md'
                     },
                     {
                         text: '安装',
-                        link: '/eden/installation.md'
+                        link: '/api-client/installation.md'
                     },
                     {
-                        text: 'Eden 协议',
+                        text: '类型安全客户端',
                         collapsed: false,
                         items: [
                             {
                                 text: '概述',
-                                link: '/eden/treaty/overview'
+                                link: '/api-client/treaty/overview'
                             },
                             {
                                 text: '参数',
-                                link: '/eden/treaty/parameters'
+                                link: '/api-client/treaty/parameters'
                             },
                             {
                                 text: '响应',
-                                link: '/eden/treaty/response'
+                                link: '/api-client/treaty/response'
                             },
                             {
                                 text: 'WebSocket',
-                                link: '/eden/treaty/websocket'
+                                link: '/api-client/treaty/websocket'
                             },
                             {
                                 text: '配置',
-                                link: '/eden/treaty/config'
+                                link: '/api-client/treaty/config'
                             },
                             {
                                 text: '单元测试',
-                                link: '/eden/treaty/unit-test'
-                            },
-                            {
-                                text: '旧版（协议 1）',
-                                link: '/eden/treaty/legacy.md'
+                                link: '/api-client/treaty/unit-test'
                             }
                         ]
                     },
                     {
-                        text: 'Eden Fetch',
-                        link: '/eden/fetch.md'
+                        text: '基础用法',
+                        link: '/api-client/fetch.md'
                     }
                 ]
             },
