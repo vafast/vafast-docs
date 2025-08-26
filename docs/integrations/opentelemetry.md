@@ -239,4 +239,4 @@ function utility() {
 
 ## 配置
 
-请查看 [opentelemetry 插件](/plugins/opentelemetry) 以获取配置选项和定义。
+请查看 [opentelemetry 中间件](/middleware/opentelemetry) 以获取配置选项和定义。

@@ -1,22 +1,22 @@
 ---
-title: Apollo GraphQL 插件 - ElysiaJS
+title: Apollo GraphQL 中间件 - ElysiaJS
 head:
     - - meta
       - property: 'og:title'
-        content: Apollo GraphQL 插件 - ElysiaJS
+        content: Apollo GraphQL 中间件 - ElysiaJS
 
     - - meta
       - name: 'description'
-        content: Elysia 的插件，用于在 Elysia 服务器上添加对 GraphQL Apollo 的支持。通过 "bun add graphql @elysiajs/apollo @apollo/server" 安装插件。
+        content: Elysia 的中间件，用于在 Elysia 服务器上添加对 GraphQL Apollo 的支持。通过 "bun add graphql @elysiajs/apollo @apollo/server" 安装中间件。
 
     - - meta
       - name: 'og:description'
-        content: Elysia 的插件，用于在 Elysia 服务器上添加对 GraphQL Apollo 的支持。通过 "bun add graphql @elysiajs/apollo @apollo/server" 安装插件。
+        content: Elysia 的中间件，用于在 Elysia 服务器上添加对 GraphQL Apollo 的支持。通过 "bun add graphql @elysiajs/apollo @apollo/server" 安装中间件。
 ---
 
-# GraphQL Apollo 插件
+# GraphQL Apollo 中间件
 
-用于 [elysia](https://github.com/elysiajs/elysia) 的插件，可以使用 GraphQL Apollo。
+用于 [elysia](https://github.com/elysiajs/elysia) 的中间件，可以使用 GraphQL Apollo。
 
 使用以下命令安装：
 
@@ -88,7 +88,7 @@ const app = new Elysia()
 
 ## 配置
 
-该插件扩展了 Apollo 的 [ServerRegistration](https://www.apollographql.com/docs/apollo-server/api/apollo-server/#options)（即 `ApolloServer` 的构造参数）。
+该中间件扩展了 Apollo 的 [ServerRegistration](https://www.apollographql.com/docs/apollo-server/api/apollo-server/#options)（即 `ApolloServer` 的构造参数）。
 
 以下是用于使用 Elysia 配置 Apollo Server 的扩展参数。
 

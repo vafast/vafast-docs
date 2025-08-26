@@ -35,7 +35,7 @@ const app = new Elysia()
 
 默认情况下，Elysia 使用 OpenAPI V3 模式和 [Scalar UI](http://scalar.com)。
 
-有关 Swagger 插件配置，请参见 [Swagger 插件页面](/plugins/swagger)。
+有关 Swagger 中间件配置，请参见 [Swagger 中间件页面](/middleware/swagger)。
 
 ## 路由定义
 我们通过提供模式类型添加路由信息。

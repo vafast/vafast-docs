@@ -1,26 +1,26 @@
 ---
-title: 流插件 - ElysiaJS
+title: 流中间件 - ElysiaJS
 head:
     - - meta
       - property: 'og:title'
-        content: 流插件 - ElysiaJS
+        content: 流中间件 - ElysiaJS
 
     - - meta
       - name: 'description'
-        content: Elysia 的插件，添加对流响应和服务器推送事件的支持，例如 OpenAI 集成。首先通过 "bun add @elysiajs/stream" 安装插件。
+        content: Elysia 的中间件，添加对流响应和服务器推送事件的支持，例如 OpenAI 集成。首先通过 "bun add @elysiajs/stream" 安装中间件。
 
     - - meta
       - name: 'og:description'
-        content: Elysia 的插件，添加对流响应和服务器推送事件的支持，例如 OpenAI 集成。首先通过 "bun add @elysiajs/stream" 安装插件。
+        content: Elysia 的中间件，添加对流响应和服务器推送事件的支持，例如 OpenAI 集成。首先通过 "bun add @elysiajs/stream" 安装中间件。
 ---
 
-# 流插件
+# 流中间件
 
 ::: warning
-此插件处于维护模式，将不再接收新功能。我们建议使用 [生成器流](/essential/handler#stream) 代替。
+此中间件处于维护模式，将不再接收新功能。我们建议使用 [生成器流](/essential/handler#stream) 代替。
 :::
 
-此插件添加对流响应或向客户端发送服务器推送事件的支持。
+此中间件添加对流响应或向客户端发送服务器推送事件的支持。
 
 安装命令：
 ```bash
@@ -75,7 +75,7 @@ new Elysia()
 `ReadableStream` 的内部值
 
 ## 模式
-以下是使用该插件的常见模式。
+以下是使用该中间件的常见模式。
 - [OpenAI](#openai)
 - [获取流](#fetch-stream)
 - [服务器推送事件](#server-sent-event)

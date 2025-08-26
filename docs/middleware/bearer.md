@@ -1,22 +1,22 @@
 ---
-title: Bearer 插件 - Vafast
+title: Bearer 中间件 - Vafast
 head:
   - - meta
     - property: 'og:title'
-      content: Bearer 插件 - Vafast
+      content: Bearer 中间件 - Vafast
 
   - - meta
     - name: 'description'
-      content: Vafast 的插件，用于获取根据 RFC6750 指定的 Bearer 令牌。首先通过 "bun add @vafast/bearer" 安装该插件。
+      content: Vafast 的中间件，用于获取根据 RFC6750 指定的 Bearer 令牌。首先通过 "bun add @vafast/bearer" 安装该中间件。
 
   - - meta
     - name: 'og:description'
-      content: Vafast 的插件，用于获取根据 RFC6750 指定的 Bearer 令牌。首先通过 "bun add @vafast/bearer" 安装该插件。
+      content: Vafast 的中间件，用于获取根据 RFC6750 指定的 Bearer 令牌。首先通过 "bun add @vafast/bearer" 安装该中间件。
 ---
 
-# Bearer 插件
+# Bearer 中间件
 
-用于 [Vafast](https://github.com/vafastjs/vafast) 的插件，用于获取 Bearer 令牌。
+用于 [Vafast](https://github.com/vafastjs/vafast) 的中间件，用于获取 Bearer 令牌。
 
 ## 安装
 
@@ -99,7 +99,7 @@ interface BearerOptions {
 
 ## 令牌提取策略
 
-该插件按照以下优先级从请求中提取 Bearer 令牌：
+该中间件按照以下优先级从请求中提取 Bearer 令牌：
 
 1. **Authorization 头部** - 默认格式：`Bearer <token>`
 2. **查询参数** - 默认参数名：`access_token`
@@ -404,7 +404,7 @@ describe('Bearer Token API', () => {
 
 ## 注意事项
 
-1. **令牌验证**: 该插件只负责提取令牌，不处理验证逻辑。开发者需要自己实现令牌验证。
+1. **令牌验证**: 该中间件只负责提取令牌，不处理验证逻辑。开发者需要自己实现令牌验证。
 
 2. **安全性**: 在生产环境中，确保使用 HTTPS 传输令牌，并实现适当的令牌过期和刷新机制。
 

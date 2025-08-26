@@ -189,75 +189,75 @@ export default defineConfig({
         logo: '/assets/elysia.svg',
         nav: [
             {
-                text: '插件',
+                text: '中间件',
                 items: [
                     {
                         text: '概述',
-                        link: '/plugins/overview'
+                        link: '/middleware/overview'
                     },
                     {
                         text: 'Bearer',
-                        link: '/plugins/bearer'
+                        link: '/middleware/bearer'
                     },
                     {
                         text: 'Compress',
-                        link: '/plugins/compress'
+                        link: '/middleware/compress'
                     },
                     {
                         text: 'Helmet',
-                        link: '/plugins/helmet'
+                        link: '/middleware/helmet'
                     },
                     {
                         text: 'IP',
-                        link: '/plugins/ip'
+                        link: '/middleware/ip'
                     },
                     {
                         text: 'Rate Limit',
-                        link: '/plugins/rate-limit'
+                        link: '/middleware/rate-limit'
                     },
                     {
                         text: 'CORS',
-                        link: '/plugins/cors'
+                        link: '/middleware/cors'
                     },
                     {
                         text: 'Cron',
-                        link: '/plugins/cron'
+                        link: '/middleware/cron'
                     },
                     {
                         text: 'GraphQL Apollo',
-                        link: '/plugins/graphql-apollo'
+                        link: '/middleware/graphql-apollo'
                     },
                     {
                         text: 'GraphQL Yoga',
-                        link: '/plugins/graphql-yoga'
+                        link: '/middleware/graphql-yoga'
                     },
                     {
                         text: 'HTML',
-                        link: '/plugins/html'
+                        link: '/middleware/html'
                     },
                     {
                         text: 'JWT',
-                        link: '/plugins/jwt'
+                        link: '/middleware/jwt'
                     },
                     {
                         text: 'OpenTelemetry',
-                        link: '/plugins/opentelemetry'
+                        link: '/middleware/opentelemetry'
                     },
                     {
                         text: 'Server Timing',
-                        link: '/plugins/server-timing'
+                        link: '/middleware/server-timing'
                     },
                     {
                         text: 'Static',
-                        link: '/plugins/static'
+                        link: '/middleware/static'
                     },
                     {
                         text: 'Stream',
-                        link: '/plugins/stream'
+                        link: '/middleware/stream'
                     },
                     {
                         text: 'Swagger',
-                        link: '/plugins/swagger'
+                        link: '/middleware/swagger'
                     }
                 ]
             },
@@ -429,80 +429,80 @@ export default defineConfig({
                 ]
             },
             {
-                text: '插件',
+                text: '中间件',
                 collapsed: true,
                 items: [
                     {
                         text: '概述',
-                        link: '/plugins/overview'
+                        link: '/middleware/overview'
                     },
                     {
                         text: 'API Client',
-                        link: '/plugins/api-client'
+                        link: '/middleware/api-client'
                     },
                     {
                         text: 'Bearer',
-                        link: '/plugins/bearer'
+                        link: '/middleware/bearer'
                     },
                     {
                         text: 'Compress',
-                        link: '/plugins/compress'
+                        link: '/middleware/compress'
                     },
                     {
                         text: 'Helmet',
-                        link: '/plugins/helmet'
+                        link: '/middleware/helmet'
                     },
                     {
                         text: 'IP',
-                        link: '/plugins/ip'
+                        link: '/middleware/ip'
                     },
                     {
                         text: 'Rate Limit',
-                        link: '/plugins/rate-limit'
+                        link: '/middleware/rate-limit'
                     },
                     {
                         text: 'CORS',
-                        link: '/plugins/cors'
+                        link: '/middleware/cors'
                     },
                     {
                         text: 'Cron',
-                        link: '/plugins/cron'
+                        link: '/middleware/cron'
                     },
                     {
                         text: 'GraphQL Apollo',
-                        link: '/plugins/graphql-apollo'
+                        link: '/middleware/graphql-apollo'
                     },
                     {
                         text: 'GraphQL Yoga',
-                        link: '/plugins/graphql-yoga'
+                        link: '/middleware/graphql-yoga'
                     },
                     {
                         text: 'HTML',
-                        link: '/plugins/html'
+                        link: '/middleware/html'
                     },
                     {
                         text: 'JWT',
-                        link: '/plugins/jwt'
+                        link: '/middleware/jwt'
                     },
                     {
                         text: 'OpenTelemetry',
-                        link: '/plugins/opentelemetry'
+                        link: '/middleware/opentelemetry'
                     },
                     {
                         text: '服务器计时',
-                        link: '/plugins/server-timing'
+                        link: '/middleware/server-timing'
                     },
                     {
                         text: '静态',
-                        link: '/plugins/static'
+                        link: '/middleware/static'
                     },
                     {
                         text: 'Stream',
-                        link: '/plugins/stream'
+                        link: '/middleware/stream'
                     },
                     {
                         text: 'Swagger',
-                        link: '/plugins/swagger'
+                        link: '/middleware/swagger'
                     }
                 ]
             },

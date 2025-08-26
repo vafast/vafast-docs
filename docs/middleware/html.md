@@ -1,20 +1,20 @@
 ---
-title: HTML 插件 - Vafast
+title: HTML 中间件 - Vafast
 head:
     - - meta
       - property: 'og:title'
-        content: HTML 插件 - Vafast
+        content: HTML 中间件 - Vafast
 
     - - meta
       - name: 'description'
-        content: 为 Vafast 添加 HTML 返回快捷支持的插件。首先通过 "bun add @vafast/html" 安装插件。
+        content: 为 Vafast 添加 HTML 返回快捷支持的中间件。首先通过 "bun add @vafast/html" 安装中间件。
 
     - - meta
       - name: 'og:description'
-        content: 为 Vafast 添加 HTML 返回快捷支持的插件。首先通过 "bun add @vafast/html" 安装插件。
+        content: 为 Vafast 添加 HTML 返回快捷支持的中间件。首先通过 "bun add @vafast/html" 安装中间件。
 ---
 
-# HTML 插件
+# HTML 中间件
 
 允许您在 Vafast 服务器中使用 [JSX](#jsx) 和 HTML，并提供适当的头部和支持。
 
@@ -214,7 +214,7 @@ interface HtmlOptions {
   /**
    * 是否在响应开头是 <html> 时自动添加 <!doctype html>，如果未找到
    * 
-   * 使用 'full' 还可以在没有此插件的响应中自动添加文档类型
+   * 使用 'full' 还可以在没有此中间件的响应中自动添加文档类型
    * 
    * @default true
    */
@@ -246,7 +246,7 @@ app.use(html({
 
 ### XSS 防护
 
-Vafast HTML 基于 Kita HTML 插件，在编译时检测可能的 XSS 攻击。
+Vafast HTML 基于 Kita HTML 中间件，在编译时检测可能的 XSS 攻击。
 
 您可以使用专用的 `safe` 属性来清理用户值，以防止 XSS 漏洞：
 

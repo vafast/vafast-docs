@@ -1,22 +1,22 @@
 ---
-title: Static 插件 - Vafast
+title: Static 中间件 - Vafast
 head:
   - - meta
     - property: 'og:title'
-      content: Static 插件 - Vafast
+      content: Static 中间件 - Vafast
 
   - - meta
     - name: 'description'
-      content: Vafast 的插件，提供高性能的静态文件服务功能，支持缓存、ETag 和智能路由。开始时请使用 "bun add @vafast/static" 安装插件。
+      content: Vafast 的中间件，提供高性能的静态文件服务功能，支持缓存、ETag 和智能路由。开始时请使用 "bun add @vafast/static" 安装中间件。
 
   - - meta
     - name: 'og:description'
-      content: Vafast 的插件，提供高性能的静态文件服务功能，支持缓存、ETag 和智能路由。开始时请使用 "bun add @vafast/static" 安装插件。
+      content: Vafast 的中间件，提供高性能的静态文件服务功能，支持缓存、ETag 和智能路由。开始时请使用 "bun add @vafast/static" 安装中间件。
 ---
 
-# Static 插件
+# Static 中间件
 
-该插件为 [Vafast](https://github.com/vafastjs/vafast) 提供了高性能的静态文件服务功能，支持智能缓存、ETag 验证、自定义头部和灵活的配置选项。
+该中间件为 [Vafast](https://github.com/vafastjs/vafast) 提供了高性能的静态文件服务功能，支持智能缓存、ETag 验证、自定义头部和灵活的配置选项。
 
 ## 安装
 
@@ -840,14 +840,14 @@ const errorHandlingRoutes = [
 
 ### 1. 智能路由选择
 
-插件会根据文件数量和配置自动选择最优的路由模式：
+中间件会根据文件数量和配置自动选择最优的路由模式：
 
 ```typescript
 // 文件数量 <= staticLimit (默认 1024) 时使用静态路由
 const staticRoutes = await staticPlugin({
     assets: 'public',
     prefix: '/static',
-    alwaysStatic: false,      // 让插件自动选择
+    alwaysStatic: false,      // 让中间件自动选择
     staticLimit: 500          // 降低阈值以使用通配符路由
 })
 
@@ -857,7 +857,7 @@ const staticRoutes = await staticPlugin({
 
 ### 2. 多层缓存系统
 
-插件内置了三层缓存系统：
+中间件内置了三层缓存系统：
 
 ```typescript
 // 文件状态缓存 (3小时 TTL)
@@ -887,7 +887,7 @@ const htmlCache = new Cache({
 
 ### 3. 智能 ETag 生成
 
-插件使用 MD5 哈希算法生成 ETag，支持 HTTP 304 响应：
+中间件使用 MD5 哈希算法生成 ETag，支持 HTTP 304 响应：
 
 ```typescript
 // 自动生成 ETag
@@ -904,7 +904,7 @@ if (await isCached(headersRecord, etag, filePath)) {
 
 ### 4. 跨平台路径处理
 
-插件自动处理不同操作系统的路径分隔符：
+中间件自动处理不同操作系统的路径分隔符：
 
 ```typescript
 const URL_PATH_SEP = '/'
@@ -922,8 +922,8 @@ const pathName = isFSSepUnsafe
 2. **缓存策略**: 根据文件类型和更新频率设置合适的缓存策略
 3. **安全考虑**: 避免暴露敏感文件，使用 ignorePatterns 过滤
 4. **性能影响**: 静态路由模式在启动时扫描所有文件，大目录可能影响启动时间
-5. **路径安全**: 插件已内置路径安全检查，防止目录遍历攻击
-6. **缓存清理**: 插件会自动清理过期的缓存项，无需手动管理
+5. **路径安全**: 中间件已内置路径安全检查，防止目录遍历攻击
+6. **缓存清理**: 中间件会自动清理过期的缓存项，无需手动管理
 7. **内存使用**: 通配符路由模式内存占用更少，适合大文件目录
 8. **启动时间**: 静态路由模式启动更快，但内存占用更多
 

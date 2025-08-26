@@ -1,22 +1,22 @@
 ---
-title: Helmet 插件 - Vafast
+title: Helmet 中间件 - Vafast
 head:
   - - meta
     - property: 'og:title'
-      content: Helmet 插件 - Vafast
+      content: Helmet 中间件 - Vafast
 
   - - meta
     - name: 'description'
-      content: Vafast 的安全头插件，通过添加各种 HTTP 安全头部来增强 Web 应用的安全性，包括 CSP、HSTS、XSS 保护等。
+      content: Vafast 的安全头中间件，通过添加各种 HTTP 安全头部来增强 Web 应用的安全性，包括 CSP、HSTS、XSS 保护等。
 
   - - meta
     - name: 'og:description'
-      content: Vafast 的安全头插件，通过添加各种 HTTP 安全头部来增强 Web 应用的安全性，包括 CSP、HSTS、XSS 保护等。
+      content: Vafast 的安全头中间件，通过添加各种 HTTP 安全头部来增强 Web 应用的安全性，包括 CSP、HSTS、XSS 保护等。
 ---
 
-# Helmet 插件
+# Helmet 中间件
 
-用于 [Vafast](https://github.com/vafastjs/vafast) 的安全头插件，通过添加各种 HTTP 安全头部来增强 Web 应用的安全性。
+用于 [Vafast](https://github.com/vafastjs/vafast) 的安全头中间件，通过添加各种 HTTP 安全头部来增强 Web 应用的安全性。
 
 ## 安装
 
@@ -204,7 +204,7 @@ interface ReportToConfig {
 
 ## 权限常量
 
-插件提供了一些常用的权限常量：
+中间件提供了一些常用的权限常量：
 
 ```typescript
 import { permission } from '@vafast/helmet'

@@ -1,22 +1,22 @@
 ---
-title: Rate Limit 插件 - Vafast
+title: Rate Limit 中间件 - Vafast
 head:
   - - meta
     - property: 'og:title'
-      content: Rate Limit 插件 - Vafast
+      content: Rate Limit 中间件 - Vafast
 
   - - meta
     - name: 'description'
-      content: Vafast 的插件，提供灵活的速率限制功能，保护 API 免受滥用。开始时请使用 "bun add @vafast/rate-limit" 安装插件。
+      content: Vafast 的中间件，提供灵活的速率限制功能，保护 API 免受滥用。开始时请使用 "bun add @vafast/rate-limit" 安装中间件。
 
   - - meta
     - name: 'og:description'
-      content: Vafast 的插件，提供灵活的速率限制功能，保护 API 免受滥用。开始时请使用 "bun add @vafast/rate-limit" 安装插件。
+      content: Vafast 的中间件，提供灵活的速率限制功能，保护 API 免受滥用。开始时请使用 "bun add @vafast/rate-limit" 安装中间件。
 ---
 
-# Rate Limit 插件
+# Rate Limit 中间件
 
-该插件为 [Vafast](https://github.com/vafastjs/vafast) 提供了灵活的速率限制功能，保护你的 API 免受滥用和 DDoS 攻击。
+该中间件为 [Vafast](https://github.com/vafastjs/vafast) 提供了灵活的速率限制功能，保护你的 API 免受滥用和 DDoS 攻击。
 
 ## 安装
 
@@ -113,7 +113,7 @@ interface Options {
   /** 注入服务器实例到生成器函数的显式方式（仅作为最后手段使用） */
   injectServer?: () => any | null
   
-  /** 是否让插件控制 RateLimit-* 头部，默认：true */
+  /** 是否让中间件控制 RateLimit-* 头部，默认：true */
   headers: boolean
 }
 ```

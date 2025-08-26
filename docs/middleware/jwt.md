@@ -1,22 +1,22 @@
 ---
-title: JWT 插件 - Vafast
+title: JWT 中间件 - Vafast
 head:
     - - meta
       - property: 'og:title'
-        content: JWT 插件 - Vafast
+        content: JWT 中间件 - Vafast
 
     - - meta
       - name: 'description'
-        content: Vafast 的插件，增加在 Vafast 服务器中使用 JWT (JSON Web Token) 的支持。开始安装插件使用 "bun add @vafast/jwt"。
+        content: Vafast 的中间件，增加在 Vafast 服务器中使用 JWT (JSON Web Token) 的支持。开始安装中间件使用 "bun add @vafast/jwt"。
 
     - - meta
       - name: 'og:description'
-        content: Vafast 的插件，增加在 Vafast 服务器中使用 JWT (JSON Web Token) 的支持。开始安装插件使用 "bun add @vafast/jwt"。
+        content: Vafast 的中间件，增加在 Vafast 服务器中使用 JWT (JSON Web Token) 的支持。开始安装中间件使用 "bun add @vafast/jwt"。
 ---
 
-# JWT 插件
+# JWT 中间件
 
-该插件增强了在 [Vafast](https://github.com/vafastjs/vafast) 处理程序中使用 JWT 的支持。
+该中间件增强了在 [Vafast](https://github.com/vafastjs/vafast) 处理程序中使用 JWT 的支持。
 
 ## 安装
 
@@ -100,7 +100,7 @@ export default {
 
 ## 配置选项
 
-该插件扩展了 [jose](https://github.com/panva/jose) 的配置。
+该中间件扩展了 [jose](https://github.com/panva/jose) 的配置。
 
 ### JWTOption
 
@@ -157,7 +157,7 @@ interface JWTOption<Name extends string | undefined = 'jwt', Schema extends TSch
 
 ### 支持的算法
 
-插件支持以下签名算法：
+中间件支持以下签名算法：
 
 - **HS256, HS384, HS512**: HMAC 算法
 - **PS256, PS384, PS512**: RSA-PSS 算法

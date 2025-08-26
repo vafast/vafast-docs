@@ -55,7 +55,7 @@ bun build \
 ### 为什么不使用 --minify
 Bun 确实有 `--minify` 标志，用于压缩二进制文件。
 
-然而，如果我们正在使用 [OpenTelemetry](/plugins/opentelemetry)，它会将函数名缩减为单个字符。
+然而，如果我们正在使用 [OpenTelemetry](/middleware/opentelemetry)，它会将函数名缩减为单个字符。
 
 这使得跟踪变得比应该的更加困难，因为 OpenTelemetry 依赖于函数名。
 

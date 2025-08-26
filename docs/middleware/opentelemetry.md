@@ -1,22 +1,22 @@
 ---
-title: OpenTelemetry 插件 - Vafast
+title: OpenTelemetry 中间件 - Vafast
 head:
   - - meta
     - property: 'og:title'
-      content: OpenTelemetry 插件 - Vafast
+      content: OpenTelemetry 中间件 - Vafast
 
   - - meta
     - name: 'description'
-      content: Vafast 的插件，增加对 OpenTelemetry 的支持。开始时请使用 "bun add @vafast/opentelemetry" 安装插件。
+      content: Vafast 的中间件，增加对 OpenTelemetry 的支持。开始时请使用 "bun add @vafast/opentelemetry" 安装中间件。
 
   - - meta
     - name: 'og:description'
-      content: Vafast 的插件，增加对 OpenTelemetry 的支持。开始时请使用 "bun add @vafast/opentelemetry" 安装插件。
+      content: Vafast 的中间件，增加对 OpenTelemetry 的支持。开始时请使用 "bun add @vafast/opentelemetry" 安装中间件。
 ---
 
-# OpenTelemetry 插件
+# OpenTelemetry 中间件
 
-该插件为 [Vafast](https://github.com/vafastjs/vafast) 提供了完整的 OpenTelemetry 集成支持，包括分布式追踪、指标收集和日志聚合。
+该中间件为 [Vafast](https://github.com/vafastjs/vafast) 提供了完整的 OpenTelemetry 集成支持，包括分布式追踪、指标收集和日志聚合。
 
 ## 安装
 
@@ -146,7 +146,7 @@ export default {
 
 ## 配置选项
 
-该插件扩展了 OpenTelemetry NodeSDK 的参数选项。
+该中间件扩展了 OpenTelemetry NodeSDK 的参数选项。
 
 ### VafastOpenTelemetryOptions
 

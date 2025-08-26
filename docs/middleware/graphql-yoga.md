@@ -1,22 +1,22 @@
 ---
-title: GraphQL Yoga 插件 - ElysiaJS
+title: GraphQL Yoga 中间件 - ElysiaJS
 head:
     - - meta
       - property: 'og:title'
-        content: GraphQL Yoga 插件 - ElysiaJS
+        content: GraphQL Yoga 中间件 - ElysiaJS
 
     - - meta
       - name: 'description'
-        content: Elysia 的插件，添加对在 Elysia 服务器上使用 GraphQL Yoga 的支持。开始可以使用“bun add graphql graphql-yoga @elysiajs/graphql-yoga”安装此插件。
+        content: Elysia 的中间件，添加对在 Elysia 服务器上使用 GraphQL Yoga 的支持。开始可以使用“bun add graphql graphql-yoga @elysiajs/graphql-yoga”安装此中间件。
 
     - - meta
       - name: 'og:description'
-        content: Elysia 的插件，添加对在 Elysia 服务器上使用 GraphQL Yoga 的支持。开始可以使用“bun add graphql graphql-yoga @elysiajs/graphql-yoga”安装此插件。
+        content: Elysia 的中间件，添加对在 Elysia 服务器上使用 GraphQL Yoga 的支持。开始可以使用“bun add graphql graphql-yoga @elysiajs/graphql-yoga”安装此中间件。
 ---
 
-# GraphQL Yoga 插件
+# GraphQL Yoga 中间件
 
-此插件将 GraphQL Yoga 集成到 Elysia 中
+此中间件将 GraphQL Yoga 集成到 Elysia 中
 
 安装方法：
 
@@ -94,9 +94,9 @@ const app = new Elysia()
 
 ## 配置
 
-此插件扩展了 [GraphQL Yoga 的 createYoga 选项，请参考 GraphQL Yoga 文档](https://the-guild.dev/graphql/yoga-server/docs)，并将 `schema` 配置内联到根部。
+此中间件扩展了 [GraphQL Yoga 的 createYoga 选项，请参考 GraphQL Yoga 文档](https://the-guild.dev/graphql/yoga-server/docs)，并将 `schema` 配置内联到根部。
 
-以下是插件接受的配置
+以下是中间件接受的配置
 
 ### path
 

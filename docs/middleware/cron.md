@@ -1,22 +1,22 @@
 ---
-title: Cron 插件 - Vafast
+title: Cron 中间件 - Vafast
 head:
     - - meta
       - property: 'og:title'
-        content: Cron 插件 - Vafast
+        content: Cron 中间件 - Vafast
 
     - - meta
       - name: 'description'
-        content: 为 Vafast 添加运行 cronjob 支持的插件。首先，通过 "bun add @vafast/cron" 安装该插件。
+        content: 为 Vafast 添加运行 cronjob 支持的中间件。首先，通过 "bun add @vafast/cron" 安装该中间件。
 
     - - meta
       - name: 'og:description'
-        content: 为 Vafast 添加运行 cronjob 支持的插件。首先，通过 "bun add @vafast/cron" 安装该插件。
+        content: 为 Vafast 添加运行 cronjob 支持的中间件。首先，通过 "bun add @vafast/cron" 安装该中间件。
 ---
 
-# Cron 插件
+# Cron 中间件
 
-此插件为 [Vafast](https://github.com/vafastjs/vafast) 服务器添加了运行 cronjob 的支持。
+此中间件为 [Vafast](https://github.com/vafastjs/vafast) 服务器添加了运行 cronjob 的支持。
 
 ## 安装
 
@@ -110,7 +110,7 @@ run: (store: Cron) => any | Promise<any>
 
 ---
 
-此插件通过 [croner](https://github.com/hexagon/croner) 扩展了 Vafast 的 cron 方法。
+此中间件通过 [croner](https://github.com/hexagon/croner) 扩展了 Vafast 的 cron 方法。
 
 以下是 croner 接受的配置选项：
 

@@ -94,7 +94,7 @@ export const auth = betterAuth({
 
 更好的身份验证支持使用 `better-auth/plugins` 的 `openapi`。
 
-然而，如果我们使用 [@elysiajs/swagger](/plugins/swagger)，您可能希望从更好的身份验证实例中提取文档。
+然而，如果我们使用 [@vafast/swagger](/middleware/swagger)，您可能希望从更好的身份验证实例中提取文档。
 
 我们可以通过以下代码实现：
 

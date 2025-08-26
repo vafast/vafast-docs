@@ -1,22 +1,22 @@
 ---
-title: CORS 插件 - ElysiaJS
+title: CORS 中间件 - ElysiaJS
 head:
     - - meta
       - property: 'og:title'
-        content: CORS 插件 - ElysiaJS
+        content: CORS 中间件 - ElysiaJS
 
     - - meta
       - name: 'description'
-        content: Elysia 的插件，支持自定义跨源资源共享行为。首先通过 "bun add @elysiajs/cors" 安装插件。
+        content: Elysia 的中间件，支持自定义跨源资源共享行为。首先通过 "bun add @elysiajs/cors" 安装中间件。
 
     - - meta
       - name: 'og:description'
-        content: Elysia 的插件，支持自定义跨源资源共享行为。首先通过 "bun add @elysiajs/cors" 安装插件。
+        content: Elysia 的中间件，支持自定义跨源资源共享行为。首先通过 "bun add @elysiajs/cors" 安装中间件。
 ---
 
-# CORS 插件
+# CORS 中间件
 
-这个插件为自定义 [跨源资源共享](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) 行为提供支持。
+这个中间件为自定义 [跨源资源共享](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) 行为提供支持。
 
 安装命令：
 
@@ -37,7 +37,7 @@ new Elysia().use(cors()).listen(3000)
 
 ## 配置
 
-以下是该插件接受的配置
+以下是该中间件接受的配置
 
 ### origin
 
@@ -150,7 +150,7 @@ Access-Control-Allow-Credentials 响应头告诉浏览器在请求的凭证模�
 
 ## 示例
 
-以下是使用该插件的常见模式。
+以下是使用该中间件的常见模式。
 
 ## 按顶级域名允许 CORS
 

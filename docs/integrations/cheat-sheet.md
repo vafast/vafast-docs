@@ -288,7 +288,7 @@ new Elysia()
 ## OpenAPI 文档
 使用 Scalar (或可选的 Swagger) 创建交互式文档
 
-参见 [swagger](/plugins/swagger.html)
+参见 [swagger](/middleware/swagger.html)
 
 ```typescript
 import { Elysia } from 'elysia'
@@ -342,7 +342,7 @@ new Elysia()
 ## GraphQL
 使用 GraphQL Yoga 或 Apollo 创建自定义 GraphQL 服务器
 
-参见 [GraphQL Yoga](/plugins/graphql-yoga)
+参见 [GraphQL Yoga](/middleware/graphql-yoga)
 
 ```typescript
 import { Elysia } from 'elysia'

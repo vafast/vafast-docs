@@ -1,22 +1,22 @@
 ---
-title: IP 插件 - Vafast
+title: IP 中间件 - Vafast
 head:
   - - meta
     - property: 'og:title'
-      content: IP 插件 - Vafast
+      content: IP 中间件 - Vafast
 
   - - meta
     - name: 'description'
-      content: Vafast 的 IP 地址获取插件，支持从各种代理头部中提取真实的客户端 IP 地址，适用于反向代理、CDN 和负载均衡器环境。
+      content: Vafast 的 IP 地址获取中间件，支持从各种代理头部中提取真实的客户端 IP 地址，适用于反向代理、CDN 和负载均衡器环境。
 
   - - meta
     - name: 'og:description'
-      content: Vafast 的 IP 地址获取插件，支持从各种代理头部中提取真实的客户端 IP 地址，适用于反向代理、CDN 和负载均衡器环境。
+      content: Vafast 的 IP 地址获取中间件，支持从各种代理头部中提取真实的客户端 IP 地址，适用于反向代理、CDN 和负载均衡器环境。
 ---
 
-# IP 插件
+# IP 中间件
 
-用于 [Vafast](https://github.com/vafastjs/vafast) 的 IP 地址获取插件，支持从各种代理头部中提取真实的客户端 IP 地址。
+用于 [Vafast](https://github.com/vafastjs/vafast) 的 IP 地址获取中间件，支持从各种代理头部中提取真实的客户端 IP 地址。
 
 ## 安装
 
@@ -120,7 +120,7 @@ type IPHeaders =
 
 ## 支持的代理头部
 
-插件默认检查以下头部，按优先级排序：
+中间件默认检查以下头部，按优先级排序：
 
 ### 1. 标准代理头部
 - **`x-real-ip`**: Nginx 反向代理和 FastCGI
@@ -802,7 +802,7 @@ const routes = [
 ## 注意事项
 
 1. **头部优先级**: 配置的头部按顺序检查，第一个找到的 IP 将被使用
-2. **X-Forwarded-For 处理**: 该头部可能包含多个 IP，插件会使用第一个（最原始的客户端 IP）
+2. **X-Forwarded-For 处理**: 该头部可能包含多个 IP，中间件会使用第一个（最原始的客户端 IP）
 3. **安全考虑**: 在生产环境中，建议仅信任可信的代理头部
 4. **性能影响**: IP 中间件对性能影响很小，但建议在需要时使用
 5. **类型断言**: 当前版本需要类型断言 `(request as any).ip` 来访问 IP 地址
