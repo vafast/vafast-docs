@@ -1,26 +1,26 @@
 ---
-title: 部署到生产环境 - ElysiaJS
+title: 部署到生产环境 - Vafast
 head:
   - - meta
     - property: 'og:title'
-      content: 部署到生产环境 - ElysiaJS
+      content: 部署到生产环境 - Vafast
 
   - - meta
     - name: 'description'
-      content: 本页面
+      content: 本页面是关于如何将 Vafast 部署到生产环境的指南
 
   - - meta
     - property: 'og:description'
-      content: Elysia 可以通过将对象传递给构造函数来进行配置。我们可以通过将对象传递给构造函数来配置 Elysia 的行为。
+      content: Vafast 可以通过将对象传递给构造函数来进行配置。我们可以通过将对象传递给构造函数来配置 Vafast 的行为。
 ---
 
 # 部署到生产环境
-本页面是关于如何将 Elysia 部署到生产环境的指南。
+本页面是关于如何将 Vafast 部署到生产环境的指南。
 
 ## 编译为二进制
 我们建议在部署到生产环境之前运行构建命令，因为这可能会显著减少内存使用和文件大小。
 
-我们推荐使用以下命令将 Elysia 编译成单个二进制文件：
+我们推荐使用以下命令将 Vafast 编译成单个二进制文件：
 ```bash
 bun build \
 	--compile \
@@ -93,7 +93,6 @@ chmod +x ./server
 
 ```bash
 bun build \
-	--compile \ // [!code --]
 	--minify-whitespace \
 	--minify-syntax \
 	--target bun \
@@ -101,162 +100,283 @@ bun build \
 	./src/index.ts
 ```
 
-这将生成一个可以在服务器上部署的单个可移植 JavaScript 文件。
+这将生成一个压缩的 JavaScript 文件，您可以使用 Node.js 或 Bun 运行它。
+
 ```bash
-NODE_ENV=production bun ./dist/index.js
+# 使用 Bun 运行
+bun ./dist/index.js
+
+# 或使用 Node.js 运行
+node ./dist/index.js
 ```
 
-## Docker
-在 Docker 上，我们建议始终编译为二进制以减少基础镜像的开销。
+## Docker 部署
 
-以下是使用二进制的 Distroless 镜像的示例。
-```dockerfile [Dockerfile]
-FROM oven/bun AS build
+### 创建 Dockerfile
 
-WORKDIR /app
+```dockerfile
+# 使用 Bun 官方镜像
+FROM oven/bun:1 as base
+WORKDIR /usr/src/app
 
-# 缓存包安装
-COPY package.json package.json
-COPY bun.lock bun.lock
+# 安装依赖
+COPY package.json bun.lockb ./
+RUN bun install --frozen-lockfile
 
-RUN bun install
+# 复制源代码
+COPY . .
 
-COPY ./src ./src
+# 构建应用
+RUN bun run build
 
-ENV NODE_ENV=production
+# 生产镜像
+FROM oven/bun:1-slim
+WORKDIR /usr/src/app
 
-RUN bun build \
-	--compile \
-	--minify-whitespace \
-	--minify-syntax \
-	--target bun \
-	--outfile server \
-	./src/index.ts
+# 复制构建产物和依赖
+COPY --from=base /usr/src/app/dist ./dist
+COPY --from=base /usr/src/app/node_modules ./node_modules
+COPY --from=base /usr/src/app/package.json ./
 
-FROM gcr.io/distroless/base
-
-WORKDIR /app
-
-COPY --from=build /app/server server
-
-ENV NODE_ENV=production
-
-CMD ["./server"]
-
+# 暴露端口
 EXPOSE 3000
+
+# 启动应用
+CMD ["bun", "dist/index.js"]
 ```
 
-### OpenTelemetry
-如果您使用 [OpenTelemetry](/integrations/opentelemetry) 来部署生产服务器。
+### 构建和运行 Docker 镜像
 
-由于 OpenTelemetry 依赖于猴子补丁 `node_modules/<library>`。为了确保仪器正确工作，我们需要指定供仪器使用的库是外部模块，以将其排除在打包之外。
-
-例如，如果您使用 `@opentelemetry/instrumentation-pg` 来仪器 `pg` 库。我们需要将 `pg` 排除在打包之外，并确保它从 `node_modules/pg` 导入。
-
-为使这一切正常工作，我们可以使用 `--external pg` 将 `pg` 指定为外部模块
 ```bash
-bun build --compile --external pg --outfile server src/index.ts
+# 构建镜像
+docker build -t vafast-app .
+
+# 运行容器
+docker run -p 3000:3000 vafast-app
 ```
 
-这告诉 bun 不将 `pg` 打包到最终输出文件中，并将在运行时从 `node_modules` 目录导入。因此在生产服务器上，您还必须保留 `node_modules` 目录。
+## 环境变量配置
 
-建议在 `package.json` 中将应在生产服务器上可用的包指定为 `dependencies`，并使用 `bun install --production` 仅安装生产依赖项。
+在生产环境中，建议使用环境变量来配置应用：
 
-```json
-{
-	"dependencies": {
-		"pg": "^8.15.6"
-	},
-	"devDependencies": {
-		"@elysiajs/opentelemetry": "^1.2.0",
-		"@opentelemetry/instrumentation-pg": "^0.52.0",
-		"@types/pg": "^8.11.14",
-		"elysia": "^1.2.25"
-	}
+```bash
+# .env.production
+NODE_ENV=production
+PORT=3000
+DATABASE_URL=postgresql://user:password@localhost:5432/db
+JWT_SECRET=your-secret-key
+```
+
+在代码中使用：
+
+```typescript
+// src/config.ts
+export const config = {
+  port: process.env.PORT || 3000,
+  databaseUrl: process.env.DATABASE_URL,
+  jwtSecret: process.env.JWT_SECRET,
+  nodeEnv: process.env.NODE_ENV || 'development'
 }
 ```
 
-然后，在生产服务器上运行构建命令后
+## 性能优化
+
+### 1. 启用压缩
+
+```typescript
+// src/index.ts
+import { Server, defineRoutes, createRouteHandler } from 'vafast'
+import { compress } from '@vafast/compress'
+
+const routes = defineRoutes([
+  // ... 你的路由
+])
+
+const server = new Server(routes)
+
+// 应用压缩中间件
+server.use(compress())
+
+export default { fetch: server.fetch }
+```
+
+### 2. 缓存策略
+
+```typescript
+// 添加缓存头
+const routes = defineRoutes([
+  {
+    method: 'GET',
+    path: '/static/:file',
+    handler: createRouteHandler(({ params }) => {
+      const file = getStaticFile(params.file)
+      return new Response(file, {
+        headers: {
+          'Cache-Control': 'public, max-age=31536000', // 1年
+          'ETag': generateETag(file)
+        }
+      })
+    })
+  }
+])
+```
+
+### 3. 负载均衡
+
+如果您的应用需要处理高流量，可以考虑使用负载均衡器：
+
 ```bash
-bun install --production
+# 使用 Nginx 作为反向代理
+upstream vafast_backend {
+    server 127.0.0.1:3000;
+    server 127.0.0.1:3001;
+    server 127.0.0.1:3002;
+}
+
+server {
+    listen 80;
+    server_name yourdomain.com;
+
+    location / {
+        proxy_pass http://vafast_backend;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
 ```
 
-如果 `node_modules` 目录仍包含开发依赖项，您可以删除 `node_modules` 目录并重新安装生产依赖项。
+## 监控和日志
 
-### Monorepo
-如果您在 Monorepo 中使用 Elysia，您可能需要包括依赖的 `packages`。
+### 1. 健康检查端点
 
-如果您使用 Turborepo，您可以在您的应用程序目录中放置 Dockerfile，例如 **apps/server/Dockerfile**。这也适用于其他 monorepo 管理器，如 Lerna 等。
-
-假设我们的 monorepo 使用 Turborepo，结构如下：
-- apps
-	- server
-		- **Dockerfile（在此处放置 Dockerfile）**
-- packages
-	- config
-
-然后我们可以在 monorepo 根目录（而不是应用根目录）构建我们的 Dockerfile：
-```bash
-docker build -t elysia-mono .
+```typescript
+const routes = defineRoutes([
+  {
+    method: 'GET',
+    path: '/health',
+    handler: createRouteHandler(() => ({
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      memory: process.memoryUsage()
+    }))
+  }
+])
 ```
 
-Dockerfile 如下：
-```dockerfile [apps/server/Dockerfile]
-FROM oven/bun:1 AS build
+### 2. 结构化日志
 
-WORKDIR /app
+```typescript
+import { Server, defineRoutes, createRouteHandler } from 'vafast'
 
-# 缓存包
-COPY package.json package.json
-COPY bun.lock bun.lock
+const loggingMiddleware = async (req: Request, next: () => Promise<Response>) => {
+  const startTime = Date.now()
+  const response = await next()
+  const duration = Date.now() - startTime
+  
+  console.log(JSON.stringify({
+    timestamp: new Date().toISOString(),
+    method: req.method,
+    url: req.url,
+    status: response.status,
+    duration: `${duration}ms`,
+    userAgent: req.headers.get('user-agent')
+  }))
+  
+  return response
+}
 
-COPY /apps/server/package.json ./apps/server/package.json
-COPY /packages/config/package.json ./packages/config/package.json
-
-RUN bun install
-
-COPY /apps/server ./apps/server
-COPY /packages/config ./packages/config
-
-ENV NODE_ENV=production
-
-RUN bun build \
-	--compile \
-	--minify-whitespace \
-	--minify-syntax \
-	--target bun \
-	--outfile server \
-	./src/index.ts
-
-FROM gcr.io/distroless/base
-
-WORKDIR /app
-
-COPY --from=build /app/server server
-
-ENV NODE_ENV=production
-
-CMD ["./server"]
-
-EXPOSE 3000
+const server = new Server(routes)
+server.use(loggingMiddleware)
 ```
 
-## Railway
-[Railway](https://railway.app) 是一个流行的部署平台。
+### 3. 性能监控
 
-Railway 为每个部署分配一个 **随机端口**，可以通过 `PORT` 环境变量访问。
+```typescript
+import { withMonitoring } from 'vafast/monitoring'
 
-我们需要修改我们的 Elysia 服务器，以接受 `PORT` 环境变量，以符合 Railway 端口。
+const server = new Server(routes)
+const monitoredServer = withMonitoring(server, {
+  enableMetrics: true,
+  enableLogging: true
+})
 
-我们可以使用 `process.env.PORT`，并在开发期间提供一个后备端口：
-```ts
-new Elysia()
-	.listen(3000) // [!code --]
-	.listen(process.env.PORT ?? 3000) // [!code ++]
+export default { fetch: monitoredServer.fetch }
 ```
 
-这应该允许 Elysia 拦截 Railway 提供的端口。
+## 安全配置
 
-::: tip
-Elysia 自动将主机名分配为 `0.0.0.0`，这与 Railway 兼容
-:::
+### 1. HTTPS 配置
+
+在生产环境中，强烈建议使用 HTTPS：
+
+```typescript
+// 使用 Bun 的内置 HTTPS 支持
+const server = Bun.serve({
+  port: 3000,
+  fetch: server.fetch,
+  tls: {
+    cert: Bun.file('path/to/cert.pem'),
+    key: Bun.file('path/to/key.pem')
+  }
+})
+```
+
+### 2. 安全头
+
+```typescript
+import { helmet } from '@vafast/helmet'
+
+const server = new Server(routes)
+server.use(helmet())
+```
+
+### 3. 速率限制
+
+```typescript
+import { rateLimit } from '@vafast/rate-limit'
+
+const server = new Server(routes)
+server.use(rateLimit({
+  windowMs: 15 * 60 * 1000, // 15分钟
+  max: 100 // 限制每个IP 15分钟内最多100个请求
+}))
+```
+
+## 部署检查清单
+
+在部署到生产环境之前，请确保：
+
+- [ ] 所有环境变量已正确配置
+- [ ] 数据库连接已测试
+- [ ] 日志记录已启用
+- [ ] 监控已配置
+- [ ] 健康检查端点已实现
+- [ ] 错误处理已完善
+- [ ] 安全头已配置
+- [ ] 速率限制已启用
+- [ ] HTTPS 已配置（如果适用）
+- [ ] 备份策略已制定
+
+## 总结
+
+Vafast 的生产部署提供了：
+
+- ✅ 二进制编译支持
+- ✅ Docker 容器化
+- ✅ 环境变量配置
+- ✅ 性能优化选项
+- ✅ 监控和日志
+- ✅ 安全配置
+- ✅ 负载均衡支持
+
+### 下一步
+
+- 查看 [路由系统](/essential/route) 了解如何组织路由
+- 学习 [中间件系统](/middleware) 了解如何增强功能
+- 探索 [验证系统](/essential/validation) 了解类型安全
+- 查看 [最佳实践](/essential/best-practice) 获取更多开发建议
+
+如果您有任何问题，请查看我们的 [社区页面](/community) 或 [GitHub 仓库](https://github.com/vafast/vafast)。

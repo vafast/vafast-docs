@@ -351,10 +351,6 @@ export default defineConfig({
                 collapsed: true,
                 items: [
                     {
-                        text: '配置',
-                        link: '/patterns/configuration'
-                    },
-                    {
                         text: 'Cookie',
                         link: '/patterns/cookie'
                     },
@@ -365,10 +361,6 @@ export default defineConfig({
                     {
                         text: '宏指令',
                         link: '/patterns/macro'
-                    },
-                    {
-                        text: '挂载',
-                        link: '/patterns/mount'
                     },
                     {
                         text: '跟踪',

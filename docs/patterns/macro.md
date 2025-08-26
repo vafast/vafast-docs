@@ -1,318 +1,560 @@
 ---
-title: 宏 - ElysiaJS
+title: 中间件和装饰器 - Vafast
 head:
   - - meta
     - property: 'og:title'
-      content: 宏 - ElysiaJS
+      content: 中间件和装饰器 - Vafast
 
   - - meta
     - name: 'description'
-      content: 宏 允许我们为钩子定义一个自定义字段。
+      content: Vafast 提供了强大的中间件系统和请求装饰器，允许您为请求处理流程添加自定义逻辑和扩展功能。
 
   - - meta
     - property: 'og:description'
-      content: 宏 允许我们为钩子定义一个自定义字段。
+      content: Vafast 提供了强大的中间件系统和请求装饰器，允许您为请求处理流程添加自定义逻辑和扩展功能。
 ---
 
-# 宏
+# 中间件和装饰器
 
-<script setup>
-import Tab from '../components/fern/tab.vue'
-</script>
+Vafast 提供了强大的中间件系统和请求装饰器，允许您为请求处理流程添加自定义逻辑和扩展功能。
 
-宏允许我们为钩子定义一个自定义字段。
+虽然 Vafast 没有 ElysiaJS 的宏系统，但它提供了更灵活和标准的中间件模式，以及强大的请求装饰器功能。
 
-<Tab
-	id="macro"
-	:names="['宏 v2', '宏 v1']"
-	:tabs="['macro2', 'macro1']"
->
+## 中间件系统
 
-<template v-slot:macro1>
-
-宏 v1 使用带有事件监听器功能的函数回调。
-
-**Elysia.macro** 允许我们将自定义的复杂逻辑组合成一个在钩子中可用的简单配置，并且在类型安全上进行 **guard**。
-
-```typescript twoslash
-import { Elysia } from 'elysia'
-
-const plugin = new Elysia({ name: 'plugin' })
-    .macro(({ onBeforeHandle }) => ({
-        hi(word: string) {
-            onBeforeHandle(() => {
-                console.log(word)
-            })
-        }
-    }))
-
-const app = new Elysia()
-    .use(plugin)
-    .get('/', () => 'hi', {
-        hi: 'Elysia'
-    })
-```
-
-访问该路径应该会记录 **"Elysia"** 作为结果。
-
-### API
-
-**macro** 应返回一个对象，每个键在钩子中反映，钩子内提供的值将作为第一个参数返回。
-
-在之前的示例中，我们创建了一个接受 **string** 的 **hi**。
-
-然后我们将 **hi** 赋值为 **"Elysia"**，该值然后被发送回 **hi** 函数，之后该函数向 **beforeHandle** 栈中添加了一个新事件。
-
-这相当于将函数推送到 **beforeHandle**，如下所示：
+Vafast 的中间件系统基于标准的 Web 标准，每个中间件都是一个函数，接受 `Request` 和 `next` 函数：
 
 ```typescript
-import { Elysia } from 'elysia'
+import { Server, defineRoutes, createRouteHandler } from 'vafast'
 
-const app = new Elysia()
-    .get('/', () => 'hi', {
-        beforeHandle() {
-            console.log('Elysia')
-        }
-    })
+// 基本中间件
+const loggingMiddleware = async (req: Request, next: () => Promise<Response>) => {
+  const startTime = Date.now()
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`)
+  
+  const response = await next()
+  
+  const duration = Date.now() - startTime
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url} - ${response.status} (${duration}ms)`)
+  
+  return response
+}
+
+// 认证中间件
+const authMiddleware = async (req: Request, next: () => Promise<Response>) => {
+  const token = req.headers.get('authorization')
+  
+  if (!token) {
+    return new Response('Unauthorized', { status: 401 })
+  }
+  
+  // 验证 token 并添加到请求中
+  try {
+    const user = await validateToken(token)
+    ;(req as any).user = user
+    return await next()
+  } catch (error) {
+    return new Response('Invalid token', { status: 401 })
+  }
+}
+
+const routes = defineRoutes([
+  {
+    method: 'GET',
+    path: '/',
+    handler: createRouteHandler(() => 'Hello Vafast!')
+  },
+  {
+    method: 'GET',
+    path: '/protected',
+    handler: createRouteHandler(({ req }) => {
+      const user = (req as any).user
+      return `Hello ${user.name}!`
+    }),
+    middleware: [authMiddleware] // 路由特定中间件
+  }
+])
+
+const server = new Server(routes)
+
+// 全局中间件
+server.use(loggingMiddleware)
+
+export default { fetch: server.fetch }
 ```
 
-**macro** 在逻辑比仅接受一个新函数更复杂时闪耀，比如为每个路由创建授权层。
+## 中间件工厂
 
-```typescript twoslash
-// @filename: auth.ts
-import { Elysia } from 'elysia'
-
-export const auth = new Elysia()
-    .macro(() => {
-        return {
-            isAuth(isAuth: boolean) {},
-            role(role: 'user' | 'admin') {},
-        }
-    })
-
-// @filename: index.ts
-// ---cut---
-import { Elysia } from 'elysia'
-import { auth } from './auth'
-
-const app = new Elysia()
-    .use(auth)
-    .get('/', () => 'hi', {
-        isAuth: true,
-        role: 'admin'
-    })
-```
-
-该字段可以接受从字符串到函数的任何内容，允许我们创建一个自定义生命周期事件。
-
-**macro** 将按照定义中从上到下的顺序执行，确保栈以正确的顺序处理。
-
-### 参数
-
-**Elysia.macro** 参数与生命周期事件交互如下：
-
--   onParse
--   onTransform
--   onBeforeHandle
--   onAfterHandle
--   onError
--   onResponse
--   events - 生命周期存储
-    -   global: 全局栈的生命周期
-    -   local: 内联钩子的生命周期（路由）
-
-以 **on** 开头的参数是一个将函数附加到生命周期栈的函数。
-
-而 **events** 是一个实际的栈，存储生命周期事件的顺序。您可以直接修改栈或使用 Elysia 提供的帮助函数。
-
-### 选项
-
-扩展 API 的生命周期函数接受额外的 **options** 以确保控制生命周期事件。
-
--   **options** （可选）- 确定哪个栈
--   **function** - 在事件上执行的函数
+创建可配置的中间件：
 
 ```typescript
-import { Elysia } from 'elysia'
+// 创建可配置的中间件
+const createAuthMiddleware = (options: {
+  required?: boolean
+  roles?: string[]
+  permissions?: string[]
+}) => {
+  return async (req: Request, next: () => Promise<Response>) => {
+    const token = req.headers.get('authorization')
+    
+    if (!token && options.required) {
+      return new Response('Unauthorized', { status: 401 })
+    }
+    
+    if (!token && !options.required) {
+      return await next()
+    }
+    
+    try {
+      const user = await validateToken(token)
+      
+      // 检查角色权限
+      if (options.roles && !options.roles.includes(user.role)) {
+        return new Response('Insufficient permissions', { status: 403 })
+      }
+      
+      // 检查具体权限
+      if (options.permissions && !options.permissions.some(p => user.permissions.includes(p))) {
+        return new Response('Insufficient permissions', { status: 403 })
+      }
+      
+      ;(req as any).user = user
+      return await next()
+    } catch (error) {
+      return new Response('Invalid token', { status: 401 })
+    }
+  }
+}
 
-const plugin = new Elysia({ name: 'plugin' })
-    .macro(({ onBeforeHandle }) => {
-        return {
-            hi(word: string) {
-                onBeforeHandle(
-                    { insert: 'before' }, // [!code ++]
-                    () => {
-                        console.log(word)
-                    }
-                )
-            }
-        }
-    })
+// 使用中间件工厂
+const adminAuth = createAuthMiddleware({
+  required: true,
+  roles: ['admin'],
+  permissions: ['read:users', 'write:users']
+})
+
+const userAuth = createAuthMiddleware({
+  required: true,
+  roles: ['user', 'admin']
+})
+
+const routes = defineRoutes([
+  {
+    method: 'GET',
+    path: '/admin/users',
+    handler: createRouteHandler(() => 'Admin users'),
+    middleware: [adminAuth]
+  },
+  {
+    method: 'GET',
+    path: '/profile',
+    handler: createRouteHandler(() => 'User profile'),
+    middleware: [userAuth]
+  }
+])
 ```
 
-**Options** 可接受以下参数：
+## 请求装饰器
 
--   **insert**
-    -   函数应该添加到哪里
-    -   值： **'before' | 'after'**
-    -   @default: **'after'**
--   **stack**
-    -   确定应该添加哪种类型的栈
-    -   值： **'global' | 'local'**
-    -   @default: **'local'**
-
-</template>
-
-<template v-slot:macro2>
-
-宏 v2 使用对象语法以返回生命周期，如内联钩子。
-
-**Elysia.macro** 允许我们将自定义的复杂逻辑组合成一个在钩子中可用的简单配置，并且在类型安全上进行 **guard**。
-
-```typescript twoslash
-import { Elysia } from 'elysia'
-
-const plugin = new Elysia({ name: 'plugin' })
-    .macro({
-        hi(word: string) {
-            return {
-	            beforeHandle() {
-	                console.log(word)
-	            }
-            }
-        }
-    })
-
-const app = new Elysia()
-    .use(plugin)
-    .get('/', () => 'hi', {
-        hi: 'Elysia'
-    })
-```
-
-访问该路径应该会记录 **"Elysia"** 作为结果。
-
-### API
-
-**macro** 具有与钩子相同的 API。
-
-在之前的示例中，我们创建了一个接受 **string** 的 **hi** 宏。
-
-然后我们将 **hi** 赋值为 **"Elysia"**，该值然后被发送回 **hi** 函数，之后该函数向 **beforeHandle** 栈中添加了一个新事件。
-
-这相当于将函数推送到 **beforeHandle**，如下所示：
+Vafast 允许您通过中间件扩展请求对象，添加自定义属性和方法：
 
 ```typescript
-import { Elysia } from 'elysia'
+import { Server, defineRoutes, createRouteHandler } from 'vafast'
 
-const app = new Elysia()
-    .get('/', () => 'hi', {
-        beforeHandle() {
-            console.log('Elysia')
-        }
+// 用户装饰器中间件
+const userDecorator = async (req: Request, next: () => Promise<Response>) => {
+  // 扩展请求对象
+  ;(req as any).getUser = () => {
+    return (req as any).user
+  }
+  
+  ;(req as any).isAuthenticated = () => {
+    return !!(req as any).user
+  }
+  
+  ;(req as any).hasRole = (role: string) => {
+    const user = (req as any).user
+    return user && user.role === role
+  }
+  
+  ;(req as any).hasPermission = (permission: string) => {
+    const user = (req as any).user
+    return user && user.permissions.includes(permission)
+  }
+  
+  return await next()
+}
+
+// 缓存装饰器中间件
+const cacheDecorator = (cache: Map<string, any>) => {
+  return async (req: Request, next: () => Promise<Response>) => {
+    ;(req as any).cache = {
+      get: (key: string) => cache.get(key),
+      set: (key: string, value: any) => cache.set(key, value),
+      delete: (key: string) => cache.delete(key),
+      clear: () => cache.clear()
+    }
+    
+    return await next()
+  }
+}
+
+// 数据库装饰器中间件
+const databaseDecorator = (db: any) => {
+  return async (req: Request, next: () => Promise<Response>) => {
+    ;(req as any).db = db
+    
+    ;(req as any).query = async (sql: string, params: any[] = []) => {
+      return await db.query(sql, params)
+    }
+    
+    ;(req as any).transaction = async (callback: (req: Request) => Promise<any>) => {
+      return await db.transaction(async () => {
+        return await callback(req)
+      })
+    }
+    
+    return await next()
+  }
+}
+
+const routes = defineRoutes([
+  {
+    method: 'GET',
+    path: '/user/:id',
+    handler: createRouteHandler(async ({ req, params }) => {
+      // 使用装饰器添加的方法
+      if (!(req as any).isAuthenticated()) {
+        return new Response('Unauthorized', { status: 401 })
+      }
+      
+      if (!(req as any).hasPermission('read:users')) {
+        return new Response('Insufficient permissions', { status: 403 })
+      }
+      
+      // 使用数据库装饰器
+      const user = await (req as any).query('SELECT * FROM users WHERE id = ?', [params.id])
+      
+      // 使用缓存装饰器
+      const cacheKey = `user:${params.id}`
+      let cachedUser = (req as any).cache.get(cacheKey)
+      
+      if (!cachedUser) {
+        cachedUser = user[0]
+        (req as any).cache.set(cacheKey, cachedUser)
+      }
+      
+      return cachedUser
     })
+  }
+])
+
+const server = new Server(routes)
+
+// 应用装饰器中间件
+server.use(userDecorator)
+server.use(cacheDecorator(new Map()))
+server.use(databaseDecorator(/* 数据库连接 */))
+
+export default { fetch: server.fetch }
 ```
 
-**macro** 在逻辑比仅接受一个新函数更复杂时闪耀，比如为每个路由创建授权层。
+## 中间件组合
 
-```typescript twoslash
-// @filename: auth.ts
-import { Elysia } from 'elysia'
+组合多个中间件创建复杂的处理流程：
 
-export const auth = new Elysia()
-    .macro({
-    	isAuth: {
-      		resolve() {
-     			return {
-         			user: 'saltyaom'
-          		}
-      		}
-        },
-        role(role: 'admin' | 'user') {
-        	return {}
-        }
-    })
-
-// @filename: index.ts
-// ---cut---
-import { Elysia } from 'elysia'
-import { auth } from './auth'
-
-const app = new Elysia()
-    .use(auth)
-    .get('/', ({ user }) => user, {
-                          // ^?
-        isAuth: true,
-        role: 'admin'
-    })
-```
-
-宏 v2 还可以向上下文注册一个新属性，允许我们直接从上下文访问该值。
-
-该字段可以接受从字符串到函数的任何内容，允许我们创建一个自定义生命周期事件。
-
-**macro** 将根据钩子的定义从上到下顺序执行，确保堆栈以正确的顺序处理。
-
-## Resolve
-
-通过返回一个带有 [**resolve**](/essential/life-cycle.html#resolve) 函数的对象，您可以将属性添加到上下文中。
-
-```ts twoslash
-import { Elysia } from 'elysia'
-
-new Elysia()
-	.macro({
-		user: (enabled: true) => ({
-			resolve: () => ({
-				user: 'Pardofelis'
-			})
-		})
-	})
-	.get('/', ({ user }) => user, {
-                          // ^?
-		user: true
-	})
-```
-
-在上面的例子中，我们通过返回一个带有 **resolve** 函数的对象向上下文添加了一个新属性 **user**。
-
-下面是一个宏解析可能有用的示例：
-- 执行身份验证并将用户添加到上下文中
-- 运行额外的数据库查询并将数据添加到上下文中
-- 向上下文添加一个新属性
-
-## Property shorthand
-Starting from Elysia 1.2.10, each property in the macro object can be a function or an object.
-
-If the property is an object, it will be translated to a function that accept a boolean parameter, and will be executed if the parameter is true.
 ```typescript
-import { Elysia } from 'elysia'
+import { Server, defineRoutes, createRouteHandler } from 'vafast'
 
-export const auth = new Elysia()
-    .macro({
-    	// This property shorthand
-    	isAuth: {
-      		resolve() {
-     			return {
-         			user: 'saltyaom'
-          		}
-      		}
-        },
-        // is equivalent to
-        isAuth(enabled: boolean) {
-        	if(!enabled) return
+// 中间件组合器
+const composeMiddleware = (...middlewares: any[]) => {
+  return async (req: Request, next: () => Promise<Response>) => {
+    let index = 0
+    
+    const executeNext = async (): Promise<Response> => {
+      if (index >= middlewares.length) {
+        return await next()
+      }
+      
+      const middleware = middlewares[index++]
+      return await middleware(req, executeNext)
+    }
+    
+    return await executeNext()
+  }
+}
 
-        	return {
-				resolve() {
-					return {
-						user
-					}
-				}
-         	}
+// 条件中间件
+const conditionalMiddleware = (
+  condition: (req: Request) => boolean,
+  middleware: any
+) => {
+  return async (req: Request, next: () => Promise<Response>) => {
+    if (condition(req)) {
+      return await middleware(req, next)
+    }
+    return await next()
+  }
+}
+
+// 重试中间件
+const retryMiddleware = (maxRetries: number = 3) => {
+  return async (req: Request, next: () => Promise<Response>) => {
+    let lastError: Error
+    
+    for (let i = 0; i <= maxRetries; i++) {
+      try {
+        return await next()
+      } catch (error) {
+        lastError = error as Error
+        
+        if (i === maxRetries) {
+          throw lastError
         }
-    })
+        
+        // 等待一段时间后重试
+        await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 1000))
+      }
+    }
+    
+    throw lastError!
+  }
+}
+
+// 限流中间件
+const rateLimitMiddleware = (options: {
+  windowMs: number
+  max: number
+  keyGenerator?: (req: Request) => string
+}) => {
+  const requests = new Map<string, { count: number; resetTime: number }>()
+  
+  return async (req: Request, next: () => Promise<Response>) => {
+    const key = options.keyGenerator ? options.keyGenerator(req) : req.headers.get('x-forwarded-for') || 'unknown'
+    const now = Date.now()
+    
+    const requestData = requests.get(key)
+    
+    if (!requestData || now > requestData.resetTime) {
+      requests.set(key, { count: 1, resetTime: now + options.windowMs })
+    } else {
+      requestData.count++
+      
+      if (requestData.count > options.max) {
+        return new Response('Too Many Requests', { status: 429 })
+      }
+    }
+    
+    return await next()
+  }
+}
+
+const routes = defineRoutes([
+  {
+    method: 'GET',
+    path: '/api/data',
+    handler: createRouteHandler(async ({ req }) => {
+      // 使用数据库查询
+      const data = await (req as any).query('SELECT * FROM data')
+      return data
+    }),
+    middleware: [
+      // 组合多个中间件
+      composeMiddleware(
+        rateLimitMiddleware({ windowMs: 60000, max: 100 }),
+        retryMiddleware(3),
+        conditionalMiddleware(
+          (req) => req.headers.get('x-debug') === 'true',
+          async (req: Request, next: () => Promise<Response>) => {
+            console.log('Debug mode enabled')
+            return await next()
+          }
+        )
+      )
+    ]
+  }
+])
+
+const server = new Server(routes)
+export default { fetch: server.fetch }
 ```
 
-</template>
+## 类型安全的装饰器
 
-</Tab>
+使用 TypeScript 确保装饰器的类型安全：
+
+```typescript
+import { Server, defineRoutes, createRouteHandler } from 'vafast'
+
+// 扩展 Request 类型
+interface ExtendedRequest extends Request {
+  user?: {
+    id: string
+    name: string
+    role: string
+    permissions: string[]
+  }
+  cache?: {
+    get: (key: string) => any
+    set: (key: string, value: any) => void
+    delete: (key: string) => void
+    clear: () => void
+  }
+  db?: {
+    query: (sql: string, params?: any[]) => Promise<any>
+    transaction: (callback: () => Promise<any>) => Promise<any>
+  }
+  isAuthenticated: () => boolean
+  hasRole: (role: string) => boolean
+  hasPermission: (permission: string) => boolean
+}
+
+// 类型安全的中间件
+const typedUserDecorator = async (req: ExtendedRequest, next: () => Promise<Response>) => {
+  req.isAuthenticated = () => !!req.user
+  req.hasRole = (role: string) => req.user?.role === role
+  req.hasPermission = (permission: string) => req.user?.permissions.includes(permission) || false
+  
+  return await next()
+}
+
+const routes = defineRoutes([
+  {
+    method: 'GET',
+    path: '/admin',
+    handler: createRouteHandler(({ req }: { req: ExtendedRequest }) => {
+      if (!req.isAuthenticated()) {
+        return new Response('Unauthorized', { status: 401 })
+      }
+      
+      if (!req.hasRole('admin')) {
+        return new Response('Insufficient permissions', { status: 403 })
+      }
+      
+      return 'Admin panel'
+    })
+  }
+])
+
+const server = new Server(routes)
+server.use(typedUserDecorator)
+
+export default { fetch: server.fetch }
+```
+
+## 中间件测试
+
+测试中间件和装饰器：
+
+```typescript
+import { describe, expect, it } from 'bun:test'
+import { Server, defineRoutes, createRouteHandler } from 'vafast'
+
+describe('Middleware and Decorators', () => {
+  it('should apply global middleware', async () => {
+    const log: string[] = []
+    
+    const loggingMiddleware = async (req: Request, next: () => Promise<Response>) => {
+      log.push('before')
+      const response = await next()
+      log.push('after')
+      return response
+    }
+    
+    const routes = defineRoutes([
+      {
+        method: 'GET',
+        path: '/',
+        handler: createRouteHandler(() => 'Hello')
+      }
+    ])
+    
+    const server = new Server(routes)
+    server.use(loggingMiddleware)
+    
+    const response = await server.fetch(new Request('http://localhost/'))
+    
+    expect(response.status).toBe(200)
+    expect(await response.text()).toBe('Hello')
+    expect(log).toEqual(['before', 'after'])
+  })
+  
+  it('should apply route-specific middleware', async () => {
+    const log: string[] = []
+    
+    const routeMiddleware = async (req: Request, next: () => Promise<Response>) => {
+      log.push('route middleware')
+      return await next()
+    }
+    
+    const routes = defineRoutes([
+      {
+        method: 'GET',
+        path: '/protected',
+        handler: createRouteHandler(() => 'Protected'),
+        middleware: [routeMiddleware]
+      }
+    ])
+    
+    const server = new Server(routes)
+    
+    const response = await server.fetch(new Request('http://localhost/protected'))
+    
+    expect(response.status).toBe(200)
+    expect(await response.text()).toBe('Protected')
+    expect(log).toEqual(['route middleware'])
+  })
+  
+  it('should decorate request object', async () => {
+    const userDecorator = async (req: Request, next: () => Promise<Response>) => {
+      ;(req as any).user = { id: '1', name: 'Test User' }
+      ;(req as any).isAuthenticated = () => true
+      
+      return await next()
+    }
+    
+    const routes = defineRoutes([
+      {
+        method: 'GET',
+        path: '/profile',
+        handler: createRouteHandler(({ req }) => {
+          const user = (req as any).user
+          const isAuth = (req as any).isAuthenticated()
+          
+          return { user, isAuthenticated: isAuth }
+        })
+      }
+    ])
+    
+    const server = new Server(routes)
+    server.use(userDecorator)
+    
+    const response = await server.fetch(new Request('http://localhost/profile'))
+    const data = await response.json()
+    
+    expect(data.user).toEqual({ id: '1', name: 'Test User' })
+    expect(data.isAuthenticated).toBe(true)
+  })
+})
+```
+
+## 总结
+
+Vafast 的中间件和装饰器系统提供了：
+
+- ✅ 标准的中间件模式
+- ✅ 可配置的中间件工厂
+- ✅ 请求对象装饰器
+- ✅ 中间件组合和条件执行
+- ✅ 类型安全的装饰器
+- ✅ 完整的测试支持
+- ✅ 灵活的中间件链
+
+### 下一步
+
+- 查看 [路由系统](/essential/route) 了解如何组织路由
+- 学习 [中间件系统](/middleware) 了解如何增强功能
+- 探索 [验证系统](/essential/validation) 了解类型安全
+- 查看 [最佳实践](/essential/best-practice) 获取更多开发建议
+
+如果您有任何问题，请查看我们的 [社区页面](/community) 或 [GitHub 仓库](https://github.com/vafast/vafast)。

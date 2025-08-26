@@ -1,323 +1,603 @@
 ---
-title: 响应式 Cookie - ElysiaJS
+title: Cookie 处理 - Vafast
 head:
   - - meta
     - property: 'og:title'
-      content: 响应式 Cookie - ElysiaJS
+      content: Cookie 处理 - Vafast
 
   - - meta
     - name: 'description'
-      content: 响应式 Cookie 采用更现代化的方法，类似信号，使用人性化的 API 来处理 Cookie。没有 'getCookie' 和 'setCookie'，一切都是一个 Cookie 对象。当你想使用 Cookie 时，可以直接提取名称和值。
+      content: Vafast 提供了简单而强大的 Cookie 处理功能，支持读取、设置和删除 Cookie，以及各种 Cookie 属性的配置。
 
   - - meta
     - property: 'og:description'
-      content: 响应式 Cookie 采用更现代化的方法，类似信号，使用人性化的 API 来处理 Cookie。没有 'getCookie' 和 'setCookie'，一切都是一个 Cookie 对象。当你想使用 Cookie 时，可以直接提取名称和值。
+      content: Vafast 提供了简单而强大的 Cookie 处理功能，支持读取、设置和删除 Cookie，以及各种 Cookie 属性的配置。
 ---
 
-# Cookie
-要使用 Cookie，您可以提取 Cookie 属性并直接访问其名称和值。
+# Cookie 处理
 
-没有 get/set，您可以直接提取 Cookie 名称并检索或更新其值。
-```ts
-import { Elysia } from 'elysia'
+Vafast 提供了简单而强大的 Cookie 处理功能，支持读取、设置和删除 Cookie，以及各种 Cookie 属性的配置。
 
-new Elysia()
-    .get('/', ({ cookie: { name } }) => {
-        // 获取
-        name.value
+## 基本用法
 
-        // 设置
-        name.value = "新值"
+在 Vafast 中，您可以通过请求对象访问 Cookie，并通过响应对象设置 Cookie：
+
+```typescript
+import { Server, defineRoutes, createRouteHandler } from 'vafast'
+
+const routes = defineRoutes([
+  {
+    method: 'GET',
+    path: '/',
+    handler: createRouteHandler(({ req }) => {
+      // 读取 Cookie
+      const cookies = req.headers.get('cookie')
+      const sessionId = getCookieValue(cookies, 'sessionId')
+      
+      if (sessionId) {
+        return `Welcome back! Session: ${sessionId}`
+      } else {
+        return 'Welcome! Please log in.'
+      }
     })
+  },
+  {
+    method: 'POST',
+    path: '/login',
+    handler: createRouteHandler(async ({ req }) => {
+      const body = await req.json()
+      const { username, password } = body
+      
+      // 验证用户...
+      if (username === 'admin' && password === 'password') {
+        const sessionId = generateSessionId()
+        
+        // 创建响应并设置 Cookie
+        const response = new Response('Login successful', { status: 200 })
+        response.headers.set('Set-Cookie', `sessionId=${sessionId}; HttpOnly; Path=/; Max-Age=3600`)
+        
+        return response
+      }
+      
+      return new Response('Invalid credentials', { status: 401 })
+    })
+  }
+])
+
+const server = new Server(routes)
+export default { fetch: server.fetch }
 ```
 
-默认情况下，响应式 Cookie 可以自动编码/解码对象类型，使我们能够将 Cookie 视为对象，而无需担心编码/解码。**它就是这样工作的**。
+## Cookie 工具函数
 
-## 响应性
-Elysia 的 Cookie 是响应式的。这意味着当您更改 Cookie 值时，Cookie 会根据类似信号的方式自动更新。
+创建实用的 Cookie 处理函数：
 
-Elysia Cookies 提供了处理 Cookies 的单一真实来源，能够自动设置头部并同步 Cookie 值。
-
-由于 Cookies 默认是基于 Proxy 的对象，提取的值永远不会是 **undefined**；相反，它将始终是一个 `Cookie<unknown>` 的值，可以通过调用 **.value** 属性获取。
-
-我们可以将 Cookie 罐视为常规对象，对其进行迭代只会迭代已经存在的 Cookie 值。
-
-## Cookie 属性
-要使用 Cookie 属性，您可以使用以下任一方法：
-
-1. 直接设置属性
-2. 使用 `set` 或 `add` 来更新 Cookie 属性。
-
-有关更多信息，请参见 [Cookie 属性配置](/patterns/cookie.html#config)。
-
-### 分配属性
-您可以像对待任何普通对象一样获取/设置 Cookie 的属性，响应性模型会自动同步 Cookie 值。
-
-```ts
-import { Elysia } from 'elysia'
-
-new Elysia()
-    .get('/', ({ cookie: { name } }) => {
-        // 获取
-        name.domain
-
-        // 设置
-        name.domain = 'millennium.sh'
-        name.httpOnly = true
-    })
-```
-
-## set
-**set** 允许一次更新多个 Cookie 属性，通过 **重置所有属性** 并用新值覆盖该属性。
-
-```ts
-import { Elysia } from 'elysia'
-
-new Elysia()
-    .get('/', ({ cookie: { name } }) => {
-        name.set({
-            domain: 'millennium.sh',
-            httpOnly: true
-        })
-    })
-```
-
-## add
-与 **set** 相似，**add** 允许我们一次更新多个 Cookie 属性，但只会覆盖已定义的属性，而不是重置。
-
-## remove
-要移除 Cookie，您可以使用以下任一方法：
-1. name.remove
-2. delete cookie.name
-
-```ts
-import { Elysia } from 'elysia'
-
-new Elysia()
-    .get('/', ({ cookie, cookie: { name } }) => {
-        name.remove()
-
-        delete cookie.name
-    })
-```
-
-## Cookie 模式
-您可以通过使用 `t.Cookie` 的 Cookie 模式严格验证 Cookie 类型，并提供 Cookie 的类型推断。
-
-```ts twoslash
-import { Elysia, t } from 'elysia'
-
-new Elysia()
-    .get('/', ({ cookie: { name } }) => {
-        // 设置
-        name.value = {
-            id: 617,
-            name: '召唤 101'
+```typescript
+// Cookie 工具函数
+export class CookieUtils {
+  // 解析 Cookie 字符串
+  static parse(cookieString: string | null): Record<string, string> {
+    if (!cookieString) return {}
+    
+    return cookieString
+      .split(';')
+      .map(cookie => cookie.trim().split('='))
+      .reduce((acc, [key, value]) => {
+        if (key && value) {
+          acc[decodeURIComponent(key)] = decodeURIComponent(value)
         }
-    }, {
-        cookie: t.Cookie({
-            name: t.Object({
-                id: t.Numeric(),
-                name: t.String()
-            })
-        })
+        return acc
+      }, {} as Record<string, string>)
+  }
+  
+  // 获取特定 Cookie 值
+  static get(cookieString: string | null, name: string): string | undefined {
+    const cookies = this.parse(cookieString)
+    return cookies[name]
+  }
+  
+  // 创建 Set-Cookie 头
+  static set(name: string, value: string, options: CookieOptions = {}): string {
+    const parts = [`${encodeURIComponent(name)}=${encodeURIComponent(value)}`]
+    
+    if (options.domain) parts.push(`Domain=${options.domain}`)
+    if (options.path) parts.push(`Path=${options.path}`)
+    if (options.maxAge) parts.push(`Max-Age=${options.maxAge}`)
+    if (options.expires) parts.push(`Expires=${options.expires.toUTCString()}`)
+    if (options.httpOnly) parts.push('HttpOnly')
+    if (options.secure) parts.push('Secure')
+    if (options.sameSite) parts.push(`SameSite=${options.sameSite}`)
+    
+    return parts.join('; ')
+  }
+  
+  // 删除 Cookie
+  static delete(name: string, options: CookieOptions = {}): string {
+    return this.set(name, '', {
+      ...options,
+      maxAge: 0,
+      expires: new Date(0)
     })
+  }
+}
+
+interface CookieOptions {
+  domain?: string
+  path?: string
+  maxAge?: number
+  expires?: Date
+  httpOnly?: boolean
+  secure?: boolean
+  sameSite?: 'Strict' | 'Lax' | 'None'
+}
+
+// 使用 Cookie 工具函数
+const routes = defineRoutes([
+  {
+    method: 'GET',
+    path: '/profile',
+    handler: createRouteHandler(({ req }) => {
+      const cookies = req.headers.get('cookie')
+      const sessionId = CookieUtils.get(cookies, 'sessionId')
+      
+      if (!sessionId) {
+        return new Response('Unauthorized', { status: 401 })
+      }
+      
+      // 验证 session 并返回用户信息
+      return { username: 'admin', email: 'admin@example.com' }
+    })
+  },
+  {
+    method: 'POST',
+    path: '/logout',
+    handler: createRouteHandler(() => {
+      const response = new Response('Logged out successfully')
+      
+      // 删除 Cookie
+      response.headers.set('Set-Cookie', CookieUtils.delete('sessionId', { path: '/' }))
+      
+      return response
+    })
+  }
+])
 ```
 
-## 可空 Cookie
-要处理可空 Cookie 值，您可以在您希望可空的 Cookie 名称上使用 `t.Optional`。
+## 中间件方式处理 Cookie
 
-```ts twoslash
-import { Elysia, t } from 'elysia'
+创建专门的 Cookie 中间件：
 
-new Elysia()
-    .get('/', ({ cookie: { name } }) => {
-        // 设置
-        name.value = {
-            id: 617,
-            name: '召唤 101'
-        }
-    }, {
-        cookie: t.Cookie({
-            name: t.Optional(
-                t.Object({
-                    id: t.Numeric(),
-                    name: t.String()
-                })
-            )
-        })
+```typescript
+import { Server, defineRoutes, createRouteHandler } from 'vafast'
+
+// Cookie 中间件
+const cookieMiddleware = async (req: Request, next: () => Promise<Response>) => {
+  // 解析 Cookie 并添加到请求对象
+  const cookieString = req.headers.get('cookie')
+  ;(req as any).cookies = CookieUtils.parse(cookieString)
+  
+  // 添加 Cookie 方法到请求对象
+  ;(req as any).getCookie = (name: string) => {
+    return (req as any).cookies[name]
+  }
+  
+  ;(req as any).hasCookie = (name: string) => {
+    return !!(req as any).cookies[name]
+  }
+  
+  const response = await next()
+  
+  // 处理响应中的 Cookie 设置
+  const cookiesToSet = (req as any)._cookiesToSet || []
+  
+  if (cookiesToSet.length > 0) {
+    cookiesToSet.forEach((cookie: string) => {
+      response.headers.append('Set-Cookie', cookie)
     })
-```
+  }
+  
+  return response
+}
 
-## Cookie 签名
-通过引入 Cookie Schema，和 `t.Cookie` 类型，我们可以创建一个统一的类型来处理签名/验证 Cookie 签名。
-
-Cookie 签名是附加到 Cookie 值的加密哈希，是使用秘密密钥和 Cookie 的内容生成的，以通过向 Cookie 添加签名来增强安全性。
-
-这确保了 Cookie 值未被恶意行为者修改，有助于验证 Cookie 数据的真实性和完整性。
-
-## 使用 Cookie 签名
-通过提供 Cookie 密钥，以及 `sign` 属性来指示哪些 Cookie 应具有签名验证。
-```ts twoslash
-import { Elysia, t } from 'elysia'
-
-new Elysia()
-    .get('/', ({ cookie: { profile } }) => {
-        profile.value = {
-            id: 617,
-            name: '召唤 101'
-        }
-    }, {
-        cookie: t.Cookie({
-            profile: t.Object({
-                id: t.Numeric(),
-                name: t.String()
-            })
-        }, {
-            secrets: 'Fischl von Luftschloss Narfidort',
-            sign: ['profile']
-        })
-    })
-```
-
-Elysia 然后会自动签名和验证 Cookie 值。
-
-## 构造函数
-您可以使用 Elysia 构造函数设置全局 Cookie `secret` 和 `sign` 值，以适用于所有路由，而不是在每个需要的路由中内联。
-
-```ts twoslash
-import { Elysia, t } from 'elysia'
-
-new Elysia({
-    cookie: {
-        secrets: 'Fischl von Luftschloss Narfidort',
-        sign: ['profile']
+// 扩展的 Cookie 中间件
+const enhancedCookieMiddleware = async (req: Request, next: () => Promise<Response>) => {
+  const cookieString = req.headers.get('cookie')
+  ;(req as any).cookies = CookieUtils.parse(cookieString)
+  
+  // 添加响应 Cookie 设置方法
+  ;(req as any).setCookie = (name: string, value: string, options: CookieOptions = {}) => {
+    if (!(req as any)._cookiesToSet) {
+      ;(req as any)._cookiesToSet = []
     }
-})
-    .get('/', ({ cookie: { profile } }) => {
-        profile.value = {
-            id: 617,
-            name: '召唤 101'
-        }
-    }, {
-        cookie: t.Cookie({
-            profile: t.Object({
-                id: t.Numeric(),
-                name: t.String()
-            })
-        })
-    })
-```
-
-## Cookie 轮换
-Elysia 会自动处理 Cookie 的密钥轮换。
-
-Cookie 轮换是一种迁移技术，用于使用较新的密钥对 Cookie 进行签名，同时也能够验证旧的 Cookie 签名。
-
-```ts
-import { Elysia } from 'elysia'
-
-new Elysia({
-    cookie: {
-        secrets: ['复仇将属于我', 'Fischl von Luftschloss Narfidort']
+    
+    const cookieString = CookieUtils.set(name, value, options)
+    ;(req as any)._cookiesToSet.push(cookieString)
+  }
+  
+  ;(req as any).deleteCookie = (name: string, options: CookieOptions = {}) => {
+    if (!(req as any)._cookiesToSet) {
+      ;(req as any)._cookiesToSet = []
     }
+    
+    const cookieString = CookieUtils.delete(name, options)
+    ;(req as any)._cookiesToSet.push(cookieString)
+  }
+  
+  return await next()
+}
+
+const routes = defineRoutes([
+  {
+    method: 'GET',
+    path: '/',
+    handler: createRouteHandler(({ req }) => {
+      // 使用中间件添加的 Cookie 方法
+      const sessionId = (req as any).getCookie('sessionId')
+      
+      if (sessionId) {
+        return `Welcome back! Session: ${sessionId}`
+      }
+      
+      return 'Welcome! Please log in.'
+    })
+  },
+  {
+    method: 'POST',
+    path: '/login',
+    handler: createRouteHandler(async ({ req }) => {
+      const body = await req.json()
+      const { username, password } = body
+      
+      if (username === 'admin' && password === 'password') {
+        const sessionId = generateSessionId()
+        
+        // 使用中间件添加的 setCookie 方法
+        ;(req as any).setCookie('sessionId', sessionId, {
+          httpOnly: true,
+          path: '/',
+          maxAge: 3600,
+          secure: true,
+          sameSite: 'Strict'
+        })
+        
+        return 'Login successful'
+      }
+      
+      return new Response('Invalid credentials', { status: 401 })
+    })
+  }
+])
+
+const server = new Server(routes)
+server.use(cookieMiddleware)
+server.use(enhancedCookieMiddleware)
+
+export default { fetch: server.fetch }
+```
+
+## 会话管理
+
+实现完整的会话管理系统：
+
+```typescript
+import { Server, defineRoutes, createRouteHandler } from 'vafast'
+
+interface Session {
+  id: string
+  userId: string
+  username: string
+  createdAt: Date
+  expiresAt: Date
+}
+
+class SessionManager {
+  private sessions = new Map<string, Session>()
+  private readonly sessionTimeout = 24 * 60 * 60 * 1000 // 24小时
+  
+  createSession(userId: string, username: string): Session {
+    const sessionId = this.generateSessionId()
+    const now = new Date()
+    
+    const session: Session = {
+      id: sessionId,
+      userId,
+      username,
+      createdAt: now,
+      expiresAt: new Date(now.getTime() + this.sessionTimeout)
+    }
+    
+    this.sessions.set(sessionId, session)
+    
+    // 清理过期会话
+    this.cleanupExpiredSessions()
+    
+    return session
+  }
+  
+  getSession(sessionId: string): Session | undefined {
+    const session = this.sessions.get(sessionId)
+    
+    if (session && session.expiresAt > new Date()) {
+      return session
+    }
+    
+    if (session) {
+      this.sessions.delete(sessionId)
+    }
+    
+    return undefined
+  }
+  
+  deleteSession(sessionId: string): boolean {
+    return this.sessions.delete(sessionId)
+  }
+  
+  private generateSessionId(): string {
+    return `sess_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+  }
+  
+  private cleanupExpiredSessions(): void {
+    const now = new Date()
+    
+    for (const [sessionId, session] of this.sessions.entries()) {
+      if (session.expiresAt <= now) {
+        this.sessions.delete(sessionId)
+      }
+    }
+  }
+}
+
+const sessionManager = new SessionManager()
+
+// 会话中间件
+const sessionMiddleware = async (req: Request, next: () => Promise<Response>) => {
+  const cookieString = req.headers.get('cookie')
+  const sessionId = CookieUtils.get(cookieString, 'sessionId')
+  
+  if (sessionId) {
+    const session = sessionManager.getSession(sessionId)
+    if (session) {
+      ;(req as any).session = session
+      ;(req as any).user = {
+        id: session.userId,
+        username: session.username
+      }
+    }
+  }
+  
+  return await next()
+}
+
+const routes = defineRoutes([
+  {
+    method: 'POST',
+    path: '/login',
+    handler: createRouteHandler(async ({ req }) => {
+      const body = await req.json()
+      const { username, password } = body
+      
+      // 验证用户...
+      if (username === 'admin' && password === 'password') {
+        const session = sessionManager.createSession('1', username)
+        
+        const response = new Response('Login successful')
+        response.headers.set('Set-Cookie', CookieUtils.set('sessionId', session.id, {
+          httpOnly: true,
+          path: '/',
+          maxAge: 24 * 60 * 60, // 24小时
+          secure: true,
+          sameSite: 'Strict'
+        }))
+        
+        return response
+      }
+      
+      return new Response('Invalid credentials', { status: 401 })
+    })
+  },
+  {
+    method: 'GET',
+    path: '/profile',
+    handler: createRouteHandler(({ req }) => {
+      const user = (req as any).user
+      
+      if (!user) {
+        return new Response('Unauthorized', { status: 401 })
+      }
+      
+      return {
+        id: user.id,
+        username: user.username,
+        message: 'Welcome to your profile!'
+      }
+    })
+  },
+  {
+    method: 'POST',
+    path: '/logout',
+    handler: createRouteHandler(({ req }) => {
+      const sessionId = CookieUtils.get(req.headers.get('cookie'), 'sessionId')
+      
+      if (sessionId) {
+        sessionManager.deleteSession(sessionId)
+      }
+      
+      const response = new Response('Logged out successfully')
+      response.headers.set('Set-Cookie', CookieUtils.delete('sessionId', { path: '/' }))
+      
+      return response
+    })
+  }
+])
+
+const server = new Server(routes)
+server.use(sessionMiddleware)
+
+export default { fetch: server.fetch }
+```
+
+## Cookie 安全配置
+
+实现安全的 Cookie 配置：
+
+```typescript
+import { Server, defineRoutes, createRouteHandler } from 'vafast'
+
+// 安全 Cookie 配置
+const createSecureCookie = (name: string, value: string, options: CookieOptions = {}) => {
+  return CookieUtils.set(name, value, {
+    httpOnly: true,        // 防止 XSS 攻击
+    secure: true,          // 仅通过 HTTPS 传输
+    sameSite: 'Strict',    // 防止 CSRF 攻击
+    path: '/',             // 限制 Cookie 路径
+    maxAge: 3600,          // 1小时过期
+    ...options
+  })
+}
+
+// 环境相关的 Cookie 配置
+const createEnvironmentCookie = (name: string, value: string, options: CookieOptions = {}) => {
+  const isProduction = process.env.NODE_ENV === 'production'
+  
+  return CookieUtils.set(name, value, {
+    httpOnly: true,
+    secure: isProduction,      // 生产环境使用 HTTPS
+    sameSite: isProduction ? 'Strict' : 'Lax',
+    path: '/',
+    maxAge: 3600,
+    ...options
+  })
+}
+
+const routes = defineRoutes([
+  {
+    method: 'POST',
+    path: '/auth/login',
+    handler: createRouteHandler(async ({ req }) => {
+      const body = await req.json()
+      const { username, password } = body
+      
+      if (username === 'admin' && password === 'password') {
+        const sessionId = generateSecureSessionId()
+        
+        const response = new Response('Login successful')
+        response.headers.set('Set-Cookie', createSecureCookie('sessionId', sessionId))
+        
+        return response
+      }
+      
+      return new Response('Invalid credentials', { status: 401 })
+    })
+  }
+])
+
+const server = new Server(routes)
+export default { fetch: server.fetch }
+```
+
+## Cookie 测试
+
+测试 Cookie 功能：
+
+```typescript
+import { describe, expect, it } from 'bun:test'
+import { Server, defineRoutes, createRouteHandler } from 'vafast'
+
+describe('Cookie Handling', () => {
+  it('should set and read cookies', async () => {
+    const routes = defineRoutes([
+      {
+        method: 'POST',
+        path: '/set-cookie',
+        handler: createRouteHandler(({ req }) => {
+          const body = (req as any).body
+          const { name, value } = body
+          
+          const response = new Response('Cookie set')
+          response.headers.set('Set-Cookie', CookieUtils.set(name, value))
+          
+          return response
+        })
+      },
+      {
+        method: 'GET',
+        path: '/read-cookie',
+        handler: createRouteHandler(({ req }) => {
+          const cookies = req.headers.get('cookie')
+          const sessionId = CookieUtils.get(cookies, 'sessionId')
+          
+          return { sessionId }
+        })
+      }
+    ])
+    
+    const server = new Server(routes)
+    
+    // 设置 Cookie
+    const setResponse = await server.fetch(new Request('http://localhost/set-cookie', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: 'sessionId', value: 'test123' })
+    }))
+    
+    expect(setResponse.status).toBe(200)
+    
+    // 读取 Cookie
+    const cookieHeader = setResponse.headers.get('Set-Cookie')
+    const readResponse = await server.fetch(new Request('http://localhost/read-cookie', {
+      headers: { cookie: cookieHeader }
+    }))
+    
+    const data = await readResponse.json()
+    expect(data.sessionId).toBe('test123')
+  })
+  
+  it('should handle cookie deletion', async () => {
+    const routes = defineRoutes([
+      {
+        method: 'POST',
+        path: '/delete-cookie',
+        handler: createRouteHandler(() => {
+          const response = new Response('Cookie deleted')
+          response.headers.set('Set-Cookie', CookieUtils.delete('sessionId', { path: '/' }))
+          
+          return response
+        })
+      }
+    ])
+    
+    const server = new Server(routes)
+    
+    const response = await server.fetch(new Request('http://localhost/delete-cookie', {
+      method: 'POST'
+    }))
+    
+    expect(response.status).toBe(200)
+    
+    const cookieHeader = response.headers.get('Set-Cookie')
+    expect(cookieHeader).toContain('Max-Age=0')
+    expect(cookieHeader).toContain('Expires=')
+  })
 })
 ```
 
-## 配置
-以下是 Elysia 接受的 Cookie 配置。
+## 总结
 
-### secret
-用于签名/取消签名 Cookie 的密钥。
+Vafast 的 Cookie 处理系统提供了：
 
-如果传递了一个数组，则将使用密钥轮换。
+- ✅ 简单的 Cookie 读取和设置
+- ✅ 完整的 Cookie 属性配置
+- ✅ 安全的 Cookie 默认值
+- ✅ 会话管理支持
+- ✅ 中间件集成
+- ✅ 类型安全的 API
+- ✅ 完整的测试支持
 
-密钥轮换是指将加密密钥退役并通过生成新的加密密钥进行替换。
+### 下一步
 
----
-以下是从 [cookie](https://npmjs.com/package/cookie) 扩展的配置。
+- 查看 [路由系统](/essential/route) 了解如何组织路由
+- 学习 [中间件系统](/middleware) 了解如何增强功能
+- 探索 [验证系统](/essential/validation) 了解类型安全
+- 查看 [最佳实践](/essential/best-practice) 获取更多开发建议
 
-### domain
-指定 [Domain Set-Cookie 属性](https://tools.ietf.org/html/rfc6265#section-5.2.3) 的值。
-
-默认情况下，没有设置域，大多数客户端将只考虑当前域的 Cookie。
-
-
-### encode
-@default `encodeURIComponent`
-
-指定将用于编码 Cookie 值的函数。
-
-由于 Cookie 的值具有有限的字符集（并且必须是简单字符串），因此可以使用此函数将值编码为适合 Cookie 值的字符串。
-
-默认函数是全局的 `encodeURIComponent`，它会将 JavaScript 字符串编码为 UTF-8 字节序列，然后对落在 Cookie 范围外的进行 URL 编码。
-
-### expires
-指定作为 [Expires Set-Cookie 属性](https://tools.ietf.org/html/rfc6265#section-5.2.1) 值的日期对象。
-
-默认情况下，没有设置过期时间，大多数客户端将视其为“非持久性 Cookie”，并将在退出 Web 浏览器应用程序等条件下删除它。
-
-::: tip
-[Cookie 存储模型规范](https://tools.ietf.org/html/rfc6265#section-5.3) 规定，如果同时设置了 `expires` 和 `maxAge`，则 `maxAge` 优先，但并不是所有客户端都可能遵守，因此如果同时设置了它们，则应指向同一日期和时间。
-:::
-
-### httpOnly
-@default `false`
-
-指定布尔值作为 [HttpOnly Set-Cookie 属性](https://tools.ietf.org/html/rfc6265#section-5.2.6) 的值。
-
-当为真时，会设置 HttpOnly 属性，否则不会设置。
-
-默认情况下，不设置 HttpOnly 属性。
-
-::: tip
-设置为 true 时要小心，因为符合规范的客户端将不允许客户端 JavaScript 在 `document.cookie` 中查看该 Cookie。
-:::
-
-### maxAge
-@default `undefined`
-
-指定作为 [Max-Age Set-Cookie 属性](https://tools.ietf.org/html/rfc6265#section-5.2.2) 的值的数字（以秒为单位）。
-
-给定的数字将通过向下取整进行转换。默认情况下，不设置最大年龄。
-
-::: tip
-[Cookie 存储模型规范](https://tools.ietf.org/html/rfc6265#section-5.3) 规定，如果同时设置了 `expires` 和 `maxAge`，则 `maxAge` 优先，但并不是所有客户端都可能遵守，因此如果同时设置了它们，则应指向同一日期和时间。
-:::
-
-### path
-指定作为 [Path Set-Cookie 属性](https://tools.ietf.org/html/rfc6265#section-5.2.4) 的值。
-
-默认情况下，路径处理器被视为默认路径。
-
-### priority
-指定字符串作为 [Priority Set-Cookie 属性](https://tools.ietf.org/html/draft-west-cookie-priority-00#section-4.1) 的值。
-`low` 将把优先级属性设置为低。
-`medium` 将把优先级属性设置为中，未设置时的默认优先级。
-`high` 将把优先级属性设置为高。
-
-有关不同优先级级别的更多信息，请参见 [规范](https://tools.ietf.org/html/draft-west-cookie-priority-00#section-4.1)。
-
-::: tip
-这是一个尚未完全标准化的属性，未来可能会有所更改。这也意味着许多客户端可能会在理解之前忽略此属性。
-:::
-
-### sameSite
-指定布尔值或字符串作为 [SameSite Set-Cookie 属性](https://tools.ietf.org/html/draft-ietf-httpbis-rfc6265bis-09#section-5.4.7) 的值。
-`true` 将 SameSite 属性设置为严格的同站强制。
-`false` 不会设置 SameSite 属性。
-`'lax'` 将 SameSite 属性设置为宽松同站强制。
-`'none'` 将 SameSite 属性设置为无以示明确的跨站 Cookie。
-`'strict'` 将 SameSite 属性设置为严格的同站强制。
-有关不同强制级别的更多信息，请参见 [规范](https://tools.ietf.org/html/draft-ietf-httpbis-rfc6265bis-09#section-5.4.7)。
-
-::: tip
-这是一个尚未完全标准化的属性，未来可能会有所更改。这也意味着许多客户端可能会在理解之前忽略此属性。
-:::
-
-### secure
-指定布尔值作为 [Secure Set-Cookie 属性](https://tools.ietf.org/html/rfc6265#section-5.2.5) 的值。当为真时，设置 Secure 属性，否则不设置。默认情况下，不设置 Secure 属性。
-
-::: tip
-设置为 true 时要小心，因为符合规范的客户端将在未来如果浏览器没有 HTTPS 连接时，不会将该 Cookie 发送回服务器。
-:::
+如果您有任何问题，请查看我们的 [社区页面](/community) 或 [GitHub 仓库](https://github.com/vafast/vafast)。

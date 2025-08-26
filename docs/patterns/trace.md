@@ -1,199 +1,572 @@
 ---
-title: Trace - ElysiaJS
+title: Trace - Vafast
 head:
     - - meta
       - property: 'og:title'
-        content: Trace - ElysiaJS
+        content: Trace - Vafast
 
     - - meta
       - name: 'description'
-        content: Trace 是一个用于测量服务器性能的 API。它使我们能够与每个生命周期事件的持续时间进行交互，并测量每个函数的性能，以识别服务器的性能瓶颈。
+        content: Trace 是一个用于测量服务器性能的 API。它使我们能够与每个请求处理阶段的持续时间进行交互，并测量每个函数的性能，以识别服务器的性能瓶颈。
 
     - - meta
       - name: 'og:description'
-        content: Trace 是一个用于测量服务器性能的 API。它使我们能够与每个生命周期事件的持续时间进行交互，并测量每个函数的性能，以识别服务器的性能瓶颈。
+        content: Trace 是一个用于测量服务器性能的 API。它使我们能够与每个请求处理阶段的持续时间进行交互，并测量每个函数的性能，以识别服务器的性能瓶颈。
 ---
 
 # Trace
 
-性能是 Elysia 一个重要的方面。
+性能是 Vafast 一个重要的方面。
 
 我们不仅希望在基准测试中快速运行，我们希望您在真实场景中拥有一个真正快速的服务器。
 
-有许多因素可能会减慢我们的应用程序 - 并且很难识别它们，但 **trace** 可以通过在每个生命周期中注入开始和停止代码来帮助解决这个问题。
+有许多因素可能会减慢我们的应用程序 - 并且很难识别它们，但 **trace** 可以通过在每个请求处理阶段中注入开始和停止代码来帮助解决这个问题。
 
-Trace 允许我们在每个生命周期事件的前后注入代码，从而阻止并与函数的执行进行交互。
+Vafast 提供了内置的监控系统，允许我们跟踪请求处理时间、中间件执行时间和其他性能指标。
 
-## Trace
-Trace 使用回调监听器以确保回调函数在移动到下一个生命周期事件之前完成。
+## 内置监控
 
-要使用 `trace`，您需要在 Elysia 实例上调用 `trace` 方法，并传递一个将在每个生命周期事件中执行的回调函数。
+Vafast 提供了 `withMonitoring` 函数来为服务器添加监控能力：
 
-您可以通过在生命周期名称前添加 `on` 前缀来监听每个生命周期，例如 `onHandle` 以监听 `handle` 事件。
+```typescript
+import { Server, defineRoutes, createRouteHandler } from 'vafast'
+import { withMonitoring } from 'vafast/monitoring'
 
-```ts twoslash
-import { Elysia } from 'elysia'
-
-const app = new Elysia()
-    .trace(async ({ onHandle }) => {
-	    onHandle(({ begin, onStop }) => {
-			onStop(({ end }) => {
-        		console.log('handle took', end - begin, 'ms')
-			})
-	    })
+const routes = defineRoutes([
+  {
+    method: 'GET',
+    path: '/',
+    handler: createRouteHandler(() => 'Hello Vafast!')
+  },
+  {
+    method: 'POST',
+    path: '/users',
+    handler: createRouteHandler(async ({ body }) => {
+      // 模拟一些异步操作
+      await new Promise(resolve => setTimeout(resolve, 100))
+      return { success: true, user: body }
     })
-    .get('/', () => 'Hi')
-    .listen(3000)
+  }
+])
+
+const server = new Server(routes)
+
+// 添加监控功能
+const monitoredServer = withMonitoring(server, {
+  enableMetrics: true,
+  enableLogging: true
+})
+
+export default { fetch: monitoredServer.fetch }
 ```
 
-有关更多信息，请参见 [生命周期事件](/essential/life-cycle#events)：
+## 自定义性能追踪
 
-![Elysia 生命周期](/assets/lifecycle-chart.svg)
+您可以使用中间件来实现自定义的性能追踪：
 
-## 子事件
-每个事件除了 `handle` 之外都有一个子事件，这是在每个生命周期事件内部执行的事件数组。
+```typescript
+import { Server, defineRoutes, createRouteHandler } from 'vafast'
 
-您可以使用 `onEvent` 来按顺序监听每个子事件。
+// 性能追踪中间件
+const performanceTraceMiddleware = async (req: Request, next: () => Promise<Response>) => {
+  const startTime = performance.now()
+  const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+  
+  console.log(`[${requestId}] 开始处理请求: ${req.method} ${req.url}`)
+  
+  try {
+    const response = await next()
+    
+    const endTime = performance.now()
+    const duration = endTime - startTime
+    
+    console.log(`[${requestId}] 请求处理完成: ${response.status} (${duration.toFixed(2)}ms)`)
+    
+    // 添加性能头
+    response.headers.set('X-Request-ID', requestId)
+    response.headers.set('X-Response-Time', `${duration.toFixed(2)}ms`)
+    
+    return response
+  } catch (error) {
+    const endTime = performance.now()
+    const duration = endTime - startTime
+    
+    console.error(`[${requestId}] 请求处理失败: ${error} (${duration.toFixed(2)}ms)`)
+    throw error
+  }
+}
 
-```ts twoslash
-import { Elysia } from 'elysia'
+// 中间件执行时间追踪
+const middlewareTraceMiddleware = (middlewareName: string) => {
+  return async (req: Request, next: () => Promise<Response>) => {
+    const startTime = performance.now()
+    
+    try {
+      const response = await next()
+      
+      const endTime = performance.now()
+      const duration = endTime - startTime
+      
+      console.log(`[${middlewareName}] 执行时间: ${duration.toFixed(2)}ms`)
+      
+      return response
+    } catch (error) {
+      const endTime = performance.now()
+      const duration = endTime - startTime
+      
+      console.error(`[${middlewareName}] 执行失败: ${error} (${duration.toFixed(2)}ms)`)
+      throw error
+    }
+  }
+}
 
-const sleep = (time = 1000) =>
-    new Promise((resolve) => setTimeout(resolve, time))
+const routes = defineRoutes([
+  {
+    method: 'GET',
+    path: '/',
+    handler: createRouteHandler(() => 'Hello Vafast!')
+  }
+])
 
-const app = new Elysia()
-    .trace(async ({ onBeforeHandle }) => {
-        onBeforeHandle(({ total, onEvent }) => {
-            console.log('总子事件:', total)
+const server = new Server(routes)
 
-            onEvent(({ onStop }) => {
-                onStop(({ elapsed }) => {
-                    console.log('子事件耗时', elapsed, 'ms')
-                })
-            })
-        })
+// 应用性能追踪中间件
+server.use(performanceTraceMiddleware)
+server.use(middlewareTraceMiddleware('Global'))
+
+export default { fetch: server.fetch }
+```
+
+## 详细性能分析
+
+实现更详细的性能分析：
+
+```typescript
+import { Server, defineRoutes, createRouteHandler } from 'vafast'
+
+interface PerformanceMetrics {
+  requestId: string
+  method: string
+  url: string
+  startTime: number
+  middlewareTimes: Map<string, number>
+  totalTime: number
+  status: number
+  memoryUsage?: NodeJS.MemoryUsage
+}
+
+class PerformanceTracker {
+  private metrics = new Map<string, PerformanceMetrics>()
+  
+  startRequest(req: Request): string {
+    const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    const metrics: PerformanceMetrics = {
+      requestId,
+      method: req.method,
+      url: req.url,
+      startTime: performance.now(),
+      middlewareTimes: new Map(),
+      totalTime: 0,
+      status: 0
+    }
+    
+    this.metrics.set(requestId, metrics)
+    return requestId
+  }
+  
+  recordMiddlewareTime(requestId: string, middlewareName: string, duration: number) {
+    const metrics = this.metrics.get(requestId)
+    if (metrics) {
+      metrics.middlewareTimes.set(middlewareName, duration)
+    }
+  }
+  
+  endRequest(requestId: string, status: number, memoryUsage?: NodeJS.MemoryUsage) {
+    const metrics = this.metrics.get(requestId)
+    if (metrics) {
+      metrics.totalTime = performance.now() - metrics.startTime
+      metrics.status = status
+      metrics.memoryUsage = memoryUsage
+      
+      this.logMetrics(metrics)
+      this.metrics.delete(requestId)
+    }
+  }
+  
+  private logMetrics(metrics: PerformanceMetrics) {
+    console.log(`\n=== 性能报告 [${metrics.requestId}] ===`)
+    console.log(`请求: ${metrics.method} ${metrics.url}`)
+    console.log(`状态: ${metrics.status}`)
+    console.log(`总时间: ${metrics.totalTime.toFixed(2)}ms`)
+    
+    if (metrics.middlewareTimes.size > 0) {
+      console.log('中间件执行时间:')
+      metrics.middlewareTimes.forEach((time, name) => {
+        console.log(`  ${name}: ${time.toFixed(2)}ms`)
+      })
+    }
+    
+    if (metrics.memoryUsage) {
+      console.log('内存使用:')
+      console.log(`  堆使用: ${(metrics.memoryUsage.heapUsed / 1024 / 1024).toFixed(2)}MB`)
+      console.log(`  堆总计: ${(metrics.memoryUsage.heapTotal / 1024 / 1024).toFixed(2)}MB`)
+    }
+    
+    console.log('================================\n')
+  }
+}
+
+const tracker = new PerformanceTracker()
+
+// 增强的性能追踪中间件
+const enhancedTraceMiddleware = async (req: Request, next: () => Promise<Response>) => {
+  const requestId = tracker.startRequest(req)
+  
+  try {
+    const response = await next()
+    tracker.endRequest(requestId, response.status)
+    return response
+  } catch (error) {
+    tracker.endRequest(requestId, 500)
+    throw error
+  }
+}
+
+// 中间件性能追踪
+const createMiddlewareTracer = (name: string) => {
+  return async (req: Request, next: () => Promise<Response>) => {
+    const startTime = performance.now()
+    
+    try {
+      const response = await next()
+      
+      const duration = performance.now() - startTime
+      const requestId = req.headers.get('X-Request-ID')
+      if (requestId) {
+        tracker.recordMiddlewareTime(requestId, name, duration)
+      }
+      
+      return response
+    } catch (error) {
+      const duration = performance.now() - startTime
+      const requestId = req.headers.get('X-Request-ID')
+      if (requestId) {
+        tracker.recordMiddlewareTime(requestId, name, duration)
+      }
+      throw error
+    }
+  }
+}
+
+const routes = defineRoutes([
+  {
+    method: 'GET',
+    path: '/',
+    handler: createRouteHandler(() => 'Hello Vafast!')
+  }
+])
+
+const server = new Server(routes)
+
+// 应用增强的性能追踪
+server.use(enhancedTraceMiddleware)
+server.use(createMiddlewareTracer('Global'))
+
+export default { fetch: server.fetch }
+```
+
+## 实时性能监控
+
+实现实时性能监控面板：
+
+```typescript
+import { Server, defineRoutes, createRouteHandler } from 'vafast'
+
+class RealTimeMonitor {
+  private metrics: Array<{
+    timestamp: number
+    method: string
+    path: string
+    duration: number
+    status: number
+  }> = []
+  
+  private maxMetrics = 1000
+  
+  recordRequest(method: string, path: string, duration: number, status: number) {
+    this.metrics.push({
+      timestamp: Date.now(),
+      method,
+      path,
+      duration,
+      status
     })
-    .get('/', () => 'Hi', {
-        beforeHandle: [
-            function setup() {},
-            async function delay() {
-                await sleep()
-            }
-        ]
+    
+    // 保持最新的指标
+    if (this.metrics.length > this.maxMetrics) {
+      this.metrics = this.metrics.slice(-this.maxMetrics)
+    }
+  }
+  
+  getStats() {
+    const now = Date.now()
+    const lastMinute = this.metrics.filter(m => now - m.timestamp < 60000)
+    const lastHour = this.metrics.filter(m => now - m.timestamp < 3600000)
+    
+    return {
+      total: this.metrics.length,
+      lastMinute: lastMinute.length,
+      lastHour: lastHour.length,
+      averageResponseTime: this.metrics.length > 0 
+        ? this.metrics.reduce((sum, m) => sum + m.duration, 0) / this.metrics.length 
+        : 0,
+      statusCodes: this.getStatusCodeDistribution(),
+      topEndpoints: this.getTopEndpoints()
+    }
+  }
+  
+  private getStatusCodeDistribution() {
+    const distribution: Record<number, number> = {}
+    this.metrics.forEach(m => {
+      distribution[m.status] = (distribution[m.status] || 0) + 1
     })
-    .listen(3000)
+    return distribution
+  }
+  
+  private getTopEndpoints() {
+    const endpointCounts: Record<string, number> = {}
+    this.metrics.forEach(m => {
+      const key = `${m.method} ${m.path}`
+      endpointCounts[key] = (endpointCounts[key] || 0) + 1
+    })
+    
+    return Object.entries(endpointCounts)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 10)
+      .map(([endpoint, count]) => ({ endpoint, count }))
+  }
+}
+
+const monitor = new RealTimeMonitor()
+
+// 监控中间件
+const monitoringMiddleware = async (req: Request, next: () => Promise<Response>) => {
+  const startTime = performance.now()
+  const url = new URL(req.url)
+  
+  try {
+    const response = await next()
+    
+    const duration = performance.now() - startTime
+    monitor.recordRequest(req.method, url.pathname, duration, response.status)
+    
+    return response
+  } catch (error) {
+    const duration = performance.now() - startTime
+    monitor.recordRequest(req.method, url.pathname, duration, 500)
+    throw error
+  }
+}
+
+const routes = defineRoutes([
+  {
+    method: 'GET',
+    path: '/',
+    handler: createRouteHandler(() => 'Hello Vafast!')
+  },
+  {
+    method: 'GET',
+    path: '/metrics',
+    handler: createRouteHandler(() => {
+      const stats = monitor.getStats()
+      return new Response(JSON.stringify(stats, null, 2), {
+        headers: { 'Content-Type': 'application/json' }
+      })
+    })
+  },
+  {
+    method: 'GET',
+    path: '/monitor',
+    handler: createRouteHandler(() => {
+      const stats = monitor.getStats()
+      return `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>Vafast 性能监控</title>
+            <style>
+              body { font-family: Arial, sans-serif; margin: 20px; }
+              .metric { margin: 10px 0; padding: 10px; border: 1px solid #ddd; }
+              .status-2xx { color: green; }
+              .status-4xx { color: orange; }
+              .status-5xx { color: red; }
+            </style>
+          </head>
+          <body>
+            <h1>Vafast 性能监控</h1>
+            <div class="metric">
+              <h3>总请求数: ${stats.total}</h3>
+              <p>最近1分钟: ${stats.lastMinute}</p>
+              <p>最近1小时: ${stats.lastHour}</p>
+            </div>
+            <div class="metric">
+              <h3>平均响应时间: ${stats.averageResponseTime.toFixed(2)}ms</h3>
+            </div>
+            <div class="metric">
+              <h3>状态码分布:</h3>
+              ${Object.entries(stats.statusCodes).map(([code, count]) => 
+                `<p class="status-${code.startsWith('2') ? '2xx' : code.startsWith('4') ? '4xx' : '5xx'}">
+                  ${code}: ${count}
+                </p>`
+              ).join('')}
+            </div>
+            <div class="metric">
+              <h3>热门端点:</h3>
+              ${stats.topEndpoints.map(({ endpoint, count }) => 
+                `<p>${endpoint}: ${count}</p>`
+              ).join('')}
+            </div>
+            <script>
+              setInterval(() => location.reload(), 5000);
+            </script>
+          </body>
+        </html>
+      `
+    })
+  }
+])
+
+const server = new Server(routes)
+server.use(monitoringMiddleware)
+
+export default { fetch: server.fetch }
 ```
 
-在此示例中，总子事件将为 `2`，因为在 `beforeHandle` 事件中有 2 个子事件。
+## 性能基准测试
 
-然后，我们使用 `onEvent` 监听每个子事件，并打印每个子事件的持续时间。
+实现性能基准测试：
 
-## Trace 参数
-每个生命周期被调用时
+```typescript
+import { Server, defineRoutes, createRouteHandler } from 'vafast'
 
-```ts twoslash
-import { Elysia } from 'elysia'
+class PerformanceBenchmark {
+  private results: Array<{
+    name: string
+    duration: number
+    timestamp: number
+  }> = []
+  
+  async runBenchmark(name: string, testFn: () => Promise<any>) {
+    const startTime = performance.now()
+    
+    try {
+      await testFn()
+      const duration = performance.now() - startTime
+      
+      this.results.push({ name, duration, timestamp: Date.now() })
+      
+      console.log(`[${name}] 基准测试完成: ${duration.toFixed(2)}ms`)
+      return duration
+    } catch (error) {
+      console.error(`[${name}] 基准测试失败:`, error)
+      throw error
+    }
+  }
+  
+  getResults() {
+    return this.results
+  }
+  
+  getAverageTime(name: string) {
+    const relevantResults = this.results.filter(r => r.name === name)
+    if (relevantResults.length === 0) return 0
+    
+    return relevantResults.reduce((sum, r) => sum + r.duration, 0) / relevantResults.length
+  }
+  
+  generateReport() {
+    const uniqueNames = [...new Set(this.results.map(r => r.name))]
+    
+    console.log('\n=== 性能基准测试报告 ===')
+    uniqueNames.forEach(name => {
+      const avgTime = this.getAverageTime(name)
+      const count = this.results.filter(r => r.name === name).length
+      console.log(`${name}: 平均 ${avgTime.toFixed(2)}ms (${count} 次测试)`)
+    })
+    console.log('==========================\n')
+  }
+}
 
-const app = new Elysia()
-	// 这是 trace 参数
-	// 悬停以查看类型
-	.trace((parameter) => {
-	})
-	.get('/', () => 'Hi')
-	.listen(3000)
+const benchmark = new PerformanceBenchmark()
+
+// 基准测试路由
+const routes = defineRoutes([
+  {
+    method: 'GET',
+    path: '/',
+    handler: createRouteHandler(() => 'Hello Vafast!')
+  },
+  {
+    method: 'POST',
+    path: '/benchmark',
+    handler: createRouteHandler(async ({ body }) => {
+      const { testName, iterations = 1000 } = body
+      
+      const testFn = async () => {
+        for (let i = 0; i < iterations; i++) {
+          // 模拟一些计算
+          Math.sqrt(i) * Math.PI
+        }
+      }
+      
+      const duration = await benchmark.runBenchmark(testName, testFn)
+      
+      return {
+        testName,
+        iterations,
+        duration: duration.toFixed(2),
+        averageTime: benchmark.getAverageTime(testName).toFixed(2)
+      }
+    })
+  },
+  {
+    method: 'GET',
+    path: '/benchmark/results',
+    handler: createRouteHandler(() => {
+      return new Response(JSON.stringify(benchmark.getResults(), null, 2), {
+        headers: { 'Content-Type': 'application/json' }
+      })
+    })
+  }
+])
+
+const server = new Server(routes)
+
+// 运行基准测试
+setTimeout(() => {
+  benchmark.generateReport()
+}, 5000)
+
+export default { fetch: server.fetch }
 ```
 
-`trace` 接受以下参数：
+## 总结
 
-### id - `number`
-为每个请求随机生成的唯一 id
+Vafast 的性能追踪系统提供了：
 
-### context - `Context`
-Elysia 的 [上下文](/essential/handler.html#context)，例如 `set`、`store`、`query``、`params`
+- ✅ 内置监控支持
+- ✅ 自定义性能追踪中间件
+- ✅ 详细的性能分析
+- ✅ 实时性能监控
+- ✅ 性能基准测试
+- ✅ 内存使用监控
+- ✅ 中间件执行时间追踪
 
-### set - `Context.set`
-`context.set` 的快捷方式，用于设置上下文的头部或状态
+### 下一步
 
-### store - `Singleton.store`
-`context.store` 的快捷方式，用于访问上下文中的数据
+- 查看 [路由系统](/essential/route) 了解如何组织路由
+- 学习 [中间件系统](/middleware) 了解如何增强功能
+- 探索 [验证系统](/essential/validation) 了解类型安全
+- 查看 [最佳实践](/essential/best-practice) 获取更多开发建议
 
-### time - `number`
-请求被调用的时间戳
-
-### on[Event] - `TraceListener`
-每个生命周期事件的事件监听器。
-
-您可以监听以下生命周期：
--   **onRequest** - 通知每个新请求
--   **onParse** - 用于解析主体的函数数组
--   **onTransform** - 在验证之前转换请求和上下文
--   **onBeforeHandle** - 在主处理器之前检查的自定义要求，可以在返回响应时跳过主处理器。
--   **onHandle** - 分配给路径的函数
--   **onAfterHandle** - 在将响应发回客户端之前与响应进行交互
--   **onMapResponse** - 将返回值映射到 Web 标准响应
--   **onError** - 处理在处理请求期间抛出的错误
--   **onAfterResponse** - 在响应发送之后的清理函数
-
-## Trace 监听器
-每个生命周期事件的监听器
-
-```ts twoslash
-import { Elysia } from 'elysia'
-
-const app = new Elysia()
-	.trace(({ onBeforeHandle }) => {
-		// 这是 trace 监听器
-		// 悬停以查看类型
-		onBeforeHandle((parameter) => {
-
-		})
-	})
-	.get('/', () => 'Hi')
-	.listen(3000)
-```
-
-每个生命周期监听器接受以下内容
-
-### name - `string`
-函数的名称，如果函数是匿名的，则名称将为 `anonymous`
-
-### begin - `number`
-函数开始执行的时间
-
-### end - `Promise<number>`
-函数结束时的时间，当函数结束时将解析
-
-### error - `Promise<Error | null>`
-在生命周期中抛出的错误，将在函数结束时解析
-
-### onStop - `callback?: (detail: TraceEndDetail) => any`
-在生命周期结束时将执行的回调
-
-```ts twoslash
-import { Elysia } from 'elysia'
-
-const app = new Elysia()
-	.trace(({ onBeforeHandle, set }) => {
-		onBeforeHandle(({ onStop }) => {
-			onStop(({ elapsed }) => {
-				set.headers['X-Elapsed'] = elapsed.toString()
-			})
-		})
-	})
-	.get('/', () => 'Hi')
-	.listen(3000)
-```
-
-建议在此函数中修改上下文，因为有一个锁机制以确保上下文在移动到下一个生命周期事件之前成功修改。
-
-## TraceEndDetail
-传递给 `onStop` 回调的参数
-
-### end - `number`
-函数结束时的时间
-
-### error - `Error | null`
-在生命周期中抛出的错误
-
-### elapsed - `number`
-生命周期的经过时间或 `end - begin`
+如果您有任何问题，请查看我们的 [社区页面](/community) 或 [GitHub 仓库](https://github.com/vafast/vafast)。
