@@ -1,242 +1,335 @@
 ---
-title: OpenTelemetry 插件 - ElysiaJS
+title: OpenTelemetry 集成 - Vafast
 head:
-    - - meta
-      - property: 'og:title'
-        content: OpenTelemetry 插件 - ElysiaJS
+  - - meta
+    - property: 'og:title'
+      content: OpenTelemetry 集成 - Vafast
 
-    - - meta
-      - name: 'description'
-        content: 为 Elysia 添加 OpenTelemetry 支持的插件。开始时，请使用 "bun add @elysiajs/opentelemetry" 安装插件。
+  - - meta
+    - name: 'description'
+      content: 为 Vafast 添加 OpenTelemetry 支持的集成。开始时，请使用 "bun add @vafast/opentelemetry" 安装中间件。
 
-    - - meta
-      - name: 'og:description'
-        content: 为 Elysia 添加 OpenTelemetry 支持的插件。开始时，请使用 "bun add @elysiajs/opentelemetry" 安装插件。
+  - - meta
+    - property: 'og:description'
+      content: 为 Vafast 添加 OpenTelemetry 支持的集成。开始时，请使用 "bun add @vafast/opentelemetry" 安装中间件。
 ---
 
-# OpenTelemetry
+# OpenTelemetry 集成
 
-要开始使用 OpenTelemetry，请安装 `@elysiajs/opentelemetry` 并将插件应用于任何实例。
+Vafast 提供了完整的 OpenTelemetry 集成支持，包括分布式追踪、指标收集和日志聚合。
 
-```typescript
-import { Elysia } from 'elysia'
-import { opentelemetry } from '@elysiajs/opentelemetry'
+要开始使用 OpenTelemetry，请安装 `@vafast/opentelemetry` 并将中间件应用于任何实例。
 
-import { BatchSpanProcessor } from '@opentelemetry/sdk-trace-node'
-import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-proto'
+## 安装
 
-new Elysia().use(
-	opentelemetry({
-		spanProcessors: [new BatchSpanProcessor(new OTLPTraceExporter())]
-	})
-)
-```
-
-![jaeger 显示收集到的跟踪信息](/blog/elysia-11/jaeger.webp)
-
-Elysia OpenTelemetry 将 **收集与 OpenTelemetry 标准兼容的任何库的 span**，并会自动应用父子 span。
-
-在上面的代码中，我们应用 `Prisma` 来跟踪每个查询所花费的时间。
-
-通过应用 OpenTelemetry，Elysia 将：
-
-- 收集遥测数据
-- 将相关生命周期分组
-- 测量每个函数所花费的时间
-- 对 HTTP 请求和响应进行仪器化
-- 收集错误和异常
-
-您可以将遥测数据导出到 Jaeger、Zipkin、New Relic、Axiom 或任何其他与 OpenTelemetry 兼容的后端。
-
-![axiom 显示收集到的 OpenTelemetry 跟踪信息](/blog/elysia-11/axiom.webp)
-
-以下是将遥测数据导出到 [Axiom](https://axiom.co) 的示例
-
-```typescript
-import { Elysia } from 'elysia'
-import { opentelemetry } from '@elysiajs/opentelemetry'
-
-import { BatchSpanProcessor } from '@opentelemetry/sdk-trace-node'
-import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-proto'
-
-new Elysia().use(
-	opentelemetry({
-		spanProcessors: [
-			new BatchSpanProcessor(
-				new OTLPTraceExporter({
-					url: 'https://api.axiom.co/v1/traces', // [!code ++]
-					headers: {
-						// [!code ++]
-						Authorization: `Bearer ${Bun.env.AXIOM_TOKEN}`, // [!code ++]
-						'X-Axiom-Dataset': Bun.env.AXIOM_DATASET // [!code ++]
-					} // [!code ++]
-				})
-			)
-		]
-	})
-)
-```
-
-## 仪器化
-
-许多仪器化库要求 SDK **必须** 在导入模块之前运行。
-
-例如，要使用 `PgInstrumentation`，`OpenTelemetry SDK` 必须在导入 `pg` 模块之前运行。
-
-要在 Bun 中实现这一点，我们可以
-
-1. 将 OpenTelemetry 设置分成一个不同的文件
-2. 创建 `bunfig.toml` 以预加载 OpenTelemetry 设置文件
-
-让我们在 `src/instrumentation.ts` 中创建一个新文件
-
-```ts [src/instrumentation.ts]
-import { opentelemetry } from '@elysiajs/opentelemetry'
-import { PgInstrumentation } from '@opentelemetry/instrumentation-pg'
-
-export const instrumentation = opentelemetry({
-	instrumentations: [new PgInstrumentation()]
-})
-```
-
-然后我们可以将此 `instrumentaiton` 插件应用于 `src/index.ts` 中的主实例
-
-```ts [src/index.ts]
-import { Elysia } from 'elysia'
-import { instrumentation } from './instrumentation.ts'
-
-new Elysia().use(instrumentation).listen(3000)
-```
-
-然后创建一个 `bunfig.toml`，内容如下：
-
-```toml [bunfig.toml]
-preload = ["./src/instrumentation.ts"]
-```
-
-这将告诉 Bun 在运行 `src/index.ts` 之前加载并设置 `instrumentation`，以允许 OpenTelemetry 按需设置。
-
-### 部署到生产环境
-如果您使用 `bun build` 或其他打包工具。
-
-由于 OpenTelemetry 依赖于猴子补丁 `node_modules/<library>`。为了确保仪器化正常工作，我们需要指定要被仪器化的库作为外部模块，以将其排除在打包之外。
-
-例如，如果您使用 `@opentelemetry/instrumentation-pg` 来对 `pg` 库进行仪器化。我们需要将 `pg` 排除在打包之外，并确保它从 `node_modules/pg` 导入。
-
-要使其正常工作，我们可以通过 `--external pg` 将 `pg` 指定为外部模块
 ```bash
-bun build --compile --external pg --outfile server src/index.ts
+bun add @vafast/opentelemetry
 ```
 
-这告诉 bun 不要将 `pg` 打包到最终输出文件中，并将在运行时从 **node_modules** 目录导入。所以在生产服务器上，您还必须保留 **node_modules** 目录。
-
-建议在 **package.json** 中将应在生产服务器上可用的包指定为 **dependencies**，并使用 `bun install --production` 仅安装生产依赖项。
-
-```json
-{
-	"dependencies": {
-		"pg": "^8.15.6"
-	},
-	"devDependencies": {
-		"@elysiajs/opentelemetry": "^1.2.0",
-		"@opentelemetry/instrumentation-pg": "^0.52.0",
-		"@types/pg": "^8.11.14",
-		"elysia": "^1.2.25"
-	}
-}
-```
-
-然后在运行构建命令后，在生产服务器上
-```bash
-bun install --production
-```
-
-如果 node_modules 目录仍包含开发依赖项，您可以删除 node_modules 目录并再次安装生产依赖项。
-
-## OpenTelemetry SDK
-
-Elysia OpenTelemetry 仅用于将 OpenTelemetry 应用到 Elysia 服务器。
-
-您可以正常使用 OpenTelemetry SDK，并且 span 在 Elysia 的请求 span 下运行，它将自动出现在 Elysia 的跟踪中。
-
-然而，我们也提供 `getTracer` 和 `record` 实用工具，以便从您应用的任何部分收集 span。
+## 基本用法
 
 ```typescript
-import { Elysia } from 'elysia'
-import { record } from '@elysiajs/opentelemetry'
+import { defineRoutes, createRouteHandler } from 'vafast'
+import { opentelemetry } from '@vafast/opentelemetry'
 
-export const plugin = new Elysia().get('', () => {
-	return record('database.query', () => {
-		return db.query('SELECT * FROM users')
-	})
-})
+const routes = defineRoutes([
+  {
+    method: 'GET',
+    path: '/users',
+    handler: createRouteHandler(() => {
+      return { users: [] }
+    })
+  }
+])
+
+const app = createRouteHandler(routes)
+  .use(opentelemetry({
+    serviceName: 'my-vafast-app',
+    serviceVersion: '1.0.0'
+  }))
 ```
 
-## Record 实用工具
+## 配置选项
 
-`record` 相当于 OpenTelemetry 的 `startActiveSpan`，但它将自动处理关闭并捕获异常。
-
-您可以将 `record` 看作是您的代码的标签，这将在跟踪中显示。
-
-### 为可观察性准备您的代码库
-
-Elysia OpenTelemetry 将分组生命周期并读取每个钩子的 **函数名称** 作为 span 的名称。
-
-现在是 **命名您的函数** 的好时机。
-
-如果您的钩子处理程序是一个箭头函数，您可以将其重构为命名函数，以便更好地理解跟踪，否则，您的跟踪 span 将被命名为 `anonymous`。
+OpenTelemetry 中间件支持丰富的配置选项：
 
 ```typescript
-const bad = new Elysia()
-	// ⚠️ span 名称将是匿名的
-	.derive(async ({ cookie: { session } }) => {
-		return {
-			user: await getProfile(session)
-		}
-	})
+import { opentelemetry } from '@vafast/opentelemetry'
 
-const good = new Elysia()
-	// ✅ span 名称将是 getProfile
-	.derive(async function getProfile({ cookie: { session } }) {
-		return {
-			user: await getProfile(session)
-		}
-	})
+app.use(opentelemetry({
+  // 服务信息
+  serviceName: 'my-vafast-app',
+  serviceVersion: '1.0.0',
+  serviceNamespace: 'production',
+  
+  // 追踪配置
+  tracing: {
+    enabled: true,
+    sampler: {
+      type: 'always_on'
+    },
+    exporter: {
+      type: 'otlp',
+      endpoint: 'http://localhost:4317'
+    }
+  },
+  
+  // 指标配置
+  metrics: {
+    enabled: true,
+    exporter: {
+      type: 'prometheus',
+      port: 9464
+    }
+  },
+  
+  // 日志配置
+  logging: {
+    enabled: true,
+    level: 'info',
+    exporter: {
+      type: 'otlp',
+      endpoint: 'http://localhost:4317'
+    }
+  }
+}))
 ```
 
-## getCurrentSpan
+## 分布式追踪
 
-`getCurrentSpan` 是一个实用工具，用于在处理程序外部获取当前请求的当前 span。
+OpenTelemetry 中间件自动为所有请求创建追踪：
 
 ```typescript
-import { getCurrentSpan } from '@elysiajs/opentelemetry'
+import { defineRoutes, createRouteHandler } from 'vafast'
+import { opentelemetry } from '@vafast/opentelemetry'
 
-function utility() {
-	const span = getCurrentSpan()
-	span.setAttributes({
-		'custom.attribute': 'value'
-	})
-}
+const routes = defineRoutes([
+  {
+    method: 'GET',
+    path: '/users/:id',
+    handler: createRouteHandler(async ({ params }) => {
+      // 这个请求会自动创建追踪
+      const user = await fetchUser(params.id)
+      return user
+    }),
+    params: Type.Object({
+      id: Type.String()
+    })
+  }
+])
+
+const app = createRouteHandler(routes)
+  .use(opentelemetry({
+    serviceName: 'user-service',
+    tracing: {
+      enabled: true,
+      exporter: {
+        type: 'otlp',
+        endpoint: 'http://jaeger:4317'
+      }
+    }
+  }))
 ```
 
-这在处理程序外部通过从 `AsyncLocalStorage` 获取当前 span 而工作。
+## 自定义追踪
 
-## setAttributes
-
-`setAttribute` 是一个用于将属性设置为当前 span 的实用工具。
+您可以在处理程序中添加自定义追踪：
 
 ```typescript
-import { setAttributes } from '@elysiajs/opentelemetry'
+import { defineRoutes, createRouteHandler } from 'vafast'
+import { trace } from '@opentelemetry/api'
 
-function utility() {
-	span.setAttributes({
-		'custom.attribute': 'value'
-	})
-}
+const routes = defineRoutes([
+  {
+    method: 'POST',
+    path: '/users',
+    handler: createRouteHandler(async ({ body }) => {
+      const tracer = trace.getTracer('user-service')
+      
+      return await tracer.startActiveSpan('create-user', async (span) => {
+        try {
+          span.setAttribute('user.email', body.email)
+          
+          const user = await createUser(body)
+          
+          span.setStatus({ code: trace.SpanStatusCode.OK })
+          return user
+        } catch (error) {
+          span.setStatus({ 
+            code: trace.SpanStatusCode.ERROR, 
+            message: error.message 
+          })
+          throw error
+        } finally {
+          span.end()
+        }
+      })
+    }),
+    body: Type.Object({
+      name: Type.String(),
+      email: Type.String({ format: 'email' })
+    })
+  }
+])
 ```
 
-这是 `getCurrentSpan().setAttributes` 的语法糖。
+## 指标收集
 
-## 配置
+中间件自动收集关键指标：
 
-请查看 [opentelemetry 中间件](/middleware/opentelemetry) 以获取配置选项和定义。
+```typescript
+import { opentelemetry } from '@vafast/opentelemetry'
+
+app.use(opentelemetry({
+  metrics: {
+    enabled: true,
+    exporter: {
+      type: 'prometheus',
+      port: 9464,
+      path: '/metrics'
+    }
+  }
+}))
+```
+
+自动收集的指标包括：
+
+- **HTTP 请求计数**：按方法、路径、状态码分组
+- **请求持续时间**：响应时间分布
+- **活跃连接数**：当前活跃的 HTTP 连接
+- **错误率**：按错误类型分组的错误计数
+
+## 日志聚合
+
+OpenTelemetry 中间件提供结构化日志：
+
+```typescript
+import { opentelemetry } from '@vafast/opentelemetry'
+
+app.use(opentelemetry({
+  logging: {
+    enabled: true,
+    level: 'info',
+    exporter: {
+      type: 'otlp',
+      endpoint: 'http://localhost:4317'
+    }
+  }
+}))
+```
+
+## 环境配置
+
+根据环境配置 OpenTelemetry：
+
+```typescript
+import { opentelemetry } from '@vafast/opentelemetry'
+
+const isDevelopment = process.env.NODE_ENV === 'development'
+
+app.use(opentelemetry({
+  serviceName: 'my-vafast-app',
+  serviceVersion: process.env.APP_VERSION || '1.0.0',
+  
+  tracing: {
+    enabled: !isDevelopment,
+    exporter: {
+      type: 'otlp',
+      endpoint: process.env.OTEL_EXPORTER_OTLP_ENDPOINT || 'http://localhost:4317'
+    }
+  },
+  
+  metrics: {
+    enabled: true,
+    exporter: {
+      type: 'prometheus',
+      port: parseInt(process.env.METRICS_PORT || '9464')
+    }
+  },
+  
+  logging: {
+    enabled: true,
+    level: process.env.LOG_LEVEL || 'info',
+    exporter: {
+      type: isDevelopment ? 'console' : 'otlp',
+      endpoint: process.env.OTEL_EXPORTER_OTLP_ENDPOINT
+    }
+  }
+}))
+```
+
+## 与监控系统集成
+
+### Jaeger 追踪
+
+```typescript
+app.use(opentelemetry({
+  tracing: {
+    exporter: {
+      type: 'otlp',
+      endpoint: 'http://jaeger:4317'
+    }
+  }
+}))
+```
+
+### Prometheus 指标
+
+```typescript
+app.use(opentelemetry({
+  metrics: {
+    exporter: {
+      type: 'prometheus',
+      port: 9464,
+      path: '/metrics'
+    }
+  }
+}))
+```
+
+### Grafana Loki 日志
+
+```typescript
+app.use(opentelemetry({
+  logging: {
+    exporter: {
+      type: 'otlp',
+      endpoint: 'http://loki:4317'
+    }
+  }
+}))
+```
+
+## 性能优化
+
+OpenTelemetry 中间件经过优化，对性能影响最小：
+
+```typescript
+app.use(opentelemetry({
+  tracing: {
+    sampler: {
+      type: 'traceidratio',
+      ratio: 0.1 // 只追踪 10% 的请求
+    }
+  },
+  
+  metrics: {
+    collectionInterval: 5000 // 5秒收集一次指标
+  }
+}))
+```
+
+## 最佳实践
+
+1. **服务命名**：使用有意义的服务名称，便于识别
+2. **采样策略**：在生产环境中使用适当的采样策略
+3. **错误处理**：确保错误被正确记录和追踪
+4. **性能监控**：监控中间件本身的性能影响
+5. **安全考虑**：在生产环境中保护监控端点
+
+## 相关链接
+
+- [OpenTelemetry 中间件](/middleware/opentelemetry) - 完整的配置选项
+- [性能监控](/patterns/trace) - 了解性能追踪
+- [中间件系统](/middleware) - 探索其他可用的中间件
+- [部署指南](/patterns/deploy) - 生产环境部署建议

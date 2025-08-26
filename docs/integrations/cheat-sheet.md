@@ -1,367 +1,483 @@
 ---
-title: 速查表 (通过示例了解 Elysia) - ElysiaJS
+title: 集成速查表 - Vafast
 head:
   - - meta
     - property: 'og:title'
-      content: 速查表 (通过示例了解 Elysia) - ElysiaJS
+      content: 集成速查表 - Vafast
 
   - - meta
     - name: 'description'
-      content: Elysia 的速查表摘要以及与“通过示例了解 Elysia”的工作原理
+      content: Vafast 框架的集成速查表，包含常用库和工具的集成示例。
 
   - - meta
     - property: 'og:description'
-      content: Elysia 的速查表摘要以及与“通过示例了解 Elysia”的工作原理
+      content: Vafast 框架的集成速查表，包含常用库和工具的集成示例。
 ---
 
-# 速查表
-这里是一些常见 Elysia 模式的快速概述
+# 集成速查表
 
-## Hello World
-一个简单的 hello world
+这是一个快速参考指南，展示如何在 Vafast 中集成常用的库和工具。
+
+## 数据库
+
+### Prisma
 
 ```typescript
-import { Elysia } from 'elysia'
+import { defineRoutes, createRouteHandler } from 'vafast'
+import { PrismaClient } from '@prisma/client'
 
-new Elysia()
-    .get('/', () => 'Hello World')
-    .listen(3000)
+const prisma = new PrismaClient()
+
+const routes = defineRoutes([
+  {
+    method: 'GET',
+    path: '/users',
+    handler: createRouteHandler(async () => {
+      const users = await prisma.user.findMany()
+      return { users }
+    })
+  },
+  
+  {
+    method: 'POST',
+    path: '/users',
+    handler: createRouteHandler(async ({ body }) => {
+      const user = await prisma.user.create({
+        data: body
+      })
+      return { user }
+    }),
+    body: Type.Object({
+      name: Type.String(),
+      email: Type.String({ format: 'email' })
+    })
+  }
+])
 ```
 
-## 自定义 HTTP 方法
-使用自定义 HTTP 方法/动词定义路由
-
-参见 [路由](/essential/route.html#custom-method)
+### Drizzle
 
 ```typescript
-import { Elysia } from 'elysia'
+import { defineRoutes, createRouteHandler } from 'vafast'
+import { drizzle } from 'drizzle-orm/bun-sqlite'
+import { Database } from 'bun:sqlite3'
+import { users } from './schema'
 
-new Elysia()
-    .get('/hi', () => 'Hi')
-    .post('/hi', () => 'From Post')
-    .put('/hi', () => 'From Put')
-    .route('M-SEARCH', '/hi', () => 'Custom Method')
-    .listen(3000)
+const db = drizzle(new Database('sqlite.db'))
+
+const routes = defineRoutes([
+  {
+    method: 'GET',
+    path: '/users',
+    handler: createRouteHandler(async () => {
+      const allUsers = await db.select().from(users)
+      return { users: allUsers }
+    })
+  }
+])
 ```
 
-## 路径参数
-使用动态路径参数
-
-参见 [路径](/essential/route.html#path-type)
+### MongoDB
 
 ```typescript
-import { Elysia } from 'elysia'
+import { defineRoutes, createRouteHandler } from 'vafast'
+import { MongoClient } from 'mongodb'
 
-new Elysia()
-    .get('/id/:id', ({ params: { id } }) => id)
-    .get('/rest/*', () => 'Rest')
-    .listen(3000)
+const client = new MongoClient('mongodb://localhost:27017')
+const db = client.db('myapp')
+
+const routes = defineRoutes([
+  {
+    method: 'GET',
+    path: '/users',
+    handler: createRouteHandler(async () => {
+      const users = await db.collection('users').find({}).toArray()
+      return { users }
+    })
+  }
+])
 ```
 
-## 返回 JSON
-Elysia 会自动将响应转换为 JSON
+## 认证
 
-参见 [处理器](/essential/handler.html)
+### JWT
 
 ```typescript
-import { Elysia } from 'elysia'
+import { defineRoutes, createRouteHandler } from 'vafast'
+import { jwt } from '@vafast/jwt'
 
-new Elysia()
-    .get('/json', () => {
-        return {
-            hello: 'Elysia'
+const routes = defineRoutes([
+  {
+    method: 'POST',
+    path: '/login',
+    handler: createRouteHandler(async ({ body }) => {
+      const token = await jwt.sign(body, { expiresIn: '1h' })
+      return { token }
+    }),
+    body: Type.Object({
+      username: Type.String(),
+      password: Type.String()
+    })
+  }
+])
+
+const app = createRouteHandler(routes)
+  .use(jwt({
+    secret: process.env.JWT_SECRET
+  }))
+```
+
+### Better Auth
+
+```typescript
+import { defineRoutes, createRouteHandler } from 'vafast'
+import { BetterAuth } from 'better-auth'
+import { VafastAdapter } from 'better-auth/adapters/vafast'
+
+const auth = new BetterAuth({
+  adapter: VafastAdapter({
+    // 配置选项
+  })
+})
+
+const routes = defineRoutes([
+  {
+    method: 'GET',
+    path: '/profile',
+    handler: createRouteHandler(async ({ request }) => {
+      const session = await auth.api.getSession(request)
+      return { user: session?.user }
+    })
+  }
+])
+```
+
+## 中间件
+
+### CORS
+
+```typescript
+import { defineRoutes, createRouteHandler } from 'vafast'
+import { cors } from '@vafast/cors'
+
+const routes = defineRoutes([
+  // 路由定义
+])
+
+const app = createRouteHandler(routes)
+  .use(cors({
+    origin: ['http://localhost:3000'],
+    credentials: true
+  }))
+```
+
+### Helmet
+
+```typescript
+import { defineRoutes, createRouteHandler } from 'vafast'
+import { helmet } from '@vafast/helmet'
+
+const app = createRouteHandler(routes)
+  .use(helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"]
+      }
+    }
+  }))
+```
+
+### Rate Limiting
+
+```typescript
+import { defineRoutes, createRouteHandler } from 'vafast'
+import { rateLimit } from '@vafast/rate-limit'
+
+const app = createRouteHandler(routes)
+  .use(rateLimit({
+    windowMs: 15 * 60 * 1000, // 15分钟
+    max: 100 // 限制每个IP 15分钟内最多100个请求
+  }))
+```
+
+## 监控和日志
+
+### OpenTelemetry
+
+```typescript
+import { defineRoutes, createRouteHandler } from 'vafast'
+import { opentelemetry } from '@vafast/opentelemetry'
+
+const app = createRouteHandler(routes)
+  .use(opentelemetry({
+    serviceName: 'my-vafast-app',
+    tracing: {
+      enabled: true,
+      exporter: {
+        type: 'otlp',
+        endpoint: 'http://localhost:4317'
+      }
+    }
+  }))
+```
+
+### Server Timing
+
+```typescript
+import { defineRoutes, createRouteHandler } from 'vafast'
+import { serverTiming } from '@vafast/server-timing'
+
+const app = createRouteHandler(routes)
+  .use(serverTiming())
+```
+
+## 文件处理
+
+### 文件上传
+
+```typescript
+import { defineRoutes, createRouteHandler } from 'vafast'
+
+const routes = defineRoutes([
+  {
+    method: 'POST',
+    path: '/upload',
+    handler: createRouteHandler(async ({ request }) => {
+      const formData = await request.formData()
+      const file = formData.get('file') as File
+      
+      if (file) {
+        const bytes = await file.arrayBuffer()
+        const buffer = Buffer.from(bytes)
+        
+        // 保存文件
+        await Bun.write(`./uploads/${file.name}`, buffer)
+        
+        return { success: true, filename: file.name }
+      }
+      
+      return { error: 'No file uploaded' }, { status: 400 }
+    })
+  }
+])
+```
+
+### 静态文件服务
+
+```typescript
+import { defineRoutes, createRouteHandler } from 'vafast'
+import { staticFiles } from '@vafast/static'
+
+const app = createRouteHandler(routes)
+  .use(staticFiles({
+    root: './public',
+    prefix: '/static'
+  }))
+```
+
+## 缓存
+
+### Redis
+
+```typescript
+import { defineRoutes, createRouteHandler } from 'vafast'
+import { Redis } from 'ioredis'
+
+const redis = new Redis()
+
+const routes = defineRoutes([
+  {
+    method: 'GET',
+    path: '/users/:id',
+    handler: createRouteHandler(async ({ params }) => {
+      // 尝试从缓存获取
+      const cached = await redis.get(`user:${params.id}`)
+      if (cached) {
+        return JSON.parse(cached)
+      }
+      
+      // 从数据库获取
+      const user = await getUserFromDB(params.id)
+      
+      // 缓存结果
+      await redis.setex(`user:${params.id}`, 3600, JSON.stringify(user))
+      
+      return { user }
+    })
+  }
+])
+```
+
+### 内存缓存
+
+```typescript
+import { defineRoutes, createRouteHandler } from 'vafast'
+
+const cache = new Map()
+
+const routes = defineRoutes([
+  {
+    method: 'GET',
+    path: '/data/:key',
+    handler: createRouteHandler(async ({ params }) => {
+      if (cache.has(params.key)) {
+        return { data: cache.get(params.key), cached: true }
+      }
+      
+      const data = await fetchData(params.key)
+      cache.set(params.key, data)
+      
+      return { data, cached: false }
+    })
+  }
+])
+```
+
+## 任务调度
+
+### Cron Jobs
+
+```typescript
+import { defineRoutes, createRouteHandler } from 'vafast'
+import { cron } from '@vafast/cron'
+
+const app = createRouteHandler(routes)
+  .use(cron({
+    jobs: [
+      {
+        name: 'cleanup',
+        schedule: '0 2 * * *', // 每天凌晨2点
+        task: async () => {
+          console.log('Running cleanup task...')
+          // 执行清理任务
         }
+      }
+    ]
+  }))
+```
+
+## 压缩
+
+### Gzip/Brotli
+
+```typescript
+import { defineRoutes, createRouteHandler } from 'vafast'
+import { compress } from '@vafast/compress'
+
+const app = createRouteHandler(routes)
+  .use(compress({
+    algorithms: ['gzip', 'brotli'],
+    threshold: 1024
+  }))
+```
+
+## 模板引擎
+
+### HTML 渲染
+
+```typescript
+import { defineRoutes, createRouteHandler } from 'vafast'
+import { html } from '@vafast/html'
+
+const routes = defineRoutes([
+  {
+    method: 'GET',
+    path: '/',
+    handler: createRouteHandler(() => {
+      return html`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>Vafast App</title>
+          </head>
+          <body>
+            <h1>Welcome to Vafast!</h1>
+          </body>
+        </html>
+      `
     })
-    .listen(3000)
+  }
+])
 ```
 
-## 返回文件
-文件可以作为 formdata 响应返回
+## 测试
 
-响应必须是 1 级深度对象
+### 单元测试
 
 ```typescript
-import { Elysia, file } from 'elysia'
-
-new Elysia()
-    .get('/json', () => {
-        return {
-            hello: 'Elysia',
-            image: file('public/cat.jpg')
-        }
-    })
-    .listen(3000)
-```
-
-## 头部和状态
-设置自定义头部和状态码
-
-参见 [处理器](/essential/handler.html)
-
-```typescript
-import { Elysia } from 'elysia'
-
-new Elysia()
-    .get('/', ({ set, status }) => {
-        set.headers['x-powered-by'] = 'Elysia'
-
-        return status(418, "I'm a teapot")
-    })
-    .listen(3000)
-```
-
-## 组
-为子路由定义一次前缀
-
-参见 [组](/essential/route.html#group)
-
-```typescript
-import { Elysia } from 'elysia'
-
-new Elysia()
-    .get("/", () => "Hi")
-    .group("/auth", app => {
-        return app
-            .get("/", () => "Hi")
-            .post("/sign-in", ({ body }) => body)
-            .put("/sign-up", ({ body }) => body)
-    })
-    .listen(3000)
-```
-
-## 模式
-强制路由的数据类型
-
-参见 [验证](/essential/validation)
-
-```typescript
-import { Elysia, t } from 'elysia'
-
-new Elysia()
-    .post('/mirror', ({ body: { username } }) => username, {
-        body: t.Object({
-            username: t.String(),
-            password: t.String()
-        })
-    })
-    .listen(3000)
-```
-
-## 文件上传
-请参见 [验证#文件](/essential/validation#file)
-
-```typescript twoslash
-import { Elysia, t } from 'elysia'
-
-new Elysia()
-	.post('/body', ({ body }) => body, {
-                    // ^?
-
-
-
-
-
-		body: t.Object({
-			file: t.File({ format: 'image/*' }),
-			multipleFiles: t.Files()
-		})
-	})
-	.listen(3000)
-```
-
-## 生命周期钩子
-按顺序拦截 Elysia 事件
-
-参见 [生命周期](/essential/life-cycle.html)
-
-```typescript
-import { Elysia, t } from 'elysia'
-
-new Elysia()
-    .onRequest(() => {
-        console.log('On request')
-    })
-    .on('beforeHandle', () => {
-        console.log('Before handle')
-    })
-    .post('/mirror', ({ body }) => body, {
-        body: t.Object({
-            username: t.String(),
-            password: t.String()
-        }),
-        afterHandle: () => {
-            console.log("After handle")
-        }
-    })
-    .listen(3000)
-```
-
-## 守卫
-强制子路由的数据类型
-
-参见 [范围](/essential/plugin.html#scope)
-
-```typescript twoslash
-// @errors: 2345
-import { Elysia, t } from 'elysia'
-
-new Elysia()
-    .guard({
-        response: t.String()
-    }, (app) => app
-        .get('/', () => 'Hi')
-        // 无效: 会抛出错误，并且 TypeScript 会报告错误
-        .get('/invalid', () => 1)
-    )
-    .listen(3000)
-```
-
-## 自定义上下文
-向路由上下文添加自定义变量
-
-参见 [上下文](/essential/handler.html#context)
-
-```typescript
-import { Elysia } from 'elysia'
-
-new Elysia()
-    .state('version', 1)
-    .decorate('getDate', () => Date.now())
-    .get('/version', ({
-        getDate,
-        store: { version }
-    }) => `${version} ${getDate()}`)
-    .listen(3000)
-```
-
-## 重定向
-重定向响应
-
-参见 [处理器](/essential/handler.html#redirect)
-
-```typescript
-import { Elysia } from 'elysia'
-
-new Elysia()
-    .get('/', () => 'hi')
-    .get('/redirect', ({ redirect }) => {
-        return redirect('/')
-    })
-    .listen(3000)
-```
-
-## 插件
-创建一个单独的实例
-
-参见 [插件](/essential/plugin)
-
-```typescript
-import { Elysia } from 'elysia'
-
-const plugin = new Elysia()
-    .state('plugin-version', 1)
-    .get('/hi', () => 'hi')
-
-new Elysia()
-    .use(plugin)
-    .get('/version', ({ store }) => store['plugin-version'])
-    .listen(3000)
-```
-
-## Web Socket
-使用 Web Socket 创建实时连接
-
-参见 [Web Socket](/patterns/websocket)
-
-```typescript
-import { Elysia } from 'elysia'
-
-new Elysia()
-    .ws('/ping', {
-        message(ws, message) {
-            ws.send('hello ' + message)
-        }
-    })
-    .listen(3000)
-```
-
-## OpenAPI 文档
-使用 Scalar (或可选的 Swagger) 创建交互式文档
-
-参见 [swagger](/middleware/swagger.html)
-
-```typescript
-import { Elysia } from 'elysia'
-import { swagger } from '@elysiajs/swagger'
-
-const app = new Elysia()
-    .use(swagger())
-    .listen(3000)
-
-console.log(`在浏览器中访问 "${app.server!.url}swagger" 查看文档`);
-```
-
-## 单元测试
-编写 Elysia 应用的单元测试
-
-参见 [单元测试](/patterns/unit-test)
-
-```typescript
-// test/index.test.ts
 import { describe, expect, it } from 'bun:test'
-import { Elysia } from 'elysia'
+import { createRouteHandler } from 'vafast'
 
-describe('Elysia', () => {
-    it('返回响应', async () => {
-        const app = new Elysia().get('/', () => 'hi')
-
-        const response = await app
-            .handle(new Request('http://localhost/'))
-            .then((res) => res.text())
-
-        expect(response).toBe('hi')
+describe('User Routes', () => {
+  it('should create a user', async () => {
+    const handler = createRouteHandler(({ body }) => {
+      return { id: '123', ...body }
     })
+    
+    const request = new Request('http://localhost/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: 'John', email: 'john@example.com' })
+    })
+    
+    const response = await handler(request)
+    const data = await response.json()
+    
+    expect(data.id).toBe('123')
+    expect(data.name).toBe('John')
+  })
 })
 ```
 
-## 自定义主体解析器
-为解析主体创建自定义逻辑
+## 部署
 
-参见 [解析](/essential/life-cycle.html#parse)
+### Docker
 
-```typescript
-import { Elysia } from 'elysia'
+```dockerfile
+FROM oven/bun:1
 
-new Elysia()
-    .onParse(({ request, contentType }) => {
-        if (contentType === 'application/custom-type')
-            return request.text()
-    })
+WORKDIR /app
+
+COPY package.json bun.lock ./
+RUN bun install --production
+
+COPY . .
+RUN bun run build
+
+EXPOSE 3000
+
+CMD ["bun", "run", "start"]
 ```
 
-## GraphQL
-使用 GraphQL Yoga 或 Apollo 创建自定义 GraphQL 服务器
+### 环境变量
 
-参见 [GraphQL Yoga](/middleware/graphql-yoga)
+```env
+# 数据库
+DATABASE_URL="postgresql://user:password@localhost:5432/myapp"
 
-```typescript
-import { Elysia } from 'elysia'
-import { yoga } from '@elysiajs/graphql-yoga'
+# JWT
+JWT_SECRET="your-secret-key"
 
-const app = new Elysia()
-    .use(
-        yoga({
-            typeDefs: /* GraphQL */`
-                type Query {
-                    hi: String
-                }
-            `,
-            resolvers: {
-                Query: {
-                    hi: () => 'Hello from Elysia'
-                }
-            }
-        })
-    )
-    .listen(3000)
+# Redis
+REDIS_URL="redis://localhost:6379"
+
+# 监控
+OTEL_EXPORTER_OTLP_ENDPOINT="http://localhost:4317"
 ```
+
+## 最佳实践
+
+1. **错误处理**：始终使用 try-catch 包装异步操作
+2. **类型安全**：使用 TypeBox 进行运行时类型验证
+3. **中间件顺序**：注意中间件的执行顺序
+4. **性能监控**：使用 OpenTelemetry 监控应用性能
+5. **安全**：使用 Helmet 和其他安全中间件
+6. **测试**：为所有路由编写测试用例
+
+## 相关链接
+
+- [中间件系统](/middleware) - 探索可用的中间件
+- [路由定义](/essential/route) - 学习如何定义路由
+- [类型验证](/patterns/type) - 了解类型验证系统
+- [部署指南](/patterns/deploy) - 生产环境部署建议

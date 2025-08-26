@@ -1,214 +1,384 @@
 ---
-title: Better Authentication - ElysiaJS
+title: Better Auth 集成 - Vafast
 head:
-    - - meta
-      - property: 'og:title'
-        content: 更好的身份验证 - ElysiaJS
+  - - meta
+    - property: 'og:title'
+      content: Better Auth 集成 - Vafast
 
-    - - meta
-      - name: 'description'
-        content: 我们可以使用 @better-auth/cli 来生成身份验证架构并迁移我们的数据库。
+  - - meta
+    - name: 'description'
+      content: 在 Vafast 中集成 Better Auth 进行身份验证和授权管理，支持多种认证方式包括 OAuth、密码、魔法链接等。
 
-    - - meta
-      - name: 'og:description'
-        content: 我们可以使用 @better-auth/cli 来生成身份验证架构并迁移我们的数据库。
+  - - meta
+    - property: 'og:description'
+      content: 在 Vafast 中集成 Better Auth 进行身份验证和授权管理，支持多种认证方式包括 OAuth、密码、魔法链接等。
 ---
 
-# 更好的身份验证
+# Better Auth 集成
 
-更好的身份验证是一个与框架无关的 TypeScript 身份验证（和授权）框架。
+Better Auth 是一个现代化的身份验证库，专为现代 Web 应用设计。它提供了一整套全面的功能，并包括一个中间件生态系统，可以简化添加高级功能。
 
-它提供了一整套全面的功能，并包括一个插件生态系统，可以简化添加高级功能。
+## 安装
 
-我们建议在访问此页面之前先查看 [Better Auth 基本设置](https://www.better-auth.com/docs/installation)。
+```bash
+bun add better-auth
+```
 
-我们基本的设置看起来如下：
+## 基本设置
 
-```ts [auth.ts]
-import { betterAuth } from 'better-auth'
-import { Pool } from 'pg'
+首先，创建一个 Better Auth 配置文件：
 
-export const auth = betterAuth({
-    database: new Pool()
+```typescript
+// src/auth/config.ts
+import { BetterAuth } from 'better-auth'
+import { VafastAdapter } from 'better-auth/adapters/vafast'
+
+export const auth = new BetterAuth({
+  adapter: VafastAdapter({
+    // 数据库配置
+    database: {
+      url: process.env.DATABASE_URL,
+      type: 'postgresql'
+    },
+    
+    // 会话配置
+    session: {
+      secret: process.env.SESSION_SECRET,
+      expiresIn: 60 * 60 * 24 * 7, // 7天
+      updateAge: 60 * 60 * 24 // 1天
+    },
+    
+    // 认证配置
+    auth: {
+      providers: ['credentials', 'oauth'],
+      pages: {
+        signIn: '/auth/signin',
+        signUp: '/auth/signup',
+        error: '/auth/error'
+      }
+    }
+  })
 })
 ```
 
-## 处理程序
+## 在 Vafast 中使用
 
-在设置了更好的身份验证实例后，我们可以通过 [mount](/patterns/mount.html) 将其挂载到 Elysia。
+```typescript
+// src/index.ts
+import { defineRoutes, createRouteHandler } from 'vafast'
+import { auth } from './auth/config'
+import { authMiddleware } from './auth/middleware'
 
-我们需要将处理程序挂载到 Elysia 端点。
-
-```ts [index.ts]
-import { Elysia } from 'elysia'
-import { auth } from './auth'
-
-const app = new Elysia()
-	.mount(auth.handler) // [!code ++]
-	.listen(3000)
-
-console.log(
-    `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`
-)
-```
-
-然后我们可以通过 `http://localhost:3000/api/auth` 访问更好的身份验证。
-
-### 自定义端点
-
-我们建议在使用 [mount](/patterns/mount.html) 时设置一个前缀路径。
-
-```ts [index.ts]
-import { Elysia } from 'elysia'
-
-const app = new Elysia()
-	.mount('/auth', auth.handler) // [!code ++]
-	.listen(3000)
-
-console.log(
-    `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`
-)
-```
-
-然后我们可以通过 `http://localhost:3000/auth/api/auth` 访问更好的身份验证。
-
-但是这个 URL 看起来有些冗余，我们可以在更好的身份验证实例中将 `/api/auth` 前缀自定义为其他内容。
-
-```ts
-import { betterAuth } from 'better-auth'
-import { openAPI } from 'better-auth/plugins'
-import { passkey } from 'better-auth/plugins/passkey'
-
-import { Pool } from 'pg'
-
-export const auth = betterAuth({
-    basePath: '/api' // [!code ++]
-})
-```
-
-然后我们可以通过 `http://localhost:3000/auth/api` 访问 Better Auth。
-
-不幸的是，我们不能将更好的身份验证实例的 `basePath` 设置为为空或 `/`。
-
-## Swagger / OpenAPI
-
-更好的身份验证支持使用 `better-auth/plugins` 的 `openapi`。
-
-然而，如果我们使用 [@vafast/swagger](/middleware/swagger)，您可能希望从更好的身份验证实例中提取文档。
-
-我们可以通过以下代码实现：
-
-```ts
-import { openAPI } from 'better-auth/plugins'
-
-let _schema: ReturnType<typeof auth.api.generateOpenAPISchema>
-const getSchema = async () => (_schema ??= auth.api.generateOpenAPISchema())
-
-export const OpenAPI = {
-    getPaths: (prefix = '/auth/api') =>
-        getSchema().then(({ paths }) => {
-            const reference: typeof paths = Object.create(null)
-
-            for (const path of Object.keys(paths)) {
-                const key = prefix + path
-                reference[key] = paths[path]
-
-                for (const method of Object.keys(paths[path])) {
-                    const operation = (reference[key] as any)[method]
-
-                    operation.tags = ['Better Auth']
-                }
-            }
-
-            return reference
-        }) as Promise<any>,
-    components: getSchema().then(({ components }) => components) as Promise<any>
-} as const
-```
-
-然后在我们使用 `@elysiajs/swagger` 的 Elysia 实例中。
-
-```ts
-import { Elysia } from 'elysia'
-import { swagger } from '@elysiajs/swagger'
-
-import { OpenAPI } from './auth'
-
-const app = new Elysia().use(
-    swagger({
-        documentation: {
-            components: await OpenAPI.components,
-            paths: await OpenAPI.getPaths()
-        }
+const routes = defineRoutes([
+  {
+    method: 'GET',
+    path: '/api/user',
+    handler: createRouteHandler(async ({ request }) => {
+      const session = await auth.api.getSession(request)
+      if (!session) {
+        return { error: 'Unauthorized' }, { status: 401 }
+      }
+      return { user: session.user }
+    }),
+    middleware: [authMiddleware]
+  },
+  
+  {
+    method: 'POST',
+    path: '/api/auth/signin',
+    handler: createRouteHandler(async ({ body, request }) => {
+      const result = await auth.api.signIn('credentials', {
+        email: body.email,
+        password: body.password,
+        request
+      })
+      
+      if (result.error) {
+        return { error: result.error }, { status: 400 }
+      }
+      
+      return { success: true, user: result.user }
+    }),
+    body: Type.Object({
+      email: Type.String({ format: 'email' }),
+      password: Type.String({ minLength: 6 })
     })
-)
+  }
+])
+
+const app = createRouteHandler(routes)
+  .use(authMiddleware)
 ```
 
-## CORS
+## 认证中间件
 
-要配置 CORS，您可以使用 `@elysiajs/cors` 中的 `cors` 插件。
+创建认证中间件来保护路由：
 
-```ts
-import { Elysia } from 'elysia'
-import { cors } from '@elysiajs/cors'
+```typescript
+// src/auth/middleware.ts
+import { auth } from './config'
 
-import { auth } from './auth'
+export const authMiddleware = async (request: Request, next: () => Promise<Response>) => {
+  const session = await auth.api.getSession(request)
+  
+  if (!session) {
+    return new Response('Unauthorized', { status: 401 })
+  }
+  
+  // 将用户信息添加到请求上下文
+  request.user = session.user
+  
+  return next()
+}
 
-const app = new Elysia()
-    .use(
-        cors({
-            origin: 'http://localhost:3001',
-            methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-            credentials: true,
-            allowedHeaders: ['Content-Type', 'Authorization']
+export const requireAuth = (handler: Function) => {
+  return async (request: Request) => {
+    const session = await auth.api.getSession(request)
+    
+    if (!session) {
+      return { error: 'Authentication required' }, { status: 401 }
+    }
+    
+    // 将用户信息添加到请求上下文
+    request.user = session.user
+    
+    return handler(request)
+  }
+}
+```
+
+## 路由保护
+
+使用中间件保护需要认证的路由：
+
+```typescript
+import { defineRoutes, createRouteHandler } from 'vafast'
+import { requireAuth } from './auth/middleware'
+
+const routes = defineRoutes([
+  {
+    method: 'GET',
+    path: '/api/profile',
+    handler: requireAuth(createRouteHandler(({ request }) => {
+      // request.user 现在可用
+      return { profile: request.user }
+    }))
+  },
+  
+  {
+    method: 'PUT',
+    path: '/api/profile',
+    handler: requireAuth(createRouteHandler(async ({ body, request }) => {
+      const updatedProfile = await updateProfile(request.user.id, body)
+      return { profile: updatedProfile }
+    })),
+    body: Type.Object({
+      name: Type.Optional(Type.String()),
+      bio: Type.Optional(Type.String())
+    })
+  }
+])
+```
+
+## OAuth 集成
+
+配置 OAuth 提供商：
+
+```typescript
+// src/auth/config.ts
+import { BetterAuth } from 'better-auth'
+import { VafastAdapter } from 'better-auth/adapters/vafast'
+import { GoogleProvider } from 'better-auth/providers/google'
+import { GitHubProvider } from 'better-auth/providers/github'
+
+export const auth = new BetterAuth({
+  adapter: VafastAdapter({
+    // ... 其他配置
+    
+    providers: [
+      GoogleProvider({
+        clientId: process.env.GOOGLE_CLIENT_ID,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET
+      }),
+      
+      GitHubProvider({
+        clientId: process.env.GITHUB_CLIENT_ID,
+        clientSecret: process.env.GITHUB_CLIENT_SECRET
+      })
+    ]
+  })
+})
+```
+
+## 会话管理
+
+```typescript
+import { defineRoutes, createRouteHandler } from 'vafast'
+import { auth } from './auth/config'
+
+const routes = defineRoutes([
+  {
+    method: 'POST',
+    path: '/api/auth/signout',
+    handler: createRouteHandler(async ({ request }) => {
+      await auth.api.signOut(request)
+      return { success: true }
+    })
+  },
+  
+  {
+    method: 'GET',
+    path: '/api/auth/session',
+    handler: createRouteHandler(async ({ request }) => {
+      const session = await auth.api.getSession(request)
+      return { session }
+    })
+  }
+])
+```
+
+## 角色和权限
+
+Better Auth 支持基于角色的访问控制：
+
+```typescript
+// src/auth/config.ts
+export const auth = new BetterAuth({
+  adapter: VafastAdapter({
+    // ... 其他配置
+    
+    callbacks: {
+      session: async ({ session, user }) => {
+        if (session.user) {
+          session.user.role = user.role
+          session.user.permissions = user.permissions
+        }
+        return session
+      }
+    }
+  })
+})
+```
+
+使用角色保护路由：
+
+```typescript
+import { defineRoutes, createRouteHandler } from 'vafast'
+
+const requireRole = (role: string) => {
+  return async (request: Request) => {
+    const session = await auth.api.getSession(request)
+    
+    if (!session || session.user.role !== role) {
+      return { error: 'Insufficient permissions' }, { status: 403 }
+    }
+    
+    request.user = session.user
+    return true
+  }
+}
+
+const routes = defineRoutes([
+  {
+    method: 'GET',
+    path: '/api/admin/users',
+    handler: createRouteHandler(async ({ request }) => {
+      const authResult = await requireRole('admin')(request)
+      if (authResult !== true) return authResult
+      
+      const users = await getAllUsers()
+      return { users }
+    })
+  }
+])
+```
+
+## 错误处理
+
+```typescript
+import { defineRoutes, createRouteHandler } from 'vafast'
+import { auth } from './auth/config'
+
+const routes = defineRoutes([
+  {
+    method: 'POST',
+    path: '/api/auth/signin',
+    handler: createRouteHandler(async ({ body, request }) => {
+      try {
+        const result = await auth.api.signIn('credentials', {
+          email: body.email,
+          password: body.password,
+          request
         })
-    )
-    .mount(auth.handler)
-    .listen(3000)
-
-console.log(
-    `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`
-)
-```
-
-## 宏
-
-您可以结合使用 [macro](https://elysiajs.com/patterns/macro.html#macro) 和 [resolve](https://elysiajs.com/essential/handler.html#resolve) 来在传递给视图之前提供会话和用户信息。
-
-```ts
-import { Elysia } from 'elysia'
-import { auth } from './auth'
-
-// 用户中间件（计算用户和会话并传递给路由）
-const betterAuth = new Elysia({ name: 'better-auth' })
-    .mount(auth.handler)
-    .macro({
-        auth: {
-            async resolve({ status, request: { headers } }) {
-                const session = await auth.api.getSession({
-                    headers
-                })
-
-                if (!session) return status(401)
-
-                return {
-                    user: session.user,
-                    session: session.session
-                }
-            }
+        
+        if (result.error) {
+          return { error: result.error }, { status: 400 }
         }
+        
+        return { success: true, user: result.user }
+      } catch (error) {
+        console.error('Authentication error:', error)
+        return { error: 'Internal server error' }, { status: 500 }
+      }
     })
-
-const app = new Elysia()
-    .use(betterAuth)
-    .get('/user', ({ user }) => user, {
-        auth: true
-    })
-    .listen(3000)
-
-console.log(
-    `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`
-)
+  }
+])
 ```
 
-这将允许您在所有路由中访问 `user` 和 `session` 对象。
+## 与 CORS 集成
+
+要配置 CORS，您可以使用 `@vafast/cors` 中的 `cors` 中间件。
+
+```typescript
+import { defineRoutes, createRouteHandler } from 'vafast'
+import { cors } from '@vafast/cors'
+import { auth } from './auth/config'
+
+const routes = defineRoutes([
+  // 你的路由定义
+])
+
+const app = createRouteHandler(routes)
+  .use(cors({
+    origin: ['http://localhost:3000', 'https://yourdomain.com'],
+    credentials: true
+  }))
+  .use(auth.middleware)
+```
+
+## 环境变量
+
+创建 `.env` 文件：
+
+```env
+# 数据库
+DATABASE_URL="postgresql://user:password@localhost:5432/mydb"
+
+# 会话密钥
+SESSION_SECRET="your-super-secret-key-here"
+
+# OAuth 提供商
+GOOGLE_CLIENT_ID="your-google-client-id"
+GOOGLE_CLIENT_SECRET="your-google-client-secret"
+GITHUB_CLIENT_ID="your-github-client-id"
+GITHUB_CLIENT_SECRET="your-github-client-secret"
+
+# 其他配置
+NEXTAUTH_URL="http://localhost:3000"
+NEXTAUTH_SECRET="your-nextauth-secret"
+```
+
+## 最佳实践
+
+1. **安全配置**：使用强密码和 HTTPS
+2. **会话管理**：定期轮换会话密钥
+3. **错误处理**：不要暴露敏感信息
+4. **日志记录**：记录认证事件用于审计
+5. **速率限制**：防止暴力攻击
+
+## 相关链接
+
+- [Better Auth 文档](https://better-auth.com) - 官方文档
+- [Vafast 中间件](/middleware) - 探索其他可用的中间件
+- [认证最佳实践](/patterns/auth) - 了解认证模式
+- [安全指南](/essential/security) - 安全最佳实践
