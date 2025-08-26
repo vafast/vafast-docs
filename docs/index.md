@@ -10,11 +10,11 @@ head:
 
     - - meta
       - name: 'description'
-        content: Vafast 是一个高性能、类型安全的 TypeScript Web 框架，专为现代 Web 应用设计。提供优秀的开发者体验、灵活的中间件系统、组件路由支持和完整的类型安全。
+        content: Vafast 是一个高性能、类型安全的 TypeScript Web 框架，专为现代 Web 应用设计。提供优秀的开发者体验、灵活的中间件系统、声明式路由支持和完整的类型安全。
 
     - - meta
       - property: 'og:description'
-        content: Vafast 是一个高性能、类型安全的 TypeScript Web 框架，专为现代 Web 应用设计。提供优秀的开发者体验、灵活的中间件系统、组件路由支持和完整的类型安全。
+        content: Vafast 是一个高性能、类型安全的 TypeScript Web 框架，专为现代 Web 应用设计。提供优秀的开发者体验、灵活的中间件系统、声明式路由支持和完整的类型安全。
 ---
 
 <script setup>
@@ -27,21 +27,24 @@ head:
 
 ```typescript twoslash
 // @noErrors
-import { Server } from 'vafast'
+import { defineRoutes, createRouteHandler } from 'vafast'
+import { Type } from '@sinclair/typebox'
 
-const routes: any[] = [
+const routes = defineRoutes([
   {
     method: 'GET',
     path: '/id/:id',
-    handler: (req: Request, params?: Record<string, string>) => {
+    handler: createRouteHandler(({ params }) => {
       // params.id 类型安全
-      return new Response(`ID: ${params?.id}`)
-    }
+      return `ID: ${params.id}`
+    }),
+    params: Type.Object({
+      id: Type.String()
+    })
   }
-]
+])
 
-const server = new Server(routes)
-export default { fetch: server.fetch }
+export default { routes }
 ```
 
 </template>
@@ -49,30 +52,25 @@ export default { fetch: server.fetch }
 <template v-slot:type-2>
 
 ```typescript twoslash
-import { Server } from 'vafast'
+import { defineRoutes, createRouteHandler } from 'vafast'
+import { Type } from '@sinclair/typebox'
 
-const routes: any[] = [
+const routes = defineRoutes([
   {
     method: 'POST',
     path: '/profile',
-    handler: async (req: Request) => {
-      const body = await req.json()
+    handler: createRouteHandler(async ({ body }) => {
       // body 类型安全
-      return new Response(JSON.stringify(body))
-    },
-    body: {
-      // 可以定义 body 验证规则
-      type: 'object',
-      properties: {
-        name: { type: 'string' },
-        age: { type: 'number' }
-      }
-    }
+      return { success: true, data: body }
+    }),
+    body: Type.Object({
+      name: Type.String(),
+      age: Type.Number({ minimum: 0 })
+    })
   }
-]
+])
 
-const server = new Server(routes)
-export default { fetch: server.fetch }
+export default { routes }
 ```
 
 </template>
@@ -81,27 +79,26 @@ export default { fetch: server.fetch }
 
 ```typescript twoslash
 // @noErrors
-import { Server } from 'vafast'
+import { defineRoutes, createRouteHandler } from 'vafast'
 
-const routes: any[] = [
+const routes = defineRoutes([
   {
     method: 'GET',
     path: '/profile',
-    handler: (req: Request) => {
+    handler: createRouteHandler(() => {
       if(Math.random() > .5) {
-        return new Response('Unauthorized', { status: 401 })
+        return { error: 'Unauthorized' }, { status: 401 }
       }
-      return new Response('OK')
-    },
+      return { message: 'OK' }
+    }),
     responses: {
       200: { description: '成功' },
       401: { description: '未授权' }
     }
   }
-]
+])
 
-const server = new Server(routes)
-export default { fetch: server.fetch }
+export default { routes }
 ```
 
 </template>
@@ -110,28 +107,27 @@ export default { fetch: server.fetch }
 
 ```typescript twoslash
 // @noErrors
-import { Server } from 'vafast'
+import { defineRoutes, createRouteHandler } from 'vafast'
 
 // 自定义中间件
-const authMiddleware = async (req: Request, next: () => Promise<Response>) => {
-  const auth = req.headers.get('authorization')
+const authMiddleware = async (request: Request, next: () => Promise<Response>) => {
+  const auth = request.headers.get('authorization')
   if (!auth) {
     return new Response('Unauthorized', { status: 401 })
   }
   return next()
 }
 
-const routes: any[] = [
+const routes = defineRoutes([
   {
     method: 'GET',
     path: '/admin/check',
     middleware: [authMiddleware],
-    handler: () => new Response('Admin OK')
+    handler: createRouteHandler(() => ({ message: 'Admin OK' }))
   }
-]
+])
 
-const server = new Server(routes)
-export default { fetch: server.fetch }
+export default { routes }
 ```
 
 </template>
@@ -139,26 +135,25 @@ export default { fetch: server.fetch }
 <template v-slot:easy>
 
 ```typescript
-import { Server } from 'vafast'
+import { defineRoutes, createRouteHandler } from 'vafast'
 
-const routes: any[] = [
+const routes = defineRoutes([
   {
     method: 'GET',
     path: '/',
-    handler: () => new Response('Hello World')
+    handler: createRouteHandler(() => 'Hello World')
   },
   {
     method: 'GET',
     path: '/stream',
-    handler: function* () {
+    handler: createRouteHandler(function* () {
       yield 'Hello'
       yield 'World'
-    }
+    })
   }
-]
+])
 
-const server = new Server(routes)
-export default { fetch: server.fetch }
+export default { routes }
 ```
 
 </template>
@@ -166,18 +161,17 @@ export default { fetch: server.fetch }
 <template v-slot:doc>
 
 ```typescript
-import { Server } from 'vafast'
+import { defineRoutes, createRouteHandler } from 'vafast'
 
-const routes: any[] = [
+const routes = defineRoutes([
   {
     method: 'GET',
     path: '/',
-    handler: () => new Response('Hello Vafast')
+    handler: createRouteHandler(() => 'Hello Vafast')
   }
-]
+])
 
-const server = new Server(routes)
-export default { fetch: server.fetch }
+export default { routes }
 ```
 
 </template>
@@ -187,30 +181,26 @@ export default { fetch: server.fetch }
 ```typescript twoslash
 // @noErrors
 // @filename: server.ts
-import { Server } from 'vafast'
+import { defineRoutes, createRouteHandler } from 'vafast'
+import { Type } from '@sinclair/typebox'
 
-const routes: any[] = [
+const routes = defineRoutes([
   {
     method: 'POST',
     path: '/profile',
-    handler: async (req: Request) => {
-      const body = await req.json() as { age: number }
+    handler: createRouteHandler(async ({ body }) => {
       if(body.age < 18) {
-        return new Response('年龄不足', { status: 400 })
+        return { error: '年龄不足' }, { status: 400 }
       }
-      return new Response(JSON.stringify(body))
-    },
-    body: {
-      type: 'object',
-      properties: {
-        age: { type: 'number' }
-      }
-    }
+      return { success: true, data: body }
+    }),
+    body: Type.Object({
+      age: Type.Number({ minimum: 0 })
+    })
   }
-]
+])
 
-const server = new Server(routes)
-export default { fetch: server.fetch }
+export default { routes }
 
 // @filename: client.ts
 // ---cut---
@@ -229,38 +219,34 @@ const response = await fetch('/profile', {
 ```typescript twoslash
 // @errors: 2345 2304
 // @filename: index.ts
-import { Server } from 'vafast'
+import { defineRoutes, createRouteHandler } from 'vafast'
+import { Type } from '@sinclair/typebox'
 
-const routes: any[] = [
+const routes = defineRoutes([
   {
     method: 'POST',
     path: '/user',
-    handler: async (req: Request) => {
-      const body = await req.json() as { username: string; password: string }
+    handler: createRouteHandler(async ({ body }) => {
       if(body.username === 'mika') {
-        return new Response(JSON.stringify({
+        return { 
           success: false,
           message: '用户名已被占用'
-        }), { status: 400 })
+        }, { status: 400 }
       }
 
-      return new Response(JSON.stringify({
+      return {
         success: true,
         message: '用户创建成功'
-      }))
-    },
-    body: {
-      type: 'object',
-      properties: {
-        username: { type: 'string' },
-        password: { type: 'string' }
       }
-    }
+    }),
+    body: Type.Object({
+      username: Type.String(),
+      password: Type.String()
+    })
   }
-]
+])
 
-const server = new Server(routes)
-export default { fetch: server.fetch }
+export default { routes }
 
 // @filename: client.ts
 // ---cut---
