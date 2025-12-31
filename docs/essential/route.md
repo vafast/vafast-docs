@@ -2,254 +2,6 @@
 title: 路由 - Vafast
 ---
 
-<script setup>
-import Playground from '../components/nearl/playground.vue'
-import { Server, defineRoutes, createRouteHandler } from 'vafast'
-
-const demo1 = new Server(defineRoutes([
-  {
-    method: 'GET',
-    path: '/',
-    handler: createRouteHandler(() => '你好')
-  },
-  {
-    method: 'GET',
-    path: '/hi',
-    handler: createRouteHandler(() => '嗨')
-  }
-]))
-
-const demo2 = new Server(defineRoutes([
-  {
-    method: 'GET',
-    path: '/',
-    handler: createRouteHandler(() => '你好')
-  },
-  {
-    method: 'POST',
-    path: '/hi',
-    handler: createRouteHandler(() => '嗨')
-  }
-]))
-
-const demo3 = new Server(defineRoutes([
-  {
-    method: 'GET',
-    path: '/id',
-    handler: createRouteHandler(() => `id: undefined`)
-  },
-  {
-    method: 'GET',
-    path: '/id/:id',
-    handler: createRouteHandler(({ params }) => `id: ${params.id}`)
-  }
-]))
-
-const demo4 = new Server(defineRoutes([
-  {
-    method: 'GET',
-    path: '/',
-    handler: createRouteHandler(() => '嗨')
-  },
-  {
-    method: 'POST',
-    path: '/',
-    handler: createRouteHandler(() => '嗨')
-  }
-]))
-
-const demo5 = new Server(defineRoutes([
-  {
-    method: 'GET',
-    path: '/',
-    handler: createRouteHandler(() => '你好')
-  },
-  {
-    method: 'GET',
-    path: '/hi',
-    handler: createRouteHandler(() => new Response('路由未找到 :(', { status: 404 }))
-  }
-]))
-
-const demo6 = new Server(defineRoutes([
-  {
-    method: 'GET',
-    path: '/id/:id',
-    handler: createRouteHandler(({ params }) => params.id)
-  },
-  {
-    method: 'GET',
-    path: '/id/123',
-    handler: createRouteHandler(() => '123')
-  },
-  {
-    method: 'GET',
-    path: '/id/anything',
-    handler: createRouteHandler(() => 'anything')
-  },
-  {
-    method: 'GET',
-    path: '/id',
-    handler: createRouteHandler(() => new Response('Not found', { status: 404 }))
-  },
-  {
-    method: 'GET',
-    path: '/id/anything/test',
-    handler: createRouteHandler(() => new Response('Not found', { status: 404 }))
-  }
-]))
-
-const demo7 = new Server(defineRoutes([
-  {
-    method: 'GET',
-    path: '/id/:id',
-    handler: createRouteHandler(({ params }) => params.id)
-  },
-  {
-    method: 'GET',
-    path: '/id/123',
-    handler: createRouteHandler(() => '123')
-  },
-  {
-    method: 'GET',
-    path: '/id/anything',
-    handler: createRouteHandler(() => 'anything')
-  },
-  {
-    method: 'GET',
-    path: '/id',
-    handler: createRouteHandler(() => new Response('Not found', { status: 404 }))
-  },
-  {
-    method: 'GET',
-    path: '/id/:id/:name',
-    handler: createRouteHandler(({ params }) => `${params.id} ${params.name}`)
-  }
-]))
-
-const demo8 = new Server(defineRoutes([
-  {
-    method: 'GET',
-    path: '/get',
-    handler: createRouteHandler(() => 'hello')
-  },
-  {
-    method: 'POST',
-    path: '/post',
-    handler: createRouteHandler(() => 'hi')
-  }
-]))
-
-const demo9 = new Server(defineRoutes([
-  {
-    method: 'GET',
-    path: '/id/:id',
-    handler: createRouteHandler(({ params }) => params.id)
-  },
-  {
-    method: 'GET',
-    path: '/id/123',
-    handler: createRouteHandler(() => '123')
-  },
-  {
-    method: 'GET',
-    path: '/id/anything',
-    handler: createRouteHandler(() => 'anything')
-  },
-  {
-    method: 'GET',
-    path: '/id',
-    handler: createRouteHandler(() => new Response('Not found', { status: 404 }))
-  },
-  {
-    method: 'GET',
-    path: '/id/:id/:name',
-    handler: createRouteHandler(({ params }) => `${params.id}/${params.name}`)
-  }
-]))
-
-const demo10 = new Server(defineRoutes([
-  {
-    method: 'GET',
-    path: '/id/1',
-    handler: createRouteHandler(() => '静态路径')
-  },
-  {
-    method: 'GET',
-    path: '/id/:id',
-    handler: createRouteHandler(() => '动态路径')
-  }
-]))
-
-const demo11 = new Server(defineRoutes([
-  {
-    method: 'POST',
-    path: '/user/sign-in',
-    handler: createRouteHandler(() => '登录')
-  },
-  {
-    method: 'POST',
-    path: '/user/sign-up',
-    handler: createRouteHandler(() => '注册')
-  },
-  {
-    method: 'POST',
-    path: '/user/profile',
-    handler: createRouteHandler(() => '个人资料')
-  }
-]))
-
-const demo12 = new Server(defineRoutes([
-  {
-    path: '/user',
-    children: [
-      {
-        method: 'POST',
-        path: '/sign-in',
-        handler: createRouteHandler(() => '登录')
-      },
-      {
-        method: 'POST',
-        path: '/sign-up',
-        handler: createRouteHandler(() => '注册')
-      },
-      {
-        method: 'POST',
-        path: '/profile',
-        handler: createRouteHandler(() => '个人资料')
-      }
-    ]
-  }
-]))
-
-const demo13 = new Server(defineRoutes([
-  {
-    method: 'GET',
-    path: '/',
-    handler: createRouteHandler(() => '你好，世界')
-  },
-  {
-    path: '/user',
-    children: [
-      {
-        method: 'POST',
-        path: '/sign-in',
-        handler: createRouteHandler(() => '登录')
-      },
-      {
-        method: 'POST',
-        path: '/sign-up',
-        handler: createRouteHandler(() => '注册')
-      },
-      {
-        method: 'POST',
-        path: '/profile',
-        handler: createRouteHandler(() => '个人资料')
-      }
-    ]
-  }
-]))
-</script>
 
 # 路由
 
@@ -262,13 +14,13 @@ Web 服务器使用请求的 **路径和 HTTP 方法** 来查找正确的资源�
 ### 定义路由
 
 ```typescript
-import { Server, defineRoutes, createRouteHandler } from 'vafast'
+import { Server, defineRoutes, handler } from 'vafast'
 
 const routes = defineRoutes([
   {
     method: 'GET',
     path: '/',
-    handler: createRouteHandler(() => 'Hello World')
+    handler: handler(() => 'Hello World')
   }
 ])
 
@@ -285,27 +37,27 @@ const routes = defineRoutes([
   {
     method: 'GET',     // 获取资源
     path: '/users',
-    handler: createRouteHandler(() => 'Get users')
+    handler: handler(() => 'Get users')
   },
   {
     method: 'POST',    // 创建资源
     path: '/users',
-    handler: createRouteHandler(() => 'Create user')
+    handler: handler(() => 'Create user')
   },
   {
     method: 'PUT',     // 更新资源
     path: '/users/:id',
-    handler: createRouteHandler(() => 'Update user')
+    handler: handler(() => 'Update user')
   },
   {
     method: 'DELETE',  // 删除资源
     path: '/users/:id',
-    handler: createRouteHandler(() => 'Delete user')
+    handler: handler(() => 'Delete user')
   },
   {
     method: 'PATCH',   // 部分更新资源
     path: '/users/:id',
-    handler: createRouteHandler(() => 'Patch user')
+    handler: handler(() => 'Patch user')
   }
 ])
 ```
@@ -319,14 +71,14 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/users/:id',
-    handler: createRouteHandler(({ params }) => {
+    handler: handler(({ params }) => {
       return `User ID: ${params.id}`
     })
   },
   {
     method: 'GET',
     path: '/posts/:postId/comments/:commentId',
-    handler: createRouteHandler(({ params }) => {
+    handler: handler(({ params }) => {
       return `Post: ${params.postId}, Comment: ${params.commentId}`
     })
   }
@@ -342,7 +94,7 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/search',
-    handler: createRouteHandler(({ query }) => {
+    handler: handler(({ query }) => {
       const { q, page = '1', limit = '10' } = query
       return `Search: ${q}, Page: ${page}, Limit: ${limit}`
     })
@@ -359,7 +111,7 @@ const routes = defineRoutes([
   {
     method: 'POST',
     path: '/users',
-    handler: createRouteHandler(async ({ body }) => {
+    handler: handler(async ({ body }) => {
       return `Created user: ${body.name}`
     })
   }
@@ -375,12 +127,12 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/users/123',        // 静态路径 - 优先级高
-    handler: createRouteHandler(() => 'Specific user')
+    handler: handler(() => 'Specific user')
   },
   {
     method: 'GET',
     path: '/users/:id',        // 动态路径 - 优先级低
-    handler: createRouteHandler(({ params }) => `User ${params.id}`)
+    handler: handler(({ params }) => `User ${params.id}`)
   }
 ])
 ```
@@ -400,7 +152,7 @@ const routes = defineRoutes([
           {
             method: 'GET',
             path: '/users',
-            handler: createRouteHandler(() => 'API v1 users')
+            handler: handler(() => 'API v1 users')
           }
         ]
       },
@@ -410,7 +162,7 @@ const routes = defineRoutes([
           {
             method: 'GET',
             path: '/users',
-            handler: createRouteHandler(() => 'API v2 users')
+            handler: handler(() => 'API v2 users')
           }
         ]
       }
@@ -428,7 +180,7 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/protected',
-    handler: createRouteHandler(() => 'Protected content'),
+    handler: handler(() => 'Protected content'),
     middleware: [authMiddleware],  // 路由级中间件
     body: userSchema,             // 请求体验证
     query: querySchema,           // 查询参数验证
@@ -462,17 +214,17 @@ const routes = defineRoutes([
       {
         method: 'GET',
         path: '/',
-        handler: createRouteHandler(() => 'List users')
+        handler: handler(() => 'List users')
       },
       {
         method: 'POST',
         path: '/',
-        handler: createRouteHandler(() => 'Create user')
+        handler: handler(() => 'Create user')
       },
       {
         method: 'GET',
         path: '/:id',
-        handler: createRouteHandler(({ params }) => `User ${params.id}`)
+        handler: handler(({ params }) => `User ${params.id}`)
       }
     ]
   },
@@ -484,12 +236,12 @@ const routes = defineRoutes([
       {
         method: 'GET',
         path: '/',
-        handler: createRouteHandler(() => 'List posts')
+        handler: handler(() => 'List posts')
       },
       {
         method: 'POST',
         path: '/',
-        handler: createRouteHandler(() => 'Create post')
+        handler: handler(() => 'Create post')
       }
     ]
   }
@@ -503,57 +255,28 @@ const routes = defineRoutes([
   {
     method: 'GET',     // 获取数据
     path: '/users',
-    handler: createRouteHandler(() => 'Get users')
+    handler: handler(() => 'Get users')
   },
   {
     method: 'POST',    // 创建数据
     path: '/users',
-    handler: createRouteHandler(() => 'Create user')
+    handler: handler(() => 'Create user')
   },
   {
     method: 'PUT',     // 完全更新
     path: '/users/:id',
-    handler: createRouteHandler(() => 'Update user')
+    handler: handler(() => 'Update user')
   },
   {
     method: 'PATCH',   // 部分更新
     path: '/users/:id',
-    handler: createRouteHandler(() => 'Patch user')
+    handler: handler(() => 'Patch user')
   },
   {
     method: 'DELETE',  // 删除数据
     path: '/users/:id',
-    handler: createRouteHandler(() => 'Delete user')
+    handler: handler(() => 'Delete user')
   }
 ])
 ```
 
-## 测试路由
-
-您可以使用 Playground 组件来测试不同的路由配置：
-
-<Playground :demo="demo1" />
-
-<Playground :demo="demo2" />
-
-<Playground :demo="demo3" />
-
-<Playground :demo="demo4" />
-
-<Playground :demo="demo5" />
-
-<Playground :demo="demo6" />
-
-<Playground :demo="demo7" />
-
-<Playground :demo="demo8" />
-
-<Playground :demo="demo9" />
-
-<Playground :demo="demo10" />
-
-<Playground :demo="demo11" />
-
-<Playground :demo="demo12" />
-
-<Playground :demo="demo13" />

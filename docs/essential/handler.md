@@ -3,110 +3,7 @@ title: 处理程序 - Vafast
 ---
 
 <script setup>
-import Playground from '../components/nearl/playground.vue'
 import Tab from '../components/fern/tab.vue'
-import { Server, defineRoutes, createRouteHandler } from 'vafast'
-
-const handler1 = new Server(defineRoutes([
-  {
-    method: 'GET',
-    path: '/',
-    handler: createRouteHandler(({ path }) => path)
-  }
-]))
-
-const handler2 = new Server(defineRoutes([
-  {
-    method: 'GET',
-    path: '/',
-    handler: createRouteHandler(() => new Response('Teapot', { status: 418 }))
-  }
-]))
-
-const demo1 = new Server(defineRoutes([
-  {
-    method: 'GET',
-    path: '/a',
-    handler: createRouteHandler(() => 'Version 1')
-  },
-  {
-    method: 'GET',
-    path: '/b',
-    handler: createRouteHandler(() => 'Store info')
-  },
-  {
-    method: 'GET',
-    path: '/c',
-    handler: createRouteHandler(() => 'still ok')
-  }
-]))
-
-const demo2 = new Server(defineRoutes([
-  {
-    method: 'GET',
-    path: '/error',
-    handler: createRouteHandler(() => new Response('Error', { status: 500 }))
-  },
-  {
-    method: 'GET',
-    path: '/',
-    handler: createRouteHandler(() => 'Version 1')
-  }
-]))
-
-const demo3 = new Server(defineRoutes([
-  {
-    method: 'GET',
-    path: '/',
-    handler: createRouteHandler(({ headers }) => {
-      const auth = headers.authorization
-      const bearer = auth?.startsWith('Bearer ') ? auth.slice(7) : null
-      return bearer ?? '12345'
-    })
-  }
-]))
-
-const demo4 = new Server(defineRoutes([
-  {
-    method: 'GET',
-    path: '/elysia-version',
-    handler: createRouteHandler(() => 'Vafast Version 1')
-  },
-  {
-    method: 'GET',
-    path: '/version',
-    handler: createRouteHandler(() => 'Version 1')
-  }
-]))
-
-const demo5 = new Server(defineRoutes([
-  {
-    method: 'GET',
-    path: '/',
-    handler: createRouteHandler(() => 'Setup Carbon')
-  }
-]))
-
-const demo6 = new Server(defineRoutes([
-  {
-    method: 'GET',
-    path: '/',
-    handler: createRouteHandler(() => 'Setup Carbon')
-  }
-]))
-
-const demo7 = new Server(defineRoutes([
-  {
-    method: 'GET',
-    path: '/',
-    handler: createRouteHandler(() => 'Counter: 0')
-  },
-  {
-    method: 'GET',
-    path: '/error',
-    handler: createRouteHandler(() => 'Counter: 0')
-  }
-]))
 </script>
 
 # 处理程序
@@ -118,14 +15,14 @@ const demo7 = new Server(defineRoutes([
 在其他框架中，处理程序也被称为 **控制器**。
 
 ```typescript
-import { Server, defineRoutes, createRouteHandler } from 'vafast'
+import { Server, defineRoutes, handler } from 'vafast'
 
 const routes = defineRoutes([
   {
     method: 'GET',
     path: '/',
-    // 函数 `createRouteHandler(() => 'hello world')` 创建一个处理程序
-    handler: createRouteHandler(() => 'hello world')
+    // handler 是柯里化函数：handler(schema)(handler)
+    handler: handler({})(() => 'hello world')
   }
 ])
 ```
@@ -141,17 +38,17 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/',
-    handler: createRouteHandler(() => 'Hello World')
+    handler: handler({})(() => 'Hello World')
   },
   {
     method: 'GET',
     path: '/json',
-    handler: createRouteHandler(() => ({ message: 'Hello World' }))
+    handler: handler({})(() => ({ message: 'Hello World' }))
   },
   {
     method: 'GET',
     path: '/html',
-    handler: createRouteHandler(() => '<h1>Hello World</h1>')
+    handler: handler({})(() => '<h1>Hello World</h1>')
   }
 ])
 ```
@@ -165,10 +62,10 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/info',
-    handler: createRouteHandler(({ req, path, method, headers, query }) => {
+    handler: handler({})(({ req, headers, query }) => {
       return {
-        path,
-        method,
+        url: req.url,
+        method: req.method,
         userAgent: headers['user-agent'],
         query: query.search || 'default'
       }
@@ -186,7 +83,7 @@ const routes = defineRoutes([
   {
     method: 'POST',
     path: '/users',
-    handler: createRouteHandler(async ({ body }) => {
+    handler: handler({})(async ({ body }) => {
       // 模拟数据库操作
       const user = await createUser(body)
       return user
@@ -206,7 +103,7 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/user/:id',
-    handler: createRouteHandler(({ params, query, headers }) => {
+    handler: handler({})(({ params, query, headers }) => {
       const userId = params.id
       const page = query.page || '1'
       const auth = headers.authorization
@@ -224,7 +121,7 @@ const routes = defineRoutes([
   {
     method: 'POST',
     path: '/users',
-    handler: createRouteHandler(async ({ body }) => {
+    handler: handler(async ({ body }) => {
       const { name, email, age } = body
       
       if (!name || !email) {
@@ -244,7 +141,7 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/search',
-    handler: createRouteHandler(({ query }) => {
+    handler: handler(({ query }) => {
       const { q, page = '1', limit = '10', sort = 'name' } = query
       
       return {
@@ -270,22 +167,22 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/string',
-    handler: createRouteHandler(() => 'Plain text') // 返回 text/plain
+    handler: handler(() => 'Plain text') // 返回 text/plain
   },
   {
     method: 'GET',
     path: '/json',
-    handler: createRouteHandler(() => ({ data: 'JSON' })) // 返回 application/json
+    handler: handler(() => ({ data: 'JSON' })) // 返回 application/json
   },
   {
     method: 'GET',
     path: '/html',
-    handler: createRouteHandler(() => '<h1>HTML</h1>') // 返回 text/html
+    handler: handler(() => '<h1>HTML</h1>') // 返回 text/html
   },
   {
     method: 'GET',
     path: '/number',
-    handler: createRouteHandler(() => 42) // 返回 text/plain
+    handler: handler(() => 42) // 返回 text/plain
   }
 ])
 ```
@@ -299,7 +196,7 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/custom',
-    handler: createRouteHandler(() => {
+    handler: handler(() => {
       return new Response('Custom response', {
         status: 200,
         headers: {
@@ -312,7 +209,7 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/redirect',
-    handler: createRouteHandler(() => {
+    handler: handler(() => {
       return new Response(null, {
         status: 302,
         headers: {
@@ -331,7 +228,7 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/user/:id',
-    handler: createRouteHandler(({ params }) => {
+    handler: handler(({ params }) => {
       const userId = params.id
       
       if (!userId || isNaN(Number(userId))) {
@@ -365,7 +262,7 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/protected',
-    handler: createRouteHandler(() => 'Protected content'),
+    handler: handler(() => 'Protected content'),
     middleware: [authMiddleware]
   }
 ])
@@ -388,7 +285,7 @@ const routes = defineRoutes([
   {
     method: 'POST',
     path: '/users',
-    handler: createRouteHandler(({ body }) => {
+    handler: handler(({ body }) => {
       // body 已经通过验证，类型安全
       const { name, email, age } = body
       return { name, email, age: age || 18 }
@@ -408,7 +305,7 @@ const routes = defineRoutes([
   {
     method: 'POST',
     path: '/users',
-    handler: createRouteHandler(async ({ body }) => {
+    handler: handler(async ({ body }) => {
       const user = await createUser(body)
       return user
     })
@@ -420,7 +317,7 @@ const routes = defineRoutes([
   {
     method: 'POST',
     path: '/users',
-    handler: createRouteHandler(async ({ body }) => {
+    handler: handler(async ({ body }) => {
       // 不要在这里放太多业务逻辑
       const { name, email, age, address, phone, preferences, ... } = body
       // 复杂的验证逻辑
@@ -440,7 +337,7 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/user/:id',
-    handler: createRouteHandler(async ({ params }) => {
+    handler: handler(async ({ params }) => {
       try {
         const user = await getUserById(params.id)
         if (!user) {
@@ -469,35 +366,13 @@ const routes = defineRoutes([
   {
     method: 'POST',
     path: '/users',
-    handler: createRouteHandler(async ({ body }): Promise<User> => {
+    handler: handler(async ({ body }): Promise<User> => {
       const user = await createUser(body)
       return user
     })
   }
 ])
 ```
-
-## 测试处理程序
-
-您可以使用 Playground 组件来测试不同的处理程序：
-
-<Playground :demo="handler1" />
-
-<Playground :demo="handler2" />
-
-<Playground :demo="demo1" />
-
-<Playground :demo="demo2" />
-
-<Playground :demo="demo3" />
-
-<Playground :demo="demo4" />
-
-<Playground :demo="demo5" />
-
-<Playground :demo="demo6" />
-
-<Playground :demo="demo7" />
 
 ## 总结
 

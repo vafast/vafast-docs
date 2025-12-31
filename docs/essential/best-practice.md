@@ -142,7 +142,7 @@ Elysia 代码应始终使用 **方法链**。
 
 **这非常重要**，以确保类型的完整性和推断。
 
-```typescript twoslash
+```typescript
 import { Elysia } from 'elysia'
 
 new Elysia()
@@ -158,8 +158,7 @@ new Elysia()
 
 如果不使用方法链，Elysia 无法保存新增类型，导致类型推断丢失。
 
-```typescript twoslash
-// @errors: 2339
+```typescript
 import { Elysia } from 'elysia'
 
 const app = new Elysia()
@@ -417,7 +416,7 @@ interface ICustomBody {
 
 使用 Elysia 验证系统而非类或接口声明模型：
 
-```typescript twoslash
+```typescript
 // ✅ 推荐做法
 import { Elysia, t } from 'elysia'
 
@@ -429,9 +428,6 @@ const customBody = t.Object({
 // 可选：获取模型对应类型
 // 通常无须专门使用该类型，因为 Elysia 已推断
 type CustomBody = typeof customBody.static
-    // ^?
-
-
 
 export { customBody }
 ```
@@ -440,18 +436,17 @@ export { customBody }
 
 这样可以通过 `CustomBody` 类型正确推断请求体。
 
-```typescript twoslash
+```typescript
 import { Elysia, t } from 'elysia'
 
 const customBody = t.Object({
 	username: t.String(),
 	password: t.String()
 })
-// ---cut---
+
 // ✅ 推荐写法
 new Elysia()
 	.post('/login', ({ body }) => {
-	                 // ^?
 		return body
 	}, {
 		body: customBody
@@ -510,7 +505,7 @@ const models = AuthModel.models
 
 使用 Elysia 的模型引用示例：
 
-```typescript twoslash
+```typescript
 import { Elysia, t } from 'elysia'
 
 const customBody = t.Object({
@@ -528,8 +523,6 @@ const models = AuthModel.models
 const UserController = new Elysia({ prefix: '/auth' })
     .use(AuthModel)
     .post('/sign-in', async ({ body, cookie: { session } }) => {
-                             // ^?
-
         return true
     }, {
         body: 'auth.sign'

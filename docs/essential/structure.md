@@ -19,7 +19,7 @@ Elysia 代码应始终使用 **方法链**。
 
 **这点很重要**，以确保类型的完整性和推断。
 
-```typescript twoslash
+```typescript
 import { Elysia } from 'elysia'
 
 new Elysia()
@@ -34,8 +34,7 @@ new Elysia()
 ### ❌ 不要：不使用方法链
 如果不使用方法链，Elysia 就无法保存这些新类型，从而导致没有类型推断。
 
-```typescript twoslash
-// @errors: 2339
+```typescript
 import { Elysia } from 'elysia'
 
 const app = new Elysia()
@@ -238,7 +237,7 @@ interface ICustomBody {
 ### ✅ 要：使用 Elysia 的验证系统
 
 不要声明类或接口，而是使用 Elysia 的验证系统来定义模型：
-```typescript twoslash
+```typescript
 // ✅ 要
 import { Elysia, t } from 'elysia'
 
@@ -250,9 +249,6 @@ const customBody = t.Object({
 // 如果您想获取模型的类型可以选择性地
 // 通常如果我们不使用类型，因为它已由 Elysia 推断
 type CustomBody = typeof customBody.static
-    // ^?
-
-
 
 export { customBody }
 ```
@@ -261,18 +257,17 @@ export { customBody }
 
 然后您可以使用 `CustomBody` 类型来推断请求体的类型。
 
-```typescript twoslash
+```typescript
 import { Elysia, t } from 'elysia'
 
 const customBody = t.Object({
 	username: t.String(),
 	password: t.String()
 })
-// ---cut---
+
 // ✅ 要
 new Elysia()
 	.post('/login', ({ body }) => {
-	                 // ^?
 		return body
 	}, {
 		body: customBody
@@ -323,7 +318,7 @@ export const AuthModel = {
 虽然这不是必需的，如果您严格遵循 MVC 模式，您可能想像服务一样将模型注入到控制器中。我们推荐使用 [Elysia 参考模型](/essential/validation.html#reference-model)
 
 使用 Elysia 的模型引用
-```typescript twoslash
+```typescript
 import { Elysia, t } from 'elysia'
 
 const customBody = t.Object({
@@ -339,8 +334,6 @@ const AuthModel = new Elysia()
 const UserController = new Elysia({ prefix: '/auth' })
     .use(AuthModel)
     .post('/sign-in', async ({ body, cookie: { session } }) => {
-                             // ^?
-
         return true
     }, {
         body: 'auth.sign'

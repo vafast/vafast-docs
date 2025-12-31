@@ -34,12 +34,12 @@ bun add -D @types/node
 
 ```typescript
 // server/api/server.ts
-import { defineRoutes, createRouteHandler } from 'vafast'
+import { defineRoutes, createHandler } from 'vafast'
 import { cors } from '@vafast/cors'
 import { helmet } from '@vafast/helmet'
 import { routes } from './routes'
 
-export const app = createRouteHandler(routes)
+export const app = createHandler(routes)
   .use(cors({
     origin: process.env.NODE_ENV === 'development' 
       ? ['http://localhost:3000'] 
@@ -55,14 +55,14 @@ export const handler = app.handler
 
 ```typescript
 // server/api/routes.ts
-import { defineRoutes, createRouteHandler } from 'vafast'
+import { defineRoutes, createHandler } from 'vafast'
 import { Type } from '@sinclair/typebox'
 
 export const routes = defineRoutes([
   {
     method: 'GET',
     path: '/api/products',
-    handler: createRouteHandler(async () => {
+    handler: createHandler(async () => {
       // 模拟数据库查询
       const products = [
         { id: 1, name: 'Product 1', price: 99.99, description: 'Amazing product' },
@@ -76,7 +76,7 @@ export const routes = defineRoutes([
   {
     method: 'POST',
     path: '/api/products',
-    handler: createRouteHandler(async ({ body }) => {
+    handler: createHandler(async ({ body }) => {
       // 创建新产品
       const newProduct = {
         id: Date.now(),
@@ -96,7 +96,7 @@ export const routes = defineRoutes([
   {
     method: 'GET',
     path: '/api/products/:id',
-    handler: createRouteHandler(async ({ params }) => {
+    handler: createHandler(async ({ params }) => {
       const productId = parseInt(params.id)
       
       // 模拟数据库查询
@@ -121,7 +121,7 @@ export const routes = defineRoutes([
   {
     method: 'PUT',
     path: '/api/products/:id',
-    handler: createRouteHandler(async ({ params, body }) => {
+    handler: createHandler(async ({ params, body }) => {
       const productId = parseInt(params.id)
       
       // 模拟数据库更新
@@ -146,7 +146,7 @@ export const routes = defineRoutes([
   {
     method: 'DELETE',
     path: '/api/products/:id',
-    handler: createRouteHandler(async ({ params }) => {
+    handler: createHandler(async ({ params }) => {
       const productId = parseInt(params.id)
       
       // 模拟数据库删除
@@ -835,14 +835,14 @@ async function verifyToken(token: string) {
 
 ```typescript
 // server/api/routes.ts
-import { defineRoutes, createRouteHandler } from 'vafast'
+import { defineRoutes, createHandler } from 'vafast'
 import { authMiddleware } from './middleware/auth'
 
 export const routes = defineRoutes([
   {
     method: 'GET',
     path: '/api/profile',
-    handler: createRouteHandler(async ({ request }) => {
+    handler: createHandler(async ({ request }) => {
       const user = (request as AuthenticatedRequest).user
       return { user }
     }),

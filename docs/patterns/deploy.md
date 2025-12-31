@@ -173,7 +173,7 @@ export const config = {
 
 ```typescript
 // src/index.ts
-import { Server, defineRoutes, createRouteHandler } from 'vafast'
+import { Server, defineRoutes, createHandler } from 'vafast'
 import { compress } from '@vafast/compress'
 
 const routes = defineRoutes([
@@ -196,7 +196,7 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/static/:file',
-    handler: createRouteHandler(({ params }) => {
+    handler: createHandler(({ params }) => {
       const file = getStaticFile(params.file)
       return new Response(file, {
         headers: {
@@ -244,7 +244,7 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/health',
-    handler: createRouteHandler(() => ({
+    handler: createHandler(() => ({
       status: 'ok',
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
@@ -257,7 +257,7 @@ const routes = defineRoutes([
 ### 2. 结构化日志
 
 ```typescript
-import { Server, defineRoutes, createRouteHandler } from 'vafast'
+import { Server, defineRoutes, createHandler } from 'vafast'
 
 const loggingMiddleware = async (req: Request, next: () => Promise<Response>) => {
   const startTime = Date.now()

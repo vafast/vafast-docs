@@ -17,7 +17,7 @@ bun add @vafast/bearer
 ## 基本用法
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { bearer, createTypedHandler } from '@vafast/bearer'
 
 // 定义路由处理器
@@ -25,7 +25,7 @@ const routes = [
   {
     method: 'GET',
     path: '/',
-    handler: createRouteHandler(() => {
+    handler: createHandler(() => {
       return { message: 'Bearer Token API' }
     })
   },
@@ -199,7 +199,7 @@ const routes = [
   {
     method: 'GET',
     path: '/public',
-    handler: createRouteHandler(() => {
+    handler: createHandler(() => {
       return { message: 'Public endpoint' }
     })
   },
@@ -231,7 +231,7 @@ export default {
 ## 完整示例
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { bearer, createTypedHandler } from '@vafast/bearer'
 
 // 模拟用户验证函数
@@ -248,14 +248,14 @@ const routes = [
   {
     method: 'GET',
     path: '/',
-    handler: createRouteHandler(() => {
+    handler: createHandler(() => {
       return { message: 'Bearer Token Authentication API' }
     })
   },
   {
     method: 'POST',
     path: '/login',
-    handler: createRouteHandler(async (req: Request) => {
+    handler: createHandler(async (req: Request) => {
       const body = await req.json()
       const { username, password } = body
       

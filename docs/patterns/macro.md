@@ -13,7 +13,7 @@ Vafast 提供了强大的中间件系统和请求装饰器，允许您为请求�
 Vafast 的中间件系统基于标准的 Web 标准，每个中间件都是一个函数，接受 `Request` 和 `next` 函数：
 
 ```typescript
-import { Server, defineRoutes, createRouteHandler } from 'vafast'
+import { Server, defineRoutes, createHandler } from 'vafast'
 
 // 基本中间件
 const loggingMiddleware = async (req: Request, next: () => Promise<Response>) => {
@@ -50,12 +50,12 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/',
-    handler: createRouteHandler(() => 'Hello Vafast!')
+    handler: createHandler(() => 'Hello Vafast!')
   },
   {
     method: 'GET',
     path: '/protected',
-    handler: createRouteHandler(({ req }) => {
+    handler: createHandler(({ req }) => {
       const user = (req as any).user
       return `Hello ${user.name}!`
     }),
@@ -130,13 +130,13 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/admin/users',
-    handler: createRouteHandler(() => 'Admin users'),
+    handler: createHandler(() => 'Admin users'),
     middleware: [adminAuth]
   },
   {
     method: 'GET',
     path: '/profile',
-    handler: createRouteHandler(() => 'User profile'),
+    handler: createHandler(() => 'User profile'),
     middleware: [userAuth]
   }
 ])
@@ -147,7 +147,7 @@ const routes = defineRoutes([
 Vafast 允许您通过中间件扩展请求对象，添加自定义属性和方法：
 
 ```typescript
-import { Server, defineRoutes, createRouteHandler } from 'vafast'
+import { Server, defineRoutes, createHandler } from 'vafast'
 
 // 用户装饰器中间件
 const userDecorator = async (req: Request, next: () => Promise<Response>) => {
@@ -210,7 +210,7 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/user/:id',
-    handler: createRouteHandler(async ({ req, params }) => {
+    handler: createHandler(async ({ req, params }) => {
       // 使用装饰器添加的方法
       if (!(req as any).isAuthenticated()) {
         return new Response('Unauthorized', { status: 401 })
@@ -252,7 +252,7 @@ export default { fetch: server.fetch }
 组合多个中间件创建复杂的处理流程：
 
 ```typescript
-import { Server, defineRoutes, createRouteHandler } from 'vafast'
+import { Server, defineRoutes, createHandler } from 'vafast'
 
 // 中间件组合器
 const composeMiddleware = (...middlewares: any[]) => {
@@ -341,7 +341,7 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/api/data',
-    handler: createRouteHandler(async ({ req }) => {
+    handler: createHandler(async ({ req }) => {
       // 使用数据库查询
       const data = await (req as any).query('SELECT * FROM data')
       return data
@@ -372,7 +372,7 @@ export default { fetch: server.fetch }
 使用 TypeScript 确保装饰器的类型安全：
 
 ```typescript
-import { Server, defineRoutes, createRouteHandler } from 'vafast'
+import { Server, defineRoutes, createHandler } from 'vafast'
 
 // 扩展 Request 类型
 interface ExtendedRequest extends Request {
@@ -410,7 +410,7 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/admin',
-    handler: createRouteHandler(({ req }: { req: ExtendedRequest }) => {
+    handler: createHandler(({ req }: { req: ExtendedRequest }) => {
       if (!req.isAuthenticated()) {
         return new Response('Unauthorized', { status: 401 })
       }
@@ -436,7 +436,7 @@ export default { fetch: server.fetch }
 
 ```typescript
 import { describe, expect, it } from 'bun:test'
-import { Server, defineRoutes, createRouteHandler } from 'vafast'
+import { Server, defineRoutes, createHandler } from 'vafast'
 
 describe('Middleware and Decorators', () => {
   it('should apply global middleware', async () => {
@@ -453,7 +453,7 @@ describe('Middleware and Decorators', () => {
       {
         method: 'GET',
         path: '/',
-        handler: createRouteHandler(() => 'Hello')
+        handler: createHandler(() => 'Hello')
       }
     ])
     
@@ -479,7 +479,7 @@ describe('Middleware and Decorators', () => {
       {
         method: 'GET',
         path: '/protected',
-        handler: createRouteHandler(() => 'Protected'),
+        handler: createHandler(() => 'Protected'),
         middleware: [routeMiddleware]
       }
     ])
@@ -505,7 +505,7 @@ describe('Middleware and Decorators', () => {
       {
         method: 'GET',
         path: '/profile',
-        handler: createRouteHandler(({ req }) => {
+        handler: createHandler(({ req }) => {
           const user = (req as any).user
           const isAuth = (req as any).isAuthenticated()
           

@@ -3,67 +3,8 @@ title: 验证 - Vafast
 ---
 
 <script setup>
-import { Server, defineRoutes, createRouteHandler } from 'vafast'
-import { Type } from '@sinclair/typebox'
-
-import Playground from '../components/nearl/playground.vue'
 import Card from '../components/nearl/card.vue'
 import Deck from '../components/nearl/card-deck.vue'
-
-const demo1 = new Server(defineRoutes([
-  {
-    method: 'GET',
-    path: '/none',
-    handler: createRouteHandler(() => 'hi')
-  },
-  {
-    method: 'GET',
-    path: '/query',
-    handler: createRouteHandler(({ query }) => query.name),
-    query: Type.Object({
-      name: Type.String()
-    })
-  }
-]))
-
-const demo2 = new Server(defineRoutes([
-  {
-    method: 'GET',
-    path: '/id/1',
-    handler: createRouteHandler(() => '1')
-  },
-  {
-    method: 'GET',
-    path: '/id/:id',
-    handler: createRouteHandler(({ params }) => params.id),
-    params: Type.Object({
-      id: Type.Number()
-    })
-  }
-]))
-
-const demo3 = new Server(defineRoutes([
-  {
-    method: 'GET',
-    path: '/query',
-    handler: createRouteHandler(({ query }) => query.id),
-    query: Type.Object({
-      id: Type.Number()
-    })
-  }
-]))
-
-const demo4 = new Server(defineRoutes([
-  {
-    method: 'GET',
-    path: '/query',
-    handler: createRouteHandler(({ query }) => query),
-    query: Type.Object({
-      name: Type.Array(Type.String()),
-      squad: Type.String()
-    })
-  }
-]))
 </script>
 
 # 验证
@@ -73,19 +14,35 @@ const demo4 = new Server(defineRoutes([
 JavaScript 允许任何数据成为任何类型。Vafast 提供了一个工具，可以对数据进行验证，以确保数据的格式正确。
 
 ```typescript
-import { Server, defineRoutes, createRouteHandler } from 'vafast'
+import { Server, defineRoutes } from 'vafast'
 import { Type } from '@sinclair/typebox'
+import { TypeCompiler } from '@sinclair/typebox/compiler'
+
+interface TypedRequest extends Request {
+  params: { id: string }
+}
+
+const paramsSchema = Type.Object({
+  id: Type.String()
+})
+const paramsValidator = TypeCompiler.Compile(paramsSchema)
 
 const routes = defineRoutes([
   {
     method: 'GET',
     path: '/id/:id',
-    handler: createRouteHandler(({ params }) => params.id),
-    params: Type.Object({
-      id: Type.Number()
-    })
+    handler: (req) => {
+      const params = (req as TypedRequest).params
+      if (!paramsValidator.Check(params)) {
+        return new Response('Invalid params', { status: 400 })
+      }
+      return params.id
+    }
   }
 ])
+
+const server = new Server(routes)
+export default { fetch: server.fetch }
 ```
 
 ### TypeBox
@@ -131,7 +88,7 @@ const routes = defineRoutes([
   {
     method: 'POST',
     path: '/users',
-    handler: createRouteHandler(({ body }) => {
+    handler: handler(({ body }) => {
       // body 已经通过验证，类型安全
       const { name, email, age } = body
       return { name, email, age: age || 18 }
@@ -159,7 +116,7 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/search',
-    handler: createRouteHandler(({ query }) => {
+    handler: handler(({ query }) => {
       const { q, page = 1, limit = 10, sort = 'name' } = query
       return { query: q, page, limit, sort, results: [] }
     }),
@@ -184,7 +141,7 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/users/:id/:action?',
-    handler: createRouteHandler(({ params }) => {
+    handler: handler(({ params }) => {
       const { id, action = 'profile' } = params
       return `User ${id} ${action}`
     }),
@@ -216,7 +173,7 @@ const routes = defineRoutes([
   {
     method: 'POST',
     path: '/users',
-    handler: createRouteHandler(({ body }) => {
+    handler: handler(({ body }) => {
       return createUser(body)
     }),
     body: userSchema
@@ -249,7 +206,7 @@ const routes = defineRoutes([
   {
     method: 'POST',
     path: '/users',
-    handler: createRouteHandler(({ body }) => {
+    handler: handler(({ body }) => {
       if (body.type === 'create') {
         return createUser(body.data)
       } else {
@@ -289,7 +246,7 @@ const routes = defineRoutes([
   {
     method: 'POST',
     path: '/accounts',
-    handler: createRouteHandler(({ body }) => {
+    handler: handler(({ body }) => {
       return createAccount(body)
     }),
     body: conditionalSchema
@@ -320,7 +277,7 @@ const routes = defineRoutes([
   {
     method: 'POST',
     path: '/scores',
-    handler: createRouteHandler(({ body }) => {
+    handler: handler(({ body }) => {
       return saveScore(body)
     }),
     body: Type.Object({
@@ -343,7 +300,7 @@ const routes = defineRoutes([
   {
     method: 'POST',
     path: '/users',
-    handler: createRouteHandler(async ({ body }) => {
+    handler: handler(async ({ body }) => {
       // 异步验证
       const emailExists = await checkEmailExists(body.email)
       if (emailExists) {
@@ -373,7 +330,7 @@ const routes = defineRoutes([
   {
     method: 'POST',
     path: '/users',
-    handler: createRouteHandler(({ body }) => {
+    handler: handler(({ body }) => {
       // 如果验证失败，这里不会执行
       return createUser(body)
     }),
@@ -413,7 +370,7 @@ const routes = defineRoutes([
   {
     method: 'POST',
     path: '/users',
-    handler: createRouteHandler(({ body }) => {
+    handler: handler(({ body }) => {
       return createUser(body)
     }),
     body: userSchema,
@@ -436,7 +393,7 @@ const routes = defineRoutes([
   {
     method: 'POST',
     path: '/users',
-    handler: createRouteHandler(({ body }) => {
+    handler: handler(({ body }) => {
       // 使用预编译的验证器
       const isValid = userValidator.Check(body)
       if (!isValid) {
@@ -477,7 +434,7 @@ const routes = defineRoutes([
   {
     method: 'POST',
     path: '/users',
-    handler: createRouteHandler(({ body }) => {
+    handler: handler(({ body }) => {
       return createUser(body)
     }),
     middleware: [cachedValidation(userSchema)]
@@ -558,25 +515,13 @@ const routes = defineRoutes([
     method: 'POST',
     path: '/users',
     middleware: [validateBody(userSchema)],
-    handler: createRouteHandler(({ req }) => {
+    handler: handler(({ req }) => {
       const userData = (req as any).validatedBody
       return createUser(userData)
     })
   }
 ])
 ```
-
-## 测试验证
-
-您可以使用 Playground 组件来测试不同的验证配置：
-
-<Playground :demo="demo1" />
-
-<Playground :demo="demo2" />
-
-<Playground :demo="demo3" />
-
-<Playground :demo="demo4" />
 
 ## 总结
 

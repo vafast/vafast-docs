@@ -16,7 +16,7 @@ bun add @vafast/swagger
 ## 基本用法
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { swagger } from '@vafast/swagger'
 
 // 创建 Swagger 中间件
@@ -35,7 +35,7 @@ const routes = [
     {
         method: 'GET',
         path: '/api/',
-        handler: createRouteHandler(() => {
+        handler: createHandler(() => {
             return { message: 'Hello API' }
         })
     }
@@ -157,7 +157,7 @@ interface OpenAPIComponents {
 ### 1. 基本 Scalar 文档
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { swagger } from '@vafast/swagger'
 
 const swaggerMiddleware = swagger({
@@ -185,7 +185,7 @@ const routes = [
     {
         method: 'GET',
         path: '/api/users',
-        handler: createRouteHandler(() => {
+        handler: createHandler(() => {
             return { users: [] }
         })
     }
@@ -203,7 +203,7 @@ export default {
 ### 2. Swagger UI 文档
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { swagger } from '@vafast/swagger'
 
 const swaggerMiddleware = swagger({
@@ -229,7 +229,7 @@ const routes = [
     {
         method: 'GET',
         path: '/api/health',
-        handler: createRouteHandler(() => {
+        handler: createHandler(() => {
             return { status: 'OK' }
         })
     }
@@ -247,7 +247,7 @@ export default {
 ### 3. 自定义路径和配置
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { swagger } from '@vafast/swagger'
 
 const swaggerMiddleware = swagger({
@@ -273,7 +273,7 @@ const routes = [
     {
         method: 'GET',
         path: '/api/data',
-        handler: createRouteHandler(() => {
+        handler: createHandler(() => {
             return { data: 'example' }
         })
     }
@@ -291,7 +291,7 @@ export default {
 ### 4. 完整的 API 文档
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { swagger } from '@vafast/swagger'
 
 const swaggerMiddleware = swagger({
@@ -405,14 +405,14 @@ const routes = [
     {
         method: 'GET',
         path: '/api/users',
-        handler: createRouteHandler(() => {
+        handler: createHandler(() => {
             return { users: [] }
         })
     },
     {
         method: 'POST',
         path: '/api/users',
-        handler: createRouteHandler(async (req: Request) => {
+        handler: createHandler(async (req: Request) => {
             const userData = await req.json()
             return { ...userData, id: 'generated-id' }
         })
@@ -431,7 +431,7 @@ export default {
 ### 5. 中间件集成
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { swagger } from '@vafast/swagger'
 
 // 创建 Swagger 中间件
@@ -451,14 +451,14 @@ const routes = [
     {
         method: 'GET',
         path: '/',
-        handler: createRouteHandler(() => {
+        handler: createHandler(() => {
             return { message: 'API is running' }
         })
     },
     {
         method: 'GET',
         path: '/api/status',
-        handler: createRouteHandler(() => {
+        handler: createHandler(() => {
             return { status: 'healthy', timestamp: new Date().toISOString() }
         })
     }
@@ -482,7 +482,7 @@ export default {
 ## 完整示例
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { swagger } from '@vafast/swagger'
 
 // 创建 Swagger 中间件
@@ -631,7 +631,7 @@ const routes = [
     {
         method: 'GET',
         path: '/',
-        handler: createRouteHandler(() => {
+        handler: createHandler(() => {
             return {
                 message: 'Vafast Swagger Example API',
                 version: '1.0.0',
@@ -643,7 +643,7 @@ const routes = [
     {
         method: 'GET',
         path: '/api/test',
-        handler: createRouteHandler(() => {
+        handler: createHandler(() => {
             return {
                 success: true,
                 message: 'Test endpoint working',
@@ -654,7 +654,7 @@ const routes = [
     {
         method: 'GET',
         path: '/api/users',
-        handler: createRouteHandler(() => {
+        handler: createHandler(() => {
             return [
                 { username: 'john_doe', email: 'john@example.com', age: 30 },
                 { username: 'jane_smith', email: 'jane@example.com', age: 25 }
@@ -664,7 +664,7 @@ const routes = [
     {
         method: 'POST',
         path: '/api/users',
-        handler: createRouteHandler(async (req: Request) => {
+        handler: createHandler(async (req: Request) => {
             const userData = await req.json()
             return {
                 ...userData,
@@ -676,7 +676,7 @@ const routes = [
     {
         method: 'GET',
         path: '/api/health',
-        handler: createRouteHandler(() => {
+        handler: createHandler(() => {
             return {
                 status: 'healthy',
                 uptime: process.uptime(),
@@ -706,7 +706,7 @@ console.log('🌐 健康检查：/api/health')
 
 ```typescript
 import { describe, expect, it } from 'bun:test'
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { swagger } from '@vafast/swagger'
 
 describe('Vafast Swagger Plugin', () => {
@@ -735,7 +735,7 @@ describe('Vafast Swagger Plugin', () => {
             {
                 method: 'GET',
                 path: '/',
-                handler: createRouteHandler(() => {
+                handler: createHandler(() => {
                     return 'Hello, API!'
                 })
             }
@@ -766,7 +766,7 @@ describe('Vafast Swagger Plugin', () => {
             {
                 method: 'GET',
                 path: '/',
-                handler: createRouteHandler(() => {
+                handler: createHandler(() => {
                     return 'Hello, API!'
                 })
             }
@@ -852,7 +852,7 @@ describe('Vafast Swagger Plugin', () => {
             {
                 method: 'GET',
                 path: '/api/data',
-                handler: createRouteHandler(() => {
+                handler: createHandler(() => {
                     return { message: 'Data endpoint' }
                 })
             }

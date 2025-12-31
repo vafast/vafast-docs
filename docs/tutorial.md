@@ -142,14 +142,14 @@ const notes: Note[] = []
 现在让我们创建我们的 API 路由：
 
 ```typescript
-import { Server, defineRoutes, createRouteHandler } from 'vafast'
+import { Server, defineRoutes, createHandler } from 'vafast'
 
 const routes = defineRoutes([
   // 获取所有笔记
   {
     method: 'GET',
     path: '/notes',
-    handler: createRouteHandler(() => {
+    handler: createHandler(() => {
       return notes
     })
   },
@@ -158,7 +158,7 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/notes/:id',
-    handler: createRouteHandler(({ params }) => {
+    handler: createHandler(({ params }) => {
       const id = params.id
       const note = notes.find(n => n.id === id)
       
@@ -174,7 +174,7 @@ const routes = defineRoutes([
   {
     method: 'POST',
     path: '/notes',
-    handler: createRouteHandler(async ({ req }) => {
+    handler: createHandler(async ({ req }) => {
       const body = await req.json()
       const { title, content } = body
       
@@ -200,7 +200,7 @@ const routes = defineRoutes([
   {
     method: 'PUT',
     path: '/notes/:id',
-    handler: createRouteHandler(async ({ req, params }) => {
+    handler: createHandler(async ({ req, params }) => {
       const id = params.id
       const noteIndex = notes.findIndex(n => n.id === id)
       
@@ -230,7 +230,7 @@ const routes = defineRoutes([
   {
     method: 'DELETE',
     path: '/notes/:id',
-    handler: createRouteHandler(({ params }) => {
+    handler: createHandler(({ params }) => {
       const id = params.id
       const noteIndex = notes.findIndex(n => n.id === id)
       
@@ -341,7 +341,7 @@ const routes = defineRoutes([
     method: 'GET',
     path: '/notes',
     middleware: [logMiddleware, errorHandler],
-    handler: createRouteHandler(() => {
+    handler: createHandler(() => {
       return notes
     })
   }
@@ -365,7 +365,7 @@ const routes = defineRoutes([
   {
     method: 'POST',
     path: '/notes',
-    handler: createRouteHandler(async ({ req, body }) => {
+    handler: createHandler(async ({ req, body }) => {
       // body 已经通过验证，类型安全
       const { title, content } = body
       

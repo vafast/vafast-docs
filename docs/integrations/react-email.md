@@ -576,7 +576,7 @@ export const emailService = new EmailService({
 
 ```typescript
 // src/routes.ts
-import { defineRoutes, createRouteHandler } from 'vafast'
+import { defineRoutes, createHandler } from 'vafast'
 import { Type } from '@sinclair/typebox'
 import { emailService } from './services/emailService'
 import { userService } from './services/userService'
@@ -587,7 +587,7 @@ export const routes = defineRoutes([
   {
     method: 'POST',
     path: '/api/auth/register',
-    handler: createRouteHandler(async ({ body }) => {
+    handler: createHandler(async ({ body }) => {
       const { email, name, password } = body
       
       // 检查用户是否已存在
@@ -639,7 +639,7 @@ export const routes = defineRoutes([
   {
     method: 'POST',
     path: '/api/auth/forgot-password',
-    handler: createRouteHandler(async ({ body }) => {
+    handler: createHandler(async ({ body }) => {
       const { email } = body
       
       // 查找用户
@@ -678,7 +678,7 @@ export const routes = defineRoutes([
   {
     method: 'POST',
     path: '/api/notifications/send-email',
-    handler: createRouteHandler(async ({ body, request }) => {
+    handler: createHandler(async ({ body, request }) => {
       // 这里应该验证用户身份和权限
       const { userId, notificationTitle, notificationMessage, actionUrl, actionText } = body
       
@@ -719,7 +719,7 @@ export const routes = defineRoutes([
   {
     method: 'POST',
     path: '/api/notifications/send-bulk-email',
-    handler: createRouteHandler(async ({ body }) => {
+    handler: createHandler(async ({ body }) => {
       const { userIds, notificationTitle, notificationMessage, actionUrl, actionText } = body
       
       // 获取所有用户信息

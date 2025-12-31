@@ -53,7 +53,7 @@ export const auth = new BetterAuth({
 
 ```typescript
 // src/index.ts
-import { defineRoutes, createRouteHandler } from 'vafast'
+import { defineRoutes, createHandler } from 'vafast'
 import { auth } from './auth/config'
 import { authMiddleware } from './auth/middleware'
 
@@ -61,7 +61,7 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/api/user',
-    handler: createRouteHandler(async ({ request }) => {
+    handler: createHandler(async ({ request }) => {
       const session = await auth.api.getSession(request)
       if (!session) {
         return { error: 'Unauthorized' }, { status: 401 }
@@ -74,7 +74,7 @@ const routes = defineRoutes([
   {
     method: 'POST',
     path: '/api/auth/signin',
-    handler: createRouteHandler(async ({ body, request }) => {
+    handler: createHandler(async ({ body, request }) => {
       const result = await auth.api.signIn('credentials', {
         email: body.email,
         password: body.password,
@@ -94,7 +94,7 @@ const routes = defineRoutes([
   }
 ])
 
-const app = createRouteHandler(routes)
+const app = createHandler(routes)
   .use(authMiddleware)
 ```
 
@@ -140,14 +140,14 @@ export const requireAuth = (handler: Function) => {
 使用中间件保护需要认证的路由：
 
 ```typescript
-import { defineRoutes, createRouteHandler } from 'vafast'
+import { defineRoutes, createHandler } from 'vafast'
 import { requireAuth } from './auth/middleware'
 
 const routes = defineRoutes([
   {
     method: 'GET',
     path: '/api/profile',
-    handler: requireAuth(createRouteHandler(({ request }) => {
+    handler: requireAuth(createHandler(({ request }) => {
       // request.user 现在可用
       return { profile: request.user }
     }))
@@ -156,7 +156,7 @@ const routes = defineRoutes([
   {
     method: 'PUT',
     path: '/api/profile',
-    handler: requireAuth(createRouteHandler(async ({ body, request }) => {
+    handler: requireAuth(createHandler(async ({ body, request }) => {
       const updatedProfile = await updateProfile(request.user.id, body)
       return { profile: updatedProfile }
     })),
@@ -201,14 +201,14 @@ export const auth = new BetterAuth({
 ## 会话管理
 
 ```typescript
-import { defineRoutes, createRouteHandler } from 'vafast'
+import { defineRoutes, createHandler } from 'vafast'
 import { auth } from './auth/config'
 
 const routes = defineRoutes([
   {
     method: 'POST',
     path: '/api/auth/signout',
-    handler: createRouteHandler(async ({ request }) => {
+    handler: createHandler(async ({ request }) => {
       await auth.api.signOut(request)
       return { success: true }
     })
@@ -217,7 +217,7 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/api/auth/session',
-    handler: createRouteHandler(async ({ request }) => {
+    handler: createHandler(async ({ request }) => {
       const session = await auth.api.getSession(request)
       return { session }
     })
@@ -251,7 +251,7 @@ export const auth = new BetterAuth({
 使用角色保护路由：
 
 ```typescript
-import { defineRoutes, createRouteHandler } from 'vafast'
+import { defineRoutes, createHandler } from 'vafast'
 
 const requireRole = (role: string) => {
   return async (request: Request) => {
@@ -270,7 +270,7 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/api/admin/users',
-    handler: createRouteHandler(async ({ request }) => {
+    handler: createHandler(async ({ request }) => {
       const authResult = await requireRole('admin')(request)
       if (authResult !== true) return authResult
       
@@ -284,14 +284,14 @@ const routes = defineRoutes([
 ## 错误处理
 
 ```typescript
-import { defineRoutes, createRouteHandler } from 'vafast'
+import { defineRoutes, createHandler } from 'vafast'
 import { auth } from './auth/config'
 
 const routes = defineRoutes([
   {
     method: 'POST',
     path: '/api/auth/signin',
-    handler: createRouteHandler(async ({ body, request }) => {
+    handler: createHandler(async ({ body, request }) => {
       try {
         const result = await auth.api.signIn('credentials', {
           email: body.email,
@@ -318,7 +318,7 @@ const routes = defineRoutes([
 要配置 CORS，您可以使用 `@vafast/cors` 中的 `cors` 中间件。
 
 ```typescript
-import { defineRoutes, createRouteHandler } from 'vafast'
+import { defineRoutes, createHandler } from 'vafast'
 import { cors } from '@vafast/cors'
 import { auth } from './auth/config'
 
@@ -326,7 +326,7 @@ const routes = defineRoutes([
   // 你的路由定义
 ])
 
-const app = createRouteHandler(routes)
+const app = createHandler(routes)
   .use(cors({
     origin: ['http://localhost:3000', 'https://yourdomain.com'],
     credentials: true

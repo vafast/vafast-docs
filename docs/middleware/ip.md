@@ -17,7 +17,7 @@ bun add @vafast/ip
 ## 基本用法
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { ip } from '@vafast/ip'
 
 // 创建 IP 中间件
@@ -28,7 +28,7 @@ const routes = [
   {
     method: 'GET',
     path: '/',
-    handler: createRouteHandler((request: Request) => {
+    handler: createHandler((request: Request) => {
       // 访问客户端 IP 地址
       const clientIP = (request as any).ip
       return { 
@@ -41,7 +41,7 @@ const routes = [
   {
     method: 'GET',
     path: '/api/client-info',
-    handler: createRouteHandler((request: Request) => {
+    handler: createHandler((request: Request) => {
       return {
         ip: (request as any).ip,
         userAgent: request.headers.get('user-agent'),
@@ -132,7 +132,7 @@ type IPHeaders =
 ### 1. 基本 IP 获取
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { ip } from '@vafast/ip'
 
 const ipMiddleware = ip()
@@ -141,7 +141,7 @@ const routes = [
   {
     method: 'GET',
     path: '/',
-    handler: createRouteHandler((request: Request) => {
+    handler: createHandler((request: Request) => {
       const clientIP = (request as any).ip
       return { 
         message: 'Welcome!',
@@ -160,7 +160,7 @@ export default { fetch: (req: Request) => server.fetch(req) }
 ### 2. 自定义头部检查
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { ip } from '@vafast/ip'
 
 // 自定义检查的头部，按优先级排序
@@ -177,7 +177,7 @@ const routes = [
   {
     method: 'GET',
     path: '/api/ip',
-    handler: createRouteHandler((request: Request) => {
+    handler: createHandler((request: Request) => {
       return {
         ip: (request as any).ip,
         headers: {
@@ -199,7 +199,7 @@ export default { fetch: (req: Request) => server.fetch(req) }
 ### 3. 多实例注入
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { ip } from '@vafast/ip'
 
 const ipMiddleware = ip()
@@ -208,7 +208,7 @@ const ipMiddleware = ip()
 const aInstance = {
   method: 'GET',
   path: '/a',
-  handler: createRouteHandler((request: Request) => {
+  handler: createHandler((request: Request) => {
     return {
       instance: 'A',
       clientIP: (request as any).ip,
@@ -221,7 +221,7 @@ const aInstance = {
 const bInstance = {
   method: 'GET',
   path: '/b',
-  handler: createRouteHandler((request: Request) => {
+  handler: createHandler((request: Request) => {
     return {
       instance: 'B',
       clientIP: (request as any).ip,
@@ -237,7 +237,7 @@ const routes = [
   {
     method: 'GET',
     path: '/',
-    handler: createRouteHandler(() => {
+    handler: createHandler(() => {
       return { 
         message: 'Multi-instance IP tracking',
         endpoints: ['/a', '/b']
@@ -253,14 +253,14 @@ export default { fetch: (req: Request) => server.fetch(req) }
 ### 4. 条件 IP 获取
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { ip } from '@vafast/ip'
 
 const routes = [
   {
     method: 'GET',
     path: '/public',
-    handler: createRouteHandler(() => {
+    handler: createHandler(() => {
       return { message: 'Public endpoint - no IP tracking' }
     })
     // 不应用 IP 中间件
@@ -268,7 +268,7 @@ const routes = [
   {
     method: 'GET',
     path: '/tracked',
-    handler: createRouteHandler((request: Request) => {
+    handler: createHandler((request: Request) => {
       return { 
         message: 'IP tracked endpoint',
         clientIP: (request as any).ip
@@ -279,7 +279,7 @@ const routes = [
   {
     method: 'GET',
     path: '/admin',
-    handler: createRouteHandler((request: Request) => {
+    handler: createHandler((request: Request) => {
       const clientIP = (request as any).ip
       
       // 基于 IP 的访问控制
@@ -308,7 +308,7 @@ export default { fetch: (req: Request) => server.fetch(req) }
 ### 5. 高级配置
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { ip } from '@vafast/ip'
 
 const advancedIpMiddleware = ip({
@@ -329,7 +329,7 @@ const routes = [
   {
     method: 'GET',
     path: '/advanced',
-    handler: createRouteHandler((request: Request) => {
+    handler: createHandler((request: Request) => {
       const clientIP = (request as any).ip
       
       return {
@@ -354,7 +354,7 @@ export default { fetch: (req: Request) => server.fetch(req) }
 ## 完整示例
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { ip } from '@vafast/ip'
 
 // 创建不同配置的 IP 中间件
@@ -372,7 +372,7 @@ const routes = [
   {
     method: 'GET',
     path: '/',
-    handler: createRouteHandler(() => {
+    handler: createHandler(() => {
       return { 
         message: 'Vafast IP Tracking API',
         endpoints: [
@@ -388,7 +388,7 @@ const routes = [
   {
     method: 'GET',
     path: '/basic',
-    handler: createRouteHandler((request: Request) => {
+    handler: createHandler((request: Request) => {
       return { 
         message: 'Basic IP tracking',
         clientIP: (request as any).ip || 'Unknown',
@@ -400,7 +400,7 @@ const routes = [
   {
     method: 'GET',
     path: '/custom',
-    handler: createRouteHandler((request: Request) => {
+    handler: createHandler((request: Request) => {
       return { 
         message: 'Custom headers IP tracking',
         clientIP: (request as any).ip || 'Unknown',
@@ -417,7 +417,7 @@ const routes = [
   {
     method: 'GET',
     path: '/strict',
-    handler: createRouteHandler((request: Request) => {
+    handler: createHandler((request: Request) => {
       return { 
         message: 'Strict headers IP tracking',
         clientIP: (request as any).ip || 'Unknown',
@@ -433,7 +433,7 @@ const routes = [
   {
     method: 'GET',
     path: '/multi',
-    handler: createRouteHandler((request: Request) => {
+    handler: createHandler((request: Request) => {
       return { 
         message: 'Multi-instance IP tracking',
         clientIP: (request as any).ip || 'Unknown',
@@ -445,7 +445,7 @@ const routes = [
   {
     method: 'GET',
     path: '/multi/a',
-    handler: createRouteHandler((request: Request) => {
+    handler: createHandler((request: Request) => {
       return { 
         instance: 'A',
         clientIP: (request as any).ip || 'Unknown',
@@ -457,7 +457,7 @@ const routes = [
   {
     method: 'GET',
     path: '/multi/b',
-    handler: createRouteHandler((request: Request) => {
+    handler: createHandler((request: Request) => {
       return { 
         instance: 'B',
         clientIP: (request as any).ip || 'Unknown',
@@ -469,7 +469,7 @@ const routes = [
   {
     method: 'GET',
     path: '/admin',
-    handler: createRouteHandler((request: Request) => {
+    handler: createHandler((request: Request) => {
       const clientIP = (request as any).ip
       
       // 简单的 IP 白名单
@@ -497,7 +497,7 @@ const routes = [
   {
     method: 'POST',
     path: '/api/log',
-    handler: createRouteHandler(async (request: Request) => {
+    handler: createHandler(async (request: Request) => {
       const clientIP = (request as any).ip
       const body = await request.json()
       
@@ -536,7 +536,7 @@ console.log('📝 活动记录: POST /api/log')
 
 ```typescript
 import { describe, expect, it } from 'bun:test'
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { ip } from '@vafast/ip'
 
 describe('Vafast IP Plugin', () => {
@@ -547,7 +547,7 @@ describe('Vafast IP Plugin', () => {
       {
         method: 'GET',
         path: '/',
-        handler: createRouteHandler(({ req }: { req: Request }) => {
+        handler: createHandler(({ req }: { req: Request }) => {
           return { ip: (req as any).ip }
         }),
         middleware: [ipMiddleware],
@@ -573,7 +573,7 @@ describe('Vafast IP Plugin', () => {
       {
         method: 'GET',
         path: '/',
-        handler: createRouteHandler(({ req }: { req: Request }) => {
+        handler: createHandler(({ req }: { req: Request }) => {
           return { ip: (req as any).ip }
         }),
         middleware: [ipMiddleware],
@@ -600,7 +600,7 @@ describe('Vafast IP Plugin', () => {
       {
         method: 'GET',
         path: '/',
-        handler: createRouteHandler(({ req }: { req: Request }) => {
+        handler: createHandler(({ req }: { req: Request }) => {
           return { ip: (req as any).ip }
         }),
         middleware: [ipMiddleware],
@@ -628,7 +628,7 @@ describe('Vafast IP Plugin', () => {
       {
         method: 'GET',
         path: '/',
-        handler: createRouteHandler(({ req }: { req: Request }) => {
+        handler: createHandler(({ req }: { req: Request }) => {
           return { ip: (req as any).ip }
         }),
         middleware: [ipMiddleware],
@@ -656,7 +656,7 @@ describe('Vafast IP Plugin', () => {
       {
         method: 'GET',
         path: '/',
-        handler: createRouteHandler(({ req }: { req: Request }) => {
+        handler: createHandler(({ req }: { req: Request }) => {
           return { ip: (req as any).ip }
         }),
         middleware: [ipMiddleware],
@@ -735,7 +735,7 @@ const routes = [
   {
     method: 'GET',
     path: '/secure',
-    handler: createRouteHandler((request: Request) => {
+    handler: createHandler((request: Request) => {
       const clientIP = (request as any).ip
       
       // 验证 IP 地址格式
@@ -770,7 +770,7 @@ const routes = [
   {
     method: 'GET',
     path: '/monitored',
-    handler: createRouteHandler((request: Request) => {
+    handler: createHandler((request: Request) => {
       const clientIP = (request as any).ip
       
       // 记录 IP 访问

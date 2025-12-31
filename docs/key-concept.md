@@ -30,13 +30,13 @@ Vafast 采用模块化架构设计，主要包含以下核心组件：
 ### 基本用法
 
 ```typescript
-import { Server, defineRoutes, createRouteHandler } from 'vafast'
+import { Server, defineRoutes, createHandler } from 'vafast'
 
 const routes = defineRoutes([
   {
     method: 'GET',
     path: '/',
-    handler: createRouteHandler(() => 'Hello World')
+    handler: createHandler(() => 'Hello World')
   }
 ])
 
@@ -102,7 +102,7 @@ type Middleware = (
 ### 中间件示例
 
 ```typescript
-import { Server, defineRoutes, createRouteHandler } from 'vafast'
+import { Server, defineRoutes, createHandler } from 'vafast'
 
 // 日志中间件
 const loggingMiddleware = async (req: Request, next: () => Promise<Response>) => {
@@ -125,7 +125,7 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/protected',
-    handler: createRouteHandler(() => 'Protected content'),
+    handler: createHandler(() => 'Protected content'),
     middleware: [authMiddleware]
   }
 ])
@@ -170,7 +170,7 @@ const routes = defineRoutes([
   {
     method: 'POST',
     path: '/users',
-    handler: createRouteHandler(({ body }) => {
+    handler: createHandler(({ body }) => {
       // body 已经通过验证，类型安全
       return { success: true, user: body }
     }),
@@ -181,19 +181,19 @@ const routes = defineRoutes([
 
 ## 🎯 路由处理器工厂
 
-`createRouteHandler` 函数用于创建类型安全的路由处理器，自动处理参数解构和类型推断。
+`createHandler` 函数用于创建类型安全的路由处理器，自动处理参数解构和类型推断。
 
 ### 基本用法
 
 ```typescript
 // 简单处理器
-const simpleHandler = createRouteHandler(() => 'Hello')
+const simpleHandler = createHandler(() => 'Hello')
 
 // 带参数的处理器
-const paramHandler = createRouteHandler(({ params }) => `ID: ${params.id}`)
+const paramHandler = createHandler(({ params }) => `ID: ${params.id}`)
 
 // 带请求体的处理器
-const bodyHandler = createRouteHandler(async ({ req, body }) => {
+const bodyHandler = createHandler(async ({ req, body }) => {
   const data = await req.json()
   return { received: data, validated: body }
 })
@@ -203,7 +203,7 @@ const bodyHandler = createRouteHandler(async ({ req, body }) => {
 
 ```typescript
 // 带多个验证的处理器
-const fullHandler = createRouteHandler(
+const fullHandler = createHandler(
   ({ params, body, query, headers }) => {
     return {
       params,

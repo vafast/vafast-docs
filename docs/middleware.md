@@ -49,7 +49,7 @@ const routes = defineRoutes([
     method: 'GET',
     path: '/admin',
     middleware: [authMiddleware, logMiddleware, rateLimitMiddleware],
-    handler: createRouteHandler(() => 'Admin panel')
+    handler: createHandler(() => 'Admin panel')
   }
 ])
 ```
@@ -116,7 +116,7 @@ const routes = defineRoutes([
     method: 'GET',
     path: '/profile',
     middleware: [authMiddleware],
-    handler: createRouteHandler(({ req }) => {
+    handler: createHandler(({ req }) => {
       const user = (req as any).user
       return `Hello ${user.name}`
     })
@@ -230,7 +230,7 @@ const routes = defineRoutes([
     method: 'POST',
     path: '/users',
     middleware: [validateBody(userSchema)],
-    handler: createRouteHandler(({ req }) => {
+    handler: createHandler(({ req }) => {
       const userData = (req as any).validatedBody
       // 处理验证后的数据...
       return new Response('User created', { status: 201 })
@@ -273,7 +273,7 @@ const routes = defineRoutes([
     method: 'GET',
     path: '/api/users',
     middleware: [combinedMiddleware],
-    handler: createRouteHandler(() => new Response('Users'))
+    handler: createHandler(() => new Response('Users'))
   }
 ])
 ```
@@ -301,7 +301,7 @@ const routes = defineRoutes([
     method: 'GET',
     path: '/admin/users',
     middleware: [adminOnly],
-    handler: createRouteHandler(() => new Response('Admin users'))
+    handler: createHandler(() => new Response('Admin users'))
   }
 ])
 ```
@@ -319,12 +319,12 @@ const routes = defineRoutes([
       {
         method: 'GET',
         path: '/users',
-        handler: createRouteHandler(() => new Response('Users'))
+        handler: createHandler(() => new Response('Users'))
       },
       {
         method: 'GET',
         path: '/posts',
-        handler: createRouteHandler(() => new Response('Posts'))
+        handler: createHandler(() => new Response('Posts'))
       }
     ]
   }
@@ -385,7 +385,7 @@ const routes = defineRoutes([
     method: 'GET',
     path: '/api/users',
     middleware: [safeMiddleware(authMiddleware)],
-    handler: createRouteHandler(() => new Response('Users'))
+    handler: createHandler(() => new Response('Users'))
   }
 ])
 ```
@@ -404,7 +404,7 @@ const routes = defineRoutes([
       authMiddleware,       // 4. 身份验证
       errorHandler          // 5. 错误处理
     ],
-    handler: createRouteHandler(() => new Response('Users'))
+    handler: createHandler(() => new Response('Users'))
   }
 ])
 ```

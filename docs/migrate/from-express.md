@@ -69,18 +69,18 @@ app.listen(3000)
 ::: code-group
 
 ```ts [Vafast]
-import { Server, defineRoutes, createRouteHandler } from 'vafast'
+import { Server, defineRoutes, createHandler } from 'vafast'
 
 const routes = defineRoutes([
   {
     method: 'GET',
     path: '/',
-    handler: createRouteHandler(() => 'Hello World')
+    handler: createHandler(() => 'Hello World')
   },
   {
     method: 'POST',
     path: '/id/:id',
-    handler: createRouteHandler(({ params }) => {
+    handler: createHandler(({ params }) => {
       return { id: params.id }
     })
   }
@@ -117,12 +117,12 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/users',
-    handler: createRouteHandler(() => { ... })
+    handler: createHandler(() => { ... })
   },
   {
     method: 'POST',
     path: '/users',
-    handler: createRouteHandler(() => { ... })
+    handler: createHandler(() => { ... })
   }
 ])
 ```
@@ -143,7 +143,7 @@ app.get('/user/:id', (req, res) => {
 {
   method: 'GET',
   path: '/user/:id',
-  handler: createRouteHandler(({ params, query }) => {
+  handler: createHandler(({ params, query }) => {
     return { id: params.id, query }
   })
 }
@@ -168,7 +168,7 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/admin',
-    handler: createRouteHandler(() => 'Admin Panel'),
+    handler: createHandler(() => 'Admin Panel'),
     middleware: [authMiddleware]
   }
 ])
@@ -221,7 +221,7 @@ app.get('/api/users', (req, res) => {
 {
   method: 'GET',
   path: '/api/users',
-  handler: createRouteHandler(() => {
+  handler: createHandler(() => {
     return getUsers()
   })
 }
@@ -311,7 +311,7 @@ app.listen(3000)
 ### Vafast 应用
 
 ```typescript
-import { Server, defineRoutes, createRouteHandler } from 'vafast'
+import { Server, defineRoutes, createHandler } from 'vafast'
 import { cors } from '@vafast/cors'
 import { helmet } from '@vafast/helmet'
 
@@ -319,21 +319,21 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/users',
-    handler: createRouteHandler(() => {
+    handler: createHandler(() => {
       return getUsers()
     })
   },
   {
     method: 'POST',
     path: '/users',
-    handler: createRouteHandler(({ body }) => {
+    handler: createHandler(({ body }) => {
       return createUser(body)
     })
   },
   {
     method: 'GET',
     path: '/users/:id',
-    handler: createRouteHandler(({ params }) => {
+    handler: createHandler(({ params }) => {
       const user = getUserById(params.id)
       if (!user) {
         return new Response(

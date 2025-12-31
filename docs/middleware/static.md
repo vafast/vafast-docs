@@ -16,7 +16,7 @@ bun add @vafast/static
 ## 基本用法
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { staticPlugin } from '@vafast/static'
 import { join } from 'path'
 
@@ -31,7 +31,7 @@ const customRoutes = [
     {
         method: 'GET',
         path: '/',
-        handler: createRouteHandler(() => {
+        handler: createHandler(() => {
             return { message: 'Static file server is running' }
         })
     }
@@ -119,7 +119,7 @@ const defaultOptions = {
 ### 1. 基本静态文件服务
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { staticPlugin } from '@vafast/static'
 
 const staticRoutes = await staticPlugin({
@@ -131,7 +131,7 @@ const routes = [
     {
         method: 'GET',
         path: '/',
-        handler: createRouteHandler(() => {
+        handler: createHandler(() => {
             return { message: 'Welcome to Static File Server' }
         })
     }
@@ -147,7 +147,7 @@ export default {
 ### 2. 生产环境优化
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { staticPlugin } from '@vafast/static'
 
 const staticRoutes = await staticPlugin({
@@ -169,7 +169,7 @@ export default {
 ### 3. 自定义头部和缓存控制
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { staticPlugin } from '@vafast/static'
 
 const staticRoutes = await staticPlugin({
@@ -194,7 +194,7 @@ export default {
 ### 4. 忽略特定文件
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { staticPlugin } from '@vafast/static'
 
 const staticRoutes = await staticPlugin({
@@ -220,7 +220,7 @@ export default {
 ### 5. 无扩展名支持
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { staticPlugin } from '@vafast/static'
 
 const staticRoutes = await staticPlugin({
@@ -240,7 +240,7 @@ export default {
 ### 6. 混合路由配置
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { staticPlugin } from '@vafast/static'
 
 // 创建静态文件路由
@@ -256,14 +256,14 @@ const customRoutes = [
     {
         method: 'GET',
         path: '/',
-        handler: createRouteHandler(() => {
+        handler: createHandler(() => {
             return { message: 'Mixed routes server' }
         })
     },
     {
         method: 'GET',
         path: '/api/status',
-        handler: createRouteHandler(() => {
+        handler: createHandler(() => {
             return { status: 'running', staticRoutes: staticRoutes.length }
         })
     }
@@ -279,7 +279,7 @@ export default {
 ## 完整示例
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { staticPlugin } from '@vafast/static'
 import { join } from 'path'
 
@@ -329,7 +329,7 @@ const routes = [
     {
         method: 'GET',
         path: '/',
-        handler: createRouteHandler(() => {
+        handler: createHandler(() => {
             return {
                 message: 'Vafast Static File Server',
                 version: '1.0.0',
@@ -346,7 +346,7 @@ const routes = [
     {
         method: 'GET',
         path: '/api/status',
-        handler: createRouteHandler(() => {
+        handler: createHandler(() => {
             return {
                 status: 'running',
                 timestamp: new Date().toISOString(),
@@ -361,7 +361,7 @@ const routes = [
     {
         method: 'GET',
         path: '/api/files',
-        handler: createRouteHandler(async () => {
+        handler: createHandler(async () => {
             // 这里可以添加文件统计逻辑
             return {
                 message: 'File statistics',
@@ -403,7 +403,7 @@ console.log('📊 总路由数：', allRoutes.length)
 
 ```typescript
 import { describe, expect, it, beforeAll, afterAll } from 'bun:test'
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { staticPlugin } from '@vafast/static'
 import { writeFile, mkdir, rm } from 'fs/promises'
 import { join } from 'path'
@@ -643,7 +643,7 @@ describe('Vafast Static Plugin', () => {
             {
                 method: 'GET',
                 path: '/',
-                handler: createRouteHandler(() => {
+                handler: createHandler(() => {
                     return { message: 'Static server is running' }
                 })
             }
@@ -772,7 +772,7 @@ const monitorRoutes = [
     {
         method: 'GET',
         path: '/admin/static-stats',
-        handler: createRouteHandler(() => {
+        handler: createHandler(() => {
             return {
                 totalRoutes: staticRoutes.length,
                 mode: 'static',
@@ -791,7 +791,7 @@ const monitorRoutes = [
 ### 6. 错误处理和日志
 
 ```typescript
-import { createRouteHandler } from 'vafast'
+import { createHandler } from 'vafast'
 
 const staticRoutes = await staticPlugin({
     assets: 'public',
@@ -805,7 +805,7 @@ const errorHandlingRoutes = [
     {
         method: 'GET',
         path: '/static/*',
-        handler: createRouteHandler(async (req: Request) => {
+        handler: createHandler(async (req: Request) => {
             try {
                 // 这里可以添加自定义的错误处理逻辑
                 const response = await handleStaticRequest(req)

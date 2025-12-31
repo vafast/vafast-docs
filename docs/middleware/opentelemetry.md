@@ -16,7 +16,7 @@ bun add @vafast/opentelemetry
 ## 基本用法
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { opentelemetry } from '@vafast/opentelemetry'
 
 // 创建 OpenTelemetry 中间件
@@ -30,14 +30,14 @@ const routes = [
     {
         method: 'GET',
         path: '/',
-        handler: createRouteHandler(() => {
+        handler: createHandler(() => {
             return 'Hello, Vafast with OpenTelemetry!'
         })
     },
     {
         method: 'GET',
         path: '/health',
-        handler: createRouteHandler(() => {
+        handler: createHandler(() => {
             return { status: 200, data: 'OK' }
         })
     }
@@ -100,7 +100,7 @@ console.log('OpenTelemetry SDK 已启动')
 然后在你的主应用中：
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { opentelemetry } from '@vafast/opentelemetry'
 
 // 导入预加载配置
@@ -116,7 +116,7 @@ const routes = [
     {
         method: 'GET',
         path: '/api/users',
-        handler: createRouteHandler(async () => {
+        handler: createHandler(async () => {
             // 这个请求会自动被 OpenTelemetry 追踪
             return { users: ['Alice', 'Bob', 'Charlie'] }
         })
@@ -186,7 +186,7 @@ interface VafastOpenTelemetryOptions {
 ### 1. 基本追踪
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { opentelemetry, getTracer, startActiveSpan } from '@vafast/opentelemetry'
 
 const telemetryMiddleware = opentelemetry({
@@ -197,7 +197,7 @@ const routes = [
     {
         method: 'GET',
         path: '/api/data',
-        handler: createRouteHandler(async () => {
+        handler: createHandler(async () => {
             const tracer = getTracer()
             
             // 创建自定义跨度
@@ -238,7 +238,7 @@ async function fetchDataFromDatabase() {
 ### 2. 自定义跨度和属性
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { opentelemetry, getTracer, setAttributes } from '@vafast/opentelemetry'
 
 const telemetryMiddleware = opentelemetry({
@@ -249,7 +249,7 @@ const routes = [
     {
         method: 'POST',
         path: '/api/users',
-        handler: createRouteHandler(async ({ req }) => {
+        handler: createHandler(async ({ req }) => {
             const tracer = getTracer()
             
             return tracer.startActiveSpan('create-user', {
@@ -309,7 +309,7 @@ async function createUser(userData: any) {
 ### 3. 分布式追踪
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { opentelemetry, getTracer, getCurrentSpan } from '@vafast/opentelemetry'
 
 const telemetryMiddleware = opentelemetry({
@@ -320,7 +320,7 @@ const routes = [
     {
         method: 'GET',
         path: '/api/orders/:id',
-        handler: createRouteHandler(async ({ params }) => {
+        handler: createHandler(async ({ params }) => {
             const tracer = getTracer()
             
             return tracer.startActiveSpan('get-order', async (span) => {
@@ -411,7 +411,7 @@ async function getProducts(productIds: string[]) {
 ### 4. 错误追踪和监控
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { opentelemetry, getTracer } from '@vafast/opentelemetry'
 
 const telemetryMiddleware = opentelemetry({
@@ -422,7 +422,7 @@ const routes = [
     {
         method: 'GET',
         path: '/api/risky-operation',
-        handler: createRouteHandler(async () => {
+        handler: createHandler(async () => {
             const tracer = getTracer()
             
             return tracer.startActiveSpan('risky-operation', async (span) => {
@@ -483,7 +483,7 @@ async function performRiskyOperation() {
 ## 完整示例
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { opentelemetry, getTracer, startActiveSpan } from '@vafast/opentelemetry'
 
 // 导入预加载配置
@@ -609,7 +609,7 @@ const routes = [
     {
         method: 'GET',
         path: '/',
-        handler: createRouteHandler(() => {
+        handler: createHandler(() => {
             return {
                 message: 'E-commerce API with OpenTelemetry',
                 version: '1.0.0',
@@ -625,7 +625,7 @@ const routes = [
     {
         method: 'GET',
         path: '/api/users/:id',
-        handler: createRouteHandler(async ({ params }) => {
+        handler: createHandler(async ({ params }) => {
             const tracer = getTracer()
             
             return tracer.startActiveSpan('api.get-user', {
@@ -664,7 +664,7 @@ const routes = [
     {
         method: 'POST',
         path: '/api/users',
-        handler: createRouteHandler(async ({ req }) => {
+        handler: createHandler(async ({ req }) => {
             const tracer = getTracer()
             
             return tracer.startActiveSpan('api.create-user', {
@@ -711,7 +711,7 @@ const routes = [
     {
         method: 'GET',
         path: '/api/orders/:id',
-        handler: createRouteHandler(async ({ params }) => {
+        handler: createHandler(async ({ params }) => {
             const tracer = getTracer()
             
             return tracer.startActiveSpan('api.get-order', {
@@ -771,7 +771,7 @@ const routes = [
     {
         method: 'POST',
         path: '/api/orders',
-        handler: createRouteHandler(async ({ req }) => {
+        handler: createHandler(async ({ req }) => {
             const tracer = getTracer()
             
             return tracer.startActiveSpan('api.create-order', {
@@ -853,7 +853,7 @@ console.log('🔍 查看 Jaeger 或其他 OpenTelemetry 后端以获取追踪数
 
 ```typescript
 import { describe, expect, it } from 'bun:test'
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { opentelemetry } from '@vafast/opentelemetry'
 
 describe('Vafast OpenTelemetry Plugin', () => {
@@ -877,7 +877,7 @@ describe('Vafast OpenTelemetry Plugin', () => {
             {
                 method: 'GET',
                 path: '/',
-                handler: createRouteHandler(() => {
+                handler: createHandler(() => {
                     return 'Hello, OpenTelemetry!'
                 })
             }
@@ -905,7 +905,7 @@ describe('Vafast OpenTelemetry Plugin', () => {
             {
                 method: 'GET',
                 path: '/error',
-                handler: createRouteHandler(() => {
+                handler: createHandler(() => {
                     throw new Error('Test error')
                 })
             }
@@ -950,7 +950,7 @@ describe('Vafast OpenTelemetry Plugin', () => {
             {
                 method: 'POST',
                 path: '/',
-                handler: createRouteHandler(() => {
+                handler: createHandler(() => {
                     return { message: 'POST request' }
                 })
             }

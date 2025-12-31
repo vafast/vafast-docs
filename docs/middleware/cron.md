@@ -17,7 +17,7 @@ bun add @vafast/cron
 ## 基本用法
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { cron } from '@vafast/cron'
 
 // 创建 cron 任务
@@ -34,7 +34,7 @@ const routes = [
     {
         method: 'GET',
         path: '/',
-        handler: createRouteHandler(() => {
+        handler: createHandler(() => {
             return { message: 'Vafast Cron API' }
         })
     }
@@ -131,7 +131,7 @@ run: (store: Cron) => any | Promise<any>
 ### 1. 基本定时任务
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { cron } from '@vafast/cron'
 
 // 创建定时任务
@@ -150,7 +150,7 @@ const routes = [
     {
         method: 'GET',
         path: '/',
-        handler: createRouteHandler(() => {
+        handler: createHandler(() => {
             return { message: 'Cleanup cron job is running' }
         })
     }
@@ -163,7 +163,7 @@ export default { fetch: (req: Request) => server.fetch(req) }
 ### 2. 任务生命周期管理
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { cron } from '@vafast/cron'
 
 // 创建可控制的 cron 任务
@@ -179,7 +179,7 @@ const routes = [
     {
         method: 'GET',
         path: '/',
-        handler: createRouteHandler(() => {
+        handler: createHandler(() => {
             // 停止 logger 任务
             loggerCron.stop()
             return { message: 'Logger stopped' }
@@ -188,7 +188,7 @@ const routes = [
     {
         method: 'GET',
         path: '/status',
-        handler: createRouteHandler(() => {
+        handler: createHandler(() => {
             return {
                 logger: loggerCron.isRunning(),
                 nextRun: loggerCron.nextRun()
@@ -198,7 +198,7 @@ const routes = [
     {
         method: 'POST',
         path: '/start-logger',
-        handler: createRouteHandler(() => {
+        handler: createHandler(() => {
             loggerCron.resume()
             return { message: 'Logger started' }
         })
@@ -212,7 +212,7 @@ export default { fetch: (req: Request) => server.fetch(req) }
 ### 3. 多个定时任务
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { cron } from '@vafast/cron'
 
 // 创建多个 cron 任务
@@ -247,7 +247,7 @@ const routes = [
     {
         method: 'GET',
         path: '/cron/status',
-        handler: createRouteHandler(() => {
+        handler: createHandler(() => {
             return {
                 heartbeat: {
                     running: heartbeatCron.isRunning(),
@@ -273,7 +273,7 @@ export default { fetch: (req: Request) => server.fetch(req) }
 ### 4. 条件执行和错误处理
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { cron } from '@vafast/cron'
 
 const dataSyncCron = cron({
@@ -307,7 +307,7 @@ const routes = [
     {
         method: 'GET',
         path: '/sync/status',
-        handler: createRouteHandler(() => {
+        handler: createHandler(() => {
             return {
                 running: dataSyncCron.isRunning(),
                 nextRun: dataSyncCron.nextRun(),
@@ -441,7 +441,7 @@ const customJob = cron({
 ## 完整示例
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { cron, Patterns } from '@vafast/cron'
 
 // 模拟业务函数
@@ -530,7 +530,7 @@ const routes = [
     {
         method: 'GET',
         path: '/',
-        handler: createRouteHandler(() => {
+        handler: createHandler(() => {
             return { 
                 message: 'Vafast Cron Management API',
                 endpoints: [
@@ -547,7 +547,7 @@ const routes = [
     {
         method: 'GET',
         path: '/cron/status',
-        handler: createRouteHandler(() => {
+        handler: createHandler(() => {
             return {
                 healthCheck: {
                     name: 'healthCheck',
@@ -579,7 +579,7 @@ const routes = [
     {
         method: 'POST',
         path: '/cron/health',
-        handler: createRouteHandler(() => {
+        handler: createHandler(() => {
             const health = checkSystemHealth()
             return { 
                 message: '手动健康检查完成',
@@ -590,7 +590,7 @@ const routes = [
     {
         method: 'POST',
         path: '/cron/backup',
-        handler: createRouteHandler(async () => {
+        handler: createHandler(async () => {
             const result = await performBackup()
             return { 
                 message: '手动备份完成',
@@ -601,7 +601,7 @@ const routes = [
     {
         method: 'POST',
         path: '/cron/cleanup',
-        handler: createRouteHandler(() => {
+        handler: createHandler(() => {
             const result = cleanupOldFiles()
             return { 
                 message: '手动清理完成',
@@ -612,7 +612,7 @@ const routes = [
     {
         method: 'POST',
         path: '/cron/stop/:name',
-        handler: createRouteHandler((req: Request) => {
+        handler: createHandler((req: Request) => {
             const url = new URL(req.url)
             const name = url.pathname.split('/').pop()
             
@@ -645,7 +645,7 @@ const routes = [
     {
         method: 'POST',
         path: '/cron/start/:name',
-        handler: createRouteHandler((req: Request) => {
+        handler: createHandler((req: Request) => {
             const url = new URL(req.url)
             const name = url.pathname.split('/').pop()
             

@@ -25,7 +25,7 @@ bun add @vafast/html
 ## 快速开始
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { html } from '@vafast/html'
 
 // 定义路由
@@ -33,7 +33,7 @@ const routes = [
   {
     method: 'GET',
     path: '/',
-    handler: createRouteHandler(() => {
+    handler: createHandler(() => {
       return `
         <!DOCTYPE html>
         <html>
@@ -112,14 +112,14 @@ Vafast HTML 基于 [@kitajs/html](https://github.com/kitajs/html)，允许我们
 使用 JSX 的示例：
 
 ```tsx
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { html, Html } from '@vafast/html'
 
 const routes = [
   {
     method: 'GET',
     path: '/',
-    handler: createRouteHandler(() => (
+    handler: createHandler(() => (
       <html lang="en">
         <head>
           <title>Hello World</title>
@@ -239,14 +239,14 @@ Vafast HTML 基于 Kita HTML 中间件，在编译时检测可能的 XSS 攻击�
 您可以使用专用的 `safe` 属性来清理用户值，以防止 XSS 漏洞：
 
 ```tsx
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { html, Html } from '@vafast/html'
 
 const routes = [
   {
     method: 'POST',
     path: '/',
-    handler: createRouteHandler(({ body }) => (
+    handler: createHandler(({ body }) => (
       <html lang="en">
         <head>
           <title>Hello World</title>
@@ -301,7 +301,7 @@ bun add @kitajs/ts-html-plugin
 ## 完整示例
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { html, Html } from '@vafast/html'
 
 // 定义路由
@@ -309,7 +309,7 @@ const routes = [
   {
     method: 'GET',
     path: '/',
-    handler: createRouteHandler(() => (
+    handler: createHandler(() => (
       <html lang="en">
         <head>
           <title>Vafast HTML Plugin</title>
@@ -332,7 +332,7 @@ const routes = [
   {
     method: 'GET',
     path: '/dynamic/:name',
-    handler: createRouteHandler(({ params }) => (
+    handler: createHandler(({ params }) => (
       <html lang="en">
         <head>
           <title>Hello {params.name}</title>

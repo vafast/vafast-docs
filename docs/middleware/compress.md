@@ -17,7 +17,7 @@ bun add @vafast/compress
 ## 基本用法
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { compression } from '@vafast/compress'
 
 // 定义路由处理器
@@ -25,7 +25,7 @@ const routes = [
   {
     method: 'GET',
     path: '/',
-    handler: createRouteHandler(() => {
+    handler: createHandler(() => {
       return { message: 'Hello World!'.repeat(100) } // 生成足够长的响应以触发压缩
     }),
     middleware: [
@@ -139,14 +139,14 @@ interface CacheOptions {
 ### 1. 基本压缩配置
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { compression } from '@vafast/compress'
 
 const routes = [
   {
     method: 'GET',
     path: '/api/data',
-    handler: createRouteHandler(() => {
+    handler: createHandler(() => {
       // 返回大量数据，触发压缩
       return {
         data: Array.from({ length: 1000 }, (_, i) => ({
@@ -173,7 +173,7 @@ export default { fetch: (req: Request) => server.fetch(req) }
 ### 2. 自定义压缩选项
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { compression } from '@vafast/compress'
 import { constants } from 'node:zlib'
 
@@ -181,7 +181,7 @@ const routes = [
   {
     method: 'GET',
     path: '/optimized',
-    handler: createRouteHandler(() => {
+    handler: createHandler(() => {
       return { message: 'Optimized compression response' }
     }),
     middleware: [
@@ -212,14 +212,14 @@ export default { fetch: (req: Request) => server.fetch(req) }
 ### 3. 条件压缩
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { compression } from '@vafast/compress'
 
 const routes = [
   {
     method: 'GET',
     path: '/public',
-    handler: createRouteHandler(() => {
+    handler: createHandler(() => {
       return { message: 'Public endpoint - no compression' }
     })
     // 不应用压缩中间件
@@ -227,7 +227,7 @@ const routes = [
   {
     method: 'GET',
     path: '/api/large',
-    handler: createRouteHandler(() => {
+    handler: createHandler(() => {
       return { 
         data: 'Large response data'.repeat(1000),
         timestamp: Date.now()
@@ -250,14 +250,14 @@ export default { fetch: (req: Request) => server.fetch(req) }
 ### 4. 流数据压缩
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { compression } from '@vafast/compress'
 
 const routes = [
   {
     method: 'GET',
     path: '/stream',
-    handler: createRouteHandler(() => {
+    handler: createHandler(() => {
       // 创建 Server-Sent Events 流
       const stream = new ReadableStream({
         start(controller) {
@@ -307,7 +307,7 @@ export default { fetch: (req: Request) => server.fetch(req) }
 ### 5. 全局压缩配置
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { compression } from '@vafast/compress'
 
 // 创建全局压缩中间件
@@ -322,14 +322,14 @@ const routes = [
   {
     method: 'GET',
     path: '/api/users',
-    handler: createRouteHandler(() => {
+    handler: createHandler(() => {
       return { users: generateLargeUserList() }
     })
   },
   {
     method: 'GET',
     path: '/api/products',
-    handler: createRouteHandler(() => {
+    handler: createHandler(() => {
       return { products: generateLargeProductList() }
     })
   }
@@ -348,7 +348,7 @@ export default {
 ## 完整示例
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { compression } from '@vafast/compress'
 import { constants } from 'node:zlib'
 
@@ -388,7 +388,7 @@ const routes = [
   {
     method: 'GET',
     path: '/',
-    handler: createRouteHandler(() => {
+    handler: createHandler(() => {
       return { 
         message: 'Vafast Compression API',
         endpoints: [
@@ -403,7 +403,7 @@ const routes = [
   {
     method: 'GET',
     path: '/api/data',
-    handler: createRouteHandler(() => {
+    handler: createHandler(() => {
       return {
         message: 'Large dataset retrieved successfully',
         data: generateLargeDataset(500),
@@ -423,7 +423,7 @@ const routes = [
   {
     method: 'GET',
     path: '/api/markdown',
-    handler: createRouteHandler(() => {
+    handler: createHandler(() => {
       return {
         content: generateMarkdownContent(),
         format: 'markdown',
@@ -442,7 +442,7 @@ const routes = [
   {
     method: 'GET',
     path: '/api/stream',
-    handler: createRouteHandler(() => {
+    handler: createHandler(() => {
       const stream = new ReadableStream({
         start(controller) {
           let count = 0
@@ -486,7 +486,7 @@ const routes = [
   {
     method: 'GET',
     path: '/api/optimized',
-    handler: createRouteHandler(() => {
+    handler: createHandler(() => {
       return {
         message: 'Optimized compression response',
         data: generateLargeDataset(200),

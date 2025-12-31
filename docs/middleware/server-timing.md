@@ -16,7 +16,7 @@ bun add @vafast/server-timing
 ## 基本用法
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { serverTiming } from '@vafast/server-timing'
 
 // 创建 Server Timing 中间件
@@ -26,7 +26,7 @@ const routes = [
   {
     method: 'GET',
     path: '/',
-    handler: createRouteHandler(async () => {
+    handler: createHandler(async () => {
       // 模拟一些异步操作
       await new Promise(resolve => setTimeout(resolve, 100))
       return 'Server Timing Example'
@@ -89,7 +89,7 @@ const defaultOptions = {
 ### 1. 基本性能监控
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { serverTiming } from '@vafast/server-timing'
 
 const timing = serverTiming({
@@ -101,7 +101,7 @@ const routes = [
   {
     method: 'GET',
     path: '/api/users',
-    handler: createRouteHandler(async () => {
+    handler: createHandler(async () => {
       // 模拟数据库查询
       await new Promise(resolve => setTimeout(resolve, 50))
       
@@ -122,7 +122,7 @@ export default {
 ### 2. 条件启用
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { serverTiming } from '@vafast/server-timing'
 
 const timing = serverTiming({
@@ -138,7 +138,7 @@ const routes = [
   {
     method: 'GET',
     path: '/api/data',
-    handler: createRouteHandler(async () => {
+    handler: createHandler(async () => {
       await new Promise(resolve => setTimeout(resolve, 100))
       return { data: 'Performance monitored data' }
     })
@@ -146,7 +146,7 @@ const routes = [
   {
     method: 'GET',
     path: '/static/info',
-    handler: createRouteHandler(() => {
+    handler: createHandler(() => {
       // 这个端点不会被监控
       return { info: 'Static information' }
     })
@@ -165,7 +165,7 @@ export default {
 ### 3. 自定义追踪配置
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { serverTiming } from '@vafast/server-timing'
 
 // 只追踪总时间，不追踪处理时间
@@ -178,7 +178,7 @@ const routes = [
   {
     method: 'POST',
     path: '/api/process',
-    handler: createRouteHandler(async ({ req }) => {
+    handler: createHandler(async ({ req }) => {
       const body = await req.json()
       
       // 模拟复杂处理
@@ -204,7 +204,7 @@ export default {
 ### 4. 动态控制
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { serverTiming } from '@vafast/server-timing'
 
 const timing = serverTiming({
@@ -230,14 +230,14 @@ const routes = [
   {
     method: 'GET',
     path: '/api/admin/users',
-    handler: createRouteHandler(() => {
+    handler: createHandler(() => {
       return { users: ['Admin1', 'Admin2'] }
     })
   },
   {
     method: 'GET',
     path: '/api/public/info',
-    handler: createRouteHandler(() => {
+    handler: createHandler(() => {
       return { info: 'Public information' }
     })
   }
@@ -255,7 +255,7 @@ export default {
 ### 5. 生产环境配置
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { serverTiming } from '@vafast/server-timing'
 
 const timing = serverTiming({
@@ -268,7 +268,7 @@ const routes = [
   {
     method: 'GET',
     path: '/api/health',
-    handler: createRouteHandler(() => {
+    handler: createHandler(() => {
       return { status: 'healthy', timestamp: new Date().toISOString() }
     })
   }
@@ -286,7 +286,7 @@ export default {
 ## 完整示例
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { serverTiming } from '@vafast/server-timing'
 
 // 模拟数据库操作
@@ -346,7 +346,7 @@ const routes = [
   {
     method: 'GET',
     path: '/',
-    handler: createRouteHandler(() => {
+    handler: createHandler(() => {
       return {
         message: 'Vafast Server Timing API',
         version: '1.0.0',
@@ -363,7 +363,7 @@ const routes = [
   {
     method: 'GET',
     path: '/api/users',
-    handler: createRouteHandler(async () => {
+    handler: createHandler(async () => {
       // 模拟数据库查询
       const users = await db.query('SELECT * FROM users', 80)
       
@@ -378,7 +378,7 @@ const routes = [
   {
     method: 'GET',
     path: '/api/users/:id',
-    handler: createRouteHandler(async ({ params }) => {
+    handler: createHandler(async ({ params }) => {
       const userId = params.id
       
       // 先尝试从缓存获取
@@ -409,7 +409,7 @@ const routes = [
   {
     method: 'POST',
     path: '/api/users',
-    handler: createRouteHandler(async ({ req }) => {
+    handler: createHandler(async ({ req }) => {
       const body = await req.json()
       
       // 模拟用户创建
@@ -425,7 +425,7 @@ const routes = [
   {
     method: 'GET',
     path: '/api/admin/stats',
-    handler: createRouteHandler(async () => {
+    handler: createHandler(async () => {
       // 模拟管理员统计查询
       const userStats = await db.query('SELECT COUNT(*) as count FROM users', 150)
       const cacheStats = await cache.get('cache:stats', 30)
@@ -444,7 +444,7 @@ const routes = [
   {
     method: 'GET',
     path: '/api/health',
-    handler: createRouteHandler(() => {
+    handler: createHandler(() => {
       return {
         status: 'healthy',
         timestamp: new Date().toISOString(),
@@ -492,7 +492,7 @@ console.log('💚 健康检查：无性能监控')
 
 ```typescript
 import { describe, expect, it } from 'bun:test'
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { serverTiming } from '@vafast/server-timing'
 
 describe('Vafast Server Timing Plugin', () => {
@@ -516,7 +516,7 @@ describe('Vafast Server Timing Plugin', () => {
       {
         method: 'GET',
         path: '/',
-        handler: createRouteHandler(() => {
+        handler: createHandler(() => {
           return 'Hello, Server Timing!'
         })
       }
@@ -550,7 +550,7 @@ describe('Vafast Server Timing Plugin', () => {
       {
         method: 'GET',
         path: '/',
-        handler: createRouteHandler(() => {
+        handler: createHandler(() => {
           return 'Hello, No Timing!'
         })
       }
@@ -583,14 +583,14 @@ describe('Vafast Server Timing Plugin', () => {
       {
         method: 'GET',
         path: '/allow',
-        handler: createRouteHandler(() => {
+        handler: createHandler(() => {
           return 'Allowed with timing'
         })
       },
       {
         method: 'GET',
         path: '/deny',
-        handler: createRouteHandler(() => {
+        handler: createHandler(() => {
           return 'Denied timing'
         })
       }
@@ -619,7 +619,7 @@ describe('Vafast Server Timing Plugin', () => {
       {
         method: 'GET',
         path: '/',
-        handler: createRouteHandler(() => {
+        handler: createHandler(() => {
           return 'Custom trace config'
         })
       }
@@ -647,7 +647,7 @@ describe('Vafast Server Timing Plugin', () => {
       {
         method: 'GET',
         path: '/async',
-        handler: createRouteHandler(async () => {
+        handler: createHandler(async () => {
           // 模拟异步操作
           await new Promise(resolve => setTimeout(resolve, 50))
           return 'Async operation completed'

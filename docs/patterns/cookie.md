@@ -11,13 +11,13 @@ Vafast 提供了简单而强大的 Cookie 处理功能，支持读取、设置�
 在 Vafast 中，您可以通过请求对象访问 Cookie，并通过响应对象设置 Cookie：
 
 ```typescript
-import { Server, defineRoutes, createRouteHandler } from 'vafast'
+import { Server, defineRoutes, createHandler } from 'vafast'
 
 const routes = defineRoutes([
   {
     method: 'GET',
     path: '/',
-    handler: createRouteHandler(({ req }) => {
+    handler: createHandler(({ req }) => {
       // 读取 Cookie
       const cookies = req.headers.get('cookie')
       const sessionId = getCookieValue(cookies, 'sessionId')
@@ -32,7 +32,7 @@ const routes = defineRoutes([
   {
     method: 'POST',
     path: '/login',
-    handler: createRouteHandler(async ({ req }) => {
+    handler: createHandler(async ({ req }) => {
       const body = await req.json()
       const { username, password } = body
       
@@ -124,7 +124,7 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/profile',
-    handler: createRouteHandler(({ req }) => {
+    handler: createHandler(({ req }) => {
       const cookies = req.headers.get('cookie')
       const sessionId = CookieUtils.get(cookies, 'sessionId')
       
@@ -139,7 +139,7 @@ const routes = defineRoutes([
   {
     method: 'POST',
     path: '/logout',
-    handler: createRouteHandler(() => {
+    handler: createHandler(() => {
       const response = new Response('Logged out successfully')
       
       // 删除 Cookie
@@ -156,7 +156,7 @@ const routes = defineRoutes([
 创建专门的 Cookie 中间件：
 
 ```typescript
-import { Server, defineRoutes, createRouteHandler } from 'vafast'
+import { Server, defineRoutes, createHandler } from 'vafast'
 
 // Cookie 中间件
 const cookieMiddleware = async (req: Request, next: () => Promise<Response>) => {
@@ -218,7 +218,7 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/',
-    handler: createRouteHandler(({ req }) => {
+    handler: createHandler(({ req }) => {
       // 使用中间件添加的 Cookie 方法
       const sessionId = (req as any).getCookie('sessionId')
       
@@ -232,7 +232,7 @@ const routes = defineRoutes([
   {
     method: 'POST',
     path: '/login',
-    handler: createRouteHandler(async ({ req }) => {
+    handler: createHandler(async ({ req }) => {
       const body = await req.json()
       const { username, password } = body
       
@@ -268,7 +268,7 @@ export default { fetch: server.fetch }
 实现完整的会话管理系统：
 
 ```typescript
-import { Server, defineRoutes, createRouteHandler } from 'vafast'
+import { Server, defineRoutes, createHandler } from 'vafast'
 
 interface Session {
   id: string
@@ -360,7 +360,7 @@ const routes = defineRoutes([
   {
     method: 'POST',
     path: '/login',
-    handler: createRouteHandler(async ({ req }) => {
+    handler: createHandler(async ({ req }) => {
       const body = await req.json()
       const { username, password } = body
       
@@ -386,7 +386,7 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/profile',
-    handler: createRouteHandler(({ req }) => {
+    handler: createHandler(({ req }) => {
       const user = (req as any).user
       
       if (!user) {
@@ -403,7 +403,7 @@ const routes = defineRoutes([
   {
     method: 'POST',
     path: '/logout',
-    handler: createRouteHandler(({ req }) => {
+    handler: createHandler(({ req }) => {
       const sessionId = CookieUtils.get(req.headers.get('cookie'), 'sessionId')
       
       if (sessionId) {
@@ -429,7 +429,7 @@ export default { fetch: server.fetch }
 实现安全的 Cookie 配置：
 
 ```typescript
-import { Server, defineRoutes, createRouteHandler } from 'vafast'
+import { Server, defineRoutes, createHandler } from 'vafast'
 
 // 安全 Cookie 配置
 const createSecureCookie = (name: string, value: string, options: CookieOptions = {}) => {
@@ -461,7 +461,7 @@ const routes = defineRoutes([
   {
     method: 'POST',
     path: '/auth/login',
-    handler: createRouteHandler(async ({ req }) => {
+    handler: createHandler(async ({ req }) => {
       const body = await req.json()
       const { username, password } = body
       
@@ -489,7 +489,7 @@ export default { fetch: server.fetch }
 
 ```typescript
 import { describe, expect, it } from 'bun:test'
-import { Server, defineRoutes, createRouteHandler } from 'vafast'
+import { Server, defineRoutes, createHandler } from 'vafast'
 
 describe('Cookie Handling', () => {
   it('should set and read cookies', async () => {
@@ -497,7 +497,7 @@ describe('Cookie Handling', () => {
       {
         method: 'POST',
         path: '/set-cookie',
-        handler: createRouteHandler(({ req }) => {
+        handler: createHandler(({ req }) => {
           const body = (req as any).body
           const { name, value } = body
           
@@ -510,7 +510,7 @@ describe('Cookie Handling', () => {
       {
         method: 'GET',
         path: '/read-cookie',
-        handler: createRouteHandler(({ req }) => {
+        handler: createHandler(({ req }) => {
           const cookies = req.headers.get('cookie')
           const sessionId = CookieUtils.get(cookies, 'sessionId')
           
@@ -545,7 +545,7 @@ describe('Cookie Handling', () => {
       {
         method: 'POST',
         path: '/delete-cookie',
-        handler: createRouteHandler(() => {
+        handler: createHandler(() => {
           const response = new Response('Cookie deleted')
           response.headers.set('Set-Cookie', CookieUtils.delete('sessionId', { path: '/' }))
           

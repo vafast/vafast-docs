@@ -71,20 +71,20 @@ await fastify.listen({ port: 3000 })
 ::: code-group
 
 ```ts [Vafast]
-import { Server, defineRoutes, createRouteHandler } from 'vafast'
+import { Server, defineRoutes, createHandler } from 'vafast'
 
 const routes = defineRoutes([
   {
     method: 'GET',
     path: '/',
-    handler: createRouteHandler(() => {
+    handler: createHandler(() => {
       return { hello: 'world' }
     })
   },
   {
     method: 'POST',
     path: '/user/:id',
-    handler: createRouteHandler(({ params, body }) => {
+    handler: createHandler(({ params, body }) => {
       return { id: params.id, name: body.name }
     })
   }
@@ -121,12 +121,12 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/users',
-    handler: createRouteHandler(() => { ... })
+    handler: createHandler(() => { ... })
   },
   {
     method: 'POST',
     path: '/users',
-    handler: createRouteHandler(() => { ... })
+    handler: createHandler(() => { ... })
   }
 ])
 ```
@@ -147,7 +147,7 @@ fastify.get('/user/:id', async (request, reply) => {
 {
   method: 'GET',
   path: '/user/:id',
-  handler: createRouteHandler(({ params, query }) => {
+  handler: createHandler(({ params, query }) => {
     return { id: params.id, query }
   })
 }
@@ -187,7 +187,7 @@ const userSchema = Type.Object({
 {
   method: 'POST',
   path: '/users',
-  handler: createRouteHandler(({ body }) => {
+  handler: createHandler(({ body }) => {
     return createUser(body)
   }),
   body: userSchema
@@ -223,7 +223,7 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/admin',
-    handler: createRouteHandler(() => 'Admin Panel'),
+    handler: createHandler(() => 'Admin Panel'),
     middleware: [authMiddleware]
   }
 ])
@@ -275,7 +275,7 @@ fastify.get('/api/users', async (request, reply) => {
 {
   method: 'GET',
   path: '/api/users',
-  handler: createRouteHandler(() => {
+  handler: createHandler(() => {
     return getUsers()
   })
 }
@@ -398,7 +398,7 @@ await fastify.listen({ port: 3000 })
 ### Vafast 应用
 
 ```typescript
-import { Server, defineRoutes, createRouteHandler } from 'vafast'
+import { Server, defineRoutes, createHandler } from 'vafast'
 import { cors } from '@vafast/cors'
 import { helmet } from '@vafast/helmet'
 import { Type } from '@sinclair/typebox'
@@ -412,14 +412,14 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/users',
-    handler: createRouteHandler(() => {
+    handler: createHandler(() => {
       return getUsers()
     })
   },
   {
     method: 'POST',
     path: '/users',
-    handler: createRouteHandler(({ body }) => {
+    handler: createHandler(({ body }) => {
       return createUser(body)
     }),
     body: userSchema
@@ -427,7 +427,7 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/users/:id',
-    handler: createRouteHandler(({ params }) => {
+    handler: createHandler(({ params }) => {
       const user = getUserById(params.id)
       if (!user) {
         return new Response(

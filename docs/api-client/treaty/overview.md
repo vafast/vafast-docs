@@ -102,19 +102,19 @@ Vafast 服务器类型定义
 
 ```typescript
 // server.ts
-import { Server, defineRoutes, createRouteHandler } from 'vafast'
+import { Server, defineRoutes, createHandler } from 'vafast'
 import { Type } from '@sinclair/typebox'
 
 const routes = defineRoutes([
   {
     method: 'GET',
     path: '/',
-    handler: createRouteHandler(() => 'Hello Vafast!')
+    handler: createHandler(() => 'Hello Vafast!')
   },
   {
     method: 'GET',
     path: '/users/:id',
-    handler: createRouteHandler(({ params }) => `User ${params.id}`),
+    handler: createHandler(({ params }) => `User ${params.id}`),
     params: Type.Object({
       id: Type.String()
     })
@@ -122,7 +122,7 @@ const routes = defineRoutes([
   {
     method: 'POST',
     path: '/users',
-    handler: createRouteHandler(({ body }) => `Created user: ${body.name}`),
+    handler: createHandler(({ body }) => `Created user: ${body.name}`),
     body: Type.Object({
       name: Type.String(),
       email: Type.String()

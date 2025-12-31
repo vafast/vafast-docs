@@ -17,7 +17,7 @@ bun add @vafast/helmet
 ## 基本用法
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { vafastHelmet } from '@vafast/helmet'
 
 // 创建安全头中间件
@@ -38,7 +38,7 @@ const routes = [
   {
     method: 'GET',
     path: '/',
-    handler: createRouteHandler(() => {
+    handler: createHandler(() => {
       return { message: 'Hello World with Security Headers!' }
     }),
     middleware: [helmet],
@@ -46,7 +46,7 @@ const routes = [
   {
     method: 'GET',
     path: '/api/data',
-    handler: createRouteHandler(() => {
+    handler: createHandler(() => {
       return { data: 'Protected API endpoint' }
     }),
     middleware: [helmet],
@@ -224,7 +224,7 @@ const helmet = vafastHelmet({
 ### 1. 基本安全配置
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { vafastHelmet } from '@vafast/helmet'
 
 // 使用默认安全配置
@@ -234,7 +234,7 @@ const routes = [
   {
     method: 'GET',
     path: '/',
-    handler: createRouteHandler(() => {
+    handler: createHandler(() => {
       return { message: 'Secure by default' }
     }),
     middleware: [helmet],
@@ -248,7 +248,7 @@ export default { fetch: (req: Request) => server.fetch(req) }
 ### 2. 自定义 CSP 配置
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { vafastHelmet, permission } from '@vafast/helmet'
 
 const helmet = vafastHelmet({
@@ -291,7 +291,7 @@ const routes = [
   {
     method: 'GET',
     path: '/',
-    handler: createRouteHandler(() => {
+    handler: createHandler(() => {
       return { message: 'Custom CSP configuration' }
     }),
     middleware: [helmet],
@@ -305,7 +305,7 @@ export default { fetch: (req: Request) => server.fetch(req) }
 ### 3. 严格的 CSP 配置
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { vafastHelmet, permission } from '@vafast/helmet'
 
 const strictHelmet = vafastHelmet({
@@ -332,7 +332,7 @@ const routes = [
   {
     method: 'GET',
     path: '/secure',
-    handler: createRouteHandler(() => {
+    handler: createHandler(() => {
       return { message: 'Strict security configuration' }
     }),
     middleware: [strictHelmet],
@@ -346,7 +346,7 @@ export default { fetch: (req: Request) => server.fetch(req) }
 ### 4. 生产环境 HSTS 配置
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { vafastHelmet } from '@vafast/helmet'
 
 const productionHelmet = vafastHelmet({
@@ -370,7 +370,7 @@ const routes = [
   {
     method: 'GET',
     path: '/api',
-    handler: createRouteHandler(() => {
+    handler: createHandler(() => {
       return { message: 'Production security headers' }
     }),
     middleware: [productionHelmet],
@@ -384,7 +384,7 @@ export default { fetch: (req: Request) => server.fetch(req) }
 ### 5. 自定义头部和报告配置
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { vafastHelmet } from '@vafast/helmet'
 
 const advancedHelmet = vafastHelmet({
@@ -418,7 +418,7 @@ const routes = [
   {
     method: 'GET',
     path: '/advanced',
-    handler: createRouteHandler(() => {
+    handler: createHandler(() => {
       return { message: 'Advanced security configuration' }
     }),
     middleware: [advancedHelmet],
@@ -432,7 +432,7 @@ export default { fetch: (req: Request) => server.fetch(req) }
 ### 6. 条件安全配置
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { vafastHelmet } from '@vafast/helmet'
 
 // 根据环境选择不同的安全配置
@@ -476,7 +476,7 @@ const routes = [
   {
     method: 'GET',
     path: '/',
-    handler: createRouteHandler(() => {
+    handler: createHandler(() => {
       return { 
         message: 'Environment-aware security',
         environment: process.env.NODE_ENV || 'development'
@@ -493,7 +493,7 @@ export default { fetch: (req: Request) => server.fetch(req) }
 ## 完整示例
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { vafastHelmet, permission } from '@vafast/helmet'
 
 // 创建不同安全级别的中间件
@@ -560,7 +560,7 @@ const routes = [
   {
     method: 'GET',
     path: '/',
-    handler: createRouteHandler(() => {
+    handler: createHandler(() => {
       return { 
         message: 'Vafast Security Headers API',
         endpoints: [
@@ -575,7 +575,7 @@ const routes = [
   {
     method: 'GET',
     path: '/basic',
-    handler: createRouteHandler(() => {
+    handler: createHandler(() => {
       return { 
         message: 'Basic security headers applied',
         security: 'Basic level'
@@ -586,7 +586,7 @@ const routes = [
   {
     method: 'GET',
     path: '/standard',
-    handler: createRouteHandler(() => {
+    handler: createHandler(() => {
       return { 
         message: 'Standard security configuration applied',
         security: 'Standard level',
@@ -600,7 +600,7 @@ const routes = [
   {
     method: 'GET',
     path: '/strict',
-    handler: createRouteHandler(() => {
+    handler: createHandler(() => {
       return { 
         message: 'Strict security configuration applied',
         security: 'Strict level',
@@ -615,7 +615,7 @@ const routes = [
   {
     method: 'GET',
     path: '/custom',
-    handler: createRouteHandler(() => {
+    handler: createHandler(() => {
       return { 
         message: 'Custom security configuration applied',
         security: 'Custom level'
@@ -646,7 +646,7 @@ const routes = [
   {
     method: 'POST',
     path: '/csp-report',
-    handler: createRouteHandler(async (req: Request) => {
+    handler: createHandler(async (req: Request) => {
       const report = await req.json()
       console.log('CSP Violation Report:', report)
       
@@ -681,7 +681,7 @@ console.log('📊 CSP 报告: POST /csp-report')
 
 ```typescript
 import { describe, expect, it } from 'bun:test'
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { vafastHelmet, permission } from '@vafast/helmet'
 
 describe('Vafast Helmet Security Headers', () => {
@@ -695,7 +695,7 @@ describe('Vafast Helmet Security Headers', () => {
       {
         method: 'GET',
         path: '/',
-        handler: createRouteHandler(() => {
+        handler: createHandler(() => {
           return { message: 'Hello World with Security Headers!' }
         }),
         middleware: [helmet],
@@ -722,7 +722,7 @@ describe('Vafast Helmet Security Headers', () => {
       {
         method: 'GET',
         path: '/',
-        handler: createRouteHandler(() => {
+        handler: createHandler(() => {
           return { message: 'Hello World!' }
         }),
         middleware: [helmet],
@@ -749,7 +749,7 @@ describe('Vafast Helmet Security Headers', () => {
       {
         method: 'GET',
         path: '/',
-        handler: createRouteHandler(() => {
+        handler: createHandler(() => {
           return { message: 'Hello World!' }
         }),
         middleware: [helmet],
@@ -779,7 +779,7 @@ describe('Vafast Helmet Security Headers', () => {
       {
         method: 'GET',
         path: '/',
-        handler: createRouteHandler(() => {
+        handler: createHandler(() => {
           return { message: 'Hello World!' }
         }),
         middleware: [helmet],
@@ -807,7 +807,7 @@ describe('Vafast Helmet Security Headers', () => {
       {
         method: 'GET',
         path: '/',
-        handler: createRouteHandler(() => {
+        handler: createHandler(() => {
           return { message: 'Hello World!' }
         }),
         middleware: [helmet],

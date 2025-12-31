@@ -16,7 +16,7 @@ bun add @vafast/rate-limit
 ## 基本用法
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { rateLimit } from '@vafast/rate-limit'
 
 // 创建速率限制中间件
@@ -36,21 +36,21 @@ const routes = [
   {
     method: 'GET',
     path: '/',
-    handler: createRouteHandler(() => {
+    handler: createHandler(() => {
       return 'Hello, Vafast with Rate Limiting!'
     })
   },
   {
     method: 'GET',
     path: '/health',
-    handler: createRouteHandler(() => {
+    handler: createHandler(() => {
       return { status: 'OK', timestamp: new Date().toISOString() }
     })
   },
   {
     method: 'POST',
     path: '/api/data',
-    handler: createRouteHandler(() => {
+    handler: createHandler(() => {
       return { message: 'Data created successfully' }
     })
   }
@@ -126,7 +126,7 @@ const defaultOptions = {
 ### 1. 基本速率限制
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { rateLimit } from '@vafast/rate-limit'
 
 const rateLimitMiddleware = rateLimit({
@@ -140,14 +140,14 @@ const routes = [
   {
     method: 'GET',
     path: '/api/users',
-    handler: createRouteHandler(() => {
+    handler: createHandler(() => {
       return { users: ['Alice', 'Bob', 'Charlie'] }
     })
   },
   {
     method: 'POST',
     path: '/api/users',
-    handler: createRouteHandler(async ({ req }) => {
+    handler: createHandler(async ({ req }) => {
       const body = await req.json()
       return { message: 'User created', user: body }
     })
@@ -166,7 +166,7 @@ export default {
 ### 2. 自定义密钥生成器
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { rateLimit } from '@vafast/rate-limit'
 import type { Generator } from '@vafast/rate-limit'
 
@@ -200,7 +200,7 @@ const routes = [
   {
     method: 'GET',
     path: '/api/profile',
-    handler: createRouteHandler(() => {
+    handler: createHandler(() => {
       return { message: 'User profile' }
     })
   }
@@ -218,7 +218,7 @@ export default {
 ### 3. 条件跳过
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { rateLimit } from '@vafast/rate-limit'
 
 const rateLimitMiddleware = rateLimit({
@@ -251,14 +251,14 @@ const routes = [
   {
     method: 'GET',
     path: '/health',
-    handler: createRouteHandler(() => {
+    handler: createHandler(() => {
       return { status: 'OK', timestamp: new Date().toISOString() }
     })
   },
   {
     method: 'GET',
     path: '/api/data',
-    handler: createRouteHandler(() => {
+    handler: createHandler(() => {
       return { data: 'Protected data' }
     })
   }
@@ -276,7 +276,7 @@ export default {
 ### 4. 多实例速率限制
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { rateLimit } from '@vafast/rate-limit'
 import type { Generator } from '@vafast/rate-limit'
 
@@ -315,7 +315,7 @@ const aInstanceRoutes = [
   {
     method: 'GET',
     path: '/a',
-    handler: createRouteHandler(() => {
+    handler: createHandler(() => {
       return 'Instance A - Rate limited to 10 requests per 200 seconds'
     })
   }
@@ -326,7 +326,7 @@ const bInstanceRoutes = [
   {
     method: 'GET',
     path: '/b',
-    handler: createRouteHandler(() => {
+    handler: createHandler(() => {
       return 'Instance B - Rate limited to 5 requests per 100 seconds'
     })
   }
@@ -337,14 +337,14 @@ const mainRoutes = [
   {
     method: 'GET',
     path: '/',
-    handler: createRouteHandler(() => {
+    handler: createHandler(() => {
       return 'Main application - No rate limiting'
     })
   },
   {
     method: 'GET',
     path: '/status',
-    handler: createRouteHandler(() => {
+    handler: createHandler(() => {
       return { 
         message: 'Application status',
         instances: ['A', 'B'],
@@ -381,7 +381,7 @@ export default {
 ### 5. 自定义错误响应
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { rateLimit } from '@vafast/rate-limit'
 
 // 自定义错误响应
@@ -412,7 +412,7 @@ const routes = [
   {
     method: 'GET',
     path: '/api/sensitive',
-    handler: createRouteHandler(() => {
+    handler: createHandler(() => {
       return { message: 'Sensitive data' }
     })
   }
@@ -430,7 +430,7 @@ export default {
 ## 完整示例
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { rateLimit } from '@vafast/rate-limit'
 import type { Generator } from '@vafast/rate-limit'
 
@@ -511,7 +511,7 @@ const routes = [
   {
     method: 'GET',
     path: '/',
-    handler: createRouteHandler(() => {
+    handler: createHandler(() => {
       return {
         message: 'Vafast Rate Limiting API',
         version: '1.0.0',
@@ -529,7 +529,7 @@ const routes = [
   {
     method: 'GET',
     path: '/health',
-    handler: createRouteHandler(() => {
+    handler: createHandler(() => {
       return {
         status: 'healthy',
         timestamp: new Date().toISOString(),
@@ -540,7 +540,7 @@ const routes = [
   {
     method: 'GET',
     path: '/status',
-    handler: createRouteHandler(() => {
+    handler: createHandler(() => {
       return {
         message: 'System status',
         timestamp: new Date().toISOString(),
@@ -551,7 +551,7 @@ const routes = [
   {
     method: 'GET',
     path: '/api/public',
-    handler: createRouteHandler(() => {
+    handler: createHandler(() => {
       return {
         message: 'Public API endpoint',
         data: 'This endpoint has lenient rate limiting (1000 requests per hour)',
@@ -562,7 +562,7 @@ const routes = [
   {
     method: 'GET',
     path: '/api/user',
-    handler: createRouteHandler(() => {
+    handler: createHandler(() => {
       return {
         message: 'User API endpoint',
         data: 'This endpoint has moderate rate limiting (50 requests per 5 minutes)',
@@ -578,7 +578,7 @@ const routes = [
   {
     method: 'POST',
     path: '/api/admin',
-    handler: createRouteHandler(async ({ req }) => {
+    handler: createHandler(async ({ req }) => {
       const body = await req.json()
       
       return {
@@ -592,7 +592,7 @@ const routes = [
   {
     method: 'GET',
     path: '/static/:file',
-    handler: createRouteHandler(({ params }) => {
+    handler: createHandler(({ params }) => {
       return {
         message: 'Static file endpoint',
         file: params.file,
@@ -638,7 +638,7 @@ console.log('✅ 健康检查和状态端点无限制')
 
 ```typescript
 import { describe, expect, it } from 'bun:test'
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { rateLimit } from '@vafast/rate-limit'
 
 describe('Vafast Rate Limit Plugin', () => {
@@ -665,7 +665,7 @@ describe('Vafast Rate Limit Plugin', () => {
       {
         method: 'GET',
         path: '/',
-        handler: createRouteHandler(() => {
+        handler: createHandler(() => {
           return 'Hello, Rate Limited!'
         })
       }
@@ -702,7 +702,7 @@ describe('Vafast Rate Limit Plugin', () => {
       {
         method: 'GET',
         path: '/',
-        handler: createRouteHandler(() => {
+        handler: createHandler(() => {
           return 'Hello, Rate Limited!'
         })
       }
@@ -743,7 +743,7 @@ describe('Vafast Rate Limit Plugin', () => {
       {
         method: 'GET',
         path: '/health',
-        handler: createRouteHandler(() => {
+        handler: createHandler(() => {
           return 'Health check'
         })
       }
@@ -776,7 +776,7 @@ describe('Vafast Rate Limit Plugin', () => {
       {
         method: 'GET',
         path: '/',
-        handler: createRouteHandler(() => {
+        handler: createHandler(() => {
           return 'Hello'
         })
       }
@@ -808,7 +808,7 @@ describe('Vafast Rate Limit Plugin', () => {
       {
         method: 'POST',
         path: '/',
-        handler: createRouteHandler(() => {
+        handler: createHandler(() => {
           return { message: 'POST request' }
         })
       }

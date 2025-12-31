@@ -32,12 +32,12 @@ bun add -D @types/node
 
 ```typescript
 // src/api/server.ts
-import { defineRoutes, createRouteHandler } from 'vafast'
+import { defineRoutes, createHandler } from 'vafast'
 import { cors } from '@vafast/cors'
 import { helmet } from '@vafast/helmet'
 import { routes } from './routes'
 
-export const app = createRouteHandler(routes)
+export const app = createHandler(routes)
   .use(cors({
     origin: process.env.NODE_ENV === 'development' 
       ? ['http://localhost:3000'] 
@@ -53,14 +53,14 @@ export const handler = app.handler
 
 ```typescript
 // src/api/routes.ts
-import { defineRoutes, createRouteHandler } from 'vafast'
+import { defineRoutes, createHandler } from 'vafast'
 import { Type } from '@sinclair/typebox'
 
 export const routes = defineRoutes([
   {
     method: 'GET',
     path: '/api/users',
-    handler: createRouteHandler(async () => {
+    handler: createHandler(async () => {
       // 模拟数据库查询
       const users = [
         { id: 1, name: 'John Doe', email: 'john@example.com' },
@@ -74,7 +74,7 @@ export const routes = defineRoutes([
   {
     method: 'POST',
     path: '/api/users',
-    handler: createRouteHandler(async ({ body }) => {
+    handler: createHandler(async ({ body }) => {
       // 创建新用户
       const newUser = {
         id: Date.now(),
@@ -93,7 +93,7 @@ export const routes = defineRoutes([
   {
     method: 'GET',
     path: '/api/users/:id',
-    handler: createRouteHandler(async ({ params }) => {
+    handler: createHandler(async ({ params }) => {
       const userId = parseInt(params.id)
       
       // 模拟数据库查询
@@ -327,14 +327,14 @@ async function verifyToken(token: string) {
 
 ```typescript
 // src/api/routes.ts
-import { defineRoutes, createRouteHandler } from 'vafast'
+import { defineRoutes, createHandler } from 'vafast'
 import { authMiddleware } from './middleware/auth'
 
 export const routes = defineRoutes([
   {
     method: 'GET',
     path: '/api/profile',
-    handler: createRouteHandler(async ({ request }) => {
+    handler: createHandler(async ({ request }) => {
       const user = (request as AuthenticatedRequest).user
       return { user }
     }),

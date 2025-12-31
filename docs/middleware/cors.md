@@ -14,7 +14,7 @@ bun add @elysiajs/cors
 
 然后使用它：
 
-```typescript twoslash
+```typescript
 import { Elysia } from 'elysia'
 import { cors } from '@elysiajs/cors'
 
@@ -142,7 +142,7 @@ Access-Control-Allow-Credentials 响应头告诉浏览器在请求的凭证模�
 
 ## 按顶级域名允许 CORS
 
-```typescript twoslash
+```typescript
 import { Elysia } from 'elysia'
 import { cors } from '@elysiajs/cors'
 

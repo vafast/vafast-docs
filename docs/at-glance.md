@@ -53,27 +53,34 @@ API 的结构和安全性完全由类型定义，而不是靠文档说明。
 
 以下是在 Vafast 中的简单 hello world 示例。
 
-```typescript twoslash
-import { Server, defineRoutes, createRouteHandler } from 'vafast'
+```typescript
+import { Server, defineRoutes } from 'vafast'
+
+interface TypedRequest extends Request {
+  params: Record<string, string>
+}
 
 const routes = defineRoutes([
   {
     method: 'GET',
     path: '/',
-    handler: createRouteHandler(() => 'Hello Vafast')
+    handler: () => 'Hello Vafast'
   },
   {
     method: 'GET',
     path: '/user/:id',
-    handler: createRouteHandler(({ params }) => `User ID: ${params.id}`)
+    handler: (req) => {
+      const { id } = (req as TypedRequest).params
+      return `User ID: ${id}`
+    }
   },
   {
     method: 'POST',
     path: '/form',
-    handler: createRouteHandler(async ({ req }) => {
+    handler: async (req) => {
       const body = await req.json()
       return { success: true, data: body }
-    })
+    }
   }
 ])
 

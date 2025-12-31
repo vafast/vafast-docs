@@ -17,19 +17,19 @@ Vafast 提供了内置的监控系统，允许我们跟踪请求处理时间、�
 Vafast 提供了 `withMonitoring` 函数来为服务器添加监控能力：
 
 ```typescript
-import { Server, defineRoutes, createRouteHandler } from 'vafast'
+import { Server, defineRoutes, createHandler } from 'vafast'
 import { withMonitoring } from 'vafast/monitoring'
 
 const routes = defineRoutes([
   {
     method: 'GET',
     path: '/',
-    handler: createRouteHandler(() => 'Hello Vafast!')
+    handler: createHandler(() => 'Hello Vafast!')
   },
   {
     method: 'POST',
     path: '/users',
-    handler: createRouteHandler(async ({ body }) => {
+    handler: createHandler(async ({ body }) => {
       // 模拟一些异步操作
       await new Promise(resolve => setTimeout(resolve, 100))
       return { success: true, user: body }
@@ -53,7 +53,7 @@ export default { fetch: monitoredServer.fetch }
 您可以使用中间件来实现自定义的性能追踪：
 
 ```typescript
-import { Server, defineRoutes, createRouteHandler } from 'vafast'
+import { Server, defineRoutes, createHandler } from 'vafast'
 
 // 性能追踪中间件
 const performanceTraceMiddleware = async (req: Request, next: () => Promise<Response>) => {
@@ -112,7 +112,7 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/',
-    handler: createRouteHandler(() => 'Hello Vafast!')
+    handler: createHandler(() => 'Hello Vafast!')
   }
 ])
 
@@ -130,7 +130,7 @@ export default { fetch: server.fetch }
 实现更详细的性能分析：
 
 ```typescript
-import { Server, defineRoutes, createRouteHandler } from 'vafast'
+import { Server, defineRoutes, createHandler } from 'vafast'
 
 interface PerformanceMetrics {
   requestId: string
@@ -250,7 +250,7 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/',
-    handler: createRouteHandler(() => 'Hello Vafast!')
+    handler: createHandler(() => 'Hello Vafast!')
   }
 ])
 
@@ -268,7 +268,7 @@ export default { fetch: server.fetch }
 实现实时性能监控面板：
 
 ```typescript
-import { Server, defineRoutes, createRouteHandler } from 'vafast'
+import { Server, defineRoutes, createHandler } from 'vafast'
 
 class RealTimeMonitor {
   private metrics: Array<{
@@ -360,12 +360,12 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/',
-    handler: createRouteHandler(() => 'Hello Vafast!')
+    handler: createHandler(() => 'Hello Vafast!')
   },
   {
     method: 'GET',
     path: '/metrics',
-    handler: createRouteHandler(() => {
+    handler: createHandler(() => {
       const stats = monitor.getStats()
       return new Response(JSON.stringify(stats, null, 2), {
         headers: { 'Content-Type': 'application/json' }
@@ -375,7 +375,7 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/monitor',
-    handler: createRouteHandler(() => {
+    handler: createHandler(() => {
       const stats = monitor.getStats()
       return `
         <!DOCTYPE html>
@@ -435,7 +435,7 @@ export default { fetch: server.fetch }
 实现性能基准测试：
 
 ```typescript
-import { Server, defineRoutes, createRouteHandler } from 'vafast'
+import { Server, defineRoutes, createHandler } from 'vafast'
 
 class PerformanceBenchmark {
   private results: Array<{
@@ -492,12 +492,12 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/',
-    handler: createRouteHandler(() => 'Hello Vafast!')
+    handler: createHandler(() => 'Hello Vafast!')
   },
   {
     method: 'POST',
     path: '/benchmark',
-    handler: createRouteHandler(async ({ body }) => {
+    handler: createHandler(async ({ body }) => {
       const { testName, iterations = 1000 } = body
       
       const testFn = async () => {
@@ -520,7 +520,7 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/benchmark/results',
-    handler: createRouteHandler(() => {
+    handler: createHandler(() => {
       return new Response(JSON.stringify(benchmark.getResults(), null, 2), {
         headers: { 'Content-Type': 'application/json' }
       })

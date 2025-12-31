@@ -314,7 +314,7 @@ export const tagQueries = {
 
 ```typescript
 // src/routes.ts
-import { defineRoutes, createRouteHandler } from 'vafast'
+import { defineRoutes, createHandler } from 'vafast'
 import { Type } from '@sinclair/typebox'
 import { userQueries, postQueries, tagQueries } from './db/queries'
 import { hashPassword, verifyPassword } from './utils/auth'
@@ -324,7 +324,7 @@ export const routes = defineRoutes([
   {
     method: 'POST',
     path: '/api/auth/register',
-    handler: createRouteHandler(async ({ body }) => {
+    handler: createHandler(async ({ body }) => {
       const { email, name, password } = body
       
       // 检查用户是否已存在
@@ -356,7 +356,7 @@ export const routes = defineRoutes([
   {
     method: 'POST',
     path: '/api/auth/login',
-    handler: createRouteHandler(async ({ body }) => {
+    handler: createHandler(async ({ body }) => {
       const { email, password } = body
       
       // 查找用户
@@ -386,7 +386,7 @@ export const routes = defineRoutes([
   {
     method: 'GET',
     path: '/api/posts',
-    handler: createRouteHandler(async ({ query }) => {
+    handler: createHandler(async ({ query }) => {
       const page = parseInt(query.page || '1')
       const limit = parseInt(query.limit || '10')
       
@@ -402,7 +402,7 @@ export const routes = defineRoutes([
   {
     method: 'GET',
     path: '/api/posts/:id',
-    handler: createRouteHandler(async ({ params }) => {
+    handler: createHandler(async ({ params }) => {
       const post = await postQueries.findById(params.id)
       
       if (!post) {
@@ -419,7 +419,7 @@ export const routes = defineRoutes([
   {
     method: 'POST',
     path: '/api/posts',
-    handler: createRouteHandler(async ({ body, request }) => {
+    handler: createHandler(async ({ body, request }) => {
       // 这里应该验证用户身份
       const authorId = 'user-id-from-auth' // 从认证中间件获取
       
@@ -440,7 +440,7 @@ export const routes = defineRoutes([
   {
     method: 'PUT',
     path: '/api/posts/:id',
-    handler: createRouteHandler(async ({ params, body }) => {
+    handler: createHandler(async ({ params, body }) => {
       // 这里应该验证用户身份和权限
       
       const updatedPost = await postQueries.update(params.id, body)
@@ -464,7 +464,7 @@ export const routes = defineRoutes([
   {
     method: 'DELETE',
     path: '/api/posts/:id',
-    handler: createRouteHandler(async ({ params }) => {
+    handler: createHandler(async ({ params }) => {
       // 这里应该验证用户身份和权限
       
       await postQueries.delete(params.id)
@@ -479,7 +479,7 @@ export const routes = defineRoutes([
   {
     method: 'GET',
     path: '/api/tags',
-    handler: createRouteHandler(async () => {
+    handler: createHandler(async () => {
       const tags = await tagQueries.findAll()
       return { tags }
     })
@@ -488,7 +488,7 @@ export const routes = defineRoutes([
   {
     method: 'POST',
     path: '/api/tags',
-    handler: createRouteHandler(async ({ body }) => {
+    handler: createHandler(async ({ body }) => {
       const newTag = await tagQueries.create(body)
       return { tag: newTag }, { status: 201 }
     }),

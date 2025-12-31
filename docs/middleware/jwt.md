@@ -16,7 +16,7 @@ bun add @vafast/jwt
 ## 基本用法
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { jwt } from '@vafast/jwt'
 
 // 创建 JWT 中间件
@@ -33,7 +33,7 @@ const routes = [
     {
         method: 'GET',
         path: '/sign/:name',
-        handler: createRouteHandler(async ({ req, params }: { req: Request, params: Record<string, string> }) => {
+        handler: createHandler(async ({ req, params }: { req: Request, params: Record<string, string> }) => {
             // 应用 JWT 中间件
             jwtMiddleware(req, () => Promise.resolve(new Response()))
             
@@ -53,7 +53,7 @@ const routes = [
     {
         method: 'GET',
         path: '/profile',
-        handler: createRouteHandler(async ({ req }: { req: Request }) => {
+        handler: createHandler(async ({ req }: { req: Request }) => {
             // 应用 JWT 中间件
             jwtMiddleware(req, () => Promise.resolve(new Response()))
             
@@ -158,7 +158,7 @@ interface JWTOption<Name extends string | undefined = 'jwt', Schema extends TSch
 ### 1. 基本 JWT 认证
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { jwt } from '@vafast/jwt'
 
 const jwtMiddleware = jwt({
@@ -172,7 +172,7 @@ const routes = [
     {
         method: 'POST',
         path: '/login',
-        handler: createRouteHandler(async ({ req }: { req: Request }) => {
+        handler: createHandler(async ({ req }: { req: Request }) => {
             jwtMiddleware(req, () => Promise.resolve(new Response()))
             
             const body = await req.json()
@@ -202,7 +202,7 @@ const routes = [
     {
         method: 'GET',
         path: '/protected',
-        handler: createRouteHandler(async ({ req }: { req: Request }) => {
+        handler: createHandler(async ({ req }: { req: Request }) => {
             jwtMiddleware(req, () => Promise.resolve(new Response()))
             
             const authHeader = req.headers.get('authorization')
@@ -239,7 +239,7 @@ export default { fetch: (req: Request) => server.fetch(req) }
 ### 2. 带类型验证的 JWT
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { jwt } from '@vafast/jwt'
 import { Type as t } from '@sinclair/typebox'
 
@@ -262,7 +262,7 @@ const routes = [
     {
         method: 'POST',
         path: '/register',
-        handler: createRouteHandler(async ({ req }: { req: Request }) => {
+        handler: createHandler(async ({ req }: { req: Request }) => {
             jwtMiddleware(req, () => Promise.resolve(new Response()))
             
             const body = await req.json()
@@ -296,7 +296,7 @@ export default { fetch: (req: Request) => server.fetch(req) }
 ### 3. 多 JWT 实例
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { jwt } from '@vafast/jwt'
 
 // 创建不同配置的 JWT 中间件
@@ -318,7 +318,7 @@ const routes = [
     {
         method: 'POST',
         path: '/auth/login',
-        handler: createRouteHandler(async ({ req }: { req: Request }) => {
+        handler: createHandler(async ({ req }: { req: Request }) => {
             // 应用两个 JWT 中间件
             accessTokenMiddleware(req, () => Promise.resolve(new Response()))
             refreshTokenMiddleware(req, () => Promise.resolve(new Response()))
@@ -355,7 +355,7 @@ const routes = [
     {
         method: 'POST',
         path: '/auth/refresh',
-        handler: createRouteHandler(async ({ req }: { req: Request }) => {
+        handler: createHandler(async ({ req }: { req: Request }) => {
             accessTokenMiddleware(req, () => Promise.resolve(new Response()))
             refreshTokenMiddleware(req, () => Promise.resolve(new Response()))
             
@@ -394,7 +394,7 @@ export default { fetch: (req: Request) => server.fetch(req) }
 ### 4. 高级 JWT 配置
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { jwt } from '@vafast/jwt'
 
 const advancedJwtMiddleware = jwt({
@@ -418,7 +418,7 @@ const routes = [
     {
         method: 'POST',
         path: '/auth/advanced',
-        handler: createRouteHandler(async ({ req }: { req: Request }) => {
+        handler: createHandler(async ({ req }: { req: Request }) => {
             advancedJwtMiddleware(req, () => Promise.resolve(new Response()))
             
             const token = await (req as any).jwt.sign({
@@ -448,7 +448,7 @@ export default { fetch: (req: Request) => server.fetch(req) }
 ## 完整示例
 
 ```typescript
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { jwt } from '@vafast/jwt'
 import { Type as t } from '@sinclair/typebox'
 
@@ -495,7 +495,7 @@ const routes = [
     {
         method: 'GET',
         path: '/',
-        handler: createRouteHandler(() => {
+        handler: createHandler(() => {
             return { 
                 message: 'Vafast JWT Authentication API',
                 endpoints: [
@@ -512,7 +512,7 @@ const routes = [
     {
         method: 'POST',
         path: '/auth/register',
-        handler: createRouteHandler(async ({ req }: { req: Request }) => {
+        handler: createHandler(async ({ req }: { req: Request }) => {
             jwtMiddleware(req, () => Promise.resolve(new Response()))
             
             const body = await req.json()
@@ -560,7 +560,7 @@ const routes = [
     {
         method: 'POST',
         path: '/auth/login',
-        handler: createRouteHandler(async ({ req }: { req: Request }) => {
+        handler: createHandler(async ({ req }: { req: Request }) => {
             jwtMiddleware(req, () => Promise.resolve(new Response()))
             
             const body = await req.json()
@@ -598,7 +598,7 @@ const routes = [
     {
         method: 'GET',
         path: '/profile',
-        handler: createRouteHandler(async ({ req }: { req: Request }) => {
+        handler: createHandler(async ({ req }: { req: Request }) => {
             jwtMiddleware(req, () => Promise.resolve(new Response()))
             
             const token = extractToken(req)
@@ -642,7 +642,7 @@ const routes = [
     {
         method: 'PUT',
         path: '/profile',
-        handler: createRouteHandler(async ({ req }: { req: Request }) => {
+        handler: createHandler(async ({ req }: { req: Request }) => {
             jwtMiddleware(req, () => Promise.resolve(new Response()))
             
             const token = extractToken(req)
@@ -692,7 +692,7 @@ const routes = [
     {
         method: 'GET',
         path: '/admin',
-        handler: createRouteHandler(async ({ req }: { req: Request }) => {
+        handler: createHandler(async ({ req }: { req: Request }) => {
             jwtMiddleware(req, () => Promise.resolve(new Response()))
             
             const token = extractToken(req)
@@ -733,7 +733,7 @@ const routes = [
     {
         method: 'POST',
         path: '/auth/logout',
-        handler: createRouteHandler(async ({ req }: { req: Request }) => {
+        handler: createHandler(async ({ req }: { req: Request }) => {
             // 在实际应用中，你可能需要将令牌加入黑名单
             return {
                 message: 'Logout successful',
@@ -764,7 +764,7 @@ console.log('🚪 用户登出: POST /auth/logout')
 
 ```typescript
 import { describe, expect, it } from 'bun:test'
-import { Server, createRouteHandler } from 'vafast'
+import { Server, createHandler } from 'vafast'
 import { jwt } from '@vafast/jwt'
 
 describe('Vafast JWT Plugin', () => {
@@ -781,7 +781,7 @@ describe('Vafast JWT Plugin', () => {
             {
                 method: 'GET',
                 path: '/sign',
-                handler: createRouteHandler(async ({ req }: { req: Request }) => {
+                handler: createHandler(async ({ req }: { req: Request }) => {
                     jwtMiddleware(req, () => Promise.resolve(new Response()))
                     
                     const token = await (req as any).jwt.sign({
@@ -813,7 +813,7 @@ describe('Vafast JWT Plugin', () => {
             {
                 method: 'GET',
                 path: '/verify',
-                handler: createRouteHandler(async ({ req }: { req: Request }) => {
+                handler: createHandler(async ({ req }: { req: Request }) => {
                     jwtMiddleware(req, () => Promise.resolve(new Response()))
                     
                     // 首先签名一个令牌
@@ -851,7 +851,7 @@ describe('Vafast JWT Plugin', () => {
             {
                 method: 'GET',
                 path: '/verify-invalid',
-                handler: createRouteHandler(async ({ req }: { req: Request }) => {
+                handler: createHandler(async ({ req }: { req: Request }) => {
                     jwtMiddleware(req, () => Promise.resolve(new Response()))
                     
                     // 尝试验证无效令牌
@@ -881,7 +881,7 @@ describe('Vafast JWT Plugin', () => {
             {
                 method: 'GET',
                 path: '/verify-missing',
-                handler: createRouteHandler(async ({ req }: { req: Request }) => {
+                handler: createHandler(async ({ req }: { req: Request }) => {
                     jwtMiddleware(req, () => Promise.resolve(new Response()))
                     
                     // 尝试验证缺失的令牌

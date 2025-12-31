@@ -15,14 +15,14 @@ Vafast 使用 Bun 的内置 WebSocket 支持，提供了高性能的实时通信
 要使用 WebSocket，您可以使用 Bun 的内置 WebSocket 服务器：
 
 ```typescript
-import { Server, defineRoutes, createRouteHandler } from 'vafast'
+import { Server, defineRoutes, createHandler } from 'vafast'
 
 // 定义 HTTP 路由
 const routes = defineRoutes([
   {
     method: 'GET',
     path: '/',
-    handler: createRouteHandler(() => 'Hello Vafast!')
+    handler: createHandler(() => 'Hello Vafast!')
   }
 ])
 
@@ -74,13 +74,13 @@ export default { fetch: server.fetch }
 您可以将 WebSocket 功能集成到现有的 Vafast 应用中：
 
 ```typescript
-import { Server, defineRoutes, createRouteHandler } from 'vafast'
+import { Server, defineRoutes, createHandler } from 'vafast'
 
 const routes = defineRoutes([
   {
     method: 'GET',
     path: '/',
-    handler: createRouteHandler(() => `
+    handler: createHandler(() => `
       <!DOCTYPE html>
       <html>
         <head>
@@ -257,7 +257,7 @@ const wsServer = Bun.serve({
 实现聊天室功能：
 
 ```typescript
-import { Server, defineRoutes, createRouteHandler } from 'vafast'
+import { Server, defineRoutes, createHandler } from 'vafast'
 
 // 房间管理
 class RoomManager {

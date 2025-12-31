@@ -84,13 +84,13 @@ bun add -d @types/bun
 创建一个新文件 `src/index.ts`，并添加以下代码：
 
 ```typescript
-import { Server, defineRoutes, createRouteHandler } from 'vafast'
+import { Server, defineRoutes, createHandler } from 'vafast'
 
 const routes = defineRoutes([
   {
     method: 'GET',
     path: '/',
-    handler: createRouteHandler(() => 'Hello Vafast!')
+    handler: createHandler({})(() => 'Hello Vafast!')
   }
 ])
 
@@ -123,13 +123,13 @@ npm install vafast
 创建一个新文件 `src/index.ts`：
 
 ```typescript
-import { Server, defineRoutes, createRouteHandler } from 'vafast'
+import { Server, defineRoutes, createHandler } from 'vafast'
 
 const routes = defineRoutes([
   {
     method: 'GET',
     path: '/',
-    handler: createRouteHandler(() => 'Hello Vafast!')
+    handler: createHandler({})(() => 'Hello Vafast!')
   }
 ])
 
@@ -156,13 +156,13 @@ npm install vafast
 创建应用文件：
 
 ```typescript
-import { Server, defineRoutes, createRouteHandler } from 'vafast'
+import { Server, defineRoutes, createHandler } from 'vafast'
 
 const routes = defineRoutes([
   {
     method: 'GET',
     path: '/',
-    handler: createRouteHandler(() => 'Hello Vafast!')
+    handler: createHandler({})(() => 'Hello Vafast!')
   }
 ])
 
@@ -179,18 +179,18 @@ export default { fetch: server.fetch }
 ### 简单路由
 
 ```typescript
-import { Server, defineRoutes, createRouteHandler } from 'vafast'
+import { Server, defineRoutes, createHandler } from 'vafast'
 
 const routes = defineRoutes([
   {
     method: 'GET',
     path: '/',
-    handler: createRouteHandler(() => 'Hello Vafast!')
+    handler: createHandler({})(() => 'Hello Vafast!')
   },
   {
     method: 'GET',
     path: '/users',
-    handler: createRouteHandler(() => ['user1', 'user2', 'user3'])
+    handler: createHandler({})(() => ['user1', 'user2', 'user3'])
   }
 ])
 
@@ -205,14 +205,14 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/users/:id',
-    handler: createRouteHandler(({ params }) => {
+    handler: createHandler({})(({ params }) => {
       return `User ID: ${params.id}`
     })
   },
   {
     method: 'POST',
     path: '/users',
-    handler: createRouteHandler(async ({ req }) => {
+    handler: createHandler({})(async ({ req }) => {
       const body = await req.json()
       return { success: true, user: body }
     })
@@ -235,10 +235,12 @@ const routes = defineRoutes([
   {
     method: 'POST',
     path: '/users',
-    handler: createRouteHandler(({ body }) => {
+    handler: createHandler({
+      body: userSchema
+    })(({ body }) => {
+      // body 已验证并自动推导类型
       return { success: true, user: body }
-    }),
-    body: userSchema
+    })
   }
 ])
 ```

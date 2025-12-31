@@ -15,7 +15,7 @@ Bun 包含一个内置的 [测试运行器](https://bun.sh/docs/cli/test)，通�
 ```typescript
 // test/index.test.ts
 import { describe, expect, it } from 'bun:test'
-import { Server, defineRoutes, createRouteHandler } from 'vafast'
+import { Server, defineRoutes, createHandler } from 'vafast'
 
 describe('Vafast', () => {
     it('returns a response', async () => {
@@ -23,7 +23,7 @@ describe('Vafast', () => {
           {
             method: 'GET',
             path: '/',
-            handler: createRouteHandler(() => 'hi')
+            handler: createHandler(() => 'hi')
           }
         ])
         
@@ -62,19 +62,19 @@ bun test
 ```typescript
 // test/routes.test.ts
 import { describe, expect, it } from 'bun:test'
-import { Server, defineRoutes, createRouteHandler } from 'vafast'
+import { Server, defineRoutes, createHandler } from 'vafast'
 
 describe('Vafast Routes', () => {
     const routes = defineRoutes([
       {
         method: 'GET',
         path: '/users/:id',
-        handler: createRouteHandler(({ params }) => `User ${params.id}`)
+        handler: createHandler(({ params }) => `User ${params.id}`)
       },
       {
         method: 'POST',
         path: '/users',
-        handler: createRouteHandler(({ body }) => ({ id: 1, ...body }))
+        handler: createHandler(({ body }) => ({ id: 1, ...body }))
       }
     ])
     
@@ -113,7 +113,7 @@ describe('Vafast Routes', () => {
 ```typescript
 // test/middleware.test.ts
 import { describe, expect, it } from 'bun:test'
-import { Server, defineRoutes, createRouteHandler } from 'vafast'
+import { Server, defineRoutes, createHandler } from 'vafast'
 
 describe('Vafast Middleware', () => {
     const loggingMiddleware = async (req: Request, next: () => Promise<Response>) => {
@@ -127,7 +127,7 @@ describe('Vafast Middleware', () => {
       {
         method: 'GET',
         path: '/test',
-        handler: createRouteHandler(() => 'Hello from middleware')
+        handler: createHandler(() => 'Hello from middleware')
       }
     ])
     
@@ -151,7 +151,7 @@ describe('Vafast Middleware', () => {
 ```typescript
 // test/validation.test.ts
 import { describe, expect, it } from 'bun:test'
-import { Server, defineRoutes, createRouteHandler } from 'vafast'
+import { Server, defineRoutes, createHandler } from 'vafast'
 import { Type } from '@sinclair/typebox'
 
 describe('Vafast Validation', () => {
@@ -165,7 +165,7 @@ describe('Vafast Validation', () => {
       {
         method: 'POST',
         path: '/users',
-        handler: createRouteHandler(({ body }) => ({ success: true, user: body })),
+        handler: createHandler(({ body }) => ({ success: true, user: body })),
         body: userSchema
       }
     ])
@@ -213,21 +213,21 @@ describe('Vafast Validation', () => {
 ```typescript
 // test/error-handling.test.ts
 import { describe, expect, it } from 'bun:test'
-import { Server, defineRoutes, createRouteHandler } from 'vafast'
+import { Server, defineRoutes, createHandler } from 'vafast'
 
 describe('Vafast Error Handling', () => {
     const routes = defineRoutes([
       {
         method: 'GET',
         path: '/error',
-        handler: createRouteHandler(() => {
+        handler: createHandler(() => {
             throw new Error('Something went wrong')
         })
       },
       {
         method: 'GET',
         path: '/not-found',
-        handler: createRouteHandler(() => 'This should not be reached')
+        handler: createHandler(() => 'This should not be reached')
       }
     ])
     
@@ -265,7 +265,7 @@ describe('Vafast Error Handling', () => {
 ```typescript
 // test/integration.test.ts
 import { describe, expect, it } from 'bun:test'
-import { Server, defineRoutes, createRouteHandler } from 'vafast'
+import { Server, defineRoutes, createHandler } from 'vafast'
 
 describe('Vafast Integration', () => {
     let server: Server
@@ -275,12 +275,12 @@ describe('Vafast Integration', () => {
           {
             method: 'GET',
             path: '/health',
-            handler: createRouteHandler(() => ({ status: 'ok' }))
+            handler: createHandler(() => ({ status: 'ok' }))
           },
           {
             method: 'GET',
             path: '/users/:id',
-            handler: createRouteHandler(({ params }) => ({
+            handler: createHandler(({ params }) => ({
                 id: params.id,
                 name: 'Test User',
                 email: 'test@example.com'
@@ -289,7 +289,7 @@ describe('Vafast Integration', () => {
           {
             method: 'POST',
             path: '/users',
-            handler: createRouteHandler(({ body }) => ({
+            handler: createHandler(({ body }) => ({
                 id: Date.now(),
                 ...body,
                 createdAt: new Date().toISOString()

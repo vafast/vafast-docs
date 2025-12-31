@@ -17,20 +17,20 @@ bun add @vafast/opentelemetry
 ## 基本用法
 
 ```typescript
-import { defineRoutes, createRouteHandler } from 'vafast'
+import { defineRoutes, createHandler } from 'vafast'
 import { opentelemetry } from '@vafast/opentelemetry'
 
 const routes = defineRoutes([
   {
     method: 'GET',
     path: '/users',
-    handler: createRouteHandler(() => {
+    handler: createHandler(() => {
       return { users: [] }
     })
   }
 ])
 
-const app = createRouteHandler(routes)
+const app = createHandler(routes)
   .use(opentelemetry({
     serviceName: 'my-vafast-app',
     serviceVersion: '1.0.0'
@@ -88,14 +88,14 @@ app.use(opentelemetry({
 OpenTelemetry 中间件自动为所有请求创建追踪：
 
 ```typescript
-import { defineRoutes, createRouteHandler } from 'vafast'
+import { defineRoutes, createHandler } from 'vafast'
 import { opentelemetry } from '@vafast/opentelemetry'
 
 const routes = defineRoutes([
   {
     method: 'GET',
     path: '/users/:id',
-    handler: createRouteHandler(async ({ params }) => {
+    handler: createHandler(async ({ params }) => {
       // 这个请求会自动创建追踪
       const user = await fetchUser(params.id)
       return user
@@ -106,7 +106,7 @@ const routes = defineRoutes([
   }
 ])
 
-const app = createRouteHandler(routes)
+const app = createHandler(routes)
   .use(opentelemetry({
     serviceName: 'user-service',
     tracing: {
@@ -124,14 +124,14 @@ const app = createRouteHandler(routes)
 您可以在处理程序中添加自定义追踪：
 
 ```typescript
-import { defineRoutes, createRouteHandler } from 'vafast'
+import { defineRoutes, createHandler } from 'vafast'
 import { trace } from '@opentelemetry/api'
 
 const routes = defineRoutes([
   {
     method: 'POST',
     path: '/users',
-    handler: createRouteHandler(async ({ body }) => {
+    handler: createHandler(async ({ body }) => {
       const tracer = trace.getTracer('user-service')
       
       return await tracer.startActiveSpan('create-user', async (span) => {

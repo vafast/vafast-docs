@@ -28,7 +28,7 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/users/:id',
-    handler: createRouteHandler(({ params }) => `User ${params.id}`),
+    handler: createHandler(({ params }) => `User ${params.id}`),
     params: Type.Object({
       id: Type.String()
     })
@@ -48,7 +48,7 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/posts/:postId/comments/:commentId',
-    handler: createRouteHandler(({ params }) => 
+    handler: createHandler(({ params }) => 
       `Post ${params.postId}, Comment ${params.commentId}`
     ),
     params: Type.Object({
@@ -74,7 +74,7 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/organizations/:orgId/departments/:deptId/employees/:empId',
-    handler: createRouteHandler(({ params }) => 
+    handler: createHandler(({ params }) => 
       `Employee ${params.empId} in ${params.deptId} of ${params.orgId}`
     ),
     params: Type.Object({
@@ -102,7 +102,7 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/users/:id',
-    handler: createRouteHandler(({ params }) => `User ${params.id}`),
+    handler: createHandler(({ params }) => `User ${params.id}`),
     params: Type.Object({
       id: Type.Union([
         Type.String({ pattern: '^[0-9]+$' }), // 数字字符串
@@ -130,7 +130,7 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/users',
-    handler: createRouteHandler(({ query }) => {
+    handler: createHandler(({ query }) => {
       const { page = 1, limit = 10, search = '' } = query
       return `Page ${page}, Limit ${limit}, Search: ${search}`
     }),
@@ -159,7 +159,7 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/products',
-    handler: createRouteHandler(({ query }) => {
+    handler: createHandler(({ query }) => {
       const { categories = [], tags = [] } = query
       return `Categories: ${categories.join(', ')}, Tags: ${tags.join(', ')}`
     }),
@@ -186,7 +186,7 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/search',
-    handler: createRouteHandler(({ query }) => {
+    handler: createHandler(({ query }) => {
       const { filters, sort, pagination } = query
       return `Filters: ${JSON.stringify(filters)}, Sort: ${JSON.stringify(sort)}, Page: ${pagination.page}`
     }),
@@ -231,7 +231,7 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/analytics',
-    handler: createRouteHandler(({ query }) => {
+    handler: createHandler(({ query }) => {
       const { startDate, endDate, metrics } = query
       return `Analytics from ${startDate} to ${endDate} for ${metrics.join(', ')}`
     }),
@@ -273,7 +273,7 @@ const routes = defineRoutes([
   {
     method: 'POST',
     path: '/users',
-    handler: createRouteHandler(({ body }) => `Created user: ${body.name}`),
+    handler: createHandler(({ body }) => `Created user: ${body.name}`),
     body: Type.Object({
       name: Type.String({ minLength: 1 }),
       email: Type.String({ format: 'email' }),
@@ -299,7 +299,7 @@ const routes = defineRoutes([
   {
     method: 'POST',
     path: '/orders',
-    handler: createRouteHandler(({ body }) => {
+    handler: createHandler(({ body }) => {
       const { customer, items, shipping } = body
       return `Order for ${customer.name} with ${items.length} items`
     }),
@@ -352,7 +352,7 @@ const routes = defineRoutes([
   {
     method: 'POST',
     path: '/upload',
-    handler: createRouteHandler(async ({ body }) => {
+    handler: createHandler(async ({ body }) => {
       const { file, metadata } = body
       const fileName = file.name
       return `Uploaded file: ${fileName}`
@@ -390,7 +390,7 @@ const routes = defineRoutes([
   {
     method: 'POST',
     path: '/validation',
-    handler: createRouteHandler(({ body }) => `Valid data: ${body.value}`),
+    handler: createHandler(({ body }) => `Valid data: ${body.value}`),
     body: Type.Object({
       value: Type.String({
         minLength: 5,
@@ -446,7 +446,7 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/protected',
-    handler: createRouteHandler(({ headers }) => {
+    handler: createHandler(({ headers }) => {
       const authHeader = headers.get('authorization')
       return `Authenticated with: ${authHeader}`
     }),
@@ -491,7 +491,7 @@ const routes = defineRoutes([
   {
     method: 'POST',
     path: '/secure',
-    handler: createRouteHandler(({ headers }) => 'Secure endpoint accessed'),
+    handler: createHandler(({ headers }) => 'Secure endpoint accessed'),
     headers: Type.Object({
       'x-api-key': Type.String({ minLength: 32, maxLength: 32 }),
       'x-timestamp': Type.String({ pattern: '^\\d{10}$' }),
@@ -523,7 +523,7 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/profile',
-    handler: createRouteHandler(({ cookies }) => {
+    handler: createHandler(({ cookies }) => {
       const sessionId = cookies.get('sessionId')
       return `Profile for session: ${sessionId}`
     }),
@@ -547,7 +547,7 @@ const routes = defineRoutes([
   {
     method: 'POST',
     path: '/login',
-    handler: createRouteHandler(({ body, cookies }) => {
+    handler: createHandler(({ body, cookies }) => {
       // 设置认证 Cookie
       cookies.set('sessionId', 'new-session-123', {
         httpOnly: true,
@@ -583,7 +583,7 @@ const routes = defineRoutes([
   {
     method: 'PUT',
     path: '/users/:id',
-    handler: createRouteHandler(({ params, query, body, headers }) => {
+    handler: createHandler(({ params, query, body, headers }) => {
       const { id } = params
       const { version } = query
       const { name, email } = body
@@ -626,7 +626,7 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/search',
-    handler: createRouteHandler(({ query }) => {
+    handler: createHandler(({ query }) => {
       const { q, page = 1, limit = 10, sort = 'relevance' } = query
       return `Search: ${q}, Page: ${page}, Limit: ${limit}, Sort: ${sort}`
     }),

@@ -74,7 +74,7 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/users/:id',
-    handler: createRouteHandler(({ params }) => ({
+    handler: createHandler(({ params }) => ({
       id: params.id,
       name: 'John Doe',
       email: 'john@example.com'
@@ -129,7 +129,7 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/users',
-    handler: createRouteHandler(({ query }) => {
+    handler: createHandler(({ query }) => {
       const { page = 1, limit = 10 } = query
       return {
         data: [
@@ -241,7 +241,7 @@ const routes = defineRoutes([
   {
     method: 'POST',
     path: '/users',
-    handler: createRouteHandler(({ body }) => `Created user: ${body.name}`),
+    handler: createHandler(({ body }) => `Created user: ${body.name}`),
     body: Type.Object({
       name: Type.String({ minLength: 1 }),
       email: Type.String({ format: 'email' })
