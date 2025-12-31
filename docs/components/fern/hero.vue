@@ -1,5 +1,5 @@
 <template>
-    <link rel="preload" as="image" href="/assets/elysia_v.webp" />
+    <link rel="preload" as="image" :href="asset('assets/elysia_v.webp')" />
     <Ray
         class="h-[60vh] -top-16 pointer-events-none opacity-[.35] dark:opacity-50"
     />
@@ -31,7 +31,7 @@
 	            ElysiaJS
 	        </h1> -->
             <img
-                src="/assets/elysia_v.webp"
+                :src="asset('assets/elysia_v.webp')"
                 alt="Curved text logo saying 'Elysia JS'"
                 class="max-w-[40ch] w-full object-contain object-left md:object-center mr-auto md:mr-0"
                 style="aspect-ratio: 1.5 / 1"
@@ -211,7 +211,7 @@
             style="max-height: calc(100vh - 64px)"
         >
             <img
-                src="/assets/elysia_chan.webp"
+                :src="asset('assets/elysia_chan.webp')"
                 class="object-cover z-[41] select-none pointer-events-none"
                 style="object-position: 50% 7.5%"
             />
@@ -221,8 +221,16 @@
 
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'
+import { useData } from 'vitepress'
 
 import Ray from './ray.vue'
+
+const { site } = useData()
+const asset = (path: string) => {
+    const base = site.value.base
+    const normalized = path.startsWith('/') ? path.slice(1) : path
+    return `${base}${normalized}`
+}
 
 const kawaii = ref(false)
 const toggleKawaii = () => {

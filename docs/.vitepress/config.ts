@@ -190,7 +190,7 @@ export default defineConfig({
                 }
             }
         },
-        logo: '/assets/elysia.svg', // VitePress 会自动加上 base
+        logo: 'assets/elysia.svg', // 使用相对路径，VitePress 会自动加上 base
         nav: [
             {
                 text: '中间件',
