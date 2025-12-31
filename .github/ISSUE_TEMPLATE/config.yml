@@ -1,5 +1,9 @@
-blank_issues_enabled: true
+blank_issues_enabled: false
 contact_links:
-    - name: 💬 Ask a Question
-      url: https://discord.gg/eaFJ2KDJck
-      about: Head over to our Discord!
+  - name: 💬 提问 / 讨论
+    url: https://github.com/vafast/vafast/discussions
+    about: 在 Discussions 中提问或讨论
+
+  - name: 🐛 框架 Bug
+    url: https://github.com/vafast/vafast/issues/new?template=bug-report.yml
+    about: 框架本身的 Bug 请到主仓库报告

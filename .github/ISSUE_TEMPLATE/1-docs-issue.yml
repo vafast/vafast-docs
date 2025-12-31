@@ -1,27 +1,39 @@
-name: 📗 Documentation Issue
-description: Tell us if there is missing or incorrect documentation
+name: 📗 文档问题
+description: 报告文档错误或遗漏
 labels: [docs]
 body:
-    - type: markdown
-      attributes:
-          value: |
-              Thank you for submitting a documentation request. It helps us make ElysiaJS better.
-    - type: dropdown
-      attributes:
-          label: What is the type of issue?
-          multiple: true
-          options:
-              - Documentation is missing
-              - Documentation is incorrect
-              - Documentation is confusing
-              - Example code is not working
-              - Something else
-    - type: textarea
-      attributes:
-          label: What is the issue?
-      validations:
-          required: true
-    - type: textarea
-      attributes:
-          label: Where did you find it?
-          description: If possible, please provide the URL(s) where you found this issue.
+  - type: markdown
+    attributes:
+      value: |
+        感谢您帮助改进 Vafast 文档！
+
+  - type: dropdown
+    attributes:
+      label: 问题类型
+      multiple: true
+      options:
+        - 文档缺失
+        - 文档错误
+        - 文档描述不清晰
+        - 示例代码无法运行
+        - 其他问题
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: 问题描述
+      description: 请详细描述您遇到的问题
+    validations:
+      required: true
+
+  - type: input
+    attributes:
+      label: 相关页面
+      description: 请提供文档页面的 URL
+      placeholder: https://vafast.dev/docs/...
+
+  - type: textarea
+    attributes:
+      label: 建议的修改
+      description: 如果您有修改建议，请在此说明
