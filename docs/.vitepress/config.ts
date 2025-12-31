@@ -12,7 +12,11 @@ import { analyzer } from 'vite-bundle-analyzer'
 const description =
     'Vafast 是一个高性能、类型安全的 TypeScript Web 框架，专为现代 Web 应用设计，提供优秀的开发者体验和灵活的中间件系统。'
 
+// GitHub Pages 子路径部署： https://vafast.github.io/vafast-docs/
+const base = '/vafast-docs/'
+
 export default defineConfig({
+    base,
     lang: 'zh-CN',
     title: 'Vafast 中文文档',
     titleTemplate: ':title - Vafast 中文文档',
@@ -52,6 +56,7 @@ export default defineConfig({
         }
     },
     vite: {
+        base, // 确保 Vite 构建时也使用正确的 base
         server: {
             watch: {
                 usePolling: true
@@ -100,7 +105,7 @@ export default defineConfig({
             'link',
             {
                 rel: 'icon',
-                href: '/assets/elysia.png'
+                href: `${base}assets/elysia.png`
             }
         ],
         [
@@ -185,7 +190,7 @@ export default defineConfig({
                 }
             }
         },
-        logo: '/assets/elysia.svg',
+        logo: `${base}assets/elysia.svg`,
         nav: [
             {
                 text: '中间件',
