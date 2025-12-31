@@ -9,38 +9,75 @@ import Playground from './components/nearl/playground.vue'
 </script>
 
 # 简介
-Vafast 是一个用于构建后端服务器的高性能 Web 框架，专为 Bun 运行时设计。
 
-Vafast 以简单性和类型安全为设计理念，拥有清晰的 API，并广泛支持 TypeScript，针对 Bun 进行了优化。
+Vafast 不只是一个框架，更是一种 **结构、清晰、可控** 的开发哲学。
 
-## 🎯 核心哲学
+## 🎯 Vafast 哲学
 
-Vafast 基于以下 5 个核心理念构建：
+<div class="philosophy-grid">
 
-### 1. **代码即结构**
-路由、中间件和业务逻辑都是配置，而不是行为。代码就是清单，而不是脚本。
+### 结构即真相 <span class="tag">Structure is Truth</span>
+API 用代码定义，而非行为。没有装饰器，没有魔法。
 
-### 2. **错误也是值**
-TirneError 包含了类型、状态和意图信息。错误会被抛出，但绝不会被隐藏。
+```typescript
+// 所见即所得
+const routes = [
+  { method: 'GET', path: '/users/:id', handler: getUser }
+]
+```
 
-### 3. **组合胜过约定**
-中间件通过显式组合，执行顺序就是契约的一部分。
+### 错误即数据 <span class="tag">Errors are Data</span>
+错误包含状态、类型和可见性。不是混乱，而是契约。
 
-### 4. **类型决定行为**
-API 的结构和安全性完全由类型定义，而不是靠文档说明。
+```typescript
+return { data: { error: 'Not Found' }, status: 404 }
+```
 
-### 5. **为边缘计算而生**
-专为 Bun 打造，为 fetch 优化，诞生在这个毫秒级的时代。
+### 组合优于约定 <span class="tag">Composition Matters</span>
+中间件显式组合，执行顺序清晰可控，无全局污染。
+
+```typescript
+{ path: '/admin', middleware: [auth, log], handler }
+```
+
+### 边缘原生 <span class="tag">Edge-Native</span>
+原生运行于 Bun、Workers、Deno —— 冷启动无忧。
+
+```typescript
+export default { port: 3000, fetch: server.fetch }
+```
+
+### 零样板代码 <span class="tag">No Boilerplate</span>
+无 CLI，无配置文件夹。一个文件，即刻运行。
+
+</div>
+
+<style>
+.philosophy-grid h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.philosophy-grid .tag {
+  font-size: 0.75rem;
+  font-weight: normal;
+  color: var(--vp-c-text-2);
+  background: var(--vp-c-bg-soft);
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+}
+</style>
 
 ## ✨ 核心特性
 
-- ✅ **结构优先的路由** — 用单一的声明式结构定义整个 API
-- ✅ **可组合的中间件** — 显式的 compose() 流程，没有装饰器，也没有全局作用域
-- ✅ **结构化错误处理** — 抛出带有类型、状态和可见性的 TirneError
-- ✅ **内置响应工具** — json()、html()、text()、error() 等 — 简洁统一
-- ✅ **边缘原生执行** — 在 Bun、Workers 和 Deno 上实现即时冷启动和亚毫秒级响应
-- ✅ **零样板代码** — 没有 CLI，没有配置文件，没有目录规则。只有纯粹的代码。
-- ✅ **类型安全设计** — 路由、处理器、错误，全部由 TypeScript 来塑造
+- ✅ **结构优先的路由** — 用声明式对象定义整个 API，所见即所得
+- ✅ **可组合的中间件** — 显式组合，无装饰器，无全局污染
+- ✅ **结构化响应** — `{ data, status }` 统一格式，错误也是数据
+- ✅ **内置响应工具** — `json()`、`html()`、`text()` 等，简洁统一
+- ✅ **边缘原生** — Bun、Workers、Deno 即时冷启动，亚毫秒响应
+- ✅ **零样板代码** — 无 CLI，无配置文件，一个文件即可运行
+- ✅ **类型安全** — 路由、处理器、响应，全部 TypeScript 类型推断
 
 ## 🚀 技术特性
 
