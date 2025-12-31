@@ -15,27 +15,17 @@ sidebar: false
 <template v-slot:type-1>
 
 ```typescript twoslash
-import { Server, defineRoutes } from 'vafast'
-import { Type } from '@sinclair/typebox'
+import { createHandler, Type } from 'vafast'
 
-interface TypedRequest extends Request {
-  params: { id: string }
-}
-
-const routes = defineRoutes([
-  {
-    method: 'GET',
-    path: '/id/:id',
-    handler: (req) => {
-      const { id } = (req as TypedRequest).params
-      //    ^?
-      return `ID: ${id}`
-    }
+// 使用 createHandler 创建类型安全的处理器
+const getUser = createHandler(
+  { params: Type.Object({ id: Type.String() }) },
+  ({ params }) => {
+    const id = params.id
+    //    ^?
+    return `User ID: ${id}`
   }
-])
-
-const server = new Server(routes)
-export default { fetch: server.fetch }
+)
 ```
 
 </template>
@@ -43,23 +33,17 @@ export default { fetch: server.fetch }
 <template v-slot:type-2>
 
 ```typescript twoslash
-import { Server, defineRoutes } from 'vafast'
-import { Type } from '@sinclair/typebox'
+import { createHandler, Type } from 'vafast'
 
-const routes = defineRoutes([
-  {
-    method: 'POST',
-    path: '/profile',
-    handler: async (req) => {
-      const body = await req.json()
-      //    ^?
-      return { success: true, data: body }
-    }
+// Schema 验证 + 类型推断
+const createProfile = createHandler(
+  { body: Type.Object({ name: Type.String(), age: Type.Number() }) },
+  ({ body }) => {
+    const name = body.name
+    //    ^?
+    return { success: true, data: body }
   }
-])
-
-const server = new Server(routes)
-export default { fetch: server.fetch }
+)
 ```
 
 </template>
@@ -67,27 +51,16 @@ export default { fetch: server.fetch }
 <template v-slot:type-3>
 
 ```typescript twoslash
-import { Server, defineRoutes } from 'vafast'
+import { createHandler, Type } from 'vafast'
 
-const routes = defineRoutes([
-  {
-    method: 'GET',
-    path: '/profile',
-    handler: () => {
-      //      ^?
-      if(Math.random() > .5) {
-        return new Response(JSON.stringify({ error: 'Unauthorized' }), { 
-          status: 401,
-          headers: { 'Content-Type': 'application/json' }
-        })
-      }
-      return { message: 'OK' }
-    }
+// 自动响应转换：对象 -> JSON，字符串 -> text/plain
+const getProfile = createHandler(({ req }) => {
+  //                               ^?
+  if(Math.random() > .5) {
+    return { data: null, status: 401 }
   }
-])
-
-const server = new Server(routes)
-export default { fetch: server.fetch }
+  return { message: 'OK' }
+})
 ```
 
 </template>
@@ -95,29 +68,19 @@ export default { fetch: server.fetch }
 <template v-slot:type-4>
 
 ```typescript twoslash
-import { Server, defineRoutes, type Middleware } from 'vafast'
+import { createHandlerWithExtra, Type } from 'vafast'
 
-// 自定义中间件
-const authMiddleware: Middleware = async (request, next) => {
-  //                                       ^?
-  const auth = request.headers.get('authorization')
-  if (!auth) {
-    return new Response('Unauthorized', { status: 401 })
+// 带中间件注入的额外上下文
+type AuthContext = { user: { id: string; role: string } }
+
+const adminHandler = createHandlerWithExtra<AuthContext>(
+  { body: Type.Object({ action: Type.String() }) },
+  ({ body, user }) => {
+    const role = user.role
+    //    ^?
+    return { success: true, userId: user.id }
   }
-  return next()
-}
-
-const routes = defineRoutes([
-  {
-    method: 'GET',
-    path: '/admin/check',
-    middleware: [authMiddleware],
-    handler: () => ({ message: 'Admin OK' })
-  }
-])
-
-const server = new Server(routes)
-export default { fetch: server.fetch }
+)
 ```
 
 </template>
@@ -125,18 +88,18 @@ export default { fetch: server.fetch }
 <template v-slot:easy>
 
 ```typescript
-import { Server, defineRoutes } from 'vafast'
+import { Server, defineRoutes, createHandler } from 'vafast'
 
 const routes = defineRoutes([
   {
     method: 'GET',
     path: '/',
-    handler: () => 'Hello World'
+    handler: createHandler(() => 'Hello World')
   },
   {
     method: 'GET',
     path: '/json',
-    handler: () => ({ message: 'Hello World' })
+    handler: createHandler(() => ({ message: 'Hello World' }))
   }
 ])
 
@@ -149,13 +112,13 @@ export default { fetch: server.fetch }
 <template v-slot:doc>
 
 ```typescript
-import { Server, defineRoutes } from 'vafast'
+import { Server, defineRoutes, createHandler } from 'vafast'
 
 const routes = defineRoutes([
   {
     method: 'GET',
     path: '/',
-    handler: () => 'Hello Vafast'
+    handler: createHandler(() => 'Hello Vafast')
   }
 ])
 
@@ -168,22 +131,22 @@ export default { fetch: server.fetch }
 <template v-slot:e2e-type-safety>
 
 ```typescript
-import { Server, defineRoutes } from 'vafast'
+import { Server, defineRoutes, createHandler, Type } from 'vafast'
 
 const routes = defineRoutes([
   {
     method: 'POST',
     path: '/profile',
-    handler: async (req) => {
-      const body = await req.json() as { age: number }
-      if(body.age < 18) {
-        return new Response(JSON.stringify({ error: '年龄不足' }), {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' }
-        })
+    handler: createHandler(
+      { body: Type.Object({ age: Type.Number() }) },
+      ({ body }) => {
+        // body.age 自动类型推断为 number
+        if(body.age < 18) {
+          return { data: { error: '年龄不足' }, status: 400 }
+        }
+        return { success: true, data: body }
       }
-      return { success: true, data: body }
-    }
+    )
   }
 ])
 
@@ -196,31 +159,22 @@ export default { fetch: server.fetch }
 <template v-slot:test-code>
 
 ```typescript
-import { Server, defineRoutes } from 'vafast'
-
-interface UserBody {
-  username: string
-  password: string
-}
+import { Server, defineRoutes, createHandler, Type } from 'vafast'
 
 const routes = defineRoutes([
   {
     method: 'POST',
     path: '/user',
-    handler: async (req) => {
-      const body = await req.json() as UserBody
-      if(body.username === 'mika') {
-        return new Response(JSON.stringify({ 
-          success: false,
-          message: '用户名已被占用'
-        }), { status: 400, headers: { 'Content-Type': 'application/json' } })
+    handler: createHandler(
+      { body: Type.Object({ username: Type.String(), password: Type.String() }) },
+      ({ body }) => {
+        // body.username 和 body.password 自动类型安全
+        if(body.username === 'mika') {
+          return { data: { success: false, message: '用户名已被占用' }, status: 400 }
+        }
+        return { success: true, message: '用户创建成功' }
       }
-
-      return {
-        success: true,
-        message: '用户创建成功'
-      }
-    }
+    )
   }
 ])
 
