@@ -90,7 +90,7 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/',
-    handler: createHandler({})(() => 'Hello Vafast!')
+    handler: createHandler(() => 'Hello Vafast!')
   }
 ])
 
@@ -129,7 +129,7 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/',
-    handler: createHandler({})(() => 'Hello Vafast!')
+    handler: createHandler(() => 'Hello Vafast!')
   }
 ])
 
@@ -162,7 +162,7 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/',
-    handler: createHandler({})(() => 'Hello Vafast!')
+    handler: createHandler(() => 'Hello Vafast!')
   }
 ])
 
@@ -185,12 +185,12 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/',
-    handler: createHandler({})(() => 'Hello Vafast!')
+    handler: createHandler(() => 'Hello Vafast!')
   },
   {
     method: 'GET',
     path: '/users',
-    handler: createHandler({})(() => ['user1', 'user2', 'user3'])
+    handler: createHandler(() => ['user1', 'user2', 'user3'])
   }
 ])
 
@@ -205,15 +205,14 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/users/:id',
-    handler: createHandler({})(({ params }) => {
+    handler: createHandler(({ params }) => {
       return `User ID: ${params.id}`
     })
   },
   {
     method: 'POST',
     path: '/users',
-    handler: createHandler({})(async ({ req }) => {
-      const body = await req.json()
+    handler: createHandler(async ({ body }) => {
       return { success: true, user: body }
     })
   }
@@ -235,12 +234,13 @@ const routes = defineRoutes([
   {
     method: 'POST',
     path: '/users',
-    handler: createHandler({
-      body: userSchema
-    })(({ body }) => {
-      // body 已验证并自动推导类型
-      return { success: true, user: body }
-    })
+    handler: createHandler(
+      { body: userSchema },
+      ({ body }) => {
+        // body 已验证并自动推导类型
+        return { success: true, user: body }
+      }
+    )
   }
 ])
 ```

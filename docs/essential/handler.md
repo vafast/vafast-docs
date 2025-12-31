@@ -15,14 +15,13 @@ import Tab from '../components/fern/tab.vue'
 在其他框架中，处理程序也被称为 **控制器**。
 
 ```typescript
-import { Server, defineRoutes, handler } from 'vafast'
+import { Server, defineRoutes, createHandler } from 'vafast'
 
 const routes = defineRoutes([
   {
     method: 'GET',
     path: '/',
-    // handler 是柯里化函数：handler(schema)(handler)
-    handler: handler({})(() => 'hello world')
+    handler: createHandler(() => 'hello world')
   }
 ])
 ```
@@ -38,17 +37,17 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/',
-    handler: handler({})(() => 'Hello World')
+    handler: createHandler(() => 'Hello World')
   },
   {
     method: 'GET',
     path: '/json',
-    handler: handler({})(() => ({ message: 'Hello World' }))
+    handler: createHandler(() => ({ message: 'Hello World' }))
   },
   {
     method: 'GET',
     path: '/html',
-    handler: handler({})(() => '<h1>Hello World</h1>')
+    handler: createHandler(() => '<h1>Hello World</h1>')
   }
 ])
 ```
@@ -62,7 +61,7 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/info',
-    handler: handler({})(({ req, headers, query }) => {
+    handler: createHandler(({ req, headers, query }) => {
       return {
         url: req.url,
         method: req.method,
@@ -83,7 +82,7 @@ const routes = defineRoutes([
   {
     method: 'POST',
     path: '/users',
-    handler: handler({})(async ({ body }) => {
+    handler: createHandler(async ({ body }) => {
       // 模拟数据库操作
       const user = await createUser(body)
       return user
@@ -103,7 +102,7 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/user/:id',
-    handler: handler({})(({ params, query, headers }) => {
+    handler: createHandler(({ params, query, headers }) => {
       const userId = params.id
       const page = query.page || '1'
       const auth = headers.authorization
@@ -121,7 +120,7 @@ const routes = defineRoutes([
   {
     method: 'POST',
     path: '/users',
-    handler: handler(async ({ body }) => {
+    handler: createHandler(async ({ body }) => {
       const { name, email, age } = body
       
       if (!name || !email) {
@@ -141,7 +140,7 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/search',
-    handler: handler(({ query }) => {
+    handler: createHandler(({ query }) => {
       const { q, page = '1', limit = '10', sort = 'name' } = query
       
       return {
@@ -167,22 +166,22 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/string',
-    handler: handler(() => 'Plain text') // 返回 text/plain
+    handler: createHandler(() => 'Plain text') // 返回 text/plain
   },
   {
     method: 'GET',
     path: '/json',
-    handler: handler(() => ({ data: 'JSON' })) // 返回 application/json
+    handler: createHandler(() => ({ data: 'JSON' })) // 返回 application/json
   },
   {
     method: 'GET',
     path: '/html',
-    handler: handler(() => '<h1>HTML</h1>') // 返回 text/html
+    handler: createHandler(() => '<h1>HTML</h1>') // 返回 text/html
   },
   {
     method: 'GET',
     path: '/number',
-    handler: handler(() => 42) // 返回 text/plain
+    handler: createHandler(() => 42) // 返回 text/plain
   }
 ])
 ```
@@ -196,7 +195,7 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/custom',
-    handler: handler(() => {
+    handler: createHandler(() => {
       return new Response('Custom response', {
         status: 200,
         headers: {
@@ -209,7 +208,7 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/redirect',
-    handler: handler(() => {
+    handler: createHandler(() => {
       return new Response(null, {
         status: 302,
         headers: {
@@ -228,7 +227,7 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/user/:id',
-    handler: handler(({ params }) => {
+    handler: createHandler(({ params }) => {
       const userId = params.id
       
       if (!userId || isNaN(Number(userId))) {
@@ -262,15 +261,15 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/protected',
-    handler: handler(() => 'Protected content'),
+    handler: createHandler(() => 'Protected content'),
     middleware: [authMiddleware]
   }
 ])
 ```
 
-## 验证集成
+## Schema 验证
 
-处理程序可以与 TypeBox 验证集成：
+处理程序可以与 TypeBox 验证集成，使用两参数形式：
 
 ```typescript
 import { Type } from '@sinclair/typebox'
@@ -285,12 +284,14 @@ const routes = defineRoutes([
   {
     method: 'POST',
     path: '/users',
-    handler: handler(({ body }) => {
-      // body 已经通过验证，类型安全
-      const { name, email, age } = body
-      return { name, email, age: age || 18 }
-    }),
-    body: userSchema
+    handler: createHandler(
+      { body: userSchema },
+      ({ body }) => {
+        // body 已经通过验证，类型安全
+        const { name, email, age } = body
+        return { name, email, age: age || 18 }
+      }
+    )
   }
 ])
 ```
@@ -305,7 +306,7 @@ const routes = defineRoutes([
   {
     method: 'POST',
     path: '/users',
-    handler: handler(async ({ body }) => {
+    handler: createHandler(async ({ body }) => {
       const user = await createUser(body)
       return user
     })
@@ -317,7 +318,7 @@ const routes = defineRoutes([
   {
     method: 'POST',
     path: '/users',
-    handler: handler(async ({ body }) => {
+    handler: createHandler(async ({ body }) => {
       // 不要在这里放太多业务逻辑
       const { name, email, age, address, phone, preferences, ... } = body
       // 复杂的验证逻辑
@@ -337,7 +338,7 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/user/:id',
-    handler: handler(async ({ params }) => {
+    handler: createHandler(async ({ params }) => {
       try {
         const user = await getUserById(params.id)
         if (!user) {
@@ -366,7 +367,7 @@ const routes = defineRoutes([
   {
     method: 'POST',
     path: '/users',
-    handler: handler(async ({ body }): Promise<User> => {
+    handler: createHandler(async ({ body }): Promise<User> => {
       const user = await createUser(body)
       return user
     })

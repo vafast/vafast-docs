@@ -14,13 +14,13 @@ Web 服务器使用请求的 **路径和 HTTP 方法** 来查找正确的资源�
 ### 定义路由
 
 ```typescript
-import { Server, defineRoutes, handler } from 'vafast'
+import { Server, defineRoutes, createHandler } from 'vafast'
 
 const routes = defineRoutes([
   {
     method: 'GET',
     path: '/',
-    handler: handler(() => 'Hello World')
+    handler: createHandler(() => 'Hello World')
   }
 ])
 
@@ -37,27 +37,27 @@ const routes = defineRoutes([
   {
     method: 'GET',     // 获取资源
     path: '/users',
-    handler: handler(() => 'Get users')
+    handler: createHandler(() => 'Get users')
   },
   {
     method: 'POST',    // 创建资源
     path: '/users',
-    handler: handler(() => 'Create user')
+    handler: createHandler(() => 'Create user')
   },
   {
     method: 'PUT',     // 更新资源
     path: '/users/:id',
-    handler: handler(() => 'Update user')
+    handler: createHandler(() => 'Update user')
   },
   {
     method: 'DELETE',  // 删除资源
     path: '/users/:id',
-    handler: handler(() => 'Delete user')
+    handler: createHandler(() => 'Delete user')
   },
   {
     method: 'PATCH',   // 部分更新资源
     path: '/users/:id',
-    handler: handler(() => 'Patch user')
+    handler: createHandler(() => 'Patch user')
   }
 ])
 ```
@@ -71,14 +71,14 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/users/:id',
-    handler: handler(({ params }) => {
+    handler: createHandler(({ params }) => {
       return `User ID: ${params.id}`
     })
   },
   {
     method: 'GET',
     path: '/posts/:postId/comments/:commentId',
-    handler: handler(({ params }) => {
+    handler: createHandler(({ params }) => {
       return `Post: ${params.postId}, Comment: ${params.commentId}`
     })
   }
@@ -94,7 +94,7 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/search',
-    handler: handler(({ query }) => {
+    handler: createHandler(({ query }) => {
       const { q, page = '1', limit = '10' } = query
       return `Search: ${q}, Page: ${page}, Limit: ${limit}`
     })
@@ -111,7 +111,7 @@ const routes = defineRoutes([
   {
     method: 'POST',
     path: '/users',
-    handler: handler(async ({ body }) => {
+    handler: createHandler(async ({ body }) => {
       return `Created user: ${body.name}`
     })
   }
@@ -127,12 +127,12 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/users/123',        // 静态路径 - 优先级高
-    handler: handler(() => 'Specific user')
+    handler: createHandler(() => 'Specific user')
   },
   {
     method: 'GET',
     path: '/users/:id',        // 动态路径 - 优先级低
-    handler: handler(({ params }) => `User ${params.id}`)
+    handler: createHandler(({ params }) => `User ${params.id}`)
   }
 ])
 ```
@@ -152,7 +152,7 @@ const routes = defineRoutes([
           {
             method: 'GET',
             path: '/users',
-            handler: handler(() => 'API v1 users')
+            handler: createHandler(() => 'API v1 users')
           }
         ]
       },
@@ -162,7 +162,7 @@ const routes = defineRoutes([
           {
             method: 'GET',
             path: '/users',
-            handler: handler(() => 'API v2 users')
+            handler: createHandler(() => 'API v2 users')
           }
         ]
       }
@@ -180,7 +180,7 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/protected',
-    handler: handler(() => 'Protected content'),
+    handler: createHandler(() => 'Protected content'),
     middleware: [authMiddleware],  // 路由级中间件
     body: userSchema,             // 请求体验证
     query: querySchema,           // 查询参数验证
@@ -214,17 +214,17 @@ const routes = defineRoutes([
       {
         method: 'GET',
         path: '/',
-        handler: handler(() => 'List users')
+        handler: createHandler(() => 'List users')
       },
       {
         method: 'POST',
         path: '/',
-        handler: handler(() => 'Create user')
+        handler: createHandler(() => 'Create user')
       },
       {
         method: 'GET',
         path: '/:id',
-        handler: handler(({ params }) => `User ${params.id}`)
+        handler: createHandler(({ params }) => `User ${params.id}`)
       }
     ]
   },
@@ -236,12 +236,12 @@ const routes = defineRoutes([
       {
         method: 'GET',
         path: '/',
-        handler: handler(() => 'List posts')
+        handler: createHandler(() => 'List posts')
       },
       {
         method: 'POST',
         path: '/',
-        handler: handler(() => 'Create post')
+        handler: createHandler(() => 'Create post')
       }
     ]
   }
@@ -255,27 +255,27 @@ const routes = defineRoutes([
   {
     method: 'GET',     // 获取数据
     path: '/users',
-    handler: handler(() => 'Get users')
+    handler: createHandler(() => 'Get users')
   },
   {
     method: 'POST',    // 创建数据
     path: '/users',
-    handler: handler(() => 'Create user')
+    handler: createHandler(() => 'Create user')
   },
   {
     method: 'PUT',     // 完全更新
     path: '/users/:id',
-    handler: handler(() => 'Update user')
+    handler: createHandler(() => 'Update user')
   },
   {
     method: 'PATCH',   // 部分更新
     path: '/users/:id',
-    handler: handler(() => 'Patch user')
+    handler: createHandler(() => 'Patch user')
   },
   {
     method: 'DELETE',  // 删除数据
     path: '/users/:id',
-    handler: handler(() => 'Delete user')
+    handler: createHandler(() => 'Delete user')
   }
 ])
 ```

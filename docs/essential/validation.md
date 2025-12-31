@@ -14,7 +14,7 @@ import Deck from '../components/nearl/card-deck.vue'
 JavaScript 允许任何数据成为任何类型。Vafast 提供了一个工具，可以对数据进行验证，以确保数据的格式正确。
 
 ```typescript
-import { Server, defineRoutes } from 'vafast'
+import { Server, defineRoutes, createHandler } from 'vafast'
 import { Type } from '@sinclair/typebox'
 import { TypeCompiler } from '@sinclair/typebox/compiler'
 
@@ -88,7 +88,7 @@ const routes = defineRoutes([
   {
     method: 'POST',
     path: '/users',
-    handler: handler(({ body }) => {
+    handler: createHandler(({ body }) => {
       // body 已经通过验证，类型安全
       const { name, email, age } = body
       return { name, email, age: age || 18 }
@@ -116,7 +116,7 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/search',
-    handler: handler(({ query }) => {
+    handler: createHandler(({ query }) => {
       const { q, page = 1, limit = 10, sort = 'name' } = query
       return { query: q, page, limit, sort, results: [] }
     }),
@@ -141,7 +141,7 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/users/:id/:action?',
-    handler: handler(({ params }) => {
+    handler: createHandler(({ params }) => {
       const { id, action = 'profile' } = params
       return `User ${id} ${action}`
     }),
@@ -173,7 +173,7 @@ const routes = defineRoutes([
   {
     method: 'POST',
     path: '/users',
-    handler: handler(({ body }) => {
+    handler: createHandler(({ body }) => {
       return createUser(body)
     }),
     body: userSchema
@@ -206,7 +206,7 @@ const routes = defineRoutes([
   {
     method: 'POST',
     path: '/users',
-    handler: handler(({ body }) => {
+    handler: createHandler(({ body }) => {
       if (body.type === 'create') {
         return createUser(body.data)
       } else {
@@ -246,7 +246,7 @@ const routes = defineRoutes([
   {
     method: 'POST',
     path: '/accounts',
-    handler: handler(({ body }) => {
+    handler: createHandler(({ body }) => {
       return createAccount(body)
     }),
     body: conditionalSchema
@@ -277,7 +277,7 @@ const routes = defineRoutes([
   {
     method: 'POST',
     path: '/scores',
-    handler: handler(({ body }) => {
+    handler: createHandler(({ body }) => {
       return saveScore(body)
     }),
     body: Type.Object({
@@ -300,7 +300,7 @@ const routes = defineRoutes([
   {
     method: 'POST',
     path: '/users',
-    handler: handler(async ({ body }) => {
+    handler: createHandler(async ({ body }) => {
       // 异步验证
       const emailExists = await checkEmailExists(body.email)
       if (emailExists) {
@@ -330,7 +330,7 @@ const routes = defineRoutes([
   {
     method: 'POST',
     path: '/users',
-    handler: handler(({ body }) => {
+    handler: createHandler(({ body }) => {
       // 如果验证失败，这里不会执行
       return createUser(body)
     }),
@@ -370,7 +370,7 @@ const routes = defineRoutes([
   {
     method: 'POST',
     path: '/users',
-    handler: handler(({ body }) => {
+    handler: createHandler(({ body }) => {
       return createUser(body)
     }),
     body: userSchema,
@@ -393,7 +393,7 @@ const routes = defineRoutes([
   {
     method: 'POST',
     path: '/users',
-    handler: handler(({ body }) => {
+    handler: createHandler(({ body }) => {
       // 使用预编译的验证器
       const isValid = userValidator.Check(body)
       if (!isValid) {
@@ -434,7 +434,7 @@ const routes = defineRoutes([
   {
     method: 'POST',
     path: '/users',
-    handler: handler(({ body }) => {
+    handler: createHandler(({ body }) => {
       return createUser(body)
     }),
     middleware: [cachedValidation(userSchema)]
@@ -515,7 +515,7 @@ const routes = defineRoutes([
     method: 'POST',
     path: '/users',
     middleware: [validateBody(userSchema)],
-    handler: handler(({ req }) => {
+    handler: createHandler(({ req }) => {
       const userData = (req as any).validatedBody
       return createUser(userData)
     })
