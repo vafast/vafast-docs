@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, nextTick, provide, onMounted } from 'vue'
+import { ref, nextTick, provide, onMounted, computed } from 'vue'
 import { useData, useRouter } from 'vitepress'
 import DefaultTheme from 'vitepress/theme-without-fonts'
 
@@ -12,9 +12,17 @@ import { motion, cubicBezier, AnimatePresence } from 'motion-v'
 import GlareCard from './glare-card.vue'
 
 const isDark = useDark()
-const { isDark: darkTheme, frontmatter } = useData()
+const { isDark: darkTheme, frontmatter, site } = useData()
 
 const showCard = ref(false)
+
+const asset = (path: string) => {
+    const base = site.value.base
+    const normalized = path.startsWith('/') ? path.slice(1) : path
+    return `${base}${normalized}`
+}
+
+const shigureMaskUrl = computed(() => asset('assets/shigure-ui-smol.gif'))
 
 const setCard = (value: boolean) => {
     showCard.value = value
@@ -87,25 +95,25 @@ router.onAfterRouteChange = () => {
     <link
         rel="preload"
         as="image"
-        href="/assets/elysia_v.webp"
+        :href="asset('assets/elysia_v.webp')"
         fetchpriority="high"
     />
     <link
         rel="preload"
         as="image"
-        href="/assets/elysia.svg"
+        :href="asset('assets/elysia.svg')"
         fetchpriority="high"
     />
     <link
         rel="preload"
         as="image"
-        href="/assets/shigure-ui-smol.gif"
+        :href="asset('assets/shigure-ui-smol.gif')"
         fetchpriority="low"
     />
     <link
         rel="preload"
         as="image"
-        href="/assets/elysia-chan-card.webp"
+        :href="asset('assets/elysia-chan-card.webp')"
         fetchpriority="low"
     />
     <meta name="theme-color" :content="isDark ? '#0f172a' : '#ffffff'" />
@@ -176,7 +184,7 @@ router.onAfterRouteChange = () => {
                 }"
             >
                 <GlareCard>
-                    <img src="/assets/elysia-chan-card.webp" />
+                    <img :src="asset('assets/elysia-chan-card.webp')" />
                 </GlareCard>
             </motion.div>
         </div>
@@ -191,7 +199,7 @@ router.onAfterRouteChange = () => {
         <template #sidebar-nav-after>
             <div class="mt-auto xl:hidden">
                 <img
-                    src="/assets/elysia-chan-card.webp"
+                    :src="asset('assets/elysia-chan-card.webp')"
                     class="aspect-video max-h-24 rounded-lg border object-cover lg:opacity-40 interact:opacity-100 interact:scale-110 interact:-translate-y-2 interact:shadow-xl shadow-slate-800/7.5 transition-all ease-out duration-200 cursor-pointer"
                     style="object-position: 0 10%"
                     @click="() => setCard(true)"
@@ -201,7 +209,7 @@ router.onAfterRouteChange = () => {
         <template #aside-bottom>
             <div class="mt-auto mx-auto">
                 <img
-                    src="/assets/elysia-chan-card.webp"
+                    :src="asset('assets/elysia-chan-card.webp')"
                     class="aspect-video max-h-24 rounded-lg border object-cover opacity-40 interact:opacity-100 interact:scale-110 interact:-translate-y-2 interact:shadow-xl shadow-slate-800/7.5 transition-all ease-out duration-200 cursor-pointer"
                     style="object-position: 0 10%"
                     @click="() => setCard(true)"
@@ -250,7 +258,7 @@ router.onAfterRouteChange = () => {
 }
 
 ::view-transition-new(root) {
-    mask: url('/assets/shigure-ui-smol.gif') center / 0 no-repeat;
+    mask: v-bind(shigureMaskUrl) center / 0 no-repeat;
     animation: var(--switch-name) var(--switch-duration);
 }
 
