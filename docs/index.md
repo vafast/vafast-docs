@@ -51,11 +51,12 @@ const createProfile = createHandler(
 <template v-slot:type-3>
 
 ```typescript twoslash
-import { createHandler, Type } from 'vafast'
+import { createHandler } from 'vafast'
 
 // 自动响应转换：对象 -> JSON，字符串 -> text/plain
-const getProfile = createHandler(({ req }) => {
-  //                               ^?
+const getProfile = createHandler((ctx) => {
+  const req = ctx.req
+  //    ^?
   if(Math.random() > .5) {
     return { data: null, status: 401 }
   }
