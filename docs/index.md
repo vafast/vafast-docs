@@ -14,7 +14,7 @@ sidebar: false
 
 <template v-slot:type-1>
 
-```typescript
+```typescript twoslash
 import { Server, defineRoutes } from 'vafast'
 import { Type } from '@sinclair/typebox'
 
@@ -28,7 +28,7 @@ const routes = defineRoutes([
     path: '/id/:id',
     handler: (req) => {
       const { id } = (req as TypedRequest).params
-      // params.id 类型安全
+      //    ^?
       return `ID: ${id}`
     }
   }
@@ -42,7 +42,7 @@ export default { fetch: server.fetch }
 
 <template v-slot:type-2>
 
-```typescript
+```typescript twoslash
 import { Server, defineRoutes } from 'vafast'
 import { Type } from '@sinclair/typebox'
 
@@ -52,7 +52,7 @@ const routes = defineRoutes([
     path: '/profile',
     handler: async (req) => {
       const body = await req.json()
-      // body 类型安全
+      //    ^?
       return { success: true, data: body }
     }
   }
@@ -66,7 +66,7 @@ export default { fetch: server.fetch }
 
 <template v-slot:type-3>
 
-```typescript
+```typescript twoslash
 import { Server, defineRoutes } from 'vafast'
 
 const routes = defineRoutes([
@@ -74,6 +74,7 @@ const routes = defineRoutes([
     method: 'GET',
     path: '/profile',
     handler: () => {
+      //      ^?
       if(Math.random() > .5) {
         return new Response(JSON.stringify({ error: 'Unauthorized' }), { 
           status: 401,
@@ -93,11 +94,12 @@ export default { fetch: server.fetch }
 
 <template v-slot:type-4>
 
-```typescript
+```typescript twoslash
 import { Server, defineRoutes, type Middleware } from 'vafast'
 
 // 自定义中间件
 const authMiddleware: Middleware = async (request, next) => {
+  //                                       ^?
   const auth = request.headers.get('authorization')
   if (!auth) {
     return new Response('Unauthorized', { status: 401 })
