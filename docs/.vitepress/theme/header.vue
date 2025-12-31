@@ -6,7 +6,7 @@ const { site } = useData()
 
 <template>
     <img
-        :src="`${site.base}assets/elysia_v.webp`"
+        :src="`${site.base}assets/vafast_v.webp`"
         alt="Curved text logo saying 'Elysia JS'"
         class="h-[64px]"
     />

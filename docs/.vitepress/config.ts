@@ -105,7 +105,7 @@ export default defineConfig({
             'link',
             {
                 rel: 'icon',
-                href: `${base}assets/elysia.png`
+                href: `${base}assets/vafast.png`
             }
         ],
         [
@@ -190,7 +190,7 @@ export default defineConfig({
                 }
             }
         },
-        logo: '/assets/elysia.svg',
+        logo: '/assets/vafast.svg',
         nav: [
             {
                 text: '中间件',
@@ -566,13 +566,11 @@ export default defineConfig({
             label: 'Page Navigation'
         },
         socialLinks: [
-            { icon: 'github', link: 'https://github.com/elysiajs/elysia' },
-            { icon: 'twitter', link: 'https://twitter.com/elysiajs' },
-            { icon: 'discord', link: 'https://discord.gg/eaFJ2KDJck' }
+            { icon: 'github', link: 'https://github.com/vafast/vafast' }
         ],
         editLink: {
             text: 'Edit this page on GitHub',
-            pattern: 'https://github.com/zhcndoc/elysia/tree/main/docs/:path'
+            pattern: 'https://github.com/vafast/vafast-docs/tree/main/docs/:path'
         },
         docFooter: {
             prev: 'Previous',

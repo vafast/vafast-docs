@@ -1,5 +1,5 @@
 <template>
-    <link rel="preload" as="image" :href="asset('assets/elysia_v.webp')" />
+    <link rel="preload" as="image" :href="asset('assets/vafast_v.webp')" />
     <Ray
         class="h-[60vh] -top-16 pointer-events-none opacity-[.35] dark:opacity-50"
     />
@@ -28,11 +28,11 @@
             <!-- <h1
 	            class="text-3xl leading-relaxed font-semibold text-center text-transparent mr-auto md:mx-auto bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400"
 	        >
-	            ElysiaJS
+	            VafastJS
 	        </h1> -->
             <img
-                :src="asset('assets/elysia_v.webp')"
-                alt="Curved text logo saying 'Elysia JS'"
+                :src="asset('assets/vafast_v.webp')"
+                alt="Vafast Logo"
                 class="max-w-[40ch] w-full object-contain object-left md:object-center mr-auto md:mr-0"
                 style="aspect-ratio: 1.5 / 1"
             />
@@ -145,7 +145,7 @@
                     <code
                         class="text-pink-500 font-mono font-medium text-lg bg-pink-200/25 dark:bg-pink-500/20 px-6 py-2.5 rounded-full"
                     >
-                        bun create elysia app
+                        bun create vafast app
                     </code>
                     <button
                         id="hero-copy"
@@ -187,7 +187,7 @@
                 class="flex justify-center items-center gap-2 text-gray-400"
                 :class="kawaii ? 'mx-auto lg:mx-0' : ''"
             >
-                了解为什么开发人员喜欢 Elysia
+                了解为什么开发人员喜欢 Vafast
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="24"
@@ -211,7 +211,7 @@
             style="max-height: calc(100vh - 64px)"
         >
             <img
-                :src="asset('assets/elysia_chan.webp')"
+                :src="asset('assets/vafast_chan.webp')"
                 class="object-cover z-[41] select-none pointer-events-none"
                 style="object-position: 50% 7.5%"
             />
@@ -259,7 +259,7 @@ const copied = ref(false)
 watch(copied, (value) => {
     // [INFO] navigator.clipboard available only in secure contexts.
     if (value && window.isSecureContext) {
-        navigator.clipboard.writeText('bun create elysia app')
+        navigator.clipboard.writeText('bun create vafast app')
 
         setTimeout(() => {
             copied.value = false

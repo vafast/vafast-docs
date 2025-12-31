@@ -1,5 +1,5 @@
 ---
-title: 流中间件 - ElysiaJS
+title: 流中间件 - VafastJS
 ---
 
 # 流中间件
@@ -12,15 +12,15 @@ title: 流中间件 - ElysiaJS
 
 安装命令：
 ```bash
-bun add @elysiajs/stream
+bun add @vafastjs/stream
 ```
 
 然后使用它：
 ```typescript
-import { Elysia } from 'elysia'
-import { Stream } from '@elysiajs/stream'
+import { Vafast } from 'vafast'
+import { Stream } from '@vafastjs/stream'
 
-new Elysia()
+new Vafast()
     .get('/', () => new Stream(async (stream) => {
         stream.send('hello')
 
@@ -71,10 +71,10 @@ new Elysia()
 ## OpenAI
 当参数为 `Iterable` 或 `AsyncIterable` 时，自动模式将被触发，自动将响应流返回给客户端。
 
-以下是集成 ChatGPT 到 Elysia 的示例。
+以下是集成 ChatGPT 到 Vafast 的示例。
 
 ```ts
-new Elysia()
+new Vafast()
     .get(
         '/ai',
         ({ query: { prompt } }) =>
@@ -101,7 +101,7 @@ new Elysia()
 const model = '@cf/meta/llama-2-7b-chat-int8'
 const endpoint = `https://api.cloudflare.com/client/v4/accounts/${process.env.ACCOUNT_ID}/ai/run/${model}`
 
-new Elysia()
+new Vafast()
     .get('/ai', ({ query: { prompt } }) =>
         fetch(endpoint, {
             method: 'POST',
@@ -126,7 +126,7 @@ new Elysia()
 以下是使用构造函数回调创建服务器推送事件端点的示例
 
 ```ts
-new Elysia()
+new Vafast()
     .get('/source', () =>
         new Stream((stream) => {
             const interval = setInterval(() => {
@@ -145,7 +145,7 @@ new Elysia()
 以下是使用基于值创建服务器推送事件端点的示例
 
 ```ts
-new Elysia()
+new Vafast()
     .get('/source', () => {
         const stream = new Stream()
 

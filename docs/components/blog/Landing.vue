@@ -11,7 +11,7 @@
         	Blog posts
         </h1>
         <p class="text-slate-500 dark:text-slate-300 text-lg">
-            Update of ElysiaJS from core maintainers
+            Update of VafastJS from core maintainers
         </p>
     </header>
     <main

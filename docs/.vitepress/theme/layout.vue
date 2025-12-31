@@ -95,13 +95,13 @@ router.onAfterRouteChange = () => {
     <link
         rel="preload"
         as="image"
-        :href="asset('assets/elysia_v.webp')"
+        :href="asset('assets/vafast_v.webp')"
         fetchpriority="high"
     />
     <link
         rel="preload"
         as="image"
-        :href="asset('assets/elysia.svg')"
+        :href="asset('assets/vafast.svg')"
         fetchpriority="high"
     />
     <link
@@ -113,7 +113,7 @@ router.onAfterRouteChange = () => {
     <link
         rel="preload"
         as="image"
-        :href="asset('assets/elysia-chan-card.webp')"
+        :href="asset('assets/vafast-card.webp')"
         fetchpriority="low"
     />
     <meta name="theme-color" :content="isDark ? '#0f172a' : '#ffffff'" />
@@ -184,7 +184,7 @@ router.onAfterRouteChange = () => {
                 }"
             >
                 <GlareCard>
-                    <img :src="asset('assets/elysia-chan-card.webp')" />
+                    <img :src="asset('assets/vafast-card.webp')" />
                 </GlareCard>
             </motion.div>
         </div>
@@ -199,7 +199,7 @@ router.onAfterRouteChange = () => {
         <template #sidebar-nav-after>
             <div class="mt-auto xl:hidden">
                 <img
-                    :src="asset('assets/elysia-chan-card.webp')"
+                    :src="asset('assets/vafast-card.webp')"
                     class="aspect-video max-h-24 rounded-lg border object-cover lg:opacity-40 interact:opacity-100 interact:scale-110 interact:-translate-y-2 interact:shadow-xl shadow-slate-800/7.5 transition-all ease-out duration-200 cursor-pointer"
                     style="object-position: 0 10%"
                     @click="() => setCard(true)"
@@ -209,7 +209,7 @@ router.onAfterRouteChange = () => {
         <template #aside-bottom>
             <div class="mt-auto mx-auto">
                 <img
-                    :src="asset('assets/elysia-chan-card.webp')"
+                    :src="asset('assets/vafast-card.webp')"
                     class="aspect-video max-h-24 rounded-lg border object-cover opacity-40 interact:opacity-100 interact:scale-110 interact:-translate-y-2 interact:shadow-xl shadow-slate-800/7.5 transition-all ease-out duration-200 cursor-pointer"
                     style="object-position: 0 10%"
                     @click="() => setCard(true)"

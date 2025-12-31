@@ -1,5 +1,5 @@
 ---
-title: CORS 中间件 - ElysiaJS
+title: CORS 中间件 - VafastJS
 ---
 
 # CORS 中间件
@@ -9,19 +9,19 @@ title: CORS 中间件 - ElysiaJS
 安装命令：
 
 ```bash
-bun add @elysiajs/cors
+bun add @vafastjs/cors
 ```
 
 然后使用它：
 
 ```typescript
-import { Elysia } from 'elysia'
-import { cors } from '@elysiajs/cors'
+import { Vafast } from 'vafast'
+import { cors } from '@vafastjs/cors'
 
-new Elysia().use(cors()).listen(3000)
+new Vafast().use(cors()).listen(3000)
 ```
 
-这样将使 Elysia 接受来自任何源的请求。
+这样将使 Vafast 接受来自任何源的请求。
 
 ## 配置
 
@@ -143,10 +143,10 @@ Access-Control-Allow-Credentials 响应头告诉浏览器在请求的凭证模�
 ## 按顶级域名允许 CORS
 
 ```typescript
-import { Elysia } from 'elysia'
-import { cors } from '@elysiajs/cors'
+import { Vafast } from 'vafast'
+import { cors } from '@vafastjs/cors'
 
-const app = new Elysia()
+const app = new Vafast()
 	.use(
 		cors({
 			origin: /.*\.saltyaom\.com$/

@@ -48,19 +48,19 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import type { Elysia } from 'elysia'
+import type { Server } from 'vafast'
 
 const {
-	elysia,
+	server,
 	mock = {},
 	alias = {}
 } = defineProps<{
-	elysia: Elysia<any, any, any, any, any, any>
+	server: Server
 	mock?: Record<string, Record<string, string>>
 	alias?: Record<string, string>
 }>()
 
-const routes = elysia?.router.history
+const routes = server?.routes
 
 const current = ref({
 	method: routes?.[0]?.method ?? 'get',
@@ -77,9 +77,9 @@ const compute = async () => {
 		return
 	}
 
-	const res = await elysia
-		.handle(
-			new Request('http://elysiajs.com' + path, {
+	const res = await server
+		.fetch(
+			new Request('http://vafast.dev' + path, {
 				method
 			})
 		)

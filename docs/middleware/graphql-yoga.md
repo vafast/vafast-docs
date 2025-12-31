@@ -1,24 +1,24 @@
 ---
-title: GraphQL Yoga 中间件 - ElysiaJS
+title: GraphQL Yoga 中间件 - VafastJS
 ---
 
 # GraphQL Yoga 中间件
 
-此中间件将 GraphQL Yoga 集成到 Elysia 中
+此中间件将 GraphQL Yoga 集成到 Vafast 中
 
 安装方法：
 
 ```bash
-bun add @elysiajs/graphql-yoga
+bun add @vafastjs/graphql-yoga
 ```
 
 然后使用它：
 
 ```typescript
-import { Elysia } from 'elysia'
-import { yoga } from '@elysiajs/graphql-yoga'
+import { Vafast } from 'vafast'
+import { yoga } from '@vafastjs/graphql-yoga'
 
-const app = new Elysia()
+const app = new Vafast()
 	.use(
 		yoga({
 			typeDefs: /* GraphQL */ `
@@ -28,7 +28,7 @@ const app = new Elysia()
 			`,
 			resolvers: {
 				Query: {
-					hi: () => 'Hello from Elysia'
+					hi: () => 'Hello from Vafast'
 				}
 			}
 		})
@@ -36,7 +36,7 @@ const app = new Elysia()
 	.listen(3000)
 ```
 
-在浏览器中访问 `/graphql`（GET 请求）将显示一个 GraphiQL 实例，用于支持 GraphQL 的 Elysia 服务器。
+在浏览器中访问 `/graphql`（GET 请求）将显示一个 GraphiQL 实例，用于支持 GraphQL 的 Vafast 服务器。
 
 可选：您还可以安装自定义版本的可选对等依赖项：
 
@@ -46,17 +46,17 @@ bun add graphql graphql-yoga
 
 ## 解析器
 
-Elysia 使用 [Mobius](https://github.com/saltyaom/mobius) 自动从 **typeDefs** 字段推断类型，允许您在输入 **resolver** 类型时获得完全的类型安全和自动完成。
+Vafast 使用 [Mobius](https://github.com/saltyaom/mobius) 自动从 **typeDefs** 字段推断类型，允许您在输入 **resolver** 类型时获得完全的类型安全和自动完成。
 
 ## 上下文
 
 您可以通过添加 **context** 为解析器函数添加自定义上下文
 
 ```ts
-import { Elysia } from 'elysia'
-import { yoga } from '@elysiajs/graphql-yoga'
+import { Vafast } from 'vafast'
+import { yoga } from '@vafastjs/graphql-yoga'
 
-const app = new Elysia()
+const app = new Vafast()
 	.use(
 		yoga({
 			typeDefs: /* GraphQL */ `

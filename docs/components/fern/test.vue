@@ -79,7 +79,7 @@ const flyIn = useFlyIn(isInView)
                     class="lg:max-w-md leading-normal"
                     v-bind="flyIn(0.3)"
                 >
-                    Elysia 提供了一个类型安全层，用于与您的服务器进行交互和测试，涵盖从路由到参数的各个环节。
+                    Vafast 提供了一个类型安全层，用于与您的服务器进行交互和测试，涵盖从路由到参数的各个环节。
                 </motion.p>
                 <motion.p
                     class="lg:max-w-md leading-normal"

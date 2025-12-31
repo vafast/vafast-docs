@@ -290,11 +290,11 @@ bun add @kitajs/ts-html-plugin
 }
 ```
 
-## 从 Elysia 迁移
+## 从 Vafast 迁移
 
-如果您正在从 `@elysiajs/html` 迁移，主要变化是：
+如果您正在从 `@vafastjs/html` 迁移，主要变化是：
 
-1. **导入**: 从 `import { html } from '@elysiajs/html'` 改为 `import { html } from '@vafast/html'`
+1. **导入**: 从 `import { html } from '@vafastjs/html'` 改为 `import { html } from '@vafast/html'`
 2. **用法**: 使用 `app.use(html())` 而不是 `app.use(html())`
 3. **API**: API 保持不变：`req.html.html()` 和 `req.html.stream()`
 

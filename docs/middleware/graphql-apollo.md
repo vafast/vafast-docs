@@ -1,24 +1,24 @@
 ---
-title: Apollo GraphQL 中间件 - ElysiaJS
+title: Apollo GraphQL 中间件 - VafastJS
 ---
 
 # GraphQL Apollo 中间件
 
-用于 [elysia](https://github.com/elysiajs/elysia) 的中间件，可以使用 GraphQL Apollo。
+用于 [vafast](https://github.com/vafastjs/vafast) 的中间件，可以使用 GraphQL Apollo。
 
 使用以下命令安装：
 
 ```bash
-bun add graphql @elysiajs/apollo @apollo/server
+bun add graphql @vafastjs/apollo @apollo/server
 ```
 
 然后使用它：
 
 ```typescript
-import { Elysia } from 'elysia'
-import { apollo, gql } from '@elysiajs/apollo'
+import { Vafast } from 'vafast'
+import { apollo, gql } from '@vafastjs/apollo'
 
-const app = new Elysia()
+const app = new Vafast()
 	.use(
 		apollo({
 			typeDefs: gql`
@@ -36,7 +36,7 @@ const app = new Elysia()
 					books: () => {
 						return [
 							{
-								title: 'Elysia',
+								title: 'Vafast',
 								author: 'saltyAom'
 							}
 						]
@@ -52,12 +52,12 @@ const app = new Elysia()
 
 ## 背景
 
-由于 Elysia 基于 Web 标准请求和响应，这与 Express 使用的 Node 的 `HttpRequest` 和 `HttpResponse` 不同，导致 `req, res` 在上下文中为未定义。
+由于 Vafast 基于 Web 标准请求和响应，这与 Express 使用的 Node 的 `HttpRequest` 和 `HttpResponse` 不同，导致 `req, res` 在上下文中为未定义。
 
-因此，Elysia 用 `context` 替代两者，类似于路由参数。
+因此，Vafast 用 `context` 替代两者，类似于路由参数。
 
 ```typescript
-const app = new Elysia()
+const app = new Vafast()
 	.use(
 		apollo({
 			typeDefs,
@@ -78,7 +78,7 @@ const app = new Elysia()
 
 该中间件扩展了 Apollo 的 [ServerRegistration](https://www.apollographql.com/docs/apollo-server/api/apollo-server/#options)（即 `ApolloServer` 的构造参数）。
 
-以下是用于使用 Elysia 配置 Apollo Server 的扩展参数。
+以下是用于使用 Vafast 配置 Apollo Server 的扩展参数。
 
 ### path
 

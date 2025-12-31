@@ -13,13 +13,13 @@
             class="flex flex-col text-lg md:text-xl !leading-[2rem] sm:text-center w-full max-w-2xl mx-auto dark:text-gray-400 dark:font-medium"
         >
             <motion.span class="inline-block" v-bind="flyIn(0.1)">
-                Elysia
+                Vafast
                 <span class="text-gray-700 dark:text-gray-200 font-medium">
                     不是由某个组织</span
                 >拥有，而是由社区推动的。
             </motion.span>
             <motion.span class="inline-block" v-bind="flyIn(0.2)">
-                Elysia 的发展离不开您的支持
+                Vafast 的发展离不开您的支持
             </motion.span>
         </p>
         <motion.div class="flex sm:justify-center my-8" v-bind="flyIn(0.3)">
@@ -225,7 +225,7 @@
             class="sm:text-center text-gradient from-pink-400 to-fuchsia-400 font-semibold text-base"
             v-bind="flyIn(0.9)"
         >
-            Thank you for making Elysia possible
+            Thank you for making Vafast possible
         </motion.p>
     </section>
 </template>

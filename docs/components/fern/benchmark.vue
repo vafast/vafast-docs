@@ -48,7 +48,7 @@ const expand = useExpandWidth(isInView)
                         <span
                             class="!text-xl !font-semibold !text-transparent !ml-0 text-gradient from-violet-500 to-sky-500"
                         >
-                            Elysia
+                            Vafast
                         </span>
                         <span> Bun</span>
                     </motion.h6>

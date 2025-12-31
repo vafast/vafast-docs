@@ -104,7 +104,7 @@
                     OpenTelemetry
                 </motion.h2>
                 <motion.p v-bind="flyIn(0.3)">
-                    Elysia 原生支持 OpenTelemetry。监控功能内置，因此您可以轻松监控您的服务，无论平台如何。
+                    Vafast 原生支持 OpenTelemetry。监控功能内置，因此您可以轻松监控您的服务，无论平台如何。
                 </motion.p>
             </header>
         </article>
@@ -136,7 +136,7 @@
                     端到端类型安全
                 </motion.h2>
                 <motion.p  v-bind="flyIn(0.5)">
-                    像 tRPC 一样，Elysia 提供从后端到前端的类型安全，而无需代码生成。前端和后端之间的交互在编译时和运行时都经过类型检查。
+                    像 tRPC 一样，Vafast 提供从后端到前端的类型安全，而无需代码生成。前端和后端之间的交互在编译时和运行时都经过类型检查。
                 </motion.p>
             </header>
         </article>

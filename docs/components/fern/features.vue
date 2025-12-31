@@ -53,14 +53,14 @@ const flyIn = useFlyIn(isInView)
                 <h3>光速</h3>
                 <h4 class="text-purple-400">比 Express 快 21 倍。</h4>
                 <p>由 Bun 超级加速，</p>
-                <p>Elysia 是表现最佳的 JavaScript 框架之一。</p>
+                <p>Vafast 是表现最佳的 JavaScript 框架之一。</p>
             </motion.section>
             <motion.section v-bind="flyIn(0.3)">
                 <h3>安全</h3>
                 <h4 class="text-blue-400">动态的类型安全</h4>
                 <p>从类型到运行时构建</p>
                 <p>
-                    Elysia 学习你的代码库，适应，用你的类型强制执行
+                    Vafast 学习你的代码库，适应，用你的类型强制执行
                 </p>
             </motion.section>
             <motion.section v-bind="flyIn(0.4)">
@@ -75,7 +75,7 @@ const flyIn = useFlyIn(isInView)
             class="text-right text-base mt-6 text-gray-400/75"
             v-bind="flyIn(0.5)"
         >
-            这些是我们建立 Elysia 的基础，<br />
+            这些是我们建立 Vafast 的基础，<br />
             为了提供最好的体验。
         </motion.h5>
     </article>
