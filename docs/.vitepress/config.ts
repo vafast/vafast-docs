@@ -12,8 +12,8 @@ import { analyzer } from 'vite-bundle-analyzer'
 const description =
     'Vafast 是一个高性能、类型安全的 TypeScript Web 框架，专为现代 Web 应用设计，提供优秀的开发者体验和灵活的中间件系统。'
 
-// GitHub Pages 子路径部署： https://vafast.github.io/vafast-docs/
-const base = '/vafast-docs/'
+// 自定义域名部署：https://vafast.huyooo.com/
+const base = '/'
 
 export default defineConfig({
     base,
@@ -190,7 +190,7 @@ export default defineConfig({
                 }
             }
         },
-        logo: 'assets/elysia.svg', // 使用相对路径，VitePress 会自动加上 base
+        logo: '/assets/elysia.svg',
         nav: [
             {
                 text: '中间件',
