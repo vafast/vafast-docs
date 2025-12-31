@@ -10,7 +10,7 @@ import Tab from './components/fern/tab.vue'
 
 # 快速入门
 
-Vafast 是一个高性能、类型安全的 TypeScript Web 框架，专为 Bun 运行时设计。
+Vafast 是一个高性能、类型安全的 TypeScript Web 框架。内置 JIT 编译验证器、中间件预编译等优化技术，比 Express/Hono 快约 **1.8x**。
 
 <Tab
 	id="quickstart"

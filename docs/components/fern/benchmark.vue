@@ -26,7 +26,7 @@ const expand = useExpandWidth(isInView)
                     class="text-gradient from-pink-400 to-fuchsia-400"
                     v-bind="flyIn(0.1)"
                 >
-                    21x
+                    1.8x
                 </motion.h3>
                 <motion.p v-bind="flyIn(0.2)">比 Express 更快</motion.p>
             </div>
@@ -36,15 +36,26 @@ const expand = useExpandWidth(isInView)
                     class="md:!text-7xl text-gradient from-violet-400 to-pink-400"
                     v-bind="flyIn(0.3)"
                 >
-                    6x
+                    86%
                 </motion.h3>
-                <motion.p v-bind="flyIn(0.4)">比 Fastify 更快</motion.p>
+                <motion.p v-bind="flyIn(0.4)">Elysia 性能</motion.p>
             </div>
         </header>
         <div class="result">
             <ol class="graph">
                 <li>
                     <motion.h6 v-bind="flyIn(0.3)">
+                        Elysia <span>Bun</span>
+                    </motion.h6>
+                    <motion.div
+                        v-bind="expand(100, 0.4)"
+                        class="bg-gradient-to-r from-pink-500 to-rose-400 !text-white"
+                    >
+                        <span>~118K reqs/s</span>
+                    </motion.div>
+                </li>
+                <li>
+                    <motion.h6 v-bind="flyIn(0.4)">
                         <span
                             class="!text-xl !font-semibold !text-transparent !ml-0 text-gradient from-violet-500 to-sky-500"
                         >
@@ -53,57 +64,29 @@ const expand = useExpandWidth(isInView)
                         <span> Bun</span>
                     </motion.h6>
                     <motion.div
-                        v-bind="expand(72, 0.4)"
+                        v-bind="expand(86, 0.5)"
                         class="bg-gradient-to-r from-violet-500 to-fuchsia-400 !text-white"
                     >
-                        <span>2,454,631 reqs/s</span>
+                        <span>~101K reqs/s</span>
                     </motion.div>
                 </li>
                 <li>
-                    <motion.h6 v-bind="flyIn(0.4)">
-                        Gin <span>Go</span>
-                    </motion.h6>
-                    <motion.div v-bind="expand(27.54, 0.5)" />
-                    <motion.p v-bind="flyIn(0.6)">676,019</motion.p>
-                </li>
-                <li>
                     <motion.h6 v-bind="flyIn(0.5)">
-                        Spring <span>Java</span>
+                        Express <span>Node</span>
                     </motion.h6>
-                    <motion.div v-bind="expand(20.62, 0.6)" />
-                    <motion.p v-bind="flyIn(0.7)">506,087</motion.p>
+                    <motion.div v-bind="expand(48, 0.6)" />
+                    <motion.p v-bind="flyIn(0.7)">~56K</motion.p>
                 </li>
                 <li>
                     <motion.h6 v-bind="flyIn(0.6)">
-                        Fastify <span>Node</span>
+                        Hono <span>Bun</span>
                     </motion.h6>
-                    <motion.div v-bind="expand(16.93, 0.7)" />
-                    <motion.p v-bind="flyIn(0.8)">415,600</motion.p>
-                </li>
-                <li>
-                    <motion.h6 v-bind="flyIn(0.7)">
-                        Express <span>Node</span>
-                    </motion.h6>
-                    <motion.div v-bind="expand(4.61, 0.8)" />
-                    <motion.p v-bind="flyIn(0.9)">113,117</motion.p>
-                </li>
-                <li>
-                    <motion.h6 v-bind="flyIn(0.8)">
-                        Nest <span>Node</span>
-                    </motion.h6>
-                    <motion.div v-bind="expand(4.28, 0.9)" />
-                    <motion.p v-bind="flyIn(1)">105,064</motion.p>
+                    <motion.div v-bind="expand(47, 0.7)" />
+                    <motion.p v-bind="flyIn(0.8)">~56K</motion.p>
                 </li>
             </ol>
-            <motion.p class="text-sm mt-3 text-gray-400" v-bind="flyIn(1.1)">
-                以每秒请求次数进行测量。数据来源于官方
-                <a
-                    href="https://www.techempower.com/benchmarks/#hw=ph&test=plaintext&section=data-r22"
-                    target="_blank"
-                    class="underline"
-                    >TechEmpower 基准测试</a
-                >
-                第 22 轮（2023-10-17）的 PlainText 结果。
+            <motion.p class="text-sm mt-3 text-gray-400" v-bind="flyIn(0.9)">
+                以每秒请求次数进行测量。测试环境：Bun 1.2.20, macOS, wrk 基准测试 (4线程, 100连接, 30s)
             </motion.p>
         </div>
     </article>
