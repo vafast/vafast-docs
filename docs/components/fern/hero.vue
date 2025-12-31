@@ -1,5 +1,4 @@
 <template>
-    <link rel="preload" as="image" :href="asset('assets/vafast_v.webp')" />
     <Ray
         class="h-[60vh] -top-16 pointer-events-none opacity-[.35] dark:opacity-50"
     />
@@ -30,12 +29,11 @@
 	        >
 	            VafastJS
 	        </h1> -->
-            <img
-                :src="asset('assets/vafast_v.webp')"
-                alt="Vafast Logo"
-                class="max-w-[40ch] w-full object-contain object-left md:object-center mr-auto md:mr-0"
-                style="aspect-ratio: 1.5 / 1"
-            />
+            <h1
+                class="text-6xl md:text-7xl leading-relaxed font-bold text-transparent mr-auto md:mx-auto bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400"
+            >
+                VafastJS
+            </h1>
             <h2
                 class="relative md:leading-tight font-bold leading-tight text-transparent bg-clip-text bg-gradient-to-r from-sky-300 to-violet-400 mb-6"
                 :class="
