@@ -32,7 +32,7 @@
         "@shikijs/vitepress-twoslash": "^3.9.1",
         "@tailwindcss/postcss": "^4.1.11",
         "@types/bun": "^1.2.19",
-        "@types/node": "^22.0.0",
+        "@types/node": "^25.0.3",
         "markdown-it": "^14.1.0",
         "oxc-minify": "^0.78.0",
         "postcss": "^8.5.6",
