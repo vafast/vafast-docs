@@ -153,10 +153,7 @@ const user = await typedClient.post('/users', { name: 'John', email: 'john@examp
 
 - [安装指南](/api-client/installation) - 了解如何安装和配置
 - [基础用法](/api-client/fetch) - 学习基本的 HTTP 请求
-- [类型安全](/api-client/treaty/overview) - 探索类型安全特性
-- [WebSocket 支持](/api-client/treaty/websocket) - 了解实时通信
-- [配置选项](/api-client/treaty/config) - 查看所有配置选项
-- [单元测试](/api-client/treaty/unit-test) - 学习如何测试
+- [测试指南](/api-client/test) - 学习如何测试
 
 ## 📚 下一步
 

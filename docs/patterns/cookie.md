@@ -1,12 +1,14 @@
 ---
-title: Cookie 处理 - Vafast
+title: Cookie 处理进阶 - Vafast
 ---
 
-# Cookie 处理
+# Cookie 处理进阶
 
-Vafast 提供了简单而强大的 Cookie 处理功能，支持读取、设置和删除 Cookie，以及各种 Cookie 属性的配置。
+> 💡 基础用法请参考 [@vafast/cookie 中间件](/middleware/cookie)
 
-## 基本用法
+本文介绍不使用中间件的原生 Cookie 处理方式，以及会话管理等进阶用法。
+
+## 原生 Cookie 处理
 
 在 Vafast 中，您可以通过请求对象访问 Cookie，并通过响应对象设置 Cookie：
 

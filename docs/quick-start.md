@@ -123,7 +123,7 @@ npm install vafast
 创建一个新文件 `src/index.ts`：
 
 ```typescript
-import { Server, defineRoutes, createHandler } from 'vafast'
+import { Server, defineRoutes, createHandler, serve } from 'vafast'
 
 const routes = defineRoutes([
   {
@@ -134,13 +134,16 @@ const routes = defineRoutes([
 ])
 
 const server = new Server(routes)
-export default { fetch: server.fetch }
+
+serve({ fetch: server.fetch, port: 3000 }, () => {
+  console.log('Server running on http://localhost:3000')
+})
 ```
 
 使用 Node.js 启动：
 
 ```bash
-node --loader ts-node/esm src/index.ts
+npx tsx src/index.ts
 ```
 
 </template>
