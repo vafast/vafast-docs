@@ -22,7 +22,7 @@ export default defineConfig({
     titleTemplate: ':title - Vafast 中文文档',
 
     sitemap: {
-        hostname: 'https://vafast.zhcndoc.com'
+        hostname: 'https://vafast.huyooo.com'
     },
     locales: {
         root: {
@@ -142,13 +142,6 @@ export default defineConfig({
                 content: description
             }
         ],
-        [
-            'script',
-            {
-                async: '',
-                src: 'https://www.zhcndoc.com/js/common.js'
-            }
-        ]
     ],
     themeConfig: {
         search: {

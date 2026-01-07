@@ -149,11 +149,11 @@ import { cors } from '@vafastjs/cors'
 const app = new Vafast()
 	.use(
 		cors({
-			origin: /.*\.saltyaom\.com$/
+			origin: /.*\.example\.com$/
 		})
 	)
 	.get('/', () => '你好')
 	.listen(3000)
 ```
 
-这将允许来自顶级域名 `saltyaom.com` 的请求。
+这将允许来自顶级域名 `example.com` 的请求。

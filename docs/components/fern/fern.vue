@@ -8,7 +8,7 @@ import Easy from './easy.vue'
 import Doc from './doc.vue'
 import Beyond from './beyond.vue'
 import Test from './test.vue'
-import Tweets from './tweets.vue'
+// import Tweets from './tweets.vue'  // 移除虚假推文
 import Sponsors from './sponsor.vue'
 import Future from './future.vue'
 import BuiltWithLove from './built-with-love.vue'
@@ -53,7 +53,7 @@ import BuiltWithLove from './built-with-love.vue'
                     <slot name="test-script" />
                 </template>
             </Test>
-            <Tweets />
+            <!-- <Tweets /> 移除虚假推文 -->
             <Sponsors />
             <Features />
             <Future />

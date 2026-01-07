@@ -36,26 +36,15 @@ const expand = useExpandWidth(isInView)
                     class="md:!text-7xl text-gradient from-violet-400 to-pink-400"
                     v-bind="flyIn(0.3)"
                 >
-                    86%
+                    101K
                 </motion.h3>
-                <motion.p v-bind="flyIn(0.4)">Elysia 性能</motion.p>
+                <motion.p v-bind="flyIn(0.4)">请求/秒</motion.p>
             </div>
         </header>
         <div class="result">
             <ol class="graph">
                 <li>
                     <motion.h6 v-bind="flyIn(0.3)">
-                        Elysia <span>Bun</span>
-                    </motion.h6>
-                    <motion.div
-                        v-bind="expand(100, 0.4)"
-                        class="bg-gradient-to-r from-pink-500 to-rose-400 !text-white"
-                    >
-                        <span>~118K reqs/s</span>
-                    </motion.div>
-                </li>
-                <li>
-                    <motion.h6 v-bind="flyIn(0.4)">
                         <span
                             class="!text-xl !font-semibold !text-transparent !ml-0 text-gradient from-violet-500 to-sky-500"
                         >
@@ -64,24 +53,31 @@ const expand = useExpandWidth(isInView)
                         <span> Bun</span>
                     </motion.h6>
                     <motion.div
-                        v-bind="expand(86, 0.5)"
+                        v-bind="expand(100, 0.4)"
                         class="bg-gradient-to-r from-violet-500 to-fuchsia-400 !text-white"
                     >
                         <span>~101K reqs/s</span>
                     </motion.div>
                 </li>
                 <li>
-                    <motion.h6 v-bind="flyIn(0.5)">
-                        Express <span>Node</span>
+                    <motion.h6 v-bind="flyIn(0.4)">
+                        Fastify <span>Node</span>
                     </motion.h6>
-                    <motion.div v-bind="expand(48, 0.6)" />
+                    <motion.div v-bind="expand(65, 0.5)" />
+                    <motion.p v-bind="flyIn(0.6)">~66K</motion.p>
+                </li>
+                <li>
+                    <motion.h6 v-bind="flyIn(0.5)">
+                        Hono <span>Bun</span>
+                    </motion.h6>
+                    <motion.div v-bind="expand(55, 0.6)" />
                     <motion.p v-bind="flyIn(0.7)">~56K</motion.p>
                 </li>
                 <li>
                     <motion.h6 v-bind="flyIn(0.6)">
-                        Hono <span>Bun</span>
+                        Express <span>Node</span>
                     </motion.h6>
-                    <motion.div v-bind="expand(47, 0.7)" />
+                    <motion.div v-bind="expand(55, 0.7)" />
                     <motion.p v-bind="flyIn(0.8)">~56K</motion.p>
                 </li>
             </ol>

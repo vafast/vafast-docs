@@ -36,9 +36,9 @@
 import { onMounted, onUnmounted } from 'vue'
 
 const authors = {
-    saltyaom: {
+    vafast: {
         src: 'aris.webp',
-        twitter: 'saltyaom'
+        twitter: 'vafast_dev'
     }
 }
 

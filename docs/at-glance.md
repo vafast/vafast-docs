@@ -81,7 +81,7 @@ export default { port: 3000, fetch: server.fetch }
 
 ## 🚀 技术特性
 
-- **超高性能**: 比 Express/Hono 快约 **1.8x**，达到 Elysia 86% 性能
+- **超高性能**: 比 Express/Hono 快约 **1.8x**，达到 ~101K reqs/s
 - **JIT 编译验证器**: Schema 验证器编译缓存，10000 次验证仅需 ~5ms
 - **中间件链预编译**: 路由注册时预编译处理链，运行时零开销
 - **快速请求解析**: 优化的 Query/Cookie 解析，比标准方法快 2x
@@ -138,10 +138,10 @@ export default { fetch: server.fetch }
 
 | 框架 | RPS | 相对性能 |
 |------|-----|----------|
-| Elysia | ~118K | 100% |
-| **Vafast** | **~101K** | **86%** |
-| Express | ~56K | 48% |
-| Hono | ~56K | 47% |
+| **Vafast** | **~101K** | **100%** |
+| Fastify | ~66K | 65% |
+| Hono | ~56K | 55% |
+| Express | ~56K | 55% |
 
 > 测试环境：Bun 1.2.20, macOS, wrk 基准测试 (4线程, 100连接, 30s)
 

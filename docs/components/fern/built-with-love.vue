@@ -3,13 +3,10 @@
         class="flex flex-col justify-center items-center gap-2 text-sm text-gray-400 dark:text-gray-400 mt-8 mb-6"
     >
         <p>
-            <a target="_blank" href="https://www.zhcndoc.com">
-                简中文档
+            <a target="_blank" href="https://github.com/vafast/vafast">
+                Vafast
             </a>
-            -
-            <a rel="nofollow" target="_blank" href="https://beian.miit.gov.cn">
-                沪ICP备2024070610号-3
-            </a>
+            - 用 ❤️ 构建的高性能 TypeScript Web 框架
         </p>
     </footer>
 </template>

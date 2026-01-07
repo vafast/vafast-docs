@@ -53,7 +53,7 @@ const flyIn = useFlyIn(isInView)
                 <h3>光速</h3>
                 <h4 class="text-purple-400">比 Express/Hono 快 1.8x</h4>
                 <p>JIT 编译验证器 + 中间件预编译，</p>
-                <p>Vafast 达到 Elysia 86% 的性能。</p>
+                <p>达到 ~101K reqs/s 的超高性能。</p>
             </motion.section>
             <motion.section v-bind="flyIn(0.3)">
                 <h3>安全</h3>

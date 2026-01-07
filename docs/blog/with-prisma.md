@@ -13,7 +13,7 @@ search: false
 title="用 Vafast 加速你的下一个 Prisma 服务器"
 src="/blog/with-prisma/prism.webp"
 alt="中心放置的三角棱镜"
-author="saltyaom"
+author="vafast"
 date="2023 年 6 月 4 日"
 >
 Prisma 是一个著名的 TypeScript ORM，以其优秀的开发者体验而闻名。

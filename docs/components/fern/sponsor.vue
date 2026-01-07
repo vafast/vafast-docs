@@ -26,7 +26,7 @@
             <a
                 id="become-sponsor"
                 class="inline-flex items-center text-white font-semibold bg-gradient-to-br from-rose-400 to-pink-400 rounded-full px-6 py-3 box-shadow shadow-pink-400/40 shadow-lg transition-transform transform hover:scale-110 focus:scale-110"
-                href="https://github.com/sponsors/saltyaom"
+                href="https://github.com/vafast/vafast"
                 target="_blank"
             >
                 成为赞助商
@@ -191,7 +191,7 @@
                 <li>
                     <a
                         class="flex flex-col justify-center items-center text-center hover:bg-pink-100/50 focus:bg-pink-100/50 dark:hover:bg-pink-500/30 dark:focus:bg-pink-500/30 px-2 py-4 rounded-xl transition-colors"
-                        href="https://github.com/sponsors/saltyaom"
+                        href="https://github.com/vafast/vafast"
                         target="_blank"
                     >
                         <div
