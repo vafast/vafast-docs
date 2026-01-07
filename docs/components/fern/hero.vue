@@ -29,11 +29,18 @@
 	        >
 	            VafastJS
 	        </h1> -->
-            <h1
-                class="text-6xl md:text-7xl leading-relaxed font-bold text-transparent mr-auto md:mx-auto bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400"
-            >
-                VafastJS
-            </h1>
+            <div class="flex items-center gap-3 mr-auto md:mx-auto mb-2">
+                <img 
+                    :src="asset('assets/vafast.svg')" 
+                    alt="Vafast" 
+                    class="w-16 h-16 md:w-20 md:h-20"
+                />
+                <h1
+                    class="text-5xl md:text-6xl leading-relaxed font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400"
+                >
+                    Vafast
+                </h1>
+            </div>
             <h2
                 class="relative md:leading-tight font-bold leading-tight text-transparent bg-clip-text bg-gradient-to-r from-sky-300 to-violet-400 mb-6"
                 :class="
