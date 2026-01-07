@@ -23,60 +23,57 @@ const flyIn = useFlyIn(isInView)
                 <span
                     class="text-gray-500 dark:text-gray-400 font-medium text-xl"
                 >
-                    总结一下
+                    核心特性
                 </span>
                 <br />
-                提供
+                为
                 <span
                     class="text-gradient font-semibold from-purple-500 to-sky-400"
                 >
-                    最好的
+                    开发者
                 </span>
                 <br />
-                给予勇敢的人
+                打造
             </motion.h2>
             <p
                 class="w-full sm:w-1/2 lg:max-w-lg lg:w-full lg:pr-24 dark:text-gray-400 dark:font-medium"
                 v-bind="flyIn(0.1)"
             >
                 <motion.span class="inline-block mb-2" v-bind="flyIn(0.2)">
-                    对于建设者、发明家和有远见的人来说
+                    专注于开发者体验
                 </motion.span>
                 <br />
                 <motion.span class="inline-block" v-bind="flyIn(0.3)">
-                    我们花费了数年时间研究 JavaScript 框架的优点和缺点，所有这一切都是为了提供一次非凡的体验。
+                    Vafast 提供简洁的 API、强大的类型推断和内置的 Schema 验证，让你专注于业务逻辑。
                 </motion.span>
             </p>
         </div>
         <div class="list">
             <motion.section v-bind="flyIn(0.2)">
-                <h3>光速</h3>
-                <h4 class="text-purple-400">比 Express/Hono 快 1.8x</h4>
-                <p>JIT 编译验证器 + 中间件预编译，</p>
-                <p>达到 ~101K reqs/s 的超高性能。</p>
+                <h3>高性能</h3>
+                <h4 class="text-purple-400">比 Express 快 1.8x</h4>
+                <p>JIT 编译验证器 + 中间件预编译</p>
+                <p>达到 ~101K reqs/s 的超高吞吐量</p>
             </motion.section>
             <motion.section v-bind="flyIn(0.3)">
-                <h3>安全</h3>
-                <h4 class="text-blue-400">动态的类型安全</h4>
-                <p>从类型到运行时构建</p>
-                <p>
-                    Vafast 学习你的代码库，适应，用你的类型强制执行
-                </p>
+                <h3>Schema 验证</h3>
+                <h4 class="text-blue-400">内置 TypeBox 支持</h4>
+                <p>声明式 Schema 定义</p>
+                <p>自动验证请求参数、类型推断</p>
             </motion.section>
             <motion.section v-bind="flyIn(0.4)">
-                <h3>生产</h3>
-                <h4 class="text-teal-400">今天最好的体验</h4>
-                <p>
-                    人体工程学设计，以开发者体验为优先。没有任何技术废话。
-                </p>
+                <h3>开发体验</h3>
+                <h4 class="text-teal-400">简洁直观的 API</h4>
+                <p>零配置开箱即用</p>
+                <p>完整的 TypeScript 类型支持</p>
             </motion.section>
         </div>
         <motion.h5
             class="text-right text-base mt-6 text-gray-400/75"
             v-bind="flyIn(0.5)"
         >
-            这些是我们建立 Vafast 的基础，<br />
-            为了提供最好的体验。
+            这些是 Vafast 的核心价值，<br />
+            让开发更简单、更高效。
         </motion.h5>
     </article>
 </template>
