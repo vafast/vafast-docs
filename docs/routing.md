@@ -133,12 +133,12 @@ const routes: any[] = [
       {
         method: 'GET',
         path: '/users',
-        handler: () => new Response('Users API')
+        handler: () => ({ message: 'Users API' })
       },
       {
         method: 'GET',
         path: '/posts',
-        handler: () => new Response('Posts API')
+        handler: () => ({ message: 'Posts API' })
       }
     ]
   }
@@ -225,7 +225,7 @@ const routes: any[] = [
       {
         method: 'GET',
         path: '/users',
-        handler: () => new Response('Users')
+        handler: () => ({ message: 'Users' })
       }
     ]
   }
