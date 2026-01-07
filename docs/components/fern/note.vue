@@ -22,7 +22,7 @@
         </div>
 
         <h2 class="text-center leading-normal opacity-80">
-            第一个生产准备就绪<br class="block sm:none">以及最受欢迎的 Bun 框架
+            生产就绪的高性能 <br class="block sm:none">TypeScript Web 框架
         </h2>
     </div>
 </template>

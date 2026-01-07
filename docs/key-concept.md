@@ -4,7 +4,7 @@ title: 关键概念 - Vafast
 
 # 关键概念
 
-Vafast 是一个专为 Bun 运行时设计的高性能 Web 框架。了解这些核心概念将帮助你更好地使用 Vafast 构建应用。
+Vafast 是一个高性能的 TypeScript Web 框架，支持 Node.js、Bun 等多种运行时。了解这些核心概念将帮助你更好地使用 Vafast 构建应用。
 
 ## 🏗️ 架构概览
 

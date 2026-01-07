@@ -22,10 +22,10 @@ import Benchmark from '../components/fern/benchmark-express.vue'
 
 **Express** 是一个流行的 Node.js 网络框架，广泛用于构建 Web 应用程序和 API。因其简单性和灵活性而闻名。
 
-**Vafast** 是一个专为 Bun 运行时设计的高性能 Web 框架，专注于类型安全、中间件系统和性能优化。设计时强调简单性和开发者友好，提供完整的 TypeScript 支持。
+**Vafast** 是一个高性能的 TypeScript Web 框架，支持 Node.js、Bun 等多种运行时，专注于类型安全、中间件系统和性能优化。设计时强调简单性和开发者友好，提供完整的 TypeScript 支持。
 
 ## 性能
-由于专为 Bun 运行时优化和智能路由匹配算法，Vafast 在性能上相比 Express 有显著提高。
+由于智能路由匹配算法和中间件预编译，Vafast 在性能上相比 Express 有显著提高。
 
 <Benchmark />
 
