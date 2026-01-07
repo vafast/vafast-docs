@@ -356,10 +356,6 @@ export default defineConfig({
                     {
                         text: '单元测试',
                         link: '/patterns/unit-test'
-                    },
-                    {
-                        text: 'WebSocket',
-                        link: '/patterns/websocket'
                     }
                 ]
             },
