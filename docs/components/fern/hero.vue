@@ -210,17 +210,6 @@
                 </svg>
             </p>
         </div>
-        <div
-            class="overflow-hidden flex-1 transition-all select-none pointer-events-none"
-            :class="kawaii ? 'lg:flex max-w-4xl' : 'hidden'"
-            style="max-height: calc(100vh - 64px)"
-        >
-            <img
-                :src="asset('assets/vafast_chan.webp')"
-                class="object-cover z-[41] select-none pointer-events-none"
-                style="object-position: 50% 7.5%"
-            />
-        </div>
     </header>
 </template>
 
