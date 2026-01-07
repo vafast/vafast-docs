@@ -396,7 +396,7 @@ console.log(
 
 Vafast 正在努力创建一个更好的开发者体验的新标准，以 Bun 构建高性能的 TypeScript 服务器，能够与 Go 和 Rust 的性能相匹配。
 
-如果你在寻找学习 Bun 的起点，可以考虑看看 Vafast ，特别是在 [端到端类型安全](/eden/overview) 方面，类似于 tRPC，但基于 REST 标准，而无需任何代码生成。
+如果你在寻找学习 Bun 的起点，可以考虑看看 Vafast，特别是在 [类型安全 API 客户端](/api-client/overview) 方面，类似于 tRPC，但基于 REST 标准，而无需任何代码生成。
 
-如果你对 Vafast 感兴趣，欢迎查看我们的 [Discord 服务器](https://discord.gg/eaFJ2KDJck) 或查看 [Vafast 的 GitHub](https://github.com/vafastjs/vafast)
+如果你对 Vafast 感兴趣，欢迎查看我们的 [GitHub](https://github.com/vafast/vafast)
 </Blog>
