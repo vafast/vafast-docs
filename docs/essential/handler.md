@@ -115,20 +115,31 @@ const routes = defineRoutes([
 
 ### 请求体
 
+::: tip 推荐
+使用 Schema 验证替代手动验证，可获得更好的类型安全和错误信息。
+:::
+
 ```typescript
+import { Type } from '@sinclair/typebox'
+
 const routes = defineRoutes([
   {
     method: 'POST',
     path: '/users',
-    handler: createHandler(async ({ body }) => {
-      const { name, email, age } = body
-      
-      if (!name || !email) {
-        return new Response('Name and email are required', { status: 400 })
-      }
-      
-      return { name, email, age: age || 18 }
-    })
+    handler: createHandler(
+      {
+        body: Type.Object({
+          name: Type.String({ minLength: 1 }),
+          email: Type.String({ format: 'email' }),
+          age: Type.Optional(Type.Number())
+        })
+      },
+      ({ body }) => ({
+        name: body.name,
+        email: body.email,
+        age: body.age || 18
+      })
+    )
   }
 ])
 ```
@@ -186,36 +197,27 @@ const routes = defineRoutes([
 ])
 ```
 
-### 手动响应控制
+### 自定义状态码和头部
 
-如果需要更精细的控制，可以返回 Response 对象：
+使用 `{ data, status, headers }` 格式可以控制响应细节：
 
 ```typescript
+import { redirect } from 'vafast'
+
 const routes = defineRoutes([
   {
     method: 'GET',
     path: '/custom',
-    handler: createHandler(() => {
-      return new Response('Custom response', {
-        status: 200,
-        headers: {
-          'Content-Type': 'text/plain',
-          'X-Custom-Header': 'value'
-        }
-      })
-    })
+    handler: createHandler(() => ({
+      data: 'Custom response',
+      status: 200,
+      headers: { 'X-Custom-Header': 'value' }
+    }))
   },
   {
     method: 'GET',
     path: '/redirect',
-    handler: createHandler(() => {
-      return new Response(null, {
-        status: 302,
-        headers: {
-          'Location': '/new-page'
-        }
-      })
-    })
+    handler: createHandler(() => redirect('/new-page'))
   }
 ])
 ```
@@ -231,11 +233,11 @@ const routes = defineRoutes([
       const userId = params.id
       
       if (!userId || isNaN(Number(userId))) {
-        return new Response('Invalid user ID', { status: 400 })
+        return { data: { error: 'Invalid user ID' }, status: 400 }
       }
       
       if (userId === '999') {
-        return new Response('User not found', { status: 404 })
+        return { data: { error: 'User not found' }, status: 404 }
       }
       
       return { id: userId, name: 'John Doe' }
@@ -249,10 +251,12 @@ const routes = defineRoutes([
 处理程序可以与中间件配合使用：
 
 ```typescript
+import { json } from 'vafast'
+
 const authMiddleware = async (req: Request, next: () => Promise<Response>) => {
   const token = req.headers.get('authorization')
   if (!token) {
-    return new Response('Unauthorized', { status: 401 })
+    return json({ error: 'Unauthorized' }, 401)
   }
   return await next()
 }
@@ -339,16 +343,12 @@ const routes = defineRoutes([
     method: 'GET',
     path: '/user/:id',
     handler: createHandler(async ({ params }) => {
-      try {
-        const user = await getUserById(params.id)
-        if (!user) {
-          return new Response('User not found', { status: 404 })
-        }
-        return user
-      } catch (error) {
-        console.error('Error fetching user:', error)
-        return new Response('Internal server error', { status: 500 })
+      const user = await getUserById(params.id)
+      if (!user) {
+        return { data: { error: 'User not found' }, status: 404 }
       }
+      return user
+      // 注意：未捕获的错误由 createHandler 内置错误处理自动返回 500
     })
   }
 ])

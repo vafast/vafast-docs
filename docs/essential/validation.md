@@ -16,28 +16,15 @@ JavaScript 允许任何数据成为任何类型。Vafast 提供了一个工具�
 ```typescript
 import { Server, defineRoutes, createHandler } from 'vafast'
 import { Type } from '@sinclair/typebox'
-import { TypeCompiler } from '@sinclair/typebox/compiler'
-
-interface TypedRequest extends Request {
-  params: { id: string }
-}
-
-const paramsSchema = Type.Object({
-  id: Type.String()
-})
-const paramsValidator = TypeCompiler.Compile(paramsSchema)
 
 const routes = defineRoutes([
   {
     method: 'GET',
     path: '/id/:id',
-    handler: (req) => {
-      const params = (req as TypedRequest).params
-      if (!paramsValidator.Check(params)) {
-        return new Response('Invalid params', { status: 400 })
-      }
-      return params.id
-    }
+    handler: createHandler(
+      { params: Type.Object({ id: Type.String() }) },
+      ({ params }) => params.id
+    )
   }
 ])
 
@@ -300,21 +287,23 @@ const routes = defineRoutes([
   {
     method: 'POST',
     path: '/users',
-    handler: createHandler(async ({ body }) => {
-      // 异步验证
-      const emailExists = await checkEmailExists(body.email)
-      if (emailExists) {
-        return new Response('Email already exists', { status: 400 })
+    handler: createHandler(
+      { body: asyncValidationSchema },
+      async ({ body }) => {
+        // 异步验证
+        const emailExists = await checkEmailExists(body.email)
+        if (emailExists) {
+          return { data: { error: 'Email already exists' }, status: 400 }
+        }
+        
+        const usernameExists = await checkUsernameExists(body.username)
+        if (usernameExists) {
+          return { data: { error: 'Username already exists' }, status: 400 }
+        }
+        
+        return createUser(body)
       }
-      
-      const usernameExists = await checkUsernameExists(body.username)
-      if (usernameExists) {
-        return new Response('Username already exists', { status: 400 })
-      }
-      
-      return createUser(body)
-    }),
-    body: asyncValidationSchema
+    )
   }
 ])
 ```
@@ -344,25 +333,21 @@ const routes = defineRoutes([
 
 ### 自定义错误处理
 
+::: tip
+`createHandler` 内置了验证错误处理，通常无需手动编写错误处理中间件。
+:::
+
 ```typescript
+import { json } from 'vafast'
+
 const errorHandler = async (req: Request, next: () => Promise<Response>) => {
   try {
     return await next()
   } catch (error) {
-    if (error.name === 'ValidationError') {
-      return new Response(
-        JSON.stringify({
-          error: 'Validation failed',
-          details: error.details
-        }), 
-        { 
-          status: 400,
-          headers: { 'Content-Type': 'application/json' }
-        }
-      )
+    if (error instanceof Error && error.message.includes('验证失败')) {
+      return json({ error: 'Validation failed', message: error.message }, 400)
     }
-    
-    return new Response('Internal server error', { status: 500 })
+    return json({ error: 'Internal server error' }, 500)
   }
 }
 
@@ -370,10 +355,10 @@ const routes = defineRoutes([
   {
     method: 'POST',
     path: '/users',
-    handler: createHandler(({ body }) => {
-      return createUser(body)
-    }),
-    body: userSchema,
+    handler: createHandler(
+      { body: userSchema },
+      ({ body }) => createUser(body)
+    ),
     middleware: [errorHandler]
   }
 ])
@@ -383,61 +368,37 @@ const routes = defineRoutes([
 
 ### 预编译验证器
 
+::: tip 推荐
+`createHandler` 内部已自动预编译 Schema，无需手动预编译。
+:::
+
 ```typescript
-import { TypeCompiler } from '@sinclair/typebox/compiler'
-
-// 预编译验证器以提高性能
-const userValidator = TypeCompiler.Compile(userSchema)
-
+// createHandler 内部会自动预编译 schema
 const routes = defineRoutes([
   {
     method: 'POST',
     path: '/users',
-    handler: createHandler(({ body }) => {
-      // 使用预编译的验证器
-      const isValid = userValidator.Check(body)
-      if (!isValid) {
-        return new Response('Invalid data', { status: 400 })
-      }
-      
-      return createUser(body)
-    })
+    handler: createHandler(
+      { body: userSchema },
+      ({ body }) => createUser(body)
+    )
   }
 ])
 ```
 
-### 缓存验证结果
+### 使用 createHandler 内置验证（推荐）
+
+`createHandler` 已内置高性能验证，通常无需额外缓存：
 
 ```typescript
-const validationCache = new Map<string, boolean>()
-
-const cachedValidation = (schema: any) => {
-  return async (req: Request, next: () => Promise<Response>) => {
-    const body = await req.json()
-    const cacheKey = JSON.stringify(body)
-    
-    if (validationCache.has(cacheKey)) {
-      return await next()
-    }
-    
-    const isValid = Type.Is(schema, body)
-    if (isValid) {
-      validationCache.set(cacheKey, true)
-      return await next()
-    } else {
-      return new Response('Invalid data', { status: 400 })
-    }
-  }
-}
-
 const routes = defineRoutes([
   {
     method: 'POST',
     path: '/users',
-    handler: createHandler(({ body }) => {
-      return createUser(body)
-    }),
-    middleware: [cachedValidation(userSchema)]
+    handler: createHandler(
+      { body: userSchema },
+      ({ body }) => createUser(body)
+    )
   }
 ])
 ```
@@ -487,38 +448,21 @@ const userQuerySchema = Type.Object({
 })
 ```
 
-### 3. 验证中间件
+### 3. 使用 createHandler 内置验证（推荐）
+
+::: tip
+不推荐手动编写验证中间件，使用 `createHandler` 内置验证更简洁、类型安全。
+:::
 
 ```typescript
-const validateBody = (schema: any) => {
-  return async (req: Request, next: () => Promise<Response>) => {
-    try {
-      const body = await req.json()
-      const isValid = Type.Is(schema, body)
-      
-      if (!isValid) {
-        return new Response('Invalid request body', { status: 400 })
-      }
-      
-      // 将验证后的数据添加到请求中
-      ;(req as any).validatedBody = body
-      
-      return await next()
-    } catch (error) {
-      return new Response('Invalid JSON', { status: 400 })
-    }
-  }
-}
-
 const routes = defineRoutes([
   {
     method: 'POST',
     path: '/users',
-    middleware: [validateBody(userSchema)],
-    handler: createHandler(({ req }) => {
-      const userData = (req as any).validatedBody
-      return createUser(userData)
-    })
+    handler: createHandler(
+      { body: userSchema },
+      ({ body }) => createUser(body)  // body 已验证且类型安全
+    )
   }
 ])
 ```

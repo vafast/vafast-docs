@@ -190,10 +190,12 @@ const routes: any[] = [
 ### 组件级中间件
 
 ```typescript
+import { json } from 'vafast'
+
 const authMiddleware = async (req: Request, next: () => Promise<Response>) => {
   const token = req.headers.get('authorization')
   if (!token) {
-    return new Response('Unauthorized', { status: 401 })
+    return json({ error: 'Unauthorized' }, 401)
   }
   return next()
 }
@@ -306,15 +308,14 @@ Vafast 的组件路由系统支持路由守卫，允许您在路由切换时执�
 ### 前置守卫
 
 ```typescript
+import { redirect } from 'vafast'
+
 const authGuard = async (req: Request, next: () => Promise<Response>) => {
   const token = req.headers.get('authorization')
   
   if (!token) {
     // 重定向到登录页面
-    return new Response(null, {
-      status: 302,
-      headers: { 'Location': '/login' }
-    })
+    return redirect('/login')
   }
   
   // 验证 token
@@ -323,10 +324,7 @@ const authGuard = async (req: Request, next: () => Promise<Response>) => {
     ;(req as any).user = user
     return next()
   } catch (error) {
-    return new Response(null, {
-      status: 302,
-      headers: { 'Location': '/login' }
-    })
+    return redirect('/login')
   }
 }
 
@@ -448,14 +446,16 @@ const routes: any[] = [
 为组件路由添加错误处理：
 
 ```typescript
+import { html } from 'vafast'
+
 const errorHandler = async (req: Request, next: () => Promise<Response>) => {
   try {
     return await next()
   } catch (error) {
     console.error('Component routing error:', error)
     
-    // 返回错误页面组件
-    return new Response(`
+    // 返回错误页面
+    return html(`
       <!DOCTYPE html>
       <html>
         <head><title>Error</title></head>
@@ -464,10 +464,7 @@ const errorHandler = async (req: Request, next: () => Promise<Response>) => {
           <p>请稍后重试</p>
         </body>
       </html>
-    `, {
-      status: 500,
-      headers: { 'Content-Type': 'text/html' }
-    })
+    `, 500)
   }
 }
 
