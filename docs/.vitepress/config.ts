@@ -208,16 +208,8 @@ export default defineConfig({
                         link: '/middleware/compress'
                     },
                     {
-                        text: 'Helmet',
-                        link: '/middleware/helmet'
-                    },
-                    {
-                        text: 'IP',
-                        link: '/middleware/ip'
-                    },
-                    {
-                        text: 'Rate Limit',
-                        link: '/middleware/rate-limit'
+                        text: 'Cookie',
+                        link: '/middleware/cookie'
                     },
                     {
                         text: 'CORS',
@@ -228,24 +220,40 @@ export default defineConfig({
                         link: '/middleware/cron'
                     },
                     {
-                        text: 'GraphQL Apollo',
-                        link: '/middleware/graphql-apollo'
-                    },
-                    {
-                        text: 'GraphQL Yoga',
-                        link: '/middleware/graphql-yoga'
+                        text: 'Helmet',
+                        link: '/middleware/helmet'
                     },
                     {
                         text: 'HTML',
                         link: '/middleware/html'
                     },
                     {
+                        text: 'IP',
+                        link: '/middleware/ip'
+                    },
+                    {
                         text: 'JWT',
                         link: '/middleware/jwt'
                     },
                     {
+                        text: 'Logger',
+                        link: '/middleware/logger'
+                    },
+                    {
                         text: 'OpenTelemetry',
                         link: '/middleware/opentelemetry'
+                    },
+                    {
+                        text: 'Rate Limit',
+                        link: '/middleware/rate-limit'
+                    },
+                    {
+                        text: 'Request ID',
+                        link: '/middleware/request-id'
+                    },
+                    {
+                        text: 'Request Logger',
+                        link: '/middleware/request-logger'
                     },
                     {
                         text: 'Server Timing',
@@ -256,12 +264,12 @@ export default defineConfig({
                         link: '/middleware/static'
                     },
                     {
-                        text: 'Stream',
-                        link: '/middleware/stream'
-                    },
-                    {
                         text: 'Swagger',
                         link: '/middleware/swagger'
+                    },
+                    {
+                        text: 'Webhook',
+                        link: '/middleware/webhook'
                     }
                 ]
             },
@@ -453,16 +461,8 @@ export default defineConfig({
                         link: '/middleware/compress'
                     },
                     {
-                        text: 'Helmet',
-                        link: '/middleware/helmet'
-                    },
-                    {
-                        text: 'IP',
-                        link: '/middleware/ip'
-                    },
-                    {
-                        text: 'Rate Limit',
-                        link: '/middleware/rate-limit'
+                        text: 'Cookie',
+                        link: '/middleware/cookie'
                     },
                     {
                         text: 'CORS',
@@ -473,40 +473,56 @@ export default defineConfig({
                         link: '/middleware/cron'
                     },
                     {
-                        text: 'GraphQL Apollo',
-                        link: '/middleware/graphql-apollo'
-                    },
-                    {
-                        text: 'GraphQL Yoga',
-                        link: '/middleware/graphql-yoga'
+                        text: 'Helmet',
+                        link: '/middleware/helmet'
                     },
                     {
                         text: 'HTML',
                         link: '/middleware/html'
                     },
                     {
+                        text: 'IP',
+                        link: '/middleware/ip'
+                    },
+                    {
                         text: 'JWT',
                         link: '/middleware/jwt'
+                    },
+                    {
+                        text: 'Logger',
+                        link: '/middleware/logger'
                     },
                     {
                         text: 'OpenTelemetry',
                         link: '/middleware/opentelemetry'
                     },
                     {
-                        text: '服务器计时',
+                        text: 'Rate Limit',
+                        link: '/middleware/rate-limit'
+                    },
+                    {
+                        text: 'Request ID',
+                        link: '/middleware/request-id'
+                    },
+                    {
+                        text: 'Request Logger',
+                        link: '/middleware/request-logger'
+                    },
+                    {
+                        text: 'Server Timing',
                         link: '/middleware/server-timing'
                     },
                     {
-                        text: '静态',
+                        text: 'Static',
                         link: '/middleware/static'
-                    },
-                    {
-                        text: 'Stream',
-                        link: '/middleware/stream'
                     },
                     {
                         text: 'Swagger',
                         link: '/middleware/swagger'
+                    },
+                    {
+                        text: 'Webhook',
+                        link: '/middleware/webhook'
                     }
                 ]
             },
