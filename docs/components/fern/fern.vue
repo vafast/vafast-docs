@@ -5,7 +5,7 @@ import Features from './features.vue'
 import Benchmark from './benchmark.vue'
 import TypeIntegrity from './type-integrity.vue'
 import Easy from './easy.vue'
-import Doc from './doc.vue'
+// import Doc from './doc.vue'  // 移除 Swagger 文档展示
 import Beyond from './beyond.vue'
 import Test from './test.vue'
 // import Tweets from './tweets.vue'  // 移除虚假推文
@@ -38,9 +38,7 @@ import BuiltWithLove from './built-with-love.vue'
                     <slot name="type-4" />
                 </template>
             </TypeIntegrity>
-            <Doc>
-                <slot name="doc" />
-            </Doc>
+            <!-- <Doc> 移除 Swagger 文档展示 </Doc> -->
             <Beyond>
                 <slot name="e2e-type-safety" />
             </Beyond>
