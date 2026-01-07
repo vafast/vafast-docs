@@ -206,16 +206,6 @@ router.onAfterRouteChange = () => {
                 />
             </div>
         </template>
-        <template #aside-bottom>
-            <div class="mt-auto mx-auto">
-                <img
-                    :src="asset('assets/vafast-card.webp')"
-                    class="aspect-video max-h-24 rounded-lg border object-cover opacity-40 interact:opacity-100 interact:scale-110 interact:-translate-y-2 interact:shadow-xl shadow-slate-800/7.5 transition-all ease-out duration-200 cursor-pointer"
-                    style="object-position: 0 10%"
-                    @click="() => setCard(true)"
-                />
-            </div>
-        </template>
         <template #aside-outline-after>
             <div class="wwads-cn wwads-vertical" data-id="354"></div>
         </template>
