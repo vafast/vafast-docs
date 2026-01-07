@@ -74,7 +74,6 @@ export default defineConfig({
                           'Vafast 是一个高性能、类型安全的 TypeScript Web 框架，专为现代 Web 应用设计。提供优秀的开发者体验、灵活的中间件系统、组件路由支持和完整的类型安全。',
                       ignoreFiles: [
                           'index.md',
-                          'table-of-content.md',
                           'blog/*',
                           'public/*'
                       ],
@@ -112,21 +111,7 @@ export default defineConfig({
             'meta',
             {
                 property: 'og:image',
-                content: 'https://elysia.zhcndoc.com/assets/cover_2k.jpg'
-            }
-        ],
-        [
-            'meta',
-            {
-                property: 'og:image:width',
-                content: '2560'
-            }
-        ],
-        [
-            'meta',
-            {
-                property: 'og:image:height',
-                content: '1440'
+                content: 'https://vafast.huyooo.com/assets/vafast.png'
             }
         ],
         [
@@ -140,14 +125,14 @@ export default defineConfig({
             'meta',
             {
                 property: 'twitter:image',
-                content: 'https://elysia.zhcndoc.com/assets/cover_2k.jpg'
+                content: 'https://vafast.huyooo.com/assets/vafast.png'
             }
         ],
         [
             'meta',
             {
                 property: 'og:title',
-                content: 'ElysiaJS'
+                content: 'Vafast'
             }
         ],
         [
@@ -317,10 +302,6 @@ export default defineConfig({
                     {
                         text: '关键概念',
                         link: '/key-concept'
-                    },
-                    {
-                        text: '目录',
-                        link: '/table-of-content'
                     }
                 ]
             },
@@ -405,38 +386,12 @@ export default defineConfig({
                         link: '/api-client/installation.md'
                     },
                     {
-                        text: '类型安全客户端',
-                        collapsed: false,
-                        items: [
-                            {
-                                text: '概述',
-                                link: '/api-client/treaty/overview'
-                            },
-                            {
-                                text: '参数',
-                                link: '/api-client/treaty/parameters'
-                            },
-                            {
-                                text: '响应',
-                                link: '/api-client/treaty/response'
-                            },
-                            {
-                                text: 'WebSocket',
-                                link: '/api-client/treaty/websocket'
-                            },
-                            {
-                                text: '配置',
-                                link: '/api-client/treaty/config'
-                            },
-                            {
-                                text: '单元测试',
-                                link: '/api-client/treaty/unit-test'
-                            }
-                        ]
-                    },
-                    {
                         text: '基础用法',
                         link: '/api-client/fetch.md'
+                    },
+                    {
+                        text: '测试',
+                        link: '/api-client/test.md'
                     }
                 ]
             },
