@@ -13,13 +13,13 @@ Vafast 的路由系统是框架的核心，它提供了强大而灵活的方式�
 ### 路由结构
 
 ```typescript
-import { Server } from 'vafast'
+import { Server, createHandler } from 'vafast'
 
-const routes: any[] = [
+const routes = [
   {
     method: 'GET',
     path: '/',
-    handler: () => new Response('Hello Vafast!')
+    handler: createHandler(() => 'Hello Vafast!')
   }
 ]
 
@@ -32,44 +32,33 @@ export default { fetch: server.fetch }
 Vafast 支持所有标准的 HTTP 方法：
 
 ```typescript
-const routes: any[] = [
+import { createHandler } from 'vafast'
+
+const routes = [
   {
     method: 'GET',     // 获取资源
     path: '/users',
-    handler: () => new Response('Get users')
+    handler: createHandler(() => ({ users: [] }))
   },
   {
     method: 'POST',    // 创建资源
     path: '/users',
-    handler: async (req: Request) => {
-      const body = await req.json()
-      return new Response('Create user')
-    }
+    handler: createHandler(({ body }) => ({ message: 'Create user', data: body }))
   },
   {
     method: 'PUT',     // 更新资源
     path: '/users/:id',
-    handler: async (req: Request) => new Response('Update user')
+    handler: createHandler(({ params }) => ({ message: `Update user ${params.id}` }))
   },
   {
     method: 'DELETE',  // 删除资源
     path: '/users/:id',
-    handler: () => new Response('Delete user')
+    handler: createHandler(({ params }) => ({ message: `Delete user ${params.id}` }))
   },
   {
     method: 'PATCH',   // 部分更新
     path: '/users/:id',
-    handler: () => new Response('Patch user')
-  },
-  {
-    method: 'OPTIONS', // 预检请求
-    path: '/users',
-    handler: () => new Response('Options')
-  },
-  {
-    method: 'HEAD',    // 获取响应头
-    path: '/users',
-    handler: () => new Response('Head')
+    handler: createHandler(({ params, body }) => ({ message: `Patch user ${params.id}`, data: body }))
   }
 ]
 ```
@@ -84,10 +73,9 @@ Vafast 支持动态路由参数，允许您捕获 URL 中的变量值。
 {
   method: 'GET',
   path: '/users/:id',
-  handler: (req: Request, params?: Record<string, string>) => {
-    const userId = params?.id
-    return new Response(`User ID: ${userId}`)
-  }
+  handler: createHandler(({ params }) => ({
+    userId: params.id
+  }))
 }
 ```
 
@@ -97,10 +85,10 @@ Vafast 支持动态路由参数，允许您捕获 URL 中的变量值。
 {
   method: 'GET',
   path: '/users/:userId/posts/:postId',
-  handler: (req: Request, params?: Record<string, string>) => {
-    const { userId, postId } = params || {}
-    return new Response(`User ${userId}, Post ${postId}`)
-  }
+  handler: createHandler(({ params }) => ({
+    userId: params.userId,
+    postId: params.postId
+  }))
 }
 ```
 
@@ -110,12 +98,12 @@ Vafast 支持动态路由参数，允许您捕获 URL 中的变量值。
 {
   method: 'GET',
   path: '/users/:id?',
-  handler: (req: Request, params?: Record<string, string>) => {
-    if (params?.id) {
-      return new Response(`User ID: ${params.id}`)
+  handler: createHandler(({ params }) => {
+    if (params.id) {
+      return { userId: params.id }
     }
-    return new Response('All users')
-  }
+    return { users: [] }
+  })
 }
 ```
 
@@ -126,19 +114,19 @@ Vafast 支持嵌套路由结构，允许您组织复杂的路由层次。
 ### 基本嵌套
 
 ```typescript
-const routes: any[] = [
+const routes = [
   {
     path: '/api',
     children: [
       {
         method: 'GET',
         path: '/users',
-        handler: () => ({ message: 'Users API' })
+        handler: createHandler(() => ({ message: 'Users API' }))
       },
       {
         method: 'GET',
         path: '/posts',
-        handler: () => ({ message: 'Posts API' })
+        handler: createHandler(() => ({ message: 'Posts API' }))
       }
     ]
   }
@@ -148,7 +136,7 @@ const routes: any[] = [
 ### 深层嵌套
 
 ```typescript
-const routes: any[] = [
+const routes = [
   {
     path: '/api',
     children: [
@@ -161,12 +149,12 @@ const routes: any[] = [
               {
                 method: 'GET',
                 path: '/',
-                handler: () => new Response('Users v1')
+                handler: createHandler(() => ({ message: 'Users v1' }))
               },
               {
                 method: 'POST',
                 path: '/',
-                handler: async (req: Request) => new Response('Create user v1')
+                handler: createHandler(({ body }) => ({ message: 'Create user v1', data: body }))
               }
             ]
           }
@@ -204,12 +192,12 @@ const logMiddleware = async (req: Request, next: () => Promise<Response>) => {
 ### 应用中间件
 
 ```typescript
-const routes: any[] = [
+const routes = [
   {
     method: 'GET',
     path: '/admin',
     middleware: [authMiddleware, logMiddleware],
-    handler: () => new Response('Admin panel')
+    handler: createHandler(() => ({ message: 'Admin panel' }))
   }
 ]
 ```
@@ -217,7 +205,7 @@ const routes: any[] = [
 ### 全局中间件
 
 ```typescript
-const routes: any[] = [
+const routes = [
   {
     path: '/api',
     middleware: [logMiddleware], // 应用到所有子路由
@@ -225,7 +213,7 @@ const routes: any[] = [
       {
         method: 'GET',
         path: '/users',
-        handler: () => ({ message: 'Users' })
+        handler: createHandler(() => ({ message: 'Users' }))
       }
     ]
   }
@@ -234,7 +222,7 @@ const routes: any[] = [
 
 ## 路由处理函数
 
-处理函数是路由的核心，负责处理请求并返回响应。
+处理函数是路由的核心，负责处理请求并返回响应。**推荐使用 `createHandler` 包装处理函数**，它提供统一的上下文解构和自动响应转换。
 
 ### 基本处理函数
 
@@ -242,7 +230,7 @@ const routes: any[] = [
 {
   method: 'GET',
   path: '/hello',
-  handler: () => new Response('Hello World')
+  handler: createHandler(() => 'Hello World')
 }
 ```
 
@@ -252,114 +240,111 @@ const routes: any[] = [
 {
   method: 'POST',
   path: '/users',
-  handler: async (req: Request) => {
-    const body = await req.json()
-    // 处理数据...
-    return new Response('User created', { status: 201 })
-  }
+  handler: createHandler(async ({ body }) => {
+    // body 已自动解析
+    const user = await createUser(body)
+    return { data: user, status: 201 }
+  })
 }
 ```
 
-### 生成器处理函数
+### 访问请求上下文
 
-```typescript
-{
-  method: 'GET',
-  path: '/stream',
-  handler: function* () {
-    yield 'Hello'
-    yield 'World'
-    yield '!'
-  }
-}
-```
-
-### 带参数的处理函数
+`createHandler` 提供了完整的请求上下文：
 
 ```typescript
 {
   method: 'GET',
   path: '/users/:id',
-  handler: (req: Request, params?: Record<string, string>) => {
-    const userId = params?.id
-    const query = new URL(req.url).searchParams
-    
-    return new Response(`User ${userId}, Query: ${query.get('sort')}`)
-  }
+  handler: createHandler(({ req, params, query, headers, cookies }) => ({
+    userId: params.id,
+    search: query.q,
+    userAgent: headers['user-agent']
+  }))
 }
 ```
 
 ## 响应处理
 
-Vafast 使用标准的 Web API Response 对象，提供了灵活的响应方式。
+Vafast 会**自动转换返回值**为 Response，你可以直接返回数据：
 
-### 基本响应
+### 自动响应转换
 
 ```typescript
-handler: () => new Response('Hello World')
+// 字符串 → text/plain
+handler: createHandler(() => 'Hello World')
+
+// 对象/数组 → application/json
+handler: createHandler(() => ({ message: 'Success' }))
+
+// 数字/布尔 → text/plain
+handler: createHandler(() => 42)
+
+// null/undefined → 204 No Content
+handler: createHandler(() => null)
 ```
 
-### JSON 响应
+### 自定义状态码和头部
+
+使用 `{ data, status, headers }` 格式可以控制响应细节：
 
 ```typescript
-handler: () => new Response(
-  JSON.stringify({ message: 'Success' }),
-  { headers: { 'Content-Type': 'application/json' } }
-)
-```
-
-### 状态码和头部
-
-```typescript
-handler: () => new Response('Created', {
+handler: createHandler(() => ({
+  data: { user: { id: 1, name: 'John' } },
   status: 201,
-  headers: {
-    'Content-Type': 'text/plain',
-    'X-Custom-Header': 'value'
-  }
-})
+  headers: { 'X-Custom-Header': 'value' }
+}))
 ```
 
 ### 重定向
 
 ```typescript
-handler: () => new Response(null, {
-  status: 302,
-  headers: { 'Location': '/new-page' }
-})
+import { redirect } from 'vafast'
+
+handler: createHandler(() => redirect('/new-page'))
+```
+
+### 手动 Response（不推荐）
+
+如需完全控制，仍可返回 Response 对象：
+
+```typescript
+handler: createHandler(() => new Response('Custom', {
+  status: 200,
+  headers: { 'Content-Type': 'text/custom' }
+}))
 ```
 
 ## 错误处理
 
-Vafast 提供了多种错误处理方式。
+Vafast 内置了自动错误处理，`createHandler` 会捕获错误并返回格式化响应。
 
 ### 抛出错误
 
 ```typescript
-handler: () => {
+handler: createHandler(() => {
   throw new Error('Something went wrong')
-}
+})
+// 自动返回 500 错误响应
 ```
 
-### 返回错误响应
+### 返回错误状态
 
 ```typescript
-handler: () => {
-  return new Response('Not found', { status: 404 })
-}
+handler: createHandler(() => ({
+  data: { error: 'Not found' },
+  status: 404
+}))
 ```
 
-### 错误处理中间件
+### 使用 VafastError
 
 ```typescript
-const errorHandler = async (req: Request, next: () => Promise<Response>) => {
-  try {
-    return await next()
-  } catch (error) {
-    console.error('Error:', error)
-    return new Response('Internal Server Error', { status: 500 })
-  }
-}
+import { VafastError } from 'vafast'
+
+handler: createHandler(() => {
+  throw new VafastError('资源不存在', { status: 404, type: 'not_found' })
+})
 ```
 
 ## 最佳实践
@@ -372,12 +357,12 @@ const userRoutes = [
   {
     method: 'GET',
     path: '/users',
-    handler: () => new Response('Get users')
+    handler: createHandler(() => ({ users: [] }))
   },
   {
     method: 'POST',
     path: '/users',
-    handler: async (req: Request) => new Response('Create user')
+    handler: createHandler(({ body }) => ({ user: body }))
   }
 ]
 
@@ -385,11 +370,11 @@ const postRoutes = [
   {
     method: 'GET',
     path: '/posts',
-    handler: () => new Response('Get posts')
+    handler: createHandler(() => ({ posts: [] }))
   }
 ]
 
-const routes: any[] = [
+const routes = [
   {
     path: '/api',
     children: [...userRoutes, ...postRoutes]
@@ -402,7 +387,7 @@ const routes: any[] = [
 ```typescript
 const commonMiddleware = [logMiddleware, corsMiddleware]
 
-const routes: any[] = [
+const routes = [
   {
     path: '/api',
     middleware: commonMiddleware,
@@ -413,23 +398,28 @@ const routes: any[] = [
 ]
 ```
 
-### 3. 类型安全
+### 3. 类型安全（使用 Schema）
 
 ```typescript
-interface RouteParams {
-  id: string
-  category?: string
-}
+import { Type } from '@sinclair/typebox'
 
-const routes: any[] = [
+const routes = [
   {
     method: 'GET',
     path: '/posts/:id/:category?',
-    handler: (req: Request, params?: RouteParams) => {
-      // 类型安全的参数访问
-      const { id, category } = params || {}
-      return new Response(`Post ${id} in ${category || 'default'}`)
-    }
+    handler: createHandler(
+      {
+        params: Type.Object({
+          id: Type.String(),
+          category: Type.Optional(Type.String())
+        })
+      },
+      ({ params }) => ({
+        // params 自动获得类型推导
+        postId: params.id,
+        category: params.category ?? 'default'
+      })
+    )
   }
 ]
 ```
@@ -438,12 +428,13 @@ const routes: any[] = [
 
 Vafast 的路由系统提供了：
 
+- ✅ **createHandler** - 推荐的处理器工厂，提供统一上下文
+- ✅ **自动响应转换** - 直接返回数据，无需手动创建 Response
 - ✅ 完整的 HTTP 方法支持
 - ✅ 动态路由参数
 - ✅ 嵌套路由结构
 - ✅ 灵活的中间件系统
-- ✅ 类型安全的处理函数
-- ✅ 标准的 Web API 响应
+- ✅ Schema 验证与类型推导
 
 ### 下一步
 

@@ -85,14 +85,15 @@ const logMiddleware = async (req: Request, next: () => Promise<Response>) => {
 ### 2. 身份验证中间件
 
 ```typescript
+import { json, setLocals, createHandlerWithExtra } from 'vafast'
+
+type AuthContext = { user: { id: string; name: string } }
+
 const authMiddleware = async (req: Request, next: () => Promise<Response>) => {
   const authHeader = req.headers.get('authorization')
   
   if (!authHeader) {
-    return new Response('Unauthorized', { 
-      status: 401,
-      headers: { 'WWW-Authenticate': 'Bearer' }
-    })
+    return json({ error: 'Unauthorized' }, 401)
   }
   
   const token = authHeader.replace('Bearer ', '')
@@ -101,12 +102,12 @@ const authMiddleware = async (req: Request, next: () => Promise<Response>) => {
     // 验证 token
     const user = await validateToken(token)
     
-    // 将用户信息添加到请求中
-    ;(req as any).user = user
+    // 注入类型化的用户信息
+    setLocals(req, { user })
     
     return await next()
   } catch (error) {
-    return new Response('Invalid token', { status: 401 })
+    return json({ error: 'Invalid token' }, 401)
   }
 }
 
@@ -116,10 +117,9 @@ const routes = defineRoutes([
     method: 'GET',
     path: '/profile',
     middleware: [authMiddleware],
-    handler: createHandler(({ req }) => {
-      const user = (req as any).user
-      return `Hello ${user.name}`
-    })
+    handler: createHandlerWithExtra<AuthContext>(({ user }) => ({
+      message: `Hello ${user.name}`
+    }))
   }
 ])
 ```
@@ -142,6 +142,8 @@ const corsMiddleware = async (req: Request, next: () => Promise<Response>) => {
 ### 4. 速率限制中间件
 
 ```typescript
+import { json } from 'vafast'
+
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>()
 
 const rateLimitMiddleware = async (req: Request, next: () => Promise<Response>) => {
@@ -155,10 +157,7 @@ const rateLimitMiddleware = async (req: Request, next: () => Promise<Response>) 
   
   if (current && current.resetTime > now) {
     if (current.count >= maxRequests) {
-      return new Response('Too many requests', { 
-        status: 429,
-        headers: { 'Retry-After': '900' }
-      })
+      return json({ error: 'Too many requests' }, 429)
     }
     current.count++
   } else {
@@ -172,6 +171,8 @@ const rateLimitMiddleware = async (req: Request, next: () => Promise<Response>) 
 ### 5. 错误处理中间件
 
 ```typescript
+import { json } from 'vafast'
+
 const errorHandler = async (req: Request, next: () => Promise<Response>) => {
   try {
     return await next()
@@ -179,62 +180,42 @@ const errorHandler = async (req: Request, next: () => Promise<Response>) => {
     console.error('Error in route:', error)
     
     if (error instanceof Error) {
-      return new Response(error.message, { status: 500 })
+      return json({ error: error.message }, 500)
     }
     
-    return new Response('Internal Server Error', { status: 500 })
+    return json({ error: 'Internal Server Error' }, 500)
   }
 }
 ```
 
 ### 6. 数据验证中间件
 
+::: tip 推荐
+Vafast 的 `createHandler` 已内置 Schema 验证功能，无需手动编写验证中间件。
+:::
+
 ```typescript
-const validateBody = (schema: any) => {
-  return async (req: Request, next: () => Promise<Response>) => {
-    try {
-      const body = await req.json()
-      
-      // 这里可以使用任何验证库，如 Zod、Joi 等
-      const validationResult = validateSchema(schema, body)
-      
-      if (!validationResult.valid) {
-        return new Response(JSON.stringify({
-          error: 'Validation failed',
-          details: validationResult.errors
-        }), {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' }
-        })
-      }
-      
-      // 将验证后的数据添加到请求中
-      ;(req as any).validatedBody = validationResult.data
-      
-      return next()
-    } catch (error) {
-      return new Response('Invalid JSON', { status: 400 })
-    }
-  }
-}
+import { createHandler, json } from 'vafast'
+import { Type } from '@sinclair/typebox'
 
-// 使用示例
-const userSchema = {
-  name: { type: 'string', required: true, minLength: 2 },
-  email: { type: 'string', required: true, format: 'email' },
-  age: { type: 'number', min: 18 }
-}
-
+// 使用 createHandler 内置验证（推荐）
 const routes = defineRoutes([
   {
     method: 'POST',
     path: '/users',
-    middleware: [validateBody(userSchema)],
-    handler: createHandler(({ req }) => {
-      const userData = (req as any).validatedBody
-      // 处理验证后的数据...
-      return new Response('User created', { status: 201 })
-    })
+    handler: createHandler(
+      {
+        body: Type.Object({
+          name: Type.String({ minLength: 2 }),
+          email: Type.String({ format: 'email' }),
+          age: Type.Optional(Type.Number({ minimum: 18 }))
+        })
+      },
+      ({ body }) => ({
+        data: { message: 'User created', user: body },
+        status: 201
+      })
+    )
   }
 ])
 ```
@@ -301,7 +282,7 @@ const routes = defineRoutes([
     method: 'GET',
     path: '/admin/users',
     middleware: [adminOnly],
-    handler: createHandler(() => new Response('Admin users'))
+    handler: createHandler(() => ({ users: [] }))
   }
 ])
 ```
@@ -336,6 +317,8 @@ const routes = defineRoutes([
 ### 1. 保持中间件简单
 
 ```typescript
+import { json } from 'vafast'
+
 // 好的做法：每个中间件只做一件事
 const logRequest = async (req: Request, next: () => Promise<Response>) => {
   console.log(`${req.method} ${req.url}`)
@@ -355,7 +338,7 @@ const logEverything = async (req: Request, next: () => Promise<Response>) => {
   
   // 验证 token
   const token = req.headers.get('authorization')
-  if (!token) return new Response('Unauthorized', { status: 401 })
+  if (!token) return json({ error: 'Unauthorized' }, 401)
   
   // 记录响应
   const response = await next()
@@ -368,13 +351,15 @@ const logEverything = async (req: Request, next: () => Promise<Response>) => {
 ### 2. 错误处理
 
 ```typescript
+import { json } from 'vafast'
+
 const safeMiddleware = (middleware: any) => {
   return async (req: Request, next: () => Promise<Response>) => {
     try {
       return await middleware(req, next)
     } catch (error) {
       console.error('Middleware error:', error)
-      return new Response('Middleware error', { status: 500 })
+      return json({ error: 'Middleware error' }, 500)
     }
   }
 }

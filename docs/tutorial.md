@@ -141,15 +141,20 @@ const notes: Note[] = []
 
 ```typescript
 import { Server, defineRoutes, createHandler } from 'vafast'
+import { Type } from '@sinclair/typebox'
+
+// 笔记 Schema
+const noteSchema = Type.Object({
+  title: Type.String({ minLength: 1 }),
+  content: Type.String({ minLength: 1 })
+})
 
 const routes = defineRoutes([
   // 获取所有笔记
   {
     method: 'GET',
     path: '/notes',
-    handler: createHandler(() => {
-      return notes
-    })
+    handler: createHandler(() => notes)
   },
   
   // 获取单个笔记
@@ -157,11 +162,10 @@ const routes = defineRoutes([
     method: 'GET',
     path: '/notes/:id',
     handler: createHandler(({ params }) => {
-      const id = params.id
-      const note = notes.find(n => n.id === id)
+      const note = notes.find(n => n.id === params.id)
       
       if (!note) {
-        return new Response('Note not found', { status: 404 })
+        return { data: { error: 'Note not found' }, status: 404 }
       }
       
       return note
@@ -172,56 +176,46 @@ const routes = defineRoutes([
   {
     method: 'POST',
     path: '/notes',
-    handler: createHandler(async ({ req }) => {
-      const body = await req.json()
-      const { title, content } = body
-      
-      if (!title || !content) {
-        return new Response('Title and content are required', { status: 400 })
+    handler: createHandler(
+      { body: noteSchema },
+      ({ body }) => {
+        const note: Note = {
+          id: Date.now().toString(),
+          title: body.title,
+          content: body.content,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        }
+        
+        notes.push(note)
+        return { data: note, status: 201 }
       }
-      
-      const note: Note = {
-        id: Date.now().toString(),
-        title,
-        content,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      }
-      
-      notes.push(note)
-      
-      return note
-    })
+    )
   },
   
   // 更新笔记
   {
     method: 'PUT',
     path: '/notes/:id',
-    handler: createHandler(async ({ req, params }) => {
-      const id = params.id
-      const noteIndex = notes.findIndex(n => n.id === id)
-      
-      if (noteIndex === -1) {
-        return new Response('Note not found', { status: 404 })
+    handler: createHandler(
+      { body: noteSchema },
+      ({ params, body }) => {
+        const noteIndex = notes.findIndex(n => n.id === params.id)
+        
+        if (noteIndex === -1) {
+          return { data: { error: 'Note not found' }, status: 404 }
+        }
+        
+        notes[noteIndex] = {
+          ...notes[noteIndex],
+          title: body.title,
+          content: body.content,
+          updatedAt: new Date()
+        }
+        
+        return notes[noteIndex]
       }
-      
-      const body = await req.json()
-      const { title, content } = body
-      
-      if (!title || !content) {
-        return new Response('Title and content are required', { status: 400 })
-      }
-      
-      notes[noteIndex] = {
-        ...notes[noteIndex],
-        title,
-        content,
-        updatedAt: new Date()
-      }
-      
-      return notes[noteIndex]
-    })
+    )
   },
   
   // 删除笔记
@@ -229,15 +223,13 @@ const routes = defineRoutes([
     method: 'DELETE',
     path: '/notes/:id',
     handler: createHandler(({ params }) => {
-      const id = params.id
-      const noteIndex = notes.findIndex(n => n.id === id)
+      const noteIndex = notes.findIndex(n => n.id === params.id)
       
       if (noteIndex === -1) {
-        return new Response('Note not found', { status: 404 })
+        return { data: { error: 'Note not found' }, status: 404 }
       }
       
       const deletedNote = notes.splice(noteIndex, 1)[0]
-      
       return deletedNote
     })
   }
@@ -312,21 +304,17 @@ const logMiddleware = async (req: Request, next: () => Promise<Response>) => {
 ### 2. 错误处理中间件
 
 ```typescript
+import { json } from 'vafast'
+
 const errorHandler = async (req: Request, next: () => Promise<Response>) => {
   try {
     return await next()
   } catch (error) {
     console.error('Error:', error)
-    return new Response(
-      JSON.stringify({ 
-        error: 'Internal Server Error', 
-        message: error.message 
-      }), 
-      { 
-        status: 500,
-        headers: { 'Content-Type': 'application/json' }
-      }
-    )
+    return json({ 
+      error: 'Internal Server Error', 
+      message: error instanceof Error ? error.message : 'Unknown error'
+    }, 500)
   }
 }
 ```

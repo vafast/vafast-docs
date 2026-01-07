@@ -84,54 +84,38 @@ export const userRoutes: any[] = [
 
 ## 代码组织
 
-### 控制器模式
+### 控制器模式（推荐使用 createHandler）
 
-将路由处理逻辑分离到控制器中：
+::: tip 推荐
+使用 `createHandler` 而不是原始的控制器模式，可以获得更好的类型安全和自动响应转换。
+:::
 
 ```typescript
 // controllers/userController.ts
-export class UserController {
-  async getProfile(req: Request, params?: Record<string, string>) {
-    try {
-      const userId = (req as any).user.id
-      const user = await userService.findById(userId)
-      
-      return new Response(JSON.stringify(user), {
-        headers: { 'Content-Type': 'application/json' }
-      })
-    } catch (error) {
-      return new Response('Failed to get profile', { status: 500 })
-    }
-  }
-  
-  async updateProfile(req: Request, params?: Record<string, string>) {
-    try {
-      const userId = (req as any).user.id
-      const body = await req.json()
-      
-      // 验证数据
-      const validatedData = await validateUserUpdate(body)
-      
-      const updatedUser = await userService.update(userId, validatedData)
-      
-      return new Response(JSON.stringify(updatedUser), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' }
-      })
-    } catch (error) {
-      if (error instanceof ValidationError) {
-        return new Response(JSON.stringify({ error: error.message }), {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' }
-        })
-      }
-      
-      return new Response('Failed to update profile', { status: 500 })
-    }
-  }
-}
+import { createHandlerWithExtra, VafastError } from 'vafast'
+import { Type } from '@sinclair/typebox'
 
-export const userController = new UserController()
+type AuthContext = { user: { id: string } }
+
+// 获取用户资料
+export const getProfile = createHandlerWithExtra<AuthContext>(({ user }) => {
+  const profile = await userService.findById(user.id)
+  return profile
+})
+
+// 更新用户资料
+export const updateProfile = createHandlerWithExtra<AuthContext>(
+  {
+    body: Type.Object({
+      name: Type.Optional(Type.String()),
+      email: Type.Optional(Type.String({ format: 'email' }))
+    })
+  },
+  async ({ user, body }) => {
+    const updatedUser = await userService.update(user.id, body)
+    return updatedUser
+  }
+)
 ```
 
 ### 服务层模式
@@ -242,6 +226,7 @@ export class NotFoundError extends AppError {
 
 ```typescript
 // middleware/errorHandler.ts
+import { json } from 'vafast'
 import { AppError } from '../utils/errors'
 
 export const errorHandler = async (req: Request, next: () => Promise<Response>) => {
@@ -251,25 +236,19 @@ export const errorHandler = async (req: Request, next: () => Promise<Response>) 
     console.error('Error:', error)
     
     if (error instanceof AppError) {
-      return new Response(JSON.stringify({
+      return json({
         error: error.message,
         code: error.code,
         statusCode: error.statusCode
-      }), {
-        status: error.statusCode,
-        headers: { 'Content-Type': 'application/json' }
-      })
+      }, error.statusCode)
     }
     
     // 未知错误
-    return new Response(JSON.stringify({
+    return json({
       error: 'Internal server error',
       code: 'INTERNAL_ERROR',
       statusCode: 500
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    })
+    }, 500)
   }
 }
 ```
@@ -297,61 +276,36 @@ export type UserUpdate = z.infer<typeof userUpdateSchema>
 
 ### 验证中间件
 
+::: tip 推荐
+使用 `createHandler` 内置的 Schema 验证功能，而不是手动编写验证中间件。
+:::
+
 ```typescript
-// middleware/validation.ts
-import { z } from 'zod'
+// 推荐：使用 createHandler 内置验证
+import { createHandler } from 'vafast'
+import { Type } from '@sinclair/typebox'
 
-export const validateBody = (schema: z.ZodSchema) => {
-  return async (req: Request, next: () => Promise<Response>) => {
-    try {
-      const body = await req.json()
-      const validatedData = schema.parse(body)
-      
-      // 将验证后的数据添加到请求中
-      ;(req as any).validatedBody = validatedData
-      
-      return next()
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return new Response(JSON.stringify({
-          error: 'Validation failed',
-          details: error.errors
-        }), {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' }
+const routes = [
+  {
+    method: 'POST',
+    path: '/users',
+    handler: createHandler(
+      {
+        body: Type.Object({
+          name: Type.String({ minLength: 2 }),
+          email: Type.String({ format: 'email' })
+        }),
+        query: Type.Object({
+          source: Type.Optional(Type.String())
         })
+      },
+      ({ body, query }) => {
+        // body 和 query 已自动验证，类型安全
+        return { success: true, user: body, source: query.source }
       }
-      
-      return new Response('Invalid JSON', { status: 400 })
-    }
+    )
   }
-}
-
-export const validateQuery = (schema: z.ZodSchema) => {
-  return async (req: Request, next: () => Promise<Response>) => {
-    try {
-      const url = new URL(req.url)
-      const queryParams = Object.fromEntries(url.searchParams.entries())
-      const validatedData = schema.parse(queryParams)
-      
-      ;(req as any).validatedQuery = validatedData
-      
-      return next()
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return new Response(JSON.stringify({
-          error: 'Query validation failed',
-          details: error.errors
-        }), {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' }
-        })
-      }
-      
-      return next()
-    }
-  }
-}
+]
 ```
 
 ## 安全性最佳实践
@@ -394,6 +348,8 @@ export const authMiddleware = async (req: Request, next: () => Promise<Response>
 
 ```typescript
 // middleware/rateLimit.ts
+import { json } from 'vafast'
+
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>()
 
 export const rateLimitMiddleware = (maxRequests: number = 100, windowMs: number = 15 * 60 * 1000) => {
@@ -406,16 +362,10 @@ export const rateLimitMiddleware = (maxRequests: number = 100, windowMs: number 
     
     if (current && current.resetTime > now) {
       if (current.count >= maxRequests) {
-        return new Response(JSON.stringify({
+        return json({
           error: 'Too many requests',
           retryAfter: Math.ceil((current.resetTime - now) / 1000)
-        }), {
-          status: 429,
-          headers: {
-            'Content-Type': 'application/json',
-            'Retry-After': Math.ceil((current.resetTime - now) / 1000).toString()
-          }
-        })
+        }, 429)
       }
       current.count++
     } else {

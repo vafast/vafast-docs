@@ -92,33 +92,28 @@ export default { port: 3000, fetch: server.fetch }
 以下是在 Vafast 中的简单 hello world 示例。
 
 ```typescript
-import { Server, defineRoutes } from 'vafast'
-
-interface TypedRequest extends Request {
-  params: Record<string, string>
-}
+import { Server, defineRoutes, createHandler } from 'vafast'
 
 const routes = defineRoutes([
   {
     method: 'GET',
     path: '/',
-    handler: () => 'Hello Vafast'
+    handler: createHandler(() => 'Hello Vafast')
   },
   {
     method: 'GET',
     path: '/user/:id',
-    handler: (req) => {
-      const { id } = (req as TypedRequest).params
-      return `User ID: ${id}`
-    }
+    handler: createHandler(({ params }) => ({
+      userId: params.id
+    }))
   },
   {
     method: 'POST',
     path: '/form',
-    handler: async (req) => {
-      const body = await req.json()
-      return { success: true, data: body }
-    }
+    handler: createHandler(({ body }) => ({
+      success: true,
+      data: body
+    }))
   }
 ])
 

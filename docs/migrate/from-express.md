@@ -186,14 +186,13 @@ app.use((err, req, res, next) => {
 
 **Vafast** 支持中间件链中的错误处理：
 ```typescript
+import { json } from 'vafast'
+
 const errorHandler = async (req: Request, next: () => Promise<Response>) => {
   try {
     return await next()
   } catch (error) {
-    return new Response(
-      JSON.stringify({ error: error.message }), 
-      { status: 500 }
-    )
+    return json({ error: error.message }, 500)
   }
 }
 ```
@@ -242,10 +241,12 @@ const authMiddleware = (req, res, next) => {
 }
 
 // Vafast 中间件
+import { json } from 'vafast'
+
 const authMiddleware = async (req: Request, next: () => Promise<Response>) => {
   const token = req.headers.get('authorization')
   if (!token) {
-    return new Response('Unauthorized', { status: 401 })
+    return json({ error: 'Unauthorized' }, 401)
   }
   return await next()
 }
@@ -260,14 +261,13 @@ app.use((err, req, res, next) => {
 })
 
 // Vafast 错误处理
+import { json } from 'vafast'
+
 const errorHandler = async (req: Request, next: () => Promise<Response>) => {
   try {
     return await next()
   } catch (error) {
-    return new Response(
-      JSON.stringify({ error: error.message }), 
-      { status: 500 }
-    )
+    return json({ error: error instanceof Error ? error.message : 'Unknown error' }, 500)
   }
 }
 ```
@@ -319,16 +319,15 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/users',
-    handler: createHandler(() => {
-      return getUsers()
-    })
+    handler: createHandler(() => getUsers())
   },
   {
     method: 'POST',
     path: '/users',
-    handler: createHandler(({ body }) => {
-      return createUser(body)
-    })
+    handler: createHandler(({ body }) => ({
+      data: createUser(body),
+      status: 201
+    }))
   },
   {
     method: 'GET',
@@ -336,10 +335,7 @@ const routes = defineRoutes([
     handler: createHandler(({ params }) => {
       const user = getUserById(params.id)
       if (!user) {
-        return new Response(
-          JSON.stringify({ error: 'User not found' }), 
-          { status: 404 }
-        )
+        return { data: { error: 'User not found' }, status: 404 }
       }
       return user
     })

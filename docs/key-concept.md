@@ -116,7 +116,7 @@ const loggingMiddleware = async (req: Request, next: () => Promise<Response>) =>
 const authMiddleware = async (req: Request, next: () => Promise<Response>) => {
   const token = req.headers.get('authorization')
   if (!token) {
-    return new Response('Unauthorized', { status: 401 })
+    return json({ error: 'Unauthorized' }, 401)
   }
   return await next()
 }
