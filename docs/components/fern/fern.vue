@@ -6,7 +6,7 @@ import Benchmark from './benchmark.vue'
 import TypeIntegrity from './type-integrity.vue'
 import Easy from './easy.vue'
 // import Doc from './doc.vue'  // 移除 Swagger 文档展示
-import Beyond from './beyond.vue'
+// import Beyond from './beyond.vue'  // 移除 OpenTelemetry + E2E 类型安全展示
 import Test from './test.vue'
 // import Tweets from './tweets.vue'  // 移除虚假推文
 import Sponsors from './sponsor.vue'
@@ -39,9 +39,7 @@ import BuiltWithLove from './built-with-love.vue'
                 </template>
             </TypeIntegrity>
             <!-- <Doc> 移除 Swagger 文档展示 </Doc> -->
-            <Beyond>
-                <slot name="e2e-type-safety" />
-            </Beyond>
+            <!-- <Beyond> 移除 OpenTelemetry + E2E 类型安全展示 </Beyond> -->
             <Benchmark />
             <Test>
                 <template v-slot:test-code>
