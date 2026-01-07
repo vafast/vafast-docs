@@ -365,7 +365,7 @@ export default defineConfig({
                 items: [
                     {
                         text: '概述',
-                        link: '/api-client/overview.md'
+                        link: '/api-client/overview'
                     },
                     {
                         text: '安装',
