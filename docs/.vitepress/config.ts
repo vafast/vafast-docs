@@ -104,14 +104,15 @@ export default defineConfig({
             'link',
             {
                 rel: 'icon',
-                href: `${base}assets/vafast.png`
+                href: `${base}assets/vafast.svg`,
+                type: 'image/svg+xml'
             }
         ],
         [
             'meta',
             {
                 property: 'og:image',
-                content: 'https://vafast.huyooo.com/assets/vafast.png'
+                content: 'https://vafast.huyooo.com/assets/vafast.svg'
             }
         ],
         [
