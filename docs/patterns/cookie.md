@@ -49,7 +49,7 @@ const routes = defineRoutes([
         return response
       }
       
-      return new Response('Invalid credentials', { status: 401 })
+      return { data: 'Invalid credentials', status: 401 }
     })
   }
 ])
@@ -131,7 +131,7 @@ const routes = defineRoutes([
       const sessionId = CookieUtils.get(cookies, 'sessionId')
       
       if (!sessionId) {
-        return new Response('Unauthorized', { status: 401 })
+        return { data: 'Unauthorized', status: 401 }
       }
       
       // 验证 session 并返回用户信息
@@ -253,7 +253,7 @@ const routes = defineRoutes([
         return 'Login successful'
       }
       
-      return new Response('Invalid credentials', { status: 401 })
+      return { data: 'Invalid credentials', status: 401 }
     })
   }
 ])
@@ -382,7 +382,7 @@ const routes = defineRoutes([
         return response
       }
       
-      return new Response('Invalid credentials', { status: 401 })
+      return { data: 'Invalid credentials', status: 401 }
     })
   },
   {
@@ -392,7 +392,7 @@ const routes = defineRoutes([
       const user = (req as any).user
       
       if (!user) {
-        return new Response('Unauthorized', { status: 401 })
+        return { data: 'Unauthorized', status: 401 }
       }
       
       return {
@@ -476,7 +476,7 @@ const routes = defineRoutes([
         return response
       }
       
-      return new Response('Invalid credentials', { status: 401 })
+      return { data: 'Invalid credentials', status: 401 }
     })
   }
 ])

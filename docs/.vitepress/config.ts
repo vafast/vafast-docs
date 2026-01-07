@@ -346,10 +346,6 @@ export default defineConfig({
                         link: '/patterns/deploy'
                     },
                     {
-                        text: '宏指令',
-                        link: '/patterns/macro'
-                    },
-                    {
                         text: '跟踪',
                         link: '/patterns/trace'
                     },

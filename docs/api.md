@@ -154,20 +154,28 @@ type Middleware = (
 
 ### RouteHandler
 
-路由处理函数类型。
+路由处理函数类型。推荐使用 `createHandler` 创建处理函数。
 
 ```typescript
-type RouteHandler = (
-  req: Request, 
-  params?: Record<string, string>
-) => Response | Promise<Response>
+// 基本类型
+type RouteHandler = Handler | ((req: Request) => unknown)
+
+// 推荐使用 createHandler
+import { createHandler } from 'vafast'
+
+// 无 schema
+const handler = createHandler(({ req, params, query }) => {
+  return { message: 'Hello' }
+})
+
+// 有 schema 验证
+const handler = createHandler(
+  { body: Type.Object({ name: Type.String() }) },
+  ({ body }) => ({ success: true, name: body.name })
+)
 ```
 
-**参数：**
-- `req`: HTTP 请求对象
-- `params`: 路径参数（可选）
-
-**返回值：** HTTP 响应对象或 Promise
+**返回值：** 任意值（自动转换为 Response）
 
 ### HTTPMethod
 
@@ -371,53 +379,59 @@ const routes: any[] = [
 ### 请求体验证
 
 ```typescript
-const routes: any[] = [
+import { defineRoutes, createHandler, Type } from 'vafast'
+
+const userSchema = Type.Object({
+  name: Type.String({ minLength: 2 }),
+  email: Type.String({ format: 'email' }),
+  age: Type.Optional(Type.Number({ minimum: 18 }))
+})
+
+const routes = defineRoutes([
   {
     method: 'POST',
     path: '/users',
-    body: {
-      type: 'object',
-      properties: {
-        name: { type: 'string', minLength: 2 },
-        email: { type: 'string', format: 'email' },
-        age: { type: 'number', minimum: 18 }
-      },
-      required: ['name', 'email']
-    },
-    handler: async (req) => {
-      const body = await req.json()
-      // body 已经通过验证
-      return new Response('User created', { status: 201 })
-    }
+    // 使用 createHandler 自动验证
+    handler: createHandler(
+      { body: userSchema },
+      ({ body }) => {
+        // body 已经通过验证，类型安全
+        return { data: 'User created', status: 201 }
+      }
+    )
   }
-]
+])
 ```
 
 ### 查询参数验证
 
 ```typescript
-const routes: any[] = [
+import { defineRoutes, createHandler, Type } from 'vafast'
+
+const querySchema = Type.Object({
+  page: Type.Optional(Type.Number({ minimum: 1 })),
+  limit: Type.Optional(Type.Number({ minimum: 1, maximum: 100 })),
+  sort: Type.Optional(Type.Union([
+    Type.Literal('name'),
+    Type.Literal('email'),
+    Type.Literal('created_at')
+  ]))
+})
+
+const routes = defineRoutes([
   {
     method: 'GET',
     path: '/users',
-    query: {
-      type: 'object',
-      properties: {
-        page: { type: 'number', minimum: 1 },
-        limit: { type: 'number', minimum: 1, maximum: 100 },
-        sort: { type: 'string', enum: ['name', 'email', 'created_at'] }
+    // 使用 createHandler 自动解析和验证
+    handler: createHandler(
+      { query: querySchema },
+      ({ query }) => {
+        // query 已经通过验证，类型安全
+        return `Page: ${query.page}, Limit: ${query.limit}, Sort: ${query.sort}`
       }
-    },
-    handler: (req) => {
-      const url = new URL(req.url)
-      const page = url.searchParams.get('page')
-      const limit = url.searchParams.get('limit')
-      const sort = url.searchParams.get('sort')
-      // 参数已经通过验证
-      return `Page: ${page}, Limit: ${limit}, Sort: ${sort}`
-    }
+    )
   }
-]
+])
 ```
 
 ## 生命周期钩子
@@ -533,16 +547,16 @@ const config: ServerOptions = {
 
 ```typescript
 import { test, expect } from 'bun:test'
-import { Server } from 'vafast'
+import { Server, defineRoutes, createHandler } from 'vafast'
 
 test('GET /users returns users list', async () => {
-  const routes: any[] = [
+  const routes = defineRoutes([
     {
       method: 'GET',
       path: '/users',
-      handler: () => new Response(JSON.stringify(['user1', 'user2']))
+      handler: createHandler(() => ['user1', 'user2'])
     }
-  ]
+  ])
   
   const server = new Server(routes)
   const response = await server.fetch(new Request('http://localhost:3000/users'))
@@ -557,16 +571,18 @@ test('GET /users returns users list', async () => {
 
 ```typescript
 test('POST /users creates new user', async () => {
-  const routes: any[] = [
+  const routes = defineRoutes([
     {
       method: 'POST',
       path: '/users',
-      handler: async (req) => {
-        const body = await req.json()
-        return new Response(JSON.stringify({ id: 1, ...body }), { status: 201 })
-      }
+      handler: createHandler(
+        async ({ body }) => ({
+          data: { id: 1, ...body },
+          status: 201
+        })
+      )
     }
-  ]
+  ])
   
   const server = new Server(routes)
   const response = await server.fetch(

@@ -366,10 +366,8 @@ const routes = defineRoutes([
     method: 'GET',
     path: '/metrics',
     handler: createHandler(() => {
-      const stats = monitor.getStats()
-      return new Response(JSON.stringify(stats, null, 2), {
-        headers: { 'Content-Type': 'application/json' }
-      })
+      // 直接返回对象，自动转换为 JSON
+      return monitor.getStats()
     })
   },
   {
@@ -521,9 +519,8 @@ const routes = defineRoutes([
     method: 'GET',
     path: '/benchmark/results',
     handler: createHandler(() => {
-      return new Response(JSON.stringify(benchmark.getResults(), null, 2), {
-        headers: { 'Content-Type': 'application/json' }
-      })
+      // 直接返回对象，自动转换为 JSON
+      return benchmark.getResults()
     })
   }
 ])

@@ -34,23 +34,19 @@ TypeBox API 是围绕 TypeScript 类型设计的，并与之类似。
 要创建第一个模式，从 TypeBox 导入 **Type**，并从最基本的类型开始：
 
 ```typescript
-import { Server, defineRoutes, Type } from 'vafast'
-import { TypeCompiler } from '@sinclair/typebox/compiler'
+import { Server, defineRoutes, createHandler, Type } from 'vafast'
 
 const BodySchema = Type.String()
-const validator = TypeCompiler.Compile(BodySchema)
 
 const routes = defineRoutes([
   {
     method: 'POST',
     path: '/',
-    handler: async (req) => {
-      const body = await req.text()
-      if (!validator.Check(body)) {
-        return new Response('Invalid body', { status: 400 })
-      }
-      return `Hello ${body}`
-    }
+    // createHandler 会自动验证并返回 400 错误
+    handler: createHandler(
+      { body: BodySchema },
+      ({ body }) => `Hello ${body}`
+    )
   }
 ])
 
@@ -372,8 +368,7 @@ Vafast 使用 TypeBox 进行类型验证，提供了完整的类型安全。
 ### 请求体验证
 
 ```typescript
-import { Server, defineRoutes, Type } from 'vafast'
-import { TypeCompiler } from '@sinclair/typebox/compiler'
+import { Server, defineRoutes, createHandler, Type } from 'vafast'
 
 const userSchema = Type.Object({
   name: Type.String({ minLength: 1 }),
@@ -381,23 +376,15 @@ const userSchema = Type.Object({
   age: Type.Optional(Type.Number({ minimum: 0 }))
 })
 
-const userValidator = TypeCompiler.Compile(userSchema)
-
 const routes = defineRoutes([
   {
     method: 'POST',
     path: '/users',
-    handler: async (req) => {
-      const body = await req.json()
-      if (!userValidator.Check(body)) {
-        return new Response(JSON.stringify({ error: 'Invalid body' }), {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' }
-        })
-      }
-      // body 已经通过验证
-      return { success: true, data: body }
-    }
+    // createHandler 自动验证 body，验证失败返回 400
+    handler: createHandler(
+      { body: userSchema },
+      ({ body }) => ({ success: true, data: body })
+    )
   }
 ])
 
@@ -408,8 +395,7 @@ export default { fetch: server.fetch }
 ### 查询参数验证
 
 ```typescript
-import { Server, defineRoutes, Type } from 'vafast'
-import { TypeCompiler } from '@sinclair/typebox/compiler'
+import { Server, defineRoutes, createHandler, Type } from 'vafast'
 
 const querySchema = Type.Object({
   page: Type.Optional(Type.Number({ minimum: 1 })),
@@ -417,26 +403,19 @@ const querySchema = Type.Object({
   search: Type.Optional(Type.String())
 })
 
-const queryValidator = TypeCompiler.Compile(querySchema)
-
 const routes = defineRoutes([
   {
     method: 'GET',
     path: '/users',
-    handler: (req) => {
-      const url = new URL(req.url)
-      const query = {
-        page: url.searchParams.get('page') ? Number(url.searchParams.get('page')) : 1,
-        limit: url.searchParams.get('limit') ? Number(url.searchParams.get('limit')) : 10,
-        search: url.searchParams.get('search') || ''
-      }
-      
-      if (!queryValidator.Check(query)) {
-        return new Response('Invalid query', { status: 400 })
-      }
-      
-      return { page: query.page, limit: query.limit, search: query.search }
-    }
+    // createHandler 自动解析和验证 query 参数
+    handler: createHandler(
+      { query: querySchema },
+      ({ query }) => ({
+        page: query.page ?? 1,
+        limit: query.limit ?? 10,
+        search: query.search ?? ''
+      })
+    )
   }
 ])
 
@@ -447,32 +426,21 @@ export default { fetch: server.fetch }
 ### 路径参数验证
 
 ```typescript
-import { Server, defineRoutes, Type } from 'vafast'
-import { TypeCompiler } from '@sinclair/typebox/compiler'
-
-interface TypedRequest extends Request {
-  params: Record<string, string>
-}
+import { Server, defineRoutes, createHandler, Type } from 'vafast'
 
 const paramsSchema = Type.Object({
   id: Type.String({ minLength: 1 })
 })
 
-const paramsValidator = TypeCompiler.Compile(paramsSchema)
-
 const routes = defineRoutes([
   {
     method: 'GET',
     path: '/users/:id',
-    handler: (req) => {
-      const params = (req as TypedRequest).params
-      
-      if (!paramsValidator.Check(params)) {
-        return new Response('Invalid params', { status: 400 })
-      }
-      
-      return { userId: params.id }
-    }
+    // createHandler 自动验证 params
+    handler: createHandler(
+      { params: paramsSchema },
+      ({ params }) => ({ userId: params.id })
+    )
   }
 ])
 
@@ -483,31 +451,24 @@ export default { fetch: server.fetch }
 ### 头部验证
 
 ```typescript
-import { Server, defineRoutes, Type } from 'vafast'
-import { TypeCompiler } from '@sinclair/typebox/compiler'
+import { Server, defineRoutes, createHandler, Type } from 'vafast'
 
 const headersSchema = Type.Object({
   authorization: Type.String({ pattern: '^Bearer .+' })
 })
 
-const headersValidator = TypeCompiler.Compile(headersSchema)
-
 const routes = defineRoutes([
   {
     method: 'POST',
     path: '/secure',
-    handler: (req) => {
-      const headers = {
-        authorization: req.headers.get('authorization') || ''
+    // createHandler 自动验证 headers
+    handler: createHandler(
+      { headers: headersSchema },
+      ({ headers }) => {
+        const token = headers.authorization.replace('Bearer ', '')
+        return { token }
       }
-      
-      if (!headersValidator.Check(headers)) {
-        return new Response('Unauthorized', { status: 401 })
-      }
-      
-      const token = headers.authorization.replace('Bearer ', '')
-      return { token }
-    }
+    )
   }
 ])
 
@@ -538,48 +499,54 @@ type User = Static<typeof userSchema>
 
 ### 验证错误处理
 
+使用 `createHandler` 时，验证错误会自动返回 400 响应。如果需要自定义错误处理：
+
 ```typescript
-import { Server, defineRoutes, Type } from 'vafast'
-import { TypeCompiler } from '@sinclair/typebox/compiler'
+import { Server, defineRoutes, createHandler, Type } from 'vafast'
 
 const userSchema = Type.Object({
   name: Type.String({ minLength: 1 }),
   email: Type.String({ format: 'email' })
 })
 
-const userValidator = TypeCompiler.Compile(userSchema)
-
 const routes = defineRoutes([
   {
     method: 'POST',
     path: '/users',
-    handler: async (req) => {
-      const body = await req.json()
-      const errors = [...userValidator.Errors(body)]
-      
-      if (errors.length > 0) {
-        return new Response(
-          JSON.stringify({
-            error: 'Validation failed',
-            details: errors.map(e => ({
-              path: e.path,
-              message: e.message
-            }))
-          }), 
-          { 
-            status: 400,
-            headers: { 'Content-Type': 'application/json' }
-          }
-        )
-      }
-      
-      return { success: true, data: body }
-    }
+    // 基本用法：验证失败自动返回 400
+    handler: createHandler(
+      { body: userSchema },
+      ({ body }) => ({ success: true, data: body })
+    )
   }
 ])
 
 const server = new Server(routes)
 export default { fetch: server.fetch }
+```
+
+如果需要获取详细的验证错误信息，可以使用自定义错误处理中间件：
+
+```typescript
+import { Type } from '@sinclair/typebox'
+import { TypeCompiler } from '@sinclair/typebox/compiler'
+
+// 自定义验证错误处理（高级用法）
+const userValidator = TypeCompiler.Compile(userSchema)
+
+const validateWithDetails = (data: unknown) => {
+  const errors = [...userValidator.Errors(data)]
+  if (errors.length > 0) {
+    return {
+      valid: false,
+      errors: errors.map(e => ({
+        path: e.path,
+        message: e.message
+      }))
+    }
+  }
+  return { valid: true, errors: [] }
+}
 ```
 
 ### 高级类型模式
@@ -699,8 +666,7 @@ const userQuerySchema = Type.Object({
 ### 3. 类型安全的路由定义
 
 ```typescript
-import { Server, defineRoutes, Type } from 'vafast'
-import { TypeCompiler } from '@sinclair/typebox/compiler'
+import { Server, defineRoutes, createHandler, Type } from 'vafast'
 import type { Static } from '@sinclair/typebox'
 
 // 定义模式
@@ -710,34 +676,29 @@ const userSchema = Type.Object({
 })
 
 type User = Static<typeof userSchema>
-const userValidator = TypeCompiler.Compile(userSchema)
 
-interface TypedRequest extends Request {
-  params: { id: string }
-}
+const paramsSchema = Type.Object({
+  id: Type.String()
+})
 
-// 定义路由
+// 定义路由 - 使用 createHandler 自动获得类型安全
 const routes = defineRoutes([
   {
     method: 'GET',
     path: '/users/:id',
-    handler: (req) => {
-      const { id } = (req as TypedRequest).params
-      return { userId: id }
-    }
+    handler: createHandler(
+      { params: paramsSchema },
+      ({ params }) => ({ userId: params.id })
+    )
   },
   {
     method: 'POST',
     path: '/users',
-    handler: async (req) => {
-      const body = await req.json()
-      if (!userValidator.Check(body)) {
-        return new Response('Invalid body', { status: 400 })
-      }
-      // body 完全类型安全
-      const user = body as User
-      return { success: true, user }
-    }
+    handler: createHandler(
+      { body: userSchema },
+      // body 已经是完全类型安全的 User 类型
+      ({ body }) => ({ success: true, user: body })
+    )
   }
 ])
 
