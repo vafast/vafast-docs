@@ -40,8 +40,8 @@ return { data: { error: 'Not Found' }, status: 404 }
 { path: '/admin', middleware: [auth, log], handler }
 ```
 
-### 边缘原生 <span class="tag">Edge-Native</span>
-原生运行于 Bun、Workers、Deno —— 冷启动无忧。
+### 多运行时支持 <span class="tag">Multi-Runtime</span>
+支持 Node.js、Bun、Deno、Workers 等多种运行时。
 
 ```typescript
 export default { port: 3000, fetch: server.fetch }
@@ -75,7 +75,7 @@ export default { port: 3000, fetch: server.fetch }
 - ✅ **可组合的中间件** — 显式组合，无装饰器，无全局污染
 - ✅ **结构化响应** — `{ data, status }` 统一格式，错误也是数据
 - ✅ **内置响应工具** — `json()`、`html()`、`text()` 等，简洁统一
-- ✅ **边缘原生** — Bun、Workers、Deno 即时冷启动，亚毫秒响应
+- ✅ **多运行时** — 支持 Node.js、Bun、Deno、Workers 等
 - ✅ **零样板代码** — 无 CLI，无配置文件，一个文件即可运行
 - ✅ **类型安全** — 路由、处理器、响应，全部 TypeScript 类型推断
 

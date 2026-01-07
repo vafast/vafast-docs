@@ -134,7 +134,7 @@
                 <span
                     class="text-transparent font-semibold bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400"
                     >端到端的类型安全</span
-                >，统一的类型系统和出色的开发人员体验。由 Bun 提供加速支持。
+                >，统一的类型系统和出色的开发人员体验。
             </h3>
             <section
                 class="flex flex-col sm:flex-row items-start sm:items-center w-full md:w-auto gap-4 mt-8 mb-12"

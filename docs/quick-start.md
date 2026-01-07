@@ -14,13 +14,13 @@ Vafast 是一个高性能、类型安全的 TypeScript Web 框架。内置 JIT �
 
 <Tab
 	id="quickstart"
-	:names="['Bun', 'Node.js', 'Web Standard']"
+	:names="['Node.js', 'Bun', 'Web Standard']"
 	:tabs="['bun', 'node', 'web-standard']"
 >
 
 <template v-slot:bun>
 
-Vafast 针对 Bun 进行了优化，Bun 是一种旨在作为 Node.js 的直接替代品的 JavaScript 运行时。
+Vafast 支持多种 JavaScript 运行时，包括 Node.js、Bun 和其他支持 Web 标准的运行时。
 
 你可以使用下面的命令安装 Bun：
 

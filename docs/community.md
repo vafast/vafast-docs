@@ -13,7 +13,7 @@ title: 社区 - Vafast
 在提问之前，请先查看我们的常见问题：
 
 **Q: Vafast 支持哪些运行时？**
-A: Vafast 主要针对 Bun 优化，但也支持 Node.js 和任何支持 Web 标准的运行时。
+A: Vafast 支持 Node.js、Bun 和任何支持 Web 标准的运行时。
 
 **Q: 如何迁移现有的 Express/Fastify 应用？**
 A: 查看我们的 [迁移指南](/migrate) 了解详细的迁移步骤。

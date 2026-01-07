@@ -62,7 +62,7 @@ import Deck from './components/nearl/card-deck.vue'
 
 ## 设置
 
-Vafast 的设计是运行在 [Bun](https://bun.sh) 上，这是一个替代 Node.js 的运行时，但它也可以运行在 Node.js 或任何支持 Web 标准 API 的运行时上。
+Vafast 支持多种运行时，包括 Node.js、[Bun](https://bun.sh) 和任何支持 Web 标准 API 的运行时。
 
 然而，在本教程中，我们将使用 Bun。
 
