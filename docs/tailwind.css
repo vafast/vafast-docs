@@ -28,27 +28,14 @@
 
 html,
 body {
-    font-family:
-        -apple-system,
-        BlinkMacSystemFont,
-        Inter,
-        system-ui,
-        -apple-system,
-        BlinkMacSystemFont,
-        'Segoe UI',
-        Roboto,
-        Oxygen,
-        Ubuntu,
-        Cantarell,
-        'Open Sans',
-        'Helvetica Neue',
-        sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, Inter, system-ui,
+        -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu,
+        Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 }
 
 @font-face {
     font-family: 'Geist Mono';
-    src:
-        url('/assets/GeistMono-Regular.woff2') format('woff2'),
+    src: url('/assets/GeistMono-Regular.woff2') format('woff2'),
         url('/assets/GeistMono-Regular.woff') format('woff');
 }
 
@@ -59,16 +46,8 @@ pre,
 pre.vp-code,
 pre.vp-code > code,
 .font-mono {
-    font-family:
-        'Geist Mono',
-        ui-monospace,
-        SFMono-Regular,
-        Menlo,
-        Monaco,
-        Consolas,
-        Liberation Mono,
-        Courier New,
-        monospace !important;
+    font-family: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Monaco,
+        Consolas, Liberation Mono, Courier New, monospace !important;
     font-size: 1.05em;
 }
 
@@ -466,10 +445,10 @@ button.copy::after {
                             }
 
                             & > ul {
-                            	@apply pl-4 pr-0;
+                                @apply pl-4 pr-0;
 
                                 & > li {
-                                	@apply border-l;
+                                    @apply border-l;
 
                                     & > a {
                                         @apply px-4;
@@ -513,7 +492,7 @@ button.copy::after {
     }
 
     @media (min-width: theme(--breakpoint-xl)) {
-    	/* &:hover,
+        /* &:hover,
      	&:focus-within {
         	z-index: 50 !important;
       	} */
@@ -717,189 +696,189 @@ button.copy::after {
 }
 
 .VPSidebar {
-	@apply !pb-6;
+    @apply !pb-6;
 
-	/* Vitepress breakpoint */
-	@media (max-width: 959px) {
-		@apply !p-2 !bg-transparent;
+    /* Vitepress breakpoint */
+    @media (max-width: 959px) {
+        @apply !p-2 !bg-transparent;
 
-		& > .nav {
-			@apply p-4 pt-2 bg-white/85 dark:bg-gray-800/85 border dark:border-gray-700 border-gray-200 rounded-xl backdrop-blur shadow-lg;
-		}
-	}
+        & > .nav {
+            @apply p-4 pt-2 bg-white/85 dark:bg-gray-800/85 border dark:border-gray-700 border-gray-200 rounded-xl backdrop-blur shadow-lg;
+        }
+    }
 }
 
 .VPBackdrop.backdrop {
-	/* Vitepress breakpoint */
-	@media (max-width: theme(--breakpoint-lg)) {
-		@apply !bg-black/5;
-	}
+    /* Vitepress breakpoint */
+    @media (max-width: theme(--breakpoint-lg)) {
+        @apply !bg-black/5;
+    }
 }
 
 #VPSidebarNav {
-	@apply flex flex-col min-h-full;
+    @apply flex flex-col min-h-full;
 }
 
 .VPLocalSearchBox {
-	& > .backdrop {
-		@apply !bg-black/7.5;
-		animation: fade-in 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-	}
+    & > .backdrop {
+        @apply !bg-black/7.5;
+        animation: fade-in 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
 
-	& > .shell {
-		/* 688px is the max-width of the content (Vitepress default) */
-		@apply md:max-w-[688px] md:translate-x-2 !bg-white md:!bg-white/75 dark:!bg-gray-800 md:dark:!bg-gray-800/75 md:backdrop-blur-md md:!rounded-2xl md:border dark:border-gray-600 md:shadow-xl shadow-black/5;
-		animation: search-in 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    & > .shell {
+        /* 688px is the max-width of the content (Vitepress default) */
+        @apply md:max-w-[688px] md:translate-x-2 !bg-white md:!bg-white/75 dark:!bg-gray-800 md:dark:!bg-gray-800/75 md:backdrop-blur-md md:!rounded-2xl md:border dark:border-gray-600 md:shadow-xl shadow-black/5;
+        animation: search-in 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 
-		& > .search-bar {
-			@apply !rounded-xl bg-gray-200/40 dark:bg-gray-500/30 !border-gray-200/85 dark:!border-gray-500/30;
-		}
+        & > .search-bar {
+            @apply !rounded-xl bg-gray-200/40 dark:bg-gray-500/30 !border-gray-200/85 dark:!border-gray-500/30;
+        }
 
-		& > .results > li > a {
-			@apply !rounded-xl;
-		}
+        & > .results > li > a {
+            @apply !rounded-xl;
+        }
 
-		& > .search-keyboard-shortcuts {
-			& > span > kbd {
-				@apply rounded-lg dark:!bg-gray-700;
-			}
-		}
-	}
+        & > .search-keyboard-shortcuts {
+            & > span > kbd {
+                @apply rounded-lg dark:!bg-gray-700;
+            }
+        }
+    }
 }
 
 @keyframes search-in {
-	from {
-		opacity: 0;
-		transform: translateY(1.25rem);
-	}
+    from {
+        opacity: 0;
+        transform: translateY(1.25rem);
+    }
 
-	to {
-		opacity: 1;
-		transform: translateY(0);
-	}
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 @keyframes fade-in {
-	from {
-		opacity: 0;
-	}
+    from {
+        opacity: 0;
+    }
 
-	to {
-		opacity: 1;
-	}
+    to {
+        opacity: 1;
+    }
 }
 
 .excerpt-wrapper {
-	& > .excerpt-gradient-bottom,
-	& > .excerpt-gradient-top {
-		@apply hidden;
-	}
+    & > .excerpt-gradient-bottom,
+    & > .excerpt-gradient-top {
+        @apply hidden;
+    }
 
-	& > .excerpt {
-		& > .vp-doc {
-			@apply !bg-transparent;
-		}
-	}
+    & > .excerpt {
+        & > .vp-doc {
+            @apply !bg-transparent;
+        }
+    }
 }
 
 .VPNavBarMenuGroup > .menu {
-	@apply top-12 backdrop-blur-xl rounded-2xl;
-	will-change: opacity;
+    @apply top-12 backdrop-blur-xl rounded-2xl;
+    will-change: opacity;
 
-	& > .VPMenu {
-		@apply !bg-white/60 dark:!bg-gray-700/60 p-1 border border-gray-100 dark:border-gray-700 rounded-2xl shadow-2xl shadow-black/5;
+    & > .VPMenu {
+        @apply !bg-white/60 dark:!bg-gray-700/60 p-1 border border-gray-100 dark:border-gray-700 rounded-2xl shadow-2xl shadow-black/5;
 
-		& > .items {
-			& > .VPMenuLink > .VPLink {
-				@apply rounded-xl interact:bg-[#f0629215] dark:interact:bg-[#f0629245] duration-0;
-			}
-		}
-	}
+        & > .items {
+            & > .VPMenuLink > .VPLink {
+                @apply rounded-xl interact:bg-[#f0629215] dark:interact:bg-[#f0629245] duration-0;
+            }
+        }
+    }
 }
 
 .VPNavBarExtra.extra > .menu {
-	@apply top-12 backdrop-blur-xl rounded-2xl;
-	will-change: opacity;
+    @apply top-12 backdrop-blur-xl rounded-2xl;
+    will-change: opacity;
 
-	& > .VPMenu {
-		@apply !bg-white/60 dark:!bg-gray-700/60 border border-gray-100 dark:border-gray-700 rounded-2xl shadow-2xl shadow-black/5;
-	}
+    & > .VPMenu {
+        @apply !bg-white/60 dark:!bg-gray-700/60 border border-gray-100 dark:border-gray-700 rounded-2xl shadow-2xl shadow-black/5;
+    }
 }
 
 /* navbar left side group in order */
 .VPNavBarMenu.menu {
-	@apply h-11 rounded-l-3xl;
+    @apply h-11 rounded-l-3xl;
 
-	& > .VPFlyout.VPNavBarMenuGroup {
-		& > .button {
-			@apply h-11;
-		}
-	}
+    & > .VPFlyout.VPNavBarMenuGroup {
+        & > .button {
+            @apply h-11;
+        }
+    }
 
-	& > .VPFlyout.VPNavBarMenuGroup > .button,
-	& > a {
-		@apply backdrop-blur-lg bg-white/80 dark:bg-gray-900/70;
-	}
+    & > .VPFlyout.VPNavBarMenuGroup > .button,
+    & > a {
+        @apply backdrop-blur-lg bg-white/80 dark:bg-gray-900/70;
+    }
 
-	/* Skip screen reader content */
-	& > *:nth-child(2),
-	& > *:nth-child(2) > .button {
-		@apply !rounded-l-3xl;
-	}
+    /* Skip screen reader content */
+    & > *:nth-child(2),
+    & > *:nth-child(2) > .button {
+        @apply !rounded-l-3xl;
+    }
 }
 
 .VPNavBarAppearance.appearance {
-	@apply h-11 bg-white/80 dark:bg-gray-900/70 backdrop-blur-lg;
+    @apply h-11 bg-white/80 dark:bg-gray-900/70 backdrop-blur-lg;
 }
 
 .VPSocialLinks.VPNavBarSocialLinks.social-links {
-	@apply h-11 pr-2 bg-white/80 dark:bg-gray-900/70 backdrop-blur-lg rounded-r-3xl;
+    @apply h-11 pr-2 bg-white/80 dark:bg-gray-900/70 backdrop-blur-lg rounded-r-3xl;
 }
 
 /* ... mobile */
 .VPFlyout.VPNavBarExtra.extra {
-	@apply h-11 bg-white/80 dark:bg-gray-900/70;
+    @apply h-11 bg-white/80 dark:bg-gray-900/70;
 
-	& > .button {
-		@apply h-10.5 backdrop-blur-lg !rounded-r-3xl;
-	}
+    & > .button {
+        @apply h-10.5 backdrop-blur-lg !rounded-r-3xl;
+    }
 }
 
 /* end navbar leftside group */
 
 .vp-adaptive-theme > .copy {
-	@apply !bg-gray-50 dark:!bg-gray-700;
+    @apply !bg-gray-50 dark:!bg-gray-700;
 
-	&::before {
-		background-color: inherit;
-	}
+    &::before {
+        background-color: inherit;
+    }
 }
 
 @utility clicky {
-	@apply hover:scale-[1.03] focus:scale-[1.03] active:scale-[0.98] !transition-all;
+    @apply hover:scale-[1.03] focus:scale-[1.03] active:scale-[0.98] !transition-all;
 }
 
 #local-search > .DocSearch-Button {
-	@apply rounded-xl backdrop-blur-sm clicky;
-	background-color: color-mix(in srgb, var(--vp-c-bg-soft) 80%, transparent);
-	border: 1px solid color-mix(in srgb, var(--vp-c-bg-soft) 80%, black 1%);
+    @apply rounded-xl backdrop-blur-sm clicky;
+    background-color: color-mix(in srgb, var(--vp-c-bg-soft) 80%, transparent);
+    border: 1px solid color-mix(in srgb, var(--vp-c-bg-soft) 80%, black 1%);
 }
 
-button[title="Copy Code"].copy,
-button[title="Copy Code"].copy::before {
-	@apply !rounded-xl clicky;
+button[title='Copy Code'].copy,
+button[title='Copy Code'].copy::before {
+    @apply !rounded-xl clicky;
 }
 
-button[title="Copy Code"].copy::before {
-	@apply -translate-x-1;
-	border: 1px solid var(--vp-code-copy-code-border-color) !important;
+button[title='Copy Code'].copy::before {
+    @apply -translate-x-1;
+    border: 1px solid var(--vp-code-copy-code-border-color) !important;
 }
 
-div[class*="language-"] {
-	@apply !rounded-2xl;
+div[class*='language-'] {
+    @apply !rounded-2xl;
 }
 
 .VPSidebarItem.is-link:not(.collapsible),
 .VPSidebarItem.is-link.collapsible > .item {
-	@apply active:scale-[0.98] !transition-all;
+    @apply active:scale-[0.98] !transition-all;
 }
