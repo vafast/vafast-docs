@@ -212,27 +212,28 @@ const { data } = await api.profile.patch({
 <template v-slot:test-code>
 
 ```typescript twoslash
-import { Server, defineRoutes, createHandler, Type, err } from 'vafast'
+// @errors: 2345
+import { eden, type InferEden } from '@vafast/api-client'
+import { defineRoutes, createHandler, Type } from 'vafast'
 
 const routes = defineRoutes([
   {
-    method: 'POST',
+    method: 'PUT',
     path: '/user',
     handler: createHandler(
       { body: Type.Object({ username: Type.String(), password: Type.String() }) },
-      ({ body }) => {
-        // body.username 和 body.password 自动类型安全
-        if(body.username === 'mika') {
-          throw err.conflict('用户名已被占用')
-        }
-        return { success: true, message: '用户创建成功' }
-      }
+      ({ body }) => ({ success: true, message: '用户创建成功' })
     )
   }
 ])
 
-const server = new Server(routes)
-export default { fetch: server.fetch }
+type Api = InferEden<typeof routes>
+const api = eden<Api>('http://localhost:3000')
+
+// ❌ 缺少 password 字段 → 编译时报错
+const { data } = await api.user.put({
+  username: 'mika'
+})
 ```
 
 </template>

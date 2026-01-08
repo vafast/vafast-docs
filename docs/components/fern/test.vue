@@ -42,19 +42,19 @@ const flyIn = useFlyIn(isInView)
                     class="text-gray-500 dark:text-gray-400 mb-4 leading-relaxed"
                     v-bind="flyIn(0.2)"
                 >
-                    Vafast 提供类型安全的测试层，涵盖从路由到参数的各个环节。
+                    类型错误在编译时暴露，而非运行时。缺少必填字段？类型不匹配？IDE 立即标红。
                 </motion.p>
                 <motion.p
                     class="text-gray-500 dark:text-gray-400 leading-relaxed"
                     v-bind="flyIn(0.3)"
                 >
-                    借助
+                    结合
                     <span
                         class="text-transparent bg-clip-text bg-gradient-to-r from-violet-500 to-sky-400 font-semibold"
                     >
-                        自动补全功能
+                        @vafast/api-client
                     </span>
-                    ，轻松为服务器编写测试，无需任何繁琐操作。
+                    ，端到端类型安全，测试代码也能享受完整的类型推断。
                 </motion.p>
             </div>
 
