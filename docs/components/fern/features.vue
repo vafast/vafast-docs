@@ -6,60 +6,112 @@ import { useFlyIn } from './animate'
 const scope = ref(null)
 const isInView = useInView(scope, {
     once: true,
-    margin: '0px 0px -35% 0px'
+    margin: '0px 0px -20% 0px'
 } as Parameters<typeof useInView>[1])
 const flyIn = useFlyIn(isInView)
+
+const features = [
+    {
+        icon: 'zap',
+        title: '极致性能',
+        subtitle: '比 Express 快 1.8x',
+        color: 'violet',
+        description: 'JIT 编译验证器 · Radix Tree 路由'
+    },
+    {
+        icon: 'shield',
+        title: '类型安全',
+        subtitle: '端到端类型推断',
+        color: 'sky',
+        description: 'Schema → Type · 跨文件类型'
+    },
+    {
+        icon: 'list',
+        title: '声明式路由',
+        subtitle: '结构即真相',
+        color: 'teal',
+        description: '路由即数组 · 显式中间件'
+    },
+    {
+        icon: 'globe',
+        title: '跨运行时',
+        subtitle: '一套代码，任意环境',
+        color: 'orange',
+        description: 'Node.js · Bun · Cloudflare Workers'
+    }
+]
+
+const iconMap: Record<string, string> = {
+    zap: 'M13 2L3 14h9l-1 8 10-12h-9l1-8z',
+    shield: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z',
+    list: 'M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01',
+    globe: 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zM2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z'
+}
+
+const colorMap: Record<string, { icon: string; subtitle: string; bg: string }> =
+    {
+        violet: {
+            icon: 'text-violet-500',
+            subtitle: 'text-violet-400',
+            bg: 'bg-violet-500/10'
+        },
+        sky: {
+            icon: 'text-sky-500',
+            subtitle: 'text-sky-400',
+            bg: 'bg-sky-500/10'
+        },
+        teal: {
+            icon: 'text-teal-500',
+            subtitle: 'text-teal-400',
+            bg: 'bg-teal-500/10'
+        },
+        orange: {
+            icon: 'text-orange-500',
+            subtitle: 'text-orange-400',
+            bg: 'bg-orange-500/10'
+        }
+    }
 </script>
 
 <template>
-    <article
+    <section
         id="features"
-        class="fern-gap relative max-w-5xl w-full mx-auto mt-4 mb-12"
+        class="relative max-w-5xl w-full mx-auto py-20 px-6"
         ref="scope"
     >
-        <div
-            class="flex flex-col md:flex-row md:justify-between items-start md:items-end gap-4 w-full mb-6 sm:mb-12"
-        >
+        <!-- 标题 -->
+        <div class="text-center mb-16">
             <motion.h2
-                class="text-5xl sm:text-6xl text-left text-gray-700 dark:text-gray-300 font-medium leading-[3.5rem] sm:leading-[4.5rem]"
+                class="text-4xl md:text-5xl font-bold text-gray-800 dark:text-gray-100 mb-4"
                 v-bind="flyIn()"
             >
+                为什么选择
                 <span
-                    class="text-gray-500 dark:text-gray-400 font-medium text-xl"
+                    class="text-transparent bg-clip-text bg-gradient-to-r from-violet-500 to-sky-400"
                 >
-                    核心特性
+                    Vafast
                 </span>
-                <br />
-                为
-                <span
-                    class="text-gradient font-semibold from-purple-500 to-sky-400"
-                >
-                    开发者
-                </span>
-                <br />
-                打造
             </motion.h2>
-            <p
-                class="w-full sm:w-1/2 lg:max-w-lg lg:w-full lg:pr-24 dark:text-gray-400 dark:font-medium"
+            <motion.p
+                class="text-lg text-gray-500 dark:text-gray-400 max-w-2xl mx-auto"
                 v-bind="flyIn(0.1)"
             >
-                <motion.span class="inline-block mb-2" v-bind="flyIn(0.2)">
-                    专注于开发者体验
-                </motion.span>
-                <br />
-                <motion.span class="inline-block" v-bind="flyIn(0.3)">
-                    Vafast 提供简洁的 API、强大的类型推断和内置的 Schema
-                    验证，让你专注于业务逻辑。
-                </motion.span>
-            </p>
+                专注于开发者体验，提供简洁的 API、强大的类型推断和内置验证
+            </motion.p>
         </div>
-        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 z-10">
-            <motion.section
-                class="feature-card relative flex flex-col w-full rounded-3xl p-6 border border-r-blue-100 border-b-purple-100 border-t-purple-200 border-l-blue-200 dark:border-r-blue-300/40 dark:border-b-purple-300/40 dark:border-t-purple-400/50 dark:border-l-blue-400/40 transform hover:-translate-y-2 transition-all ease-out duration-200 dark:text-gray-400 bg-white dark:bg-gray-900"
-                v-bind="flyIn(0.2)"
+
+        <!-- 4 卡片网格 -->
+        <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <motion.article
+                v-for="(feature, index) in features"
+                :key="feature.title"
+                class="feature-card group relative flex flex-col p-6 rounded-2xl bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+                v-bind="flyIn(0.1 + index * 0.1)"
             >
-                <h3
-                    class="flex items-center gap-2 text-2xl font-medium text-gray-700 dark:text-gray-300"
+                <!-- 图标 -->
+                <div
+                    class="w-12 h-12 rounded-xl flex items-center justify-center mb-4"
+                    :class="colorMap[feature.color].bg"
                 >
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -71,529 +123,47 @@ const flyIn = useFlyIn(isInView)
                         stroke-width="2"
                         stroke-linecap="round"
                         stroke-linejoin="round"
-                        class="w-6 h-6 flex-shrink-0 text-purple-400"
+                        :class="colorMap[feature.color].icon"
                     >
-                        <polygon
-                            points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"
-                        ></polygon>
+                        <path :d="iconMap[feature.icon]" />
                     </svg>
-                    高性能
-                </h3>
-                <h4
-                    class="inline-block text-base font-medium mt-0.5 mb-3 dark:text-gray-400/90 text-purple-400"
-                >
-                    比 Express 快 1.8x
-                </h4>
-                <p>JIT 编译验证器自动缓存</p>
-                <p>Radix Tree O(k) 路由匹配</p>
-            </motion.section>
-            <motion.section
-                class="feature-card feature-card-2 relative flex flex-col w-full rounded-3xl p-6 border border-r-blue-100 border-b-purple-100 border-t-purple-200 border-l-blue-200 dark:border-r-blue-300/40 dark:border-b-purple-300/40 dark:border-t-purple-400/50 dark:border-l-blue-400/40 transform hover:-translate-y-2 transition-all ease-out duration-200 dark:text-gray-400 bg-white dark:bg-gray-900"
-                v-bind="flyIn(0.3)"
-            >
+                </div>
+
+                <!-- 标题 -->
                 <h3
-                    class="flex items-center gap-2 text-2xl font-medium text-gray-700 dark:text-gray-300"
+                    class="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-1"
                 >
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        class="w-6 h-6 flex-shrink-0 text-blue-400"
-                    >
-                        <path
-                            d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"
-                        ></path>
-                    </svg>
-                    类型安全
+                    {{ feature.title }}
                 </h3>
-                <h4
-                    class="inline-block text-base font-medium mt-0.5 mb-3 dark:text-gray-400/90 text-blue-400"
-                >
-                    端到端类型推断
-                </h4>
-                <p>TypeBox Schema → TypeScript 类型</p>
-                <p>跨文件类型不丢失</p>
-            </motion.section>
-            <motion.section
-                class="feature-card feature-card-3 relative flex flex-col w-full rounded-3xl p-6 border border-r-blue-100 border-b-purple-100 border-t-purple-200 border-l-blue-200 dark:border-r-blue-300/40 dark:border-b-purple-300/40 dark:border-t-purple-400/50 dark:border-l-blue-400/40 transform hover:-translate-y-2 transition-all ease-out duration-200 dark:text-gray-400 bg-white dark:bg-gray-900"
-                v-bind="flyIn(0.4)"
-            >
-                <h3
-                    class="flex items-center gap-2 text-2xl font-medium text-gray-700 dark:text-gray-300"
-                >
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        class="w-6 h-6 flex-shrink-0 text-teal-400"
-                    >
-                        <line x1="8" y1="6" x2="21" y2="6"></line>
-                        <line x1="8" y1="12" x2="21" y2="12"></line>
-                        <line x1="8" y1="18" x2="21" y2="18"></line>
-                        <line x1="3" y1="6" x2="3.01" y2="6"></line>
-                        <line x1="3" y1="12" x2="3.01" y2="12"></line>
-                        <line x1="3" y1="18" x2="3.01" y2="18"></line>
-                    </svg>
-                    声明式路由
-                </h3>
-                <h4
-                    class="inline-block text-base font-medium mt-0.5 mb-3 dark:text-gray-400/90 text-teal-400"
-                >
-                    结构即真相
-                </h4>
-                <p>路由是一个数组，一目了然</p>
-                <p>中间件显式声明在路由上</p>
-            </motion.section>
-            <motion.section
-                class="feature-card feature-card-secondary relative flex flex-col w-full rounded-3xl p-6 border border-r-blue-100 border-b-purple-100 border-t-purple-200 border-l-blue-200 dark:border-r-blue-300/40 dark:border-b-purple-300/40 dark:border-t-purple-400/50 dark:border-l-blue-400/40 transform hover:-translate-y-2 transition-all ease-out duration-200 dark:text-gray-400 bg-white dark:bg-gray-900"
-                v-bind="flyIn(0.5)"
-            >
-                <h3
-                    class="flex items-center gap-2 text-2xl font-medium text-gray-700 dark:text-gray-300"
-                >
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        class="w-6 h-6 flex-shrink-0 text-orange-400"
-                    >
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <line x1="2" y1="12" x2="22" y2="12"></line>
-                        <path
-                            d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"
-                        ></path>
-                    </svg>
-                    跨运行时
-                </h3>
-                <h4
-                    class="inline-block text-base font-medium mt-0.5 mb-3 dark:text-gray-400/90 text-orange-400"
-                >
-                    一套代码，任意环境
-                </h4>
-                <p>Node.js / Bun / Cloudflare Workers</p>
-                <p>serve() 自动适配运行时</p>
-            </motion.section>
-            <motion.section
-                class="feature-card feature-card-secondary relative flex flex-col w-full rounded-3xl p-6 border border-r-blue-100 border-b-purple-100 border-t-purple-200 border-l-blue-200 dark:border-r-blue-300/40 dark:border-b-purple-300/40 dark:border-t-purple-400/50 dark:border-l-blue-400/40 transform hover:-translate-y-2 transition-all ease-out duration-200 dark:text-gray-400 bg-white dark:bg-gray-900"
-                v-bind="flyIn(0.6)"
-            >
-                <h3
-                    class="flex items-center gap-2 text-2xl font-medium text-gray-700 dark:text-gray-300"
-                >
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        class="w-6 h-6 flex-shrink-0 text-green-400"
-                    >
-                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                    </svg>
-                    内置验证
-                </h3>
-                <h4
-                    class="inline-block text-base font-medium mt-0.5 mb-3 dark:text-gray-400/90 text-green-400"
-                >
-                    30+ Format 验证器
-                </h4>
-                <p>email, uuid, phone, url, date-time...</p>
-                <p>导入即用，无需手动注册</p>
-            </motion.section>
-            <motion.section
-                class="feature-card feature-card-secondary relative flex flex-col w-full rounded-3xl p-6 border border-r-blue-100 border-b-purple-100 border-t-purple-200 border-l-blue-200 dark:border-r-blue-300/40 dark:border-b-purple-300/40 dark:border-t-purple-400/50 dark:border-l-blue-400/40 transform hover:-translate-y-2 transition-all ease-out duration-200 dark:text-gray-400 bg-white dark:bg-gray-900"
-                v-bind="flyIn(0.7)"
-            >
-                <h3
-                    class="flex items-center gap-2 text-2xl font-medium text-gray-700 dark:text-gray-300"
-                >
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        class="w-6 h-6 flex-shrink-0 text-pink-400"
-                    >
-                        <polyline
-                            points="22 12 18 12 15 21 9 3 6 12 2 12"
-                        ></polyline>
-                    </svg>
-                    内置监控
-                </h3>
-                <h4
-                    class="inline-block text-base font-medium mt-0.5 mb-3 dark:text-gray-400/90 text-pink-400"
-                >
-                    零依赖性能监控
-                </h4>
-                <p>P50/P95/P99 百分位数</p>
-                <p>RPS、状态码分布、内存监控</p>
-            </motion.section>
+
+                <!-- 副标题 -->
+                <p class="text-sm font-medium mb-3" :class="colorMap[feature.color].subtitle">
+                    {{ feature.subtitle }}
+                </p>
+
+                <!-- 描述 -->
+                <p class="text-sm text-gray-500 dark:text-gray-400">
+                    {{ feature.description }}
+                </p>
+            </motion.article>
         </div>
-        <motion.h5
-            class="text-right text-base mt-6 text-gray-400/75"
-            v-bind="flyIn(0.5)"
-        >
-            这些是 Vafast 的核心价值，<br />
-            让开发更简单、更高效。
-        </motion.h5>
-    </article>
+    </section>
 </template>
 
 <style scoped>
 .feature-card {
-    box-shadow: 0 7px 40px rgba(48, 160, 255, 0.075);
-    background-image: radial-gradient(
-            closest-side at center,
-            rgba(255, 255, 255, 1) 70%,
-            transparent 150%
-        ),
-        radial-gradient(
-            closest-side at center,
-            rgba(255, 255, 255, 1) 90%,
-            transparent 150%
-        ),
-        radial-gradient(
-            at 9% 67%,
-            hsla(223, 100%, 65%, 0.14) 0px,
-            transparent 50%
-        ),
-        radial-gradient(
-            at 22% 0%,
-            hsla(210, 100%, 69%, 0.29) 0px,
-            transparent 50%
-        ),
-        radial-gradient(
-            at 97% 49%,
-            hsla(240, 100%, 87%, 0.35) 0px,
-            transparent 50%
-        ),
-        radial-gradient(
-            at 100% 75%,
-            hsla(280, 100%, 75%, 0.26) 0px,
-            transparent 50%
-        ),
-        radial-gradient(
-            at 75% 100%,
-            hsla(22, 100%, 77%, 0.19) 0px,
-            transparent 50%
-        ),
-        radial-gradient(
-            at 40% 100%,
-            hsla(240, 100%, 70%, 0.15) 0px,
-            transparent 50%
-        ),
-        radial-gradient(
-            at 72% 0%,
-            hsla(343, 100%, 76%, 0.17) 0px,
-            transparent 50%
-        );
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
 }
 
 .feature-card:hover {
-    box-shadow: 0 12px 55px rgba(223, 160, 255, 0.2);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
 }
 
 html.dark .feature-card {
-    box-shadow: 0 7px 40px rgba(48, 160, 255, 0.15);
-    background-image: radial-gradient(
-            closest-side at center,
-            var(--color-gray-800) 70%,
-            transparent 150%
-        ),
-        radial-gradient(
-            at 9% 67%,
-            hsla(223, 100%, 65%, 0.14) 0px,
-            transparent 50%
-        ),
-        radial-gradient(
-            at 22% 0%,
-            hsla(210, 100%, 69%, 0.29) 0px,
-            transparent 50%
-        ),
-        radial-gradient(
-            at 97% 49%,
-            hsla(240, 100%, 87%, 0.35) 0px,
-            transparent 50%
-        ),
-        radial-gradient(
-            at 100% 75%,
-            hsla(280, 100%, 75%, 0.26) 0px,
-            transparent 50%
-        ),
-        radial-gradient(
-            at 75% 100%,
-            hsla(22, 100%, 77%, 0.19) 0px,
-            transparent 50%
-        ),
-        radial-gradient(
-            at 40% 100%,
-            hsla(240, 100%, 70%, 0.15) 0px,
-            transparent 50%
-        ),
-        radial-gradient(
-            at 72% 0%,
-            hsla(343, 100%, 76%, 0.17) 0px,
-            transparent 50%
-        );
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
 }
 
 html.dark .feature-card:hover {
-    box-shadow: 0 12px 55px rgba(223, 160, 255, 0.25);
-}
-
-.feature-card-2 {
-    background-image: radial-gradient(
-            closest-side at center,
-            rgba(255, 255, 255, 1) 70%,
-            transparent 150%
-        ),
-        radial-gradient(
-            closest-side at center,
-            rgba(255, 255, 255, 1) 90%,
-            transparent 150%
-        ),
-        radial-gradient(
-            at 7% 95%,
-            hsla(223, 100%, 65%, 0.14) 0px,
-            transparent 50%
-        ),
-        radial-gradient(
-            at 89% 10%,
-            hsla(210, 100%, 69%, 0.29) 0px,
-            transparent 50%
-        ),
-        radial-gradient(
-            at 30% 0%,
-            hsla(240, 100%, 87%, 0.35) 0px,
-            transparent 50%
-        ),
-        radial-gradient(
-            at 100% 54%,
-            hsla(280, 100%, 75%, 0.26) 0px,
-            transparent 50%
-        ),
-        radial-gradient(
-            at 61% 0%,
-            hsla(22, 100%, 77%, 0.19) 0px,
-            transparent 50%
-        ),
-        radial-gradient(
-            at 2% 48%,
-            hsla(240, 100%, 70%, 0.15) 0px,
-            transparent 50%
-        ),
-        radial-gradient(
-            at 80% 100%,
-            hsla(343, 100%, 76%, 0.17) 0px,
-            transparent 50%
-        );
-}
-
-html.dark .feature-card-2 {
-    background-image: radial-gradient(
-            closest-side at center,
-            var(--color-gray-800) 70%,
-            transparent 150%
-        ),
-        radial-gradient(
-            at 7% 95%,
-            hsla(223, 100%, 65%, 0.14) 0px,
-            transparent 50%
-        ),
-        radial-gradient(
-            at 89% 10%,
-            hsla(210, 100%, 69%, 0.29) 0px,
-            transparent 50%
-        ),
-        radial-gradient(
-            at 30% 0%,
-            hsla(240, 100%, 87%, 0.35) 0px,
-            transparent 50%
-        ),
-        radial-gradient(
-            at 100% 54%,
-            hsla(280, 100%, 75%, 0.26) 0px,
-            transparent 50%
-        ),
-        radial-gradient(
-            at 61% 0%,
-            hsla(22, 100%, 77%, 0.19) 0px,
-            transparent 50%
-        ),
-        radial-gradient(
-            at 2% 48%,
-            hsla(240, 100%, 70%, 0.15) 0px,
-            transparent 50%
-        ),
-        radial-gradient(
-            at 80% 100%,
-            hsla(343, 100%, 76%, 0.17) 0px,
-            transparent 50%
-        );
-}
-
-.feature-card-3 {
-    background-image: radial-gradient(
-            closest-side at center,
-            rgba(255, 255, 255, 0.8) 70%,
-            transparent 150%
-        ),
-        radial-gradient(
-            closest-side at center,
-            rgba(255, 255, 255, 0.8) 90%,
-            transparent 150%
-        ),
-        radial-gradient(
-            at 29% 66%,
-            hsla(223, 100%, 65%, 0.14) 0px,
-            transparent 50%
-        ),
-        radial-gradient(
-            at 47% 51%,
-            hsla(210, 100%, 69%, 0.29) 0px,
-            transparent 50%
-        ),
-        radial-gradient(
-            at 34% 34%,
-            hsla(240, 100%, 87%, 0.35) 0px,
-            transparent 50%
-        ),
-        radial-gradient(
-            at 74% 32%,
-            hsla(280, 100%, 75%, 0.26) 0px,
-            transparent 50%
-        ),
-        radial-gradient(
-            at 57% 66%,
-            hsla(22, 100%, 77%, 0.19) 0px,
-            transparent 50%
-        ),
-        radial-gradient(
-            at 42% 84%,
-            hsla(240, 100%, 70%, 0.15) 0px,
-            transparent 50%
-        ),
-        radial-gradient(
-            at 59% 10%,
-            hsla(343, 100%, 76%, 0.17) 0px,
-            transparent 50%
-        );
-}
-
-html.dark .feature-card-3 {
-    background-image: radial-gradient(
-            closest-side at center,
-            var(--color-gray-800) 50%,
-            transparent 120%
-        ),
-        radial-gradient(
-            at 29% 66%,
-            hsla(223, 100%, 65%, 0.14) 0px,
-            transparent 50%
-        ),
-        radial-gradient(
-            at 47% 51%,
-            hsla(210, 100%, 69%, 0.29) 0px,
-            transparent 50%
-        ),
-        radial-gradient(
-            at 34% 34%,
-            hsla(240, 100%, 87%, 0.35) 0px,
-            transparent 50%
-        ),
-        radial-gradient(
-            at 74% 32%,
-            hsla(280, 100%, 75%, 0.26) 0px,
-            transparent 50%
-        ),
-        radial-gradient(
-            at 57% 66%,
-            hsla(22, 100%, 77%, 0.19) 0px,
-            transparent 50%
-        ),
-        radial-gradient(
-            at 42% 84%,
-            hsla(240, 100%, 70%, 0.15) 0px,
-            transparent 50%
-        ),
-        radial-gradient(
-            at 59% 10%,
-            hsla(343, 100%, 76%, 0.17) 0px,
-            transparent 50%
-        );
-}
-
-.feature-card-secondary {
-    background-image: radial-gradient(
-            closest-side at center,
-            rgba(255, 255, 255, 0.9) 70%,
-            transparent 150%
-        ),
-        radial-gradient(
-            at 20% 80%,
-            hsla(223, 100%, 65%, 0.12) 0px,
-            transparent 50%
-        ),
-        radial-gradient(
-            at 80% 20%,
-            hsla(280, 100%, 75%, 0.18) 0px,
-            transparent 50%
-        ),
-        radial-gradient(
-            at 50% 50%,
-            hsla(240, 100%, 87%, 0.25) 0px,
-            transparent 50%
-        );
-}
-
-html.dark .feature-card-secondary {
-    background-image: radial-gradient(
-            closest-side at center,
-            var(--color-gray-800) 60%,
-            transparent 140%
-        ),
-        radial-gradient(
-            at 20% 80%,
-            hsla(223, 100%, 65%, 0.12) 0px,
-            transparent 50%
-        ),
-        radial-gradient(
-            at 80% 20%,
-            hsla(280, 100%, 75%, 0.18) 0px,
-            transparent 50%
-        ),
-        radial-gradient(
-            at 50% 50%,
-            hsla(240, 100%, 87%, 0.25) 0px,
-            transparent 50%
-        );
+    box-shadow: 0 12px 40px rgba(100, 100, 255, 0.1);
 }
 </style>

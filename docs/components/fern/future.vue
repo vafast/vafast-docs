@@ -1,57 +1,84 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useInView, motion } from 'motion-v'
-import { useFlyIn, useFadeIn } from './animate'
+import { useFlyIn } from './animate'
 
 const scope = ref(null)
 const isInView = useInView(scope, {
     once: true,
-    margin: '0px 0px -35% 0px'
+    margin: '0px 0px -20% 0px'
 } as Parameters<typeof useInView>[1])
 const flyIn = useFlyIn(isInView)
-const fadeIn = useFadeIn(isInView)
 </script>
 
 <template>
     <section
-        class="flex flex-col sm:flex-row md:items-end justify-between max-w-5xl gap-8 w-full mx-auto mt-8 mb-24 fern-gap"
+        class="relative max-w-5xl w-full mx-auto py-20 px-6"
         ref="scope"
     >
-        <h3
-            class="flex flex-col text-5xl md:text-6xl font-semibold text-gray-700 dark:text-gray-300 leading-[3.5rem] md:leading-[4.5rem]"
+        <!-- 背景装饰 -->
+        <div
+            class="absolute inset-0 bg-gradient-to-b from-violet-500/5 to-transparent dark:from-violet-500/10 rounded-3xl pointer-events-none"
+        />
+
+        <div
+            class="relative flex flex-col md:flex-row md:items-center justify-between gap-8"
         >
-            <motion.span v-bind="flyIn()">和我们一起</motion.span>
-            <motion.span v-bind="flyIn(0.1)"
-                class="text-gradient font-bold from-purple-500 to-sky-400"
+            <!-- 文案 -->
+            <div>
+                <motion.h2
+                    class="text-4xl md:text-5xl font-bold mb-4"
+                    v-bind="flyIn()"
+                >
+                    <span class="text-gray-800 dark:text-gray-100">和我们一起</span>
+                    <br />
+                    <span
+                        class="text-transparent bg-clip-text bg-gradient-to-r from-violet-500 to-sky-400"
+                    >
+                        构建未来
+                    </span>
+                </motion.h2>
+                <motion.p
+                    class="text-gray-500 dark:text-gray-400 max-w-md"
+                    v-bind="flyIn(0.1)"
+                >
+                    开始使用 Vafast，体验更简单、更高效的 API 开发方式
+                </motion.p>
+            </div>
+
+            <!-- 按钮 -->
+            <motion.div
+                class="flex flex-wrap gap-4"
+                v-bind="flyIn(0.2)"
             >
-                构建未来
-            </motion.span>
-        </h3>
-        <section class="flex gap-3 text-xl">
-            <motion.a
-                id="future-get-started"
-                class="font-semibold text-pink-400 px-8 py-2.5 rounded-3xl bg-pink-400/10 dark:bg-pink-500/25"
-                href="/at-glance"
-                v-bind="fadeIn(0.2)"
-            >
-                快速开始
-            </motion.a>
-            <motion.a
-                id="future-tutorial"
-                class="font-semibold text-white px-8 py-2.5 rounded-3xl bg-pink-400 dark:bg-pink-500"
-                href="/tutorial"
-                v-bind="fadeIn(0.3)"
-            >
-                教程
-            </motion.a>
-        </section>
+                <a
+                    href="/at-glance"
+                    class="inline-flex items-center px-6 py-3 text-violet-600 dark:text-violet-400 font-semibold bg-violet-100 dark:bg-violet-500/20 rounded-full hover:bg-violet-200 dark:hover:bg-violet-500/30 transition-colors"
+                >
+                    快速开始
+                </a>
+                <a
+                    href="/tutorial"
+                    class="inline-flex items-center px-6 py-3 text-white font-semibold bg-gradient-to-r from-violet-500 to-sky-500 rounded-full shadow-lg shadow-violet-500/25 hover:shadow-xl hover:shadow-violet-500/30 transition-all duration-300 hover:scale-105"
+                >
+                    教程
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        class="ml-2"
+                    >
+                        <line x1="5" y1="12" x2="19" y2="12" />
+                        <polyline points="12 5 19 12 12 19" />
+                    </svg>
+                </a>
+            </motion.div>
+        </div>
     </section>
 </template>
-
-<style>
-#future-get-started,
-#future-tutorial {
-    @apply transform hover:scale-110 focus:scale-110;
-    transition: all 0.35s cubic-bezier(0.68, -0.6, 0.32, 1.6);
-}
-</style>

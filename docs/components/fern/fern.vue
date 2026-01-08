@@ -1,14 +1,10 @@
 <script setup lang="ts">
 import Hero from './hero.vue'
-import Note from './note.vue'
 import Features from './features.vue'
-import Benchmark from './benchmark.vue'
-import TypeIntegrity from './type-integrity.vue'
 import Easy from './easy.vue'
-// import Doc from './doc.vue'  // 移除 Swagger 文档展示
-// import Beyond from './beyond.vue'  // 移除 OpenTelemetry + E2E 类型安全展示
+import TypeIntegrity from './type-integrity.vue'
+import Benchmark from './benchmark.vue'
 import Test from './test.vue'
-// import Tweets from './tweets.vue'  // 移除虚假推文
 import Sponsors from './sponsor.vue'
 import Future from './future.vue'
 import BuiltWithLove from './built-with-love.vue'
@@ -18,12 +14,17 @@ import BuiltWithLove from './built-with-love.vue'
     <div id="landing" class="dark:bg-gray-900/60">
         <Hero />
         <article
-            class="flex flex-col gap-4 text-gray-500/80 dark:text-gray-400/90 leading-normal text-lg"
+            class="flex flex-col text-gray-500/80 dark:text-gray-400/90 leading-normal text-lg"
         >
-            <Note />
+            <!-- 核心特性 4 卡片 -->
+            <Features />
+
+            <!-- 设计以人为本 -->
             <Easy>
                 <slot name="easy" />
             </Easy>
+
+            <!-- 类型安全展示 -->
             <TypeIntegrity>
                 <template v-slot:type-1>
                     <slot name="type-1" />
@@ -38,9 +39,11 @@ import BuiltWithLove from './built-with-love.vue'
                     <slot name="type-4" />
                 </template>
             </TypeIntegrity>
-            <!-- <Doc> 移除 Swagger 文档展示 </Doc> -->
-            <!-- <Beyond> 移除 OpenTelemetry + E2E 类型安全展示 </Beyond> -->
+
+            <!-- 性能对比 -->
             <Benchmark />
+
+            <!-- 测试展示 -->
             <Test>
                 <template v-slot:test-code>
                     <slot name="test-code" />
@@ -49,10 +52,14 @@ import BuiltWithLove from './built-with-love.vue'
                     <slot name="test-script" />
                 </template>
             </Test>
-            <!-- <Tweets /> 移除虚假推文 -->
+
+            <!-- 社区/赞助 -->
             <Sponsors />
-            <Features />
+
+            <!-- CTA -->
             <Future />
+
+            <!-- 页脚 -->
             <BuiltWithLove />
         </article>
     </div>

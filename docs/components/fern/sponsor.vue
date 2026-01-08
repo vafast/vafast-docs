@@ -1,46 +1,43 @@
 <template>
     <section
-        class="flex flex-col w-full max-w-5xl mx-auto mt-4 fern-gap"
+        class="relative max-w-5xl w-full mx-auto py-20 px-6"
         ref="scope"
     >
-        <motion.h2
-            class="text-5xl lg:text-6xl !leading-[4rem] sm:text-center font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-tl from-rose-400 to-fuchsia-400"
-            v-bind="flyIn()"
-        >
-            由你实现
-        </motion.h2>
-        <p
-            class="flex flex-col text-lg md:text-xl !leading-[2rem] sm:text-center w-full max-w-2xl mx-auto dark:text-gray-400 dark:font-medium"
-        >
-            <motion.span class="inline-block" v-bind="flyIn(0.1)">
-                Vafast
-                <span class="text-gray-700 dark:text-gray-200 font-medium">
-                    不是由某个组织</span
-                >拥有，而是由社区推动的。
-            </motion.span>
-            <motion.span class="inline-block" v-bind="flyIn(0.2)">
-                Vafast 的发展离不开您的支持
-            </motion.span>
-        </p>
-        <motion.div class="flex sm:justify-center my-8" v-bind="flyIn(0.3)">
+        <!-- 标题 -->
+        <div class="text-center mb-12">
+            <motion.h2
+                class="text-4xl md:text-5xl font-bold mb-4"
+                v-bind="flyIn()"
+            >
+                <span
+                    class="text-transparent bg-clip-text bg-gradient-to-r from-rose-400 to-pink-500"
+                >
+                    由你实现
+                </span>
+            </motion.h2>
+            <motion.p
+                class="text-lg text-gray-500 dark:text-gray-400 max-w-xl mx-auto"
+                v-bind="flyIn(0.1)"
+            >
+                Vafast 不是由某个组织拥有，而是由社区推动。您的支持让 Vafast
+                得以持续发展。
+            </motion.p>
+        </div>
+
+        <!-- CTA 按钮 -->
+        <motion.div class="flex justify-center mb-16" v-bind="flyIn(0.2)">
             <a
-                id="become-sponsor"
-                class="become-sponsor-btn inline-flex items-center text-white font-semibold bg-gradient-to-br from-rose-400 to-pink-400 rounded-full px-6 py-3 box-shadow shadow-pink-400/40 shadow-lg transition-transform transform hover:scale-110 focus:scale-110"
+                class="inline-flex items-center gap-2 px-8 py-3 text-white font-semibold bg-gradient-to-r from-rose-500 to-pink-500 rounded-full shadow-lg shadow-pink-500/25 hover:shadow-xl hover:shadow-pink-500/30 transition-all duration-300 hover:scale-105"
                 href="https://github.com/vafast/vafast"
                 target="_blank"
             >
                 成为赞助商
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
+                    width="20"
+                    height="20"
                     viewBox="0 0 24 24"
                     fill="currentColor"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    class="transform scale-75 translate-x-1.5"
                 >
                     <path
                         d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
@@ -48,194 +45,138 @@
                 </svg>
             </a>
         </motion.div>
-        <section v-if="goldSponsors.length">
-            <header class="mt-4 text-center" v-bind="flyIn(0.3)">
-                <motion.h4
-                    class="text-4xl text-center font-semibold text-gradient from-sky-500 to-violet-500"
-                    v-bind="flyIn(0.4)"
-                >
-                    Gold Sponsors
-                </motion.h4>
-            </header>
+
+        <!-- Gold Sponsors -->
+        <section v-if="goldSponsors.length" class="mb-12">
+            <motion.h4
+                class="text-2xl font-semibold text-center mb-6 text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-yellow-500"
+                v-bind="flyIn(0.3)"
+            >
+                Gold Sponsors
+            </motion.h4>
             <motion.ul
-                id="sponsors-fern-gold"
-                class="sponsors-gold grid gap-2 grid-cols-1 my-4"
+                class="flex flex-wrap justify-center gap-6"
+                v-bind="flyIn(0.4)"
+            >
+                <li v-for="sponsor in goldSponsors" :key="sponsor.sponsorEntity.login">
+                    <a
+                        :href="`https://github.com/${sponsor.sponsorEntity.login}`"
+                        target="_blank"
+                        class="flex items-center gap-4 p-4 rounded-xl bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                    >
+                        <img
+                            v-if="sponsor.sponsorEntity.avatarUrl"
+                            :src="sponsor.sponsorEntity.avatarUrl"
+                            :alt="sponsor.sponsorEntity.login"
+                            class="w-16 h-16 rounded-full"
+                        />
+                        <div>
+                            <p class="font-semibold text-gray-800 dark:text-gray-100">
+                                {{ sponsor.sponsorEntity.name ?? sponsor.sponsorEntity.login }}
+                            </p>
+                            <p class="text-sm text-gray-500">{{ sponsor.duration }}</p>
+                        </div>
+                    </a>
+                </li>
+            </motion.ul>
+        </section>
+
+        <!-- Silver Sponsors -->
+        <section v-if="silverSponsors.length" class="mb-12">
+            <motion.h4
+                class="text-xl font-semibold text-center mb-6 text-transparent bg-clip-text bg-gradient-to-r from-gray-400 to-gray-500"
+                v-bind="flyIn(0.4)"
+            >
+                Silver Sponsors
+            </motion.h4>
+            <motion.ul
+                class="flex flex-wrap justify-center gap-4"
                 v-bind="flyIn(0.5)"
             >
-                <li
-                    v-for="sponsor in goldSponsors"
-                    :key="sponsor.sponsorEntity.login"
-                >
+                <li v-for="sponsor in silverSponsors" :key="sponsor.sponsorEntity.login">
                     <a
                         :href="`https://github.com/${sponsor.sponsorEntity.login}`"
                         target="_blank"
-                        class="sponsor-gold flex justify-center items-center gap-3 text-xs text-center py-2"
+                        class="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                     >
-                        <div
-                            class="min-w-21 min-h-21 overflow-hidden rounded-full"
-                        >
-                            <img
-                                v-if="sponsor.sponsorEntity.avatarUrl"
-                                :src="sponsor.sponsorEntity.avatarUrl"
-                                alt="Sponsor avatar"
-                                loading="lazy"
-                                class="w-21 h-21 rounded-full object-cover object-center"
-                            />
-                        </div>
-                        <section class="flex flex-col gap-1 sponsor-info">
-                            <h5 class="text-left text-xl font-medium m-0">
-                                {{
-                                    sponsor.sponsorEntity.name ??
-                                    sponsor.sponsorEntity.login ??
-                                    '[Private]'
-                                }}
-                            </h5>
-                            <p class="text-left my-0">
-                                {{ sponsor.duration }}
+                        <img
+                            v-if="sponsor.sponsorEntity.avatarUrl"
+                            :src="sponsor.sponsorEntity.avatarUrl"
+                            :alt="sponsor.sponsorEntity.login"
+                            class="w-12 h-12 rounded-full"
+                        />
+                        <div>
+                            <p class="font-medium text-gray-800 dark:text-gray-100 text-sm">
+                                {{ sponsor.sponsorEntity.name ?? sponsor.sponsorEntity.login }}
                             </p>
-                        </section>
+                            <p class="text-xs text-gray-500">{{ sponsor.duration }}</p>
+                        </div>
                     </a>
                 </li>
             </motion.ul>
         </section>
 
-        <section v-if="silverSponsors.length">
-            <header class="mt-4 text-center">
-                <motion.h4
-                    class="text-3xl text-center font-semibold text-gradient from-violet-500 to-sky-400"
-                    v-bind="flyIn(0.5)"
-                >
-                    Silver Sponsors
-                </motion.h4>
-            </header>
-
+        <!-- Individual Sponsors -->
+        <section v-if="individualSponsors.length">
+            <motion.h4
+                class="text-lg font-semibold text-center mb-6 text-transparent bg-clip-text bg-gradient-to-r from-rose-400 to-pink-400"
+                v-bind="flyIn(0.5)"
+            >
+                Individual Sponsors
+            </motion.h4>
             <motion.ul
-                id="sponsors-fern-silver"
-                v-if="sponsors.length > 0"
-                class="sponsors-silver grid gap-2 grid-cols-1 my-4"
+                class="flex flex-wrap justify-center gap-4"
                 v-bind="flyIn(0.6)"
             >
-                <li
-                    v-for="sponsor in silverSponsors"
-                    :key="sponsor.sponsorEntity.login"
-                >
+                <li v-for="sponsor in individualSponsors" :key="sponsor.sponsorEntity.login">
                     <a
                         :href="`https://github.com/${sponsor.sponsorEntity.login}`"
                         target="_blank"
-                        class="sponsor-silver flex justify-center items-center gap-3 text-xs text-center py-2"
+                        class="flex flex-col items-center p-4 rounded-xl hover:bg-pink-50 dark:hover:bg-pink-500/10 transition-colors"
                     >
-                        <div
-                            class="min-w-16 min-h-16 bg-gray-100 overflow-hidden rounded-full"
-                        >
-                            <img
-                                v-if="sponsor.sponsorEntity.avatarUrl"
-                                :src="sponsor.sponsorEntity.avatarUrl"
-                                alt="Sponsor avatar"
-                                loading="lazy"
-                                class="w-16 h-16 rounded-full object-cover object-center"
-                            />
-                        </div>
-                        <section class="flex flex-col">
-                            <h6 class="text-left text-lg font-medium m-0">
-                                {{
-                                    sponsor.sponsorEntity.name ??
-                                    sponsor.sponsorEntity.login ??
-                                    '[Private]'
-                                }}
-                            </h6>
-                            <p class="text-left my-0">
-                                {{ sponsor.duration }}
-                            </p>
-                        </section>
-                    </a>
-                </li>
-            </motion.ul>
-        </section>
-
-        <section v-if="individualSponsors.length">
-            <header class="mt-6 text-center">
-                <motion.h4
-                    class="text-2xl text-center font-semibold text-gradient from-rose-400 to-pink-400"
-                    v-bind="flyIn(0.7)"
-                >
-                    Individual Sponsors
-                </motion.h4>
-            </header>
-
-            <motion.ul
-                id="sponsors-fern"
-                v-if="individualSponsors.length > 0"
-                class="sponsors-individual grid gap-0.5 grid-cols-3 my-4"
-                v-bind="flyIn(0.8)"
-            >
-                <li
-                    v-for="sponsor in individualSponsors"
-                    :key="sponsor.sponsorEntity.login"
-                >
-                    <a
-                        :href="`https://github.com/${sponsor.sponsorEntity.login}`"
-                        target="_blank"
-                        class="sponsor-individual flex flex-col justify-center items-center text-xs text-center hover:bg-pink-500/10 focus:bg-pink-500/10 dark:hover:bg-pink-500/25 dark:focus:bg-pink-500/25 px-0.5 py-4 rounded-xl transition-colors text-gray-500 hover:text-pink-500 dark:text-gray-400 dark:hover:text-pink-400"
-                    >
-                        <div
-                            class="w-16 h-16 bg-gray-100 overflow-hidden rounded-full mb-3"
-                        >
-                            <img
-                                v-if="sponsor.sponsorEntity.avatarUrl"
-                                :src="sponsor.sponsorEntity.avatarUrl"
-                                alt="Sponsor avatar"
-                                loading="lazy"
-                                class="w-16 h-16 rounded-full object-cover object-center"
-                            />
-                        </div>
-                        <p class="my-0">
-                            {{
-                                sponsor.sponsorEntity.name ??
-                                sponsor.sponsorEntity.login ??
-                                '[Private]'
-                            }}
-                        </p>
-                        <p class="my-0">
-                            {{ sponsor.duration }}
+                        <img
+                            v-if="sponsor.sponsorEntity.avatarUrl"
+                            :src="sponsor.sponsorEntity.avatarUrl"
+                            :alt="sponsor.sponsorEntity.login"
+                            class="w-12 h-12 rounded-full mb-2"
+                        />
+                        <p class="text-sm text-gray-600 dark:text-gray-300">
+                            {{ sponsor.sponsorEntity.name ?? sponsor.sponsorEntity.login }}
                         </p>
                     </a>
                 </li>
                 <li>
                     <a
-                        class="flex flex-col justify-center items-center text-center hover:bg-pink-100/50 focus:bg-pink-100/50 dark:hover:bg-pink-500/30 dark:focus:bg-pink-500/30 px-2 py-4 rounded-xl transition-colors"
                         href="https://github.com/vafast/vafast"
                         target="_blank"
+                        class="flex flex-col items-center p-4 rounded-xl hover:bg-pink-50 dark:hover:bg-pink-500/10 transition-colors"
                     >
                         <div
-                            class="flex justify-center items-center w-14 h-14 sm:w-16 sm:h-16 bg-pink-100 dark:bg-pink-400/30 overflow-hidden rounded-full mb-2 text-pink-500"
+                            class="w-12 h-12 rounded-full bg-pink-100 dark:bg-pink-500/20 flex items-center justify-center mb-2"
                         >
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
-                                width="24"
-                                height="24"
+                                width="20"
+                                height="20"
                                 viewBox="0 0 24 24"
                                 fill="none"
                                 stroke="currentColor"
                                 stroke-width="2"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
+                                class="text-pink-500"
                             >
-                                <path
-                                    d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
-                                />
+                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
                             </svg>
                         </div>
-                        <p className="text-lg font-semibold text-pink-400 mb-2">
-                            And you
-                        </p>
+                        <p class="text-sm font-medium text-pink-500">And you</p>
                     </a>
                 </li>
             </motion.ul>
         </section>
 
+        <!-- 感谢语 -->
         <motion.p
-            class="sm:text-center text-gradient from-pink-400 to-fuchsia-400 font-semibold text-base"
-            v-bind="flyIn(0.9)"
+            class="text-center text-sm font-medium text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-rose-400 mt-12"
+            v-bind="flyIn(0.7)"
         >
             Thank you for making Vafast possible
         </motion.p>
@@ -252,7 +193,7 @@ import { data, type Sponsor } from './sponsor.data'
 const scope = ref(null)
 const isInView = useInView(scope, {
     once: true,
-    margin: '0px 0px -35% 0px'
+    margin: '0px 0px -20% 0px'
 } as Parameters<typeof useInView>[1])
 const flyIn = useFlyIn(isInView)
 
@@ -270,36 +211,3 @@ const individualSponsors = sponsors.filter(
     (sponsor) => sponsor.tier.monthlyPriceInDollars < 75
 )
 </script>
-
-<style scoped>
-.become-sponsor-btn {
-    transition: all 0.35s cubic-bezier(0.68, -0.6, 0.32, 1.6);
-}
-
-.sponsor-info {
-    zoom: 0.9;
-}
-
-/* equivalent to md screen */
-@media (min-width: 40rem) {
-    .sponsors-individual {
-        grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)) !important;
-    }
-
-    .sponsors-gold {
-        grid-template-columns: repeat(
-            auto-fit,
-            minmax(224px, 256px)
-        ) !important;
-        justify-content: center;
-    }
-
-    .sponsors-silver {
-        grid-template-columns: repeat(
-            auto-fit,
-            minmax(192px, 224px)
-        ) !important;
-        justify-content: center;
-    }
-}
-</style>

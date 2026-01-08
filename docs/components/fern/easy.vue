@@ -6,272 +6,139 @@ import { useFlyIn } from './animate'
 const scope = ref(null)
 const isInView = useInView(scope, {
     once: true,
-    margin: '0px 0px -35% 0px'
+    margin: '0px 0px -20% 0px'
 } as Parameters<typeof useInView>[1])
 const flyIn = useFlyIn(isInView)
+
+const principles = [
+    {
+        icon: 'M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16zM3.27 6.96L12 12.01l8.73-5.05M12 22.08V12',
+        title: '自动响应',
+        desc: '返回对象自动转 JSON，字符串自动 text/plain'
+    },
+    {
+        icon: 'M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM12 8v4M12 16h.01',
+        title: '语义化错误',
+        desc: 'err.notFound() 统一的错误响应格式'
+    },
+    {
+        icon: 'M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01',
+        title: '声明式路由',
+        desc: '路由是数组，一眼看清所有 API 端点'
+    },
+    {
+        icon: 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zM2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z',
+        title: '跨运行时',
+        desc: 'Node.js / Bun / Workers 同一套代码'
+    }
+]
 </script>
 
 <template>
-    <article
+    <section
         id="made-for-human"
-        class="fern-gap flex flex-col max-w-5xl w-full mx-auto gap-8 my-16"
+        class="relative max-w-5xl w-full mx-auto py-20 px-6"
         ref="scope"
     >
-        <div
-            class="flex flex-col md:flex-row justify-between items-center gap-8 w-full mb-6"
-        >
-            <header class="flex flex-col flex-1 text-xl gap-6">
-                <div class="flex flex-col gap-3 mb-2">
-                    <motion.h3
-                        class="text-2xl font-medium text-700"
-                        v-bind="flyIn()"
-                    >
-                        我们的原则
-                    </motion.h3>
-                    <motion.h2
-                        class="text-6xl font-semibold text-gradient from-sky-500 to-violet-500 leading-[4.25rem]"
-                        v-bind="flyIn(0.1)"
-                    >
-                        设计以人为本
-                    </motion.h2>
-                </div>
-                <motion.p class="max-w-md leading-normal" v-bind="flyIn(0.2)">
-                    我们的目标是设计一个符合人体工程学、合理且高效的工作框架，即使是初学者也能轻松使用。
+        <div class="flex flex-col lg:flex-row gap-12 lg:gap-16 items-center">
+            <!-- 左侧文案 -->
+            <div class="flex-1 lg:max-w-md">
+                <motion.p
+                    class="text-sm font-medium text-violet-500 mb-2"
+                    v-bind="flyIn()"
+                >
+                    我们的设计原则
                 </motion.p>
-                <motion.p class="max-w-md leading-normal" v-bind="flyIn(0.3)">
-                    设计以避免不必要的复杂性，并为您简化类型复杂性，以便您专注于构建。
-                </motion.p>
-                <motion.p class="leading-normal" v-bind="flyIn(0.4)">
-                    一个感觉就像
+                <motion.h2
+                    class="text-4xl md:text-5xl font-bold mb-6"
+                    v-bind="flyIn(0.1)"
+                >
+                    <span class="text-gray-800 dark:text-gray-100">设计</span>
+                    <br />
                     <span
-                        class="text-gradient from-violet-500 to-sky-500 font-semibold"
+                        class="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-violet-500"
                     >
-                        JavaScript 的框架
+                        以人为本
+                    </span>
+                </motion.h2>
+                <motion.p
+                    class="text-gray-500 dark:text-gray-400 mb-4 leading-relaxed"
+                    v-bind="flyIn(0.2)"
+                >
+                    我们的目标是设计一个符合人体工程学、合理且高效的框架，即使是初学者也能轻松使用。
+                </motion.p>
+                <motion.p
+                    class="text-gray-500 dark:text-gray-400 leading-relaxed"
+                    v-bind="flyIn(0.3)"
+                >
+                    避免不必要的复杂性，简化类型，让您专注于业务逻辑。
+                    <span
+                        class="text-transparent bg-clip-text bg-gradient-to-r from-violet-500 to-sky-400 font-semibold"
+                    >
+                        像写 JavaScript 一样简单。
                     </span>
                 </motion.p>
-            </header>
-            <motion.section
-                class="showcase flex flex-col flex-1 max-w-full sm:max-w-[30rem] rounded-2xl overflow-hidden border dark:border-gray-700 bg-white dark:bg-gray-800"
+            </div>
+
+            <!-- 右侧代码展示 -->
+            <motion.div
+                class="flex-1 w-full lg:max-w-xl"
                 v-bind="flyIn(0.3)"
             >
-                <slot />
-            </motion.section>
+                <div
+                    class="showcase rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800/50"
+                >
+                    <slot />
+                </div>
+            </motion.div>
         </div>
 
-        <footer class="grid grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-6">
+        <!-- 底部特性网格 -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-6 mt-16">
             <motion.article
-                class="flex flex-col flex-1 text-sm"
-                v-bind="flyIn(0.6)"
+                v-for="(item, index) in principles"
+                :key="item.title"
+                class="flex flex-col"
+                v-bind="flyIn(0.4 + index * 0.1)"
             >
-                <h4 class="flex items-center gap-1.5 text-xl mb-2">
+                <div
+                    class="w-10 h-10 rounded-lg flex items-center justify-center bg-gray-100 dark:bg-gray-800 mb-3"
+                >
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
+                        width="20"
+                        height="20"
                         viewBox="0 0 24 24"
                         fill="none"
                         stroke="currentColor"
                         stroke-width="2"
                         stroke-linecap="round"
                         stroke-linejoin="round"
-                        class="feather feather-box scale-90"
+                        class="text-gray-600 dark:text-gray-300"
                     >
-                        <path
-                            d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"
-                        ></path>
-                        <polyline
-                            points="3.27 6.96 12 12.01 20.73 6.96"
-                        ></polyline>
-                        <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                        <path :d="item.icon" />
                     </svg>
-                    自动响应
+                </div>
+                <h4
+                    class="text-base font-semibold text-gray-800 dark:text-gray-100 mb-1"
+                >
+                    {{ item.title }}
                 </h4>
-                <p>返回对象自动转 JSON</p>
-                <p>返回字符串自动 text/plain</p>
-            </motion.article>
-            <motion.article
-                class="flex flex-col flex-1 text-sm"
-                v-bind="flyIn(0.7)"
-            >
-                <h4 class="flex items-center gap-1.5 text-xl mb-2">
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        class="feather feather-alert-circle scale-90"
-                    >
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <line x1="12" y1="8" x2="12" y2="12"></line>
-                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                    </svg>
-                    语义化错误
-                </h4>
-                <p>
-                    <span class="font-mono text-violet-500 font-bold"
-                        >err.notFound()</span
-                    >
+                <p class="text-sm text-gray-500 dark:text-gray-400">
+                    {{ item.desc }}
                 </p>
-                <p>统一的错误响应格式</p>
             </motion.article>
-            <motion.article
-                class="flex flex-col flex-1 text-sm"
-                v-bind="flyIn(0.8)"
-            >
-                <h4 class="flex items-center gap-1.5 text-xl mb-2">
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        class="feather feather-list scale-90"
-                    >
-                        <line x1="8" y1="6" x2="21" y2="6"></line>
-                        <line x1="8" y1="12" x2="21" y2="12"></line>
-                        <line x1="8" y1="18" x2="21" y2="18"></line>
-                        <line x1="3" y1="6" x2="3.01" y2="6"></line>
-                        <line x1="3" y1="12" x2="3.01" y2="12"></line>
-                        <line x1="3" y1="18" x2="3.01" y2="18"></line>
-                    </svg>
-                    声明式路由
-                </h4>
-                <p>路由是一个数组</p>
-                <p>一眼看清所有 API 端点</p>
-            </motion.article>
-            <motion.article
-                class="flex flex-col flex-1 text-sm"
-                v-bind="flyIn(0.9)"
-            >
-                <h4 class="flex items-center gap-1.5 text-xl mb-2">
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        class="feather feather-globe scale-90"
-                    >
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <line x1="2" y1="12" x2="22" y2="12"></line>
-                        <path
-                            d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"
-                        ></path>
-                    </svg>
-                    跨运行时
-                </h4>
-                <p>Node.js / Bun / Workers</p>
-                <p>同一套代码，任意运行时</p>
-            </motion.article>
-        </footer>
-    </article>
+        </div>
+    </section>
 </template>
 
 <style scoped>
 .showcase {
-    box-shadow: 0 16px 40px rgba(0, 123, 255, 0.075);
-    background-image: radial-gradient(
-            closest-side at center,
-            rgba(255, 255, 255, 1) 70%,
-            transparent 150%
-        ),
-        radial-gradient(
-            closest-side at center,
-            rgba(255, 255, 255, 1) 90%,
-            transparent 150%
-        ),
-        radial-gradient(
-            at 9% 67%,
-            hsla(223, 100%, 65%, 0.14) 0px,
-            transparent 50%
-        ),
-        radial-gradient(
-            at 22% 0%,
-            hsla(210, 100%, 69%, 0.29) 0px,
-            transparent 50%
-        ),
-        radial-gradient(
-            at 97% 49%,
-            hsla(240, 100%, 87%, 0.35) 0px,
-            transparent 50%
-        ),
-        radial-gradient(
-            at 100% 75%,
-            hsla(280, 100%, 75%, 0.26) 0px,
-            transparent 50%
-        ),
-        radial-gradient(
-            at 75% 100%,
-            hsla(22, 100%, 77%, 0.19) 0px,
-            transparent 50%
-        ),
-        radial-gradient(
-            at 40% 100%,
-            hsla(240, 100%, 70%, 0.15) 0px,
-            transparent 50%
-        ),
-        radial-gradient(
-            at 72% 0%,
-            hsla(343, 100%, 76%, 0.17) 0px,
-            transparent 50%
-        );
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.05);
 }
 
 html.dark .showcase {
-    box-shadow: 0 16px 40px rgba(0, 123, 255, 0.15);
-    background-image: radial-gradient(
-            closest-side at center,
-            var(--color-gray-800) 35%,
-            transparent 140%
-        ),
-        radial-gradient(
-            at 9% 67%,
-            hsla(223, 100%, 65%, 0.14) 0px,
-            transparent 50%
-        ),
-        radial-gradient(
-            at 22% 0%,
-            hsla(210, 100%, 69%, 0.29) 0px,
-            transparent 50%
-        ),
-        radial-gradient(
-            at 97% 49%,
-            hsla(240, 100%, 87%, 0.35) 0px,
-            transparent 50%
-        ),
-        radial-gradient(
-            at 100% 75%,
-            hsla(280, 100%, 75%, 0.26) 0px,
-            transparent 50%
-        ),
-        radial-gradient(
-            at 75% 100%,
-            hsla(22, 100%, 77%, 0.19) 0px,
-            transparent 50%
-        ),
-        radial-gradient(
-            at 40% 100%,
-            hsla(240, 100%, 70%, 0.15) 0px,
-            transparent 50%
-        ),
-        radial-gradient(
-            at 72% 0%,
-            hsla(343, 100%, 76%, 0.17) 0px,
-            transparent 50%
-        );
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
 }
 
 .showcase :deep(> div) {
@@ -279,7 +146,6 @@ html.dark .showcase {
 }
 
 .showcase :deep(> div > pre) {
-    padding-top: 0.875rem !important;
-    padding-bottom: 0.875rem !important;
+    padding: 1rem !important;
 }
 </style>
