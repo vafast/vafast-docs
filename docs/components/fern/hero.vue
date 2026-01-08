@@ -10,63 +10,78 @@
         class="relative flex flex-col justify-center items-center w-full pt-6 md:pt-0 mb-16 md:mb-8 px-6 overflow-hidden transition-all"
         style="min-height: calc(100vh - 64px)"
     >
-        <div class="flex flex-col justify-center items-center transition-all">
-            <div class="flex items-center gap-4 mb-4">
+        <div class="flex flex-col justify-center items-center transition-all max-w-4xl">
+            <!-- Logo -->
+            <div class="flex items-center gap-4 mb-8">
                 <img
                     :src="asset('assets/vafast.svg')"
                     alt="Vafast"
-                    class="w-20 h-20 md:w-24 md:h-24"
+                    class="w-16 h-16 md:w-20 md:h-20"
                 />
             </div>
+
+            <!-- 主标题 - 分行展示 -->
             <h1
-                class="text-5xl md:text-6xl leading-relaxed font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400 mb-2"
+                class="text-4xl md:text-6xl lg:text-7xl font-bold text-center leading-tight md:leading-tight lg:leading-tight mb-6"
             >
-                Vafast
+                <span class="text-gray-700 dark:text-gray-200">用最少的代码</span>
+                <br />
+                <span class="text-gray-700 dark:text-gray-200">构建</span>
+                <span
+                    class="text-transparent bg-clip-text bg-gradient-to-r from-violet-500 to-sky-400"
+                >
+                    高性能 API
+                </span>
             </h1>
-            <h2
-                class="relative font-medium text-gray-600 dark:text-gray-300 mb-6 text-xl md:text-2xl text-center max-w-lg leading-relaxed"
-            >
-                用最少的代码构建
-                <span class="text-transparent font-semibold bg-clip-text bg-gradient-to-r from-sky-400 to-violet-400">高性能 API</span>
-            </h2>
+
+            <!-- 副标题 -->
             <p
-                class="text-base md:text-lg text-gray-400 dark:text-gray-500 leading-relaxed w-full max-w-2xl text-center mb-8"
+                class="text-lg md:text-xl text-gray-500 dark:text-gray-400 text-center max-w-2xl mb-4 leading-relaxed"
             >
-                声明式路由定义 · 自动类型推断 · Schema 验证 · 极致性能
+                声明式路由 · 自动类型推断 · Schema 验证
             </p>
+
+            <!-- 支持的运行时 -->
+            <p
+                class="text-sm md:text-base text-gray-400 dark:text-gray-500 text-center mb-10"
+            >
+                支持 Node.js / Bun / Cloudflare Workers
+            </p>
+
+            <!-- CTA 区域 -->
             <section
-                class="flex flex-col sm:flex-row items-center w-full md:w-auto gap-4 mb-10"
+                class="flex flex-col sm:flex-row items-center w-full md:w-auto gap-4 mb-12"
             >
                 <a
-                    class="hero-btn text-white font-semibold text-lg bg-pink-400 dark:bg-pink-500 px-8 py-3 rounded-full transform hover:scale-110"
+                    class="hero-btn text-white font-semibold text-lg bg-gradient-to-r from-violet-500 to-sky-500 px-8 py-3 rounded-full transform hover:scale-105 shadow-lg shadow-violet-500/25"
                     id="hero-get-started"
                     href="/at-glance"
                 >
                     快速开始
                 </a>
-                <div class="relative flex flex-1 gap-3 text-pink-500">
+                <div class="relative flex items-center gap-2">
                     <code
-                        class="text-pink-500 font-mono font-medium text-lg bg-pink-200/25 dark:bg-pink-500/20 px-6 py-3 rounded-full"
+                        class="text-gray-600 dark:text-gray-300 font-mono text-sm md:text-base bg-gray-100 dark:bg-gray-800 px-4 py-3 rounded-full border border-gray-200 dark:border-gray-700"
                     >
-                        npx create-vafast-app
+                        <span class="text-gray-400 mr-2">$</span>npx create-vafast-app
                     </code>
                     <button
                         id="hero-copy"
-                        class="hero-btn hidden sm:inline-flex p-3 rounded-xl active:rounded-4xl interact:bg-pink-200/25 active:bg-pink-200/50 interact:dark:bg-pink-500/20 active:dark:bg-pink-500/20 transform hover:scale-110"
-                        :class="{ '!rounded-4xl': copied }"
+                        class="hero-btn p-2.5 rounded-full bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-500 hover:text-violet-500 hover:border-violet-300 dark:hover:border-violet-500 transition-colors"
+                        :class="{ 'text-green-500 border-green-300': copied }"
                         @click="copied = true"
                     >
                         <svg
+                            v-if="!copied"
                             xmlns="http://www.w3.org/2000/svg"
-                            width="24"
-                            height="24"
+                            width="18"
+                            height="18"
                             viewBox="0 0 24 24"
                             fill="none"
                             stroke="currentColor"
                             stroke-width="2"
                             stroke-linecap="round"
                             stroke-linejoin="round"
-                            class="feather feather-copy"
                         >
                             <rect
                                 x="9"
@@ -80,14 +95,27 @@
                                 d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
                             />
                         </svg>
+                        <svg
+                            v-else
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="18"
+                            height="18"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
                     </button>
-                    <p v-if="copied" class="absolute -bottom-8 right-0">
-                        已复制
-                    </p>
                 </div>
             </section>
-            <p class="flex justify-center items-center gap-2 text-gray-400 text-sm">
-                向下滚动了解更多
+
+            <!-- 向下滚动提示 -->
+            <div class="flex flex-col items-center gap-2 text-gray-400 text-sm">
+                <span>向下滚动了解更多</span>
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="20"
@@ -103,7 +131,7 @@
                     <line x1="12" y1="5" x2="12" y2="19"></line>
                     <polyline points="19 12 12 19 5 12"></polyline>
                 </svg>
-            </p>
+            </div>
         </div>
     </header>
 </template>
@@ -154,8 +182,6 @@ watch(copied, (value) => {
 }
 
 .hero-btn {
-    transition:
-        all 0.35s cubic-bezier(0.68, -0.6, 0.32, 1.6),
-        color 0.35s ease-out;
+    transition: all 0.3s ease;
 }
 </style>
