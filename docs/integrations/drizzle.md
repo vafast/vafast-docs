@@ -8,34 +8,74 @@ Vafast 可以与 Drizzle ORM 无缝集成，为您提供类型安全的数据库
 
 ## 安装依赖
 
-```bash
-bun add drizzle-orm @vafast/db
-bun add -D drizzle-kit @types/node
+::: code-group
+
+```bash [SQLite]
+npm install drizzle-orm better-sqlite3
+npm install -D drizzle-kit @types/better-sqlite3
 ```
+
+```bash [PostgreSQL]
+npm install drizzle-orm postgres
+npm install -D drizzle-kit
+```
+
+```bash [MySQL]
+npm install drizzle-orm mysql2
+npm install -D drizzle-kit
+```
+
+:::
 
 ## 数据库配置
 
-```typescript
+::: code-group
+
+```typescript [SQLite]
 // src/db/config.ts
-import { drizzle } from 'drizzle-orm/bun-sqlite'
-import { Database } from 'bun:sqlite3'
-import { migrate } from 'drizzle-orm/bun-sqlite/migrator'
+import { drizzle } from 'drizzle-orm/better-sqlite3'
+import Database from 'better-sqlite3'
 
 // 创建数据库连接
 const sqlite = new Database('sqlite.db')
 export const db = drizzle(sqlite)
-
-// 运行迁移
-export async function runMigrations() {
-  await migrate(db, { migrationsFolder: './drizzle' })
-}
 ```
+
+```typescript [PostgreSQL]
+// src/db/config.ts
+import { drizzle } from 'drizzle-orm/postgres-js'
+import postgres from 'postgres'
+
+const connectionString = process.env.DATABASE_URL!
+const client = postgres(connectionString, { max: 10 })
+export const db = drizzle(client)
+```
+
+```typescript [MySQL]
+// src/db/config.ts
+import { drizzle } from 'drizzle-orm/mysql2'
+import mysql from 'mysql2/promise'
+
+const pool = mysql.createPool({
+  host: process.env.DB_HOST || 'localhost',
+  user: process.env.DB_USER || 'root',
+  password: process.env.DB_PASSWORD || '',
+  database: process.env.DB_NAME || 'mydb',
+  connectionLimit: 10
+})
+
+export const db = drizzle(pool)
+```
+
+:::
 
 ## 定义数据库模式
 
-```typescript
+::: code-group
+
+```typescript [SQLite]
 // src/db/schema.ts
-import { sqliteTable, text, integer, real } from 'drizzle-orm/sqlite-core'
+import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core'
 import { sql } from 'drizzle-orm'
 
 // 用户表
@@ -73,8 +113,78 @@ export const postTags = sqliteTable('post_tags', {
 }, (table) => ({
   pk: sql`primary key(${table.postId}, ${table.tagId})`
 }))
+```
 
-// 导出类型
+```typescript [PostgreSQL]
+// src/db/schema.ts
+import { pgTable, uuid, varchar, text, boolean, timestamp } from 'drizzle-orm/pg-core'
+
+// 用户表
+export const users = pgTable('users', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  email: varchar('email', { length: 255 }).notNull().unique(),
+  name: varchar('name', { length: 255 }).notNull(),
+  passwordHash: text('password_hash').notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow()
+})
+
+// 文章表
+export const posts = pgTable('posts', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  title: varchar('title', { length: 255 }).notNull(),
+  content: text('content').notNull(),
+  authorId: uuid('author_id').notNull().references(() => users.id),
+  published: boolean('published').notNull().default(false),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow()
+})
+
+// 标签表
+export const tags = pgTable('tags', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: varchar('name', { length: 100 }).notNull().unique(),
+  createdAt: timestamp('created_at').notNull().defaultNow()
+})
+```
+
+```typescript [MySQL]
+// src/db/schema.ts
+import { mysqlTable, varchar, text, boolean, timestamp } from 'drizzle-orm/mysql-core'
+
+// 用户表
+export const users = mysqlTable('users', {
+  id: varchar('id', { length: 36 }).primaryKey().$defaultFn(() => crypto.randomUUID()),
+  email: varchar('email', { length: 255 }).notNull().unique(),
+  name: varchar('name', { length: 255 }).notNull(),
+  passwordHash: text('password_hash').notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow().onUpdateNow()
+})
+
+// 文章表
+export const posts = mysqlTable('posts', {
+  id: varchar('id', { length: 36 }).primaryKey().$defaultFn(() => crypto.randomUUID()),
+  title: varchar('title', { length: 255 }).notNull(),
+  content: text('content').notNull(),
+  authorId: varchar('author_id', { length: 36 }).notNull().references(() => users.id),
+  published: boolean('published').notNull().default(false),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow().onUpdateNow()
+})
+
+// 标签表
+export const tags = mysqlTable('tags', {
+  id: varchar('id', { length: 36 }).primaryKey().$defaultFn(() => crypto.randomUUID()),
+  name: varchar('name', { length: 100 }).notNull().unique(),
+  createdAt: timestamp('created_at').notNull().defaultNow()
+})
+```
+
+:::
+
+```typescript
+// 导出类型（所有数据库通用）
 export type User = typeof users.$inferSelect
 export type NewUser = typeof users.$inferInsert
 export type Post = typeof posts.$inferSelect
@@ -501,7 +611,9 @@ export const routes = defineRoutes([
 
 ## 数据库迁移
 
-```typescript
+::: code-group
+
+```typescript [SQLite]
 // drizzle.config.ts
 import { defineConfig } from 'drizzle-kit'
 
@@ -515,15 +627,48 @@ export default defineConfig({
 })
 ```
 
+```typescript [PostgreSQL]
+// drizzle.config.ts
+import { defineConfig } from 'drizzle-kit'
+
+export default defineConfig({
+  schema: './src/db/schema.ts',
+  out: './drizzle',
+  dialect: 'postgresql',
+  dbCredentials: {
+    url: process.env.DATABASE_URL!
+  }
+})
+```
+
+```typescript [MySQL]
+// drizzle.config.ts
+import { defineConfig } from 'drizzle-kit'
+
+export default defineConfig({
+  schema: './src/db/schema.ts',
+  out: './drizzle',
+  dialect: 'mysql',
+  dbCredentials: {
+    host: process.env.DB_HOST || 'localhost',
+    user: process.env.DB_USER || 'root',
+    password: process.env.DB_PASSWORD || '',
+    database: process.env.DB_NAME || 'mydb'
+  }
+})
+```
+
+:::
+
 ```bash
 # 生成迁移文件
-bun run drizzle-kit generate
+npx drizzle-kit generate
 
 # 运行迁移
-bun run drizzle-kit migrate
+npx drizzle-kit migrate
 
-# 查看数据库状态
-bun run drizzle-kit studio
+# 查看数据库状态（可视化界面）
+npx drizzle-kit studio
 ```
 
 ## 事务处理
@@ -551,7 +696,9 @@ export async function createUserWithPost(userData: any, postData: any) {
 
 ## 连接池管理
 
-```typescript
+::: code-group
+
+```typescript [PostgreSQL]
 // src/db/pool.ts
 import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
@@ -559,7 +706,11 @@ import { migrate } from 'drizzle-orm/postgres-js/migrator'
 
 // PostgreSQL 连接池
 const connectionString = process.env.DATABASE_URL!
-const client = postgres(connectionString, { max: 10 })
+const client = postgres(connectionString, { 
+  max: 10,              // 最大连接数
+  idle_timeout: 20,     // 空闲超时（秒）
+  connect_timeout: 10   // 连接超时（秒）
+})
 export const db = drizzle(client)
 
 // 运行迁移
@@ -572,6 +723,32 @@ export async function closePool() {
   await client.end()
 }
 ```
+
+```typescript [MySQL]
+// src/db/pool.ts
+import { drizzle } from 'drizzle-orm/mysql2'
+import mysql from 'mysql2/promise'
+
+// MySQL 连接池
+const pool = mysql.createPool({
+  host: process.env.DB_HOST || 'localhost',
+  user: process.env.DB_USER || 'root',
+  password: process.env.DB_PASSWORD || '',
+  database: process.env.DB_NAME || 'mydb',
+  connectionLimit: 10,      // 最大连接数
+  waitForConnections: true, // 等待可用连接
+  queueLimit: 0             // 队列限制（0=无限制）
+})
+
+export const db = drizzle(pool)
+
+// 关闭连接池
+export async function closePool() {
+  await pool.end()
+}
+```
+
+:::
 
 ## 性能优化
 
@@ -631,7 +808,7 @@ export async function findPostsByTag(tagName: string) {
 
 ```typescript
 // src/db/__tests__/queries.test.ts
-import { describe, expect, it, beforeEach, afterEach } from 'bun:test'
+import { describe, expect, it, beforeEach, afterEach } from 'vitest'
 import { db } from '../config'
 import { userQueries, postQueries } from '../queries'
 import { users, posts } from '../schema'
