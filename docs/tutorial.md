@@ -170,7 +170,7 @@ const notes: Note[] = []
 现在让我们创建我们的 API 路由：
 
 ```typescript
-import { Server, defineRoutes, createHandler, serve, Type } from 'vafast'
+import { Server, defineRoutes, createHandler, serve, Type, json, err } from 'vafast'
 
 interface Note {
   id: string
@@ -204,7 +204,7 @@ const routes = defineRoutes([
       const note = notes.find(n => n.id === params.id)
       
       if (!note) {
-        throw new VafastError('Note not found', { status: 404, type: 'NOT_FOUND', expose: true })
+        throw err.notFound('Note not found')
       }
       
       return note
@@ -227,7 +227,7 @@ const routes = defineRoutes([
         }
         
         notes.push(note)
-        return note
+        return json(note, 201)  // 201 Created
       }
     )
   },
@@ -242,7 +242,7 @@ const routes = defineRoutes([
         const noteIndex = notes.findIndex(n => n.id === params.id)
         
         if (noteIndex === -1) {
-          throw new VafastError('Note not found', { status: 404, type: 'NOT_FOUND', expose: true })
+          throw err.notFound('Note not found')
         }
         
         notes[noteIndex] = {
@@ -265,11 +265,11 @@ const routes = defineRoutes([
       const noteIndex = notes.findIndex(n => n.id === params.id)
       
       if (noteIndex === -1) {
-        throw new VafastError('Note not found', { status: 404, type: 'NOT_FOUND', expose: true })
+        throw err.notFound('Note not found')
       }
       
-      const deletedNote = notes.splice(noteIndex, 1)[0]
-      return deletedNote
+      notes.splice(noteIndex, 1)
+      return null  // 204 No Content
     })
   }
 ])

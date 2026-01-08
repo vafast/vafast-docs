@@ -293,12 +293,12 @@ const routes = defineRoutes([
       // 异步验证
       const emailExists = await checkEmailExists(body.email)
       if (emailExists) {
-          throw new VafastError('Email already exists', { status: 400, type: 'VALIDATION_ERROR', expose: true })
+          throw err.conflict('Email already exists')
       }
       
       const usernameExists = await checkUsernameExists(body.username)
       if (usernameExists) {
-          throw new VafastError('Username already exists', { status: 400, type: 'VALIDATION_ERROR', expose: true })
+          throw err.conflict('Username already exists')
       }
       
       return createUser(body)

@@ -99,7 +99,7 @@ export const routes = defineRoutes([
       const user = { id: userId, name: 'John Doe', email: 'john@example.com' }
       
       if (!user) {
-        throw new VafastError('User not found', { status: 404, type: 'NOT_FOUND', expose: true })
+        throw err.notFound('User not found')
       }
       
       return { user }

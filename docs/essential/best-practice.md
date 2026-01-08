@@ -319,7 +319,7 @@ class UserService {
   handler: createHandler(async ({ params }) => {
     const user = await UserService.getUser(params.id)
     if (!user) {
-      throw new VafastError('User not found', { status: 404, type: 'NOT_FOUND', expose: true })
+      throw err.notFound('User not found')
     }
     return user
   })
@@ -427,10 +427,10 @@ type User = Static<typeof userSchema>
 
 ## 错误处理
 
-### ✅ 推荐：使用框架内置的 VafastError
+### ✅ 推荐：使用 err() 错误工具函数
 
 ```typescript
-import { VafastError, defineRoutes, createHandler } from 'vafast'
+import { defineRoutes, createHandler, err } from 'vafast'
 
 const routes = defineRoutes([
   {
@@ -440,12 +440,8 @@ const routes = defineRoutes([
       const user = await db.user.findUnique({ where: { id: params.id } })
       
       if (!user) {
-        // 使用 VafastError 抛出错误
-        throw new VafastError('用户不存在', { 
-          status: 404, 
-          type: 'NOT_FOUND',
-          expose: true  // expose: true 会将消息返回给客户端
-        })
+        // 使用 err() 抛出语义化错误
+        throw err.notFound('用户不存在')
       }
       
       return user
@@ -453,8 +449,20 @@ const routes = defineRoutes([
   }
 ])
 
-// 框架内置错误处理器会自动捕获 VafastError 并返回：
+// 框架内置错误处理器会自动捕获错误并返回：
 // { "error": "NOT_FOUND", "message": "用户不存在" }
+```
+
+**常用错误方法：**
+
+```typescript
+throw err.badRequest('参数错误')      // 400
+throw err.unauthorized('请先登录')    // 401
+throw err.forbidden('无权限')         // 403
+throw err.notFound('资源不存在')      // 404
+throw err.conflict('资源冲突')        // 409
+throw err.internal('服务器错误')      // 500
+throw err('自定义错误', 422, 'TYPE')  // 自定义
 ```
 
 ### ✅ 推荐：扩展 VafastError 创建自定义错误类

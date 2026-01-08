@@ -428,7 +428,7 @@ export const routes = defineRoutes([
       // 检查用户是否已存在
       const existingUser = await userService.findByEmail(email)
       if (existingUser) {
-        throw new VafastError('用户已存在', { status: 400, type: 'USER_EXISTS', expose: true })
+        throw err.conflict('用户已存在')
       }
       
       // 创建新用户
@@ -465,13 +465,13 @@ export const routes = defineRoutes([
       // 查找用户
       const user = await userService.findByEmail(email)
       if (!user) {
-        throw new VafastError('用户不存在', { status: 401, type: 'USER_NOT_FOUND', expose: true })
+        throw err.unauthorized('用户不存在')
       }
       
       // 验证密码
       const isValidPassword = await verifyPassword(password, user.password)
       if (!isValidPassword) {
-        throw new VafastError('密码错误', { status: 401, type: 'INVALID_PASSWORD', expose: true })
+        throw err.unauthorized('密码错误')
       }
       
       return { 
@@ -514,7 +514,7 @@ export const routes = defineRoutes([
       const post = await postService.findById(params.id)
       
       if (!post) {
-        throw new VafastError('文章不存在', { status: 404, type: 'NOT_FOUND', expose: true })
+        throw err.notFound('文章不存在')
       }
       
       return { post }
@@ -556,7 +556,7 @@ export const routes = defineRoutes([
       const updatedPost = await postService.update(params.id, body)
       
       if (!updatedPost) {
-        throw new VafastError('文章不存在', { status: 404, type: 'NOT_FOUND', expose: true })
+        throw err.notFound('文章不存在')
       }
       
       return { post: updatedPost }

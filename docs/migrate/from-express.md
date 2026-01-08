@@ -311,7 +311,7 @@ app.listen(3000)
 ### Vafast 应用
 
 ```typescript
-import { Server, defineRoutes, createHandler } from 'vafast'
+import { Server, defineRoutes, createHandler, json, err } from 'vafast'
 import { cors } from '@vafast/cors'
 
 const routes = defineRoutes([
@@ -323,10 +323,7 @@ const routes = defineRoutes([
   {
     method: 'POST',
     path: '/users',
-    handler: createHandler(({ body }) => ({
-      data: createUser(body),
-      status: 201
-    }))
+    handler: createHandler(({ body }) => json(createUser(body), 201))
   },
   {
     method: 'GET',
@@ -334,7 +331,7 @@ const routes = defineRoutes([
     handler: createHandler(({ params }) => {
       const user = getUserById(params.id)
       if (!user) {
-        throw new VafastError('User not found', { status: 404, type: 'NOT_FOUND', expose: true })
+        throw err.notFound('User not found')
       }
       return user
     })

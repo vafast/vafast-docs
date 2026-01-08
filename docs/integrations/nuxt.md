@@ -107,7 +107,7 @@ export const routes = defineRoutes([
       }
       
       if (!product) {
-        throw new VafastError('Product not found', { status: 404, type: 'NOT_FOUND', expose: true })
+        throw err.notFound('Product not found')
       }
       
       return { product }

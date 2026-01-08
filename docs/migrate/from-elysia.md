@@ -387,7 +387,7 @@ export default app
 ### Vafast 应用
 
 ```typescript
-import { Server, defineRoutes, createHandler, serve, Type, json } from 'vafast'
+import { Server, defineRoutes, createHandler, serve, Type, json, err } from 'vafast'
 import { cors } from '@vafast/cors'
 
 const UserSchema = Type.Object({
@@ -420,7 +420,7 @@ const routes = defineRoutes([
     path: '/users',
     handler: createHandler(
       { body: UserSchema },
-      ({ body }) => createUser(body)
+      ({ body }) => json(createUser(body), 201)
     )
   },
   {
@@ -429,7 +429,7 @@ const routes = defineRoutes([
     handler: createHandler(({ params }) => {
       const user = getUserById(params.id)
       if (!user) {
-        throw new VafastError('User not found', { status: 404, type: 'NOT_FOUND', expose: true })
+        throw err.notFound('User not found')
       }
       return user
     })

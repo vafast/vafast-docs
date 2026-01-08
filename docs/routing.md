@@ -331,10 +331,10 @@ handler: createHandler(() => {
 ### 使用 VafastError 返回错误状态
 
 ```typescript
-import { VafastError } from 'vafast'
+import { err } from 'vafast'
 
 handler: createHandler(() => {
-  throw new VafastError('资源不存在', { status: 404, type: 'not_found' })
+  throw err.notFound('资源不存在')
 })
 ```
 

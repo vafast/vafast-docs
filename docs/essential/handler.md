@@ -224,7 +224,11 @@ const routes = defineRoutes([
 
 ### 错误响应
 
+使用 `err()` 函数抛出语义化的错误：
+
 ```typescript
+import { defineRoutes, createHandler, err } from 'vafast'
+
 const routes = defineRoutes([
   {
     method: 'GET',
@@ -233,18 +237,31 @@ const routes = defineRoutes([
       const userId = params.id
       
       if (!userId || isNaN(Number(userId))) {
-        throw new VafastError('Invalid user ID', { status: 400, type: 'VALIDATION_ERROR', expose: true })
+        throw err.badRequest('Invalid user ID')
       }
       
       if (userId === '999') {
-        throw new VafastError('User not found', { status: 404, type: 'NOT_FOUND', expose: true })
+        throw err.notFound('User not found')
       }
       
       return { id: userId, name: 'John Doe' }
     })
   }
 ])
+
+// 错误响应格式: { "error": "NOT_FOUND", "message": "User not found" }
 ```
+
+**预定义错误列表：**
+
+| 方法 | 状态码 | 使用场景 |
+|------|--------|----------|
+| `err.badRequest()` | 400 | 参数错误 |
+| `err.unauthorized()` | 401 | 未登录 |
+| `err.forbidden()` | 403 | 无权限 |
+| `err.notFound()` | 404 | 资源不存在 |
+| `err.conflict()` | 409 | 资源冲突 |
+| `err.internal()` | 500 | 服务器错误 |
 
 ## 中间件集成
 
@@ -338,6 +355,8 @@ const routes = defineRoutes([
 ### 2. 使用适当的错误处理
 
 ```typescript
+import { defineRoutes, createHandler, err } from 'vafast'
+
 const routes = defineRoutes([
   {
     method: 'GET',
@@ -345,7 +364,7 @@ const routes = defineRoutes([
     handler: createHandler(async ({ params }) => {
         const user = await getUserById(params.id)
         if (!user) {
-          throw new VafastError('User not found', { status: 404, type: 'NOT_FOUND', expose: true })
+          throw err.notFound('User not found')
         }
         return user
       // 注意：未捕获的错误由 createHandler 内置错误处理自动返回 500

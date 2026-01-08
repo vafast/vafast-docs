@@ -344,14 +344,114 @@ const logMiddleware = createMiddleware({
 })
 ```
 
+## 响应工具
+
+Vafast 提供简洁的响应工具函数。
+
+### json()
+
+生成 JSON 响应。
+
+```typescript
+import { json } from 'vafast'
+
+// 基本用法
+return json(data)                          // 200 + JSON
+return json(data, 201)                     // 201 + JSON
+return json(data, 200, { 'X-Id': 'abc' })  // 自定义头部
+```
+
+**函数签名：**
+
+```typescript
+function json(
+  data: unknown,
+  status?: number,           // 默认 200
+  headers?: HeadersInit      // 自定义响应头
+): Response
+```
+
+### 其他响应工具
+
+```typescript
+import { text, html, redirect, empty, stream } from 'vafast'
+
+// 纯文本响应
+return text('Hello World')
+return text('Created', 201)
+
+// HTML 响应
+return html('<h1>Hello</h1>')
+
+// 重定向
+return redirect('/new-url')        // 302 临时重定向
+return redirect('/new-url', 301)   // 301 永久重定向
+
+// 空响应
+return empty()         // 204 No Content
+return empty(201)      // 指定状态码
+
+// 流式响应
+return stream(readableStream)
+return stream(readableStream, 200, { 'Content-Type': 'text/event-stream' })
+```
+
+### 自动响应转换
+
+在 `createHandler` 中，返回值会自动转换为 Response：
+
+```typescript
+createHandler(() => {
+  return user          // → 200 + JSON
+  return 'Hello'       // → 200 + text/plain
+  return 123           // → 200 + text/plain
+  return null          // → 204 No Content
+})
+```
+
 ## 错误处理
 
-### 内置错误类型
+### err() 错误工具函数（推荐）
+
+`err()` 提供简洁、语义化的错误 API。
+
+```typescript
+import { err } from 'vafast'
+
+// 预定义错误（推荐）
+throw err.badRequest('参数错误')      // 400 BAD_REQUEST
+throw err.unauthorized('请先登录')    // 401 UNAUTHORIZED
+throw err.forbidden('无权限访问')     // 403 FORBIDDEN
+throw err.notFound('用户不存在')      // 404 NOT_FOUND
+throw err.conflict('用户名已存在')    // 409 CONFLICT
+throw err.unprocessable('无法处理')   // 422 UNPROCESSABLE_ENTITY
+throw err.tooMany('请求过于频繁')     // 429 TOO_MANY_REQUESTS
+throw err.internal('服务器错误')      // 500 INTERNAL_ERROR
+
+// 自定义错误
+throw err('自定义错误消息', 418, 'CUSTOM_ERROR_TYPE')
+```
+
+**完整的预定义错误列表：**
+
+| 方法 | 状态码 | 错误类型 | 默认消息 |
+|------|--------|----------|----------|
+| `err.badRequest(msg?)` | 400 | BAD_REQUEST | 请求参数错误 |
+| `err.unauthorized(msg?)` | 401 | UNAUTHORIZED | 未授权 |
+| `err.forbidden(msg?)` | 403 | FORBIDDEN | 禁止访问 |
+| `err.notFound(msg?)` | 404 | NOT_FOUND | 资源不存在 |
+| `err.conflict(msg?)` | 409 | CONFLICT | 资源冲突 |
+| `err.unprocessable(msg?)` | 422 | UNPROCESSABLE_ENTITY | 无法处理的实体 |
+| `err.tooMany(msg?)` | 429 | TOO_MANY_REQUESTS | 请求过于频繁 |
+| `err.internal(msg?)` | 500 | INTERNAL_ERROR | 服务器内部错误 |
+
+### VafastError 类
+
+底层错误类，`err()` 是它的便捷封装。
 
 ```typescript
 import { VafastError } from 'vafast'
 
-// VafastError 构造函数签名
 class VafastError extends Error {
   status: number      // HTTP 状态码，默认 500
   type: string        // 错误类型，默认 'internal_error'
@@ -363,45 +463,94 @@ class VafastError extends Error {
       status?: number    // HTTP 状态码
       type?: string      // 错误类型标识
       expose?: boolean   // 是否暴露消息给客户端
-      cause?: unknown    // 原始错误
+      cause?: unknown    // 原始错误（用于错误链）
     }
   )
 }
+
+// 直接使用（不推荐，除非需要 expose: false）
+throw new VafastError('Internal error', { 
+  status: 500, 
+  type: 'DB_ERROR',
+  expose: false  // 不暴露给客户端
+})
 ```
 
-### 错误响应
+### 完整示例
 
 ```typescript
-import { VafastError, defineRoutes, createHandler } from 'vafast'
+import { defineRoutes, createHandler, json, err, Type } from 'vafast'
 
 const routes = defineRoutes([
   {
     method: 'GET',
-    path: '/error',
-    handler: createHandler(() => {
-      // 抛出错误，expose: true 表示消息会返回给客户端
-      throw new VafastError('Something went wrong', { 
-        status: 500, 
-        type: 'INTERNAL_ERROR',
-        expose: true 
-      })
+    path: '/users/:id',
+    handler: createHandler(async ({ params }) => {
+      const user = await db.findUser(params.id)
+      
+      if (!user) {
+        throw err.notFound('用户不存在')
+      }
+      
+      return user  // 200 + JSON
     })
   },
   {
-    method: 'GET',
-    path: '/not-found',
-    handler: createHandler(() => {
-      throw new VafastError('Resource not found', { 
-        status: 404, 
-        type: 'NOT_FOUND',
-        expose: true 
+    method: 'POST',
+    path: '/users',
+    schema: {
+      body: Type.Object({
+        name: Type.String(),
+        email: Type.String({ format: 'email' })
       })
+    },
+    handler: createHandler(async ({ body }) => {
+      if (await db.emailExists(body.email)) {
+        throw err.conflict('邮箱已被注册')
+      }
+      
+      const user = await db.createUser(body)
+      return json(user, 201)  // 201 Created
+    })
+  },
+  {
+    method: 'DELETE',
+    path: '/users/:id',
+    handler: createHandler(async ({ params }) => {
+      await db.deleteUser(params.id)
+      return null  // 204 No Content
     })
   }
 ])
 
-// 框架会自动将 VafastError 转换为 JSON 响应：
-// { "error": "NOT_FOUND", "message": "Resource not found" }
+// 错误响应格式：
+// { "error": "NOT_FOUND", "message": "用户不存在" }
+```
+
+### API 速查表
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                      成功响应                                │
+├─────────────────────────────────────────────────────────────┤
+│  return data           →  200 + JSON（自动转换）            │
+│  return json(data,201) →  201 + JSON                        │
+│  return 'Hello'        →  200 + text/plain                  │
+│  return null           →  204 No Content                    │
+│  return new Response() →  完全控制                          │
+├─────────────────────────────────────────────────────────────┤
+│                      错误响应                                │
+├─────────────────────────────────────────────────────────────┤
+│  throw err.badRequest()    →  400                           │
+│  throw err.unauthorized()  →  401                           │
+│  throw err.forbidden()     →  403                           │
+│  throw err.notFound()      →  404                           │
+│  throw err.conflict()      →  409                           │
+│  throw err.unprocessable() →  422                           │
+│  throw err.tooMany()       →  429                           │
+│  throw err.internal()      →  500                           │
+│  throw err(msg, 418, 'X')  →  自定义                        │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ## 验证配置

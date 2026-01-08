@@ -102,7 +102,7 @@ export const routes = defineRoutes([
       const post = { id: postId, title: 'Sample Post', content: 'Sample content' }
       
       if (!post) {
-        throw new VafastError('Post not found', { status: 404, type: 'NOT_FOUND', expose: true })
+        throw err.notFound('Post not found')
       }
       
       return { post }

@@ -64,7 +64,7 @@ const routes = defineRoutes([
     handler: createHandler(async ({ request }) => {
       const session = await auth.api.getSession(request)
       if (!session) {
-        throw new VafastError('Unauthorized', { status: 401, type: 'UNAUTHORIZED', expose: true })
+        throw err.unauthorized('Unauthorized')
       }
       return { user: session.user }
     }),
@@ -82,7 +82,7 @@ const routes = defineRoutes([
       })
       
       if (result.error) {
-        throw new VafastError(result.error, { status: 400, type: 'AUTH_ERROR', expose: true })
+        throw err.badRequest(result.error)
       }
       
       return { success: true, user: result.user }
@@ -124,7 +124,7 @@ export const requireAuth = (handler: Function) => {
     const session = await auth.api.getSession(request)
     
     if (!session) {
-      throw new VafastError('Authentication required', { status: 401, type: 'UNAUTHORIZED', expose: true })
+      throw err.unauthorized('Authentication required')
     }
     
     // 将用户信息添加到请求上下文
@@ -258,7 +258,7 @@ const requireRole = (role: string) => {
     const session = await auth.api.getSession(request)
     
     if (!session || session.user.role !== role) {
-      throw new VafastError('Insufficient permissions', { status: 403, type: 'FORBIDDEN', expose: true })
+      throw err.forbidden('Insufficient permissions')
     }
     
     request.user = session.user
@@ -290,17 +290,17 @@ const routes = defineRoutes([
     method: 'POST',
     path: '/api/auth/signin',
     handler: createHandler(async ({ body, request }) => {
-      const result = await auth.api.signIn('credentials', {
-        email: body.email,
-        password: body.password,
-        request
-      })
-      
-      if (result.error) {
-        throw new VafastError(result.error, { status: 400, type: 'AUTH_ERROR', expose: true })
-      }
-      
-      return { success: true, user: result.user }
+        const result = await auth.api.signIn('credentials', {
+          email: body.email,
+          password: body.password,
+          request
+        })
+        
+        if (result.error) {
+        throw err.badRequest(result.error)
+        }
+        
+        return { success: true, user: result.user }
     }),
     body: Type.Object({
       email: Type.String({ format: 'email' }),

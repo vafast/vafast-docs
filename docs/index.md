@@ -58,7 +58,7 @@ const getProfile = createHandler((ctx) => {
   const req = ctx.req
   //    ^?
   if(Math.random() > .5) {
-    throw new VafastError('Unauthorized', { status: 401, expose: true })
+    throw err.unauthorized('Unauthorized')
   }
   return { message: 'OK' }
 })
@@ -143,7 +143,7 @@ const routes = defineRoutes([
       ({ body }) => {
         // body.age 自动类型推断为 number
         if(body.age < 18) {
-          throw new VafastError('年龄不足', { status: 400, expose: true })
+          throw err.badRequest('年龄不足')
         }
         return { success: true, data: body }
       }
@@ -171,7 +171,7 @@ const routes = defineRoutes([
       ({ body }) => {
         // body.username 和 body.password 自动类型安全
         if(body.username === 'mika') {
-          throw new VafastError('用户名已被占用', { status: 400, expose: true })
+          throw err.conflict('用户名已被占用')
         }
         return { success: true, message: '用户创建成功' }
       }

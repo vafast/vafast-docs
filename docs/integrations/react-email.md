@@ -592,7 +592,7 @@ export const routes = defineRoutes([
       // 检查用户是否已存在
       const existingUser = await userService.findByEmail(email)
       if (existingUser) {
-        throw new VafastError('用户已存在', { status: 400, type: 'USER_EXISTS', expose: true })
+        throw err.conflict('用户已存在')
       }
       
       // 创建新用户
@@ -665,7 +665,7 @@ export const routes = defineRoutes([
         return { message: '密码重置链接已发送到您的邮箱' }
       } catch (error) {
         console.error('Failed to send password reset email:', error)
-        throw new VafastError('邮件发送失败，请稍后重试', { status: 500, type: 'EMAIL_FAILED', expose: true })
+        throw err.internal('邮件发送失败，请稍后重试')
       }
     }),
     body: Type.Object({
@@ -684,7 +684,7 @@ export const routes = defineRoutes([
       // 获取用户信息
       const user = await userService.findById(userId)
       if (!user) {
-        throw new VafastError('用户不存在', { status: 404, type: 'NOT_FOUND', expose: true })
+        throw err.notFound('用户不存在')
       }
       
       // 发送通知邮件
@@ -701,7 +701,7 @@ export const routes = defineRoutes([
         return { message: '通知邮件发送成功' }
       } catch (error) {
         console.error('Failed to send notification email:', error)
-        throw new VafastError('邮件发送失败', { status: 500, type: 'EMAIL_FAILED', expose: true })
+        throw err.internal('邮件发送失败')
       }
     }),
     body: Type.Object({
