@@ -414,7 +414,7 @@ export const tagService = new TagService()
 ```typescript
 // src/routes.ts
 import { defineRoutes, createHandler } from 'vafast'
-import { Type } from '@sinclair/typebox'
+import { Type } from 'vafast'
 import { userService, postService, tagService } from './services'
 import { authMiddleware } from './middleware/auth'
 

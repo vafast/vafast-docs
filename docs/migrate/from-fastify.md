@@ -177,7 +177,7 @@ fastify.post('/users', {
 
 **Vafast** 使用 TypeBox 进行验证：
 ```typescript
-import { Type } from '@sinclair/typebox'
+import { Type } from 'vafast'
 
 const userSchema = Type.Object({
   name: Type.String(),
@@ -296,7 +296,7 @@ const userSchema = {
 }
 
 // Vafast Schema
-import { Type } from '@sinclair/typebox'
+import { Type } from 'vafast'
 
 const userSchema = Type.Object({
   name: Type.String({ minLength: 1 }),
@@ -398,10 +398,8 @@ await fastify.listen({ port: 3000 })
 ### Vafast 应用
 
 ```typescript
-import { Server, defineRoutes, createHandler } from 'vafast'
+import { Server, defineRoutes, createHandler, Type } from 'vafast'
 import { cors } from '@vafast/cors'
-import { helmet } from '@vafast/helmet'
-import { Type } from '@sinclair/typebox'
 
 const userSchema = Type.Object({
   name: Type.String(),
@@ -440,7 +438,6 @@ const routes = defineRoutes([
 
 const server = new Server(routes)
 server.use(cors())
-server.use(helmet())
 
 export default { fetch: server.fetch }
 ```

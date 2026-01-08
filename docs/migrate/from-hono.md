@@ -206,7 +206,7 @@ app.post('/users', zValidator('json', userSchema), (c) => {
 
 **Vafast** 使用 TypeBox 进行验证：
 ```typescript
-import { Type } from '@sinclair/typebox'
+import { Type } from 'vafast'
 
 const userSchema = Type.Object({
   name: Type.String({ minLength: 1 }),
@@ -319,7 +319,7 @@ app.post('/users', zValidator('json', userSchema), (c) => {
 })
 
 // Vafast 验证
-import { Type } from '@sinclair/typebox'
+import { Type } from 'vafast'
 
 const userSchema = Type.Object({
   name: Type.String({ minLength: 1 }),
@@ -405,9 +405,8 @@ export default app
 ### Vafast 应用
 
 ```typescript
-import { Server, defineRoutes, createHandler } from 'vafast'
+import { Server, defineRoutes, createHandler, Type } from 'vafast'
 import { cors } from '@vafast/cors'
-import { Type } from '@sinclair/typebox'
 
 const userSchema = Type.Object({
   name: Type.String({ minLength: 1 }),

@@ -15,7 +15,7 @@ JavaScript 允许任何数据成为任何类型。Vafast 提供了一个工具�
 
 ```typescript
 import { Server, defineRoutes, createHandler } from 'vafast'
-import { Type } from '@sinclair/typebox'
+import { Type } from 'vafast'
 
 const routes = defineRoutes([
   {
@@ -45,7 +45,7 @@ TypeBox 是一个非常快速、轻量且类型安全的 TypeScript 运行时验
 我们可以通过访问 TypeBox 的类型定义来获得完整的类型安全：
 
 ```typescript
-import { Type } from '@sinclair/typebox'
+import { Type } from 'vafast'
 
 const UserSchema = Type.Object({
   id: Type.Number(),
@@ -63,7 +63,7 @@ type User = Static<typeof UserSchema>
 ### 请求体验证
 
 ```typescript
-import { Type } from '@sinclair/typebox'
+import { Type } from 'vafast'
 
 const userSchema = Type.Object({
   name: Type.String({ minLength: 1, maxLength: 100 }),

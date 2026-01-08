@@ -54,7 +54,7 @@ export const handler = app.handler
 ```typescript
 // src/api/routes.ts
 import { defineRoutes, createHandler } from 'vafast'
-import { Type } from '@sinclair/typebox'
+import { Type } from 'vafast'
 
 export const routes = defineRoutes([
   {
@@ -143,7 +143,7 @@ export async function PATCH(request: Request) {
 
 ```typescript
 // src/api/types.ts
-import { Type } from '@sinclair/typebox'
+import { Type } from 'vafast'
 
 export const UserSchema = Type.Object({
   id: Type.Number(),

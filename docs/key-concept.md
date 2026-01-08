@@ -158,7 +158,7 @@ interface HandlerContext {
 Vafast 集成了 TypeBox 进行运行时类型验证：
 
 ```typescript
-import { Type } from '@sinclair/typebox'
+import { Type } from 'vafast'
 
 const userSchema = Type.Object({
   name: Type.String({ minLength: 1 }),
@@ -242,7 +242,7 @@ Schema 验证器在首次使用时编译并缓存，后续验证直接使用编�
 
 ```typescript
 import { createValidator, validateFast, precompileSchemas } from 'vafast'
-import { Type } from '@sinclair/typebox'
+import { Type } from 'vafast'
 
 const UserSchema = Type.Object({
   name: Type.String(),

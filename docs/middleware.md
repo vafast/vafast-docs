@@ -196,7 +196,7 @@ Vafast 的 `createHandler` 已内置 Schema 验证功能，无需手动编写验
 
 ```typescript
 import { createHandler, json } from 'vafast'
-import { Type } from '@sinclair/typebox'
+import { Type } from 'vafast'
 
 // 使用 createHandler 内置验证（推荐）
 const routes = defineRoutes([

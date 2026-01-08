@@ -120,7 +120,7 @@ const routes = defineRoutes([
 :::
 
 ```typescript
-import { Type } from '@sinclair/typebox'
+import { Type } from 'vafast'
 
 const routes = defineRoutes([
   {
@@ -276,7 +276,7 @@ const routes = defineRoutes([
 处理程序可以与 TypeBox 验证集成，使用两参数形式：
 
 ```typescript
-import { Type } from '@sinclair/typebox'
+import { Type } from 'vafast'
 
 const userSchema = Type.Object({
   name: Type.String({ minLength: 1 }),

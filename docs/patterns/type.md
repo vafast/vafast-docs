@@ -265,7 +265,7 @@ bigint
 TypeBox 提供了多种字符串验证选项：
 
 ```typescript
-import { Type } from '@sinclair/typebox'
+import { Type } from 'vafast'
 
 // 基本字符串
 const basicString = Type.String()
@@ -292,7 +292,7 @@ const statusString = Type.Union([
 ### 数字类型
 
 ```typescript
-import { Type } from '@sinclair/typebox'
+import { Type } from 'vafast'
 
 // 基本数字
 const basicNumber = Type.Number()
@@ -316,7 +316,7 @@ const positiveNumber = Type.Number({
 ### 对象类型
 
 ```typescript
-import { Type } from '@sinclair/typebox'
+import { Type } from 'vafast'
 
 // 基本对象
 const userObject = Type.Object({
@@ -342,7 +342,7 @@ const userWithAddress = Type.Object({
 ### 数组类型
 
 ```typescript
-import { Type } from '@sinclair/typebox'
+import { Type } from 'vafast'
 
 // 基本数组
 const stringArray = Type.Array(Type.String())
@@ -483,7 +483,7 @@ Vafast 与 TypeBox 的集成提供了以下特性：
 ### 自动类型推断
 
 ```typescript
-import { Type, type Static } from '@sinclair/typebox'
+import { Type, type Static } from 'vafast'
 
 // 定义模式
 const userSchema = Type.Object({
@@ -528,7 +528,7 @@ export default { fetch: server.fetch }
 如果需要获取详细的验证错误信息，可以使用自定义错误处理中间件：
 
 ```typescript
-import { Type } from '@sinclair/typebox'
+import { Type } from 'vafast'
 import { TypeCompiler } from '@sinclair/typebox/compiler'
 
 // 自定义验证错误处理（高级用法）
@@ -586,7 +586,7 @@ const adminUser = Type.Intersect([baseUserSchema, adminUserSchema])
 #### 递归类型
 
 ```typescript
-import { Type } from '@sinclair/typebox'
+import { Type } from 'vafast'
 
 const commentSchema = Type.Recursive(This => Type.Object({
   id: Type.Number(),
@@ -602,7 +602,7 @@ const commentSchema = Type.Recursive(This => Type.Object({
 
 ```typescript
 import { TypeCompiler } from '@sinclair/typebox/compiler'
-import { Type } from '@sinclair/typebox'
+import { Type } from 'vafast'
 
 const userSchema = Type.Object({
   name: Type.String(),
@@ -641,7 +641,7 @@ const userSchema = Type.Object({
 ### 2. 重用验证模式
 
 ```typescript
-import { Type } from '@sinclair/typebox'
+import { Type } from 'vafast'
 
 // 基础模式
 const baseUserSchema = Type.Object({
@@ -667,7 +667,7 @@ const userQuerySchema = Type.Object({
 
 ```typescript
 import { Server, defineRoutes, createHandler, Type } from 'vafast'
-import type { Static } from '@sinclair/typebox'
+import type { Static } from 'vafast'
 
 // 定义模式
 const userSchema = Type.Object({

@@ -93,7 +93,7 @@ export const userRoutes: any[] = [
 ```typescript
 // controllers/userController.ts
 import { createHandlerWithExtra, VafastError } from 'vafast'
-import { Type } from '@sinclair/typebox'
+import { Type } from 'vafast'
 
 type AuthContext = { user: { id: string } }
 
@@ -283,7 +283,7 @@ export type UserUpdate = z.infer<typeof userUpdateSchema>
 ```typescript
 // 推荐：使用 createHandler 内置验证
 import { createHandler } from 'vafast'
-import { Type } from '@sinclair/typebox'
+import { Type } from 'vafast'
 
 const routes = [
   {

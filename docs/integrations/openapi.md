@@ -38,7 +38,7 @@ const app = createHandler(routes)
 
 ```typescript
 import { defineRoutes, createHandler } from 'vafast'
-import { Type } from '@sinclair/typebox'
+import { Type } from 'vafast'
 import { swagger } from '@vafast/swagger'
 
 const routes = defineRoutes([
@@ -115,7 +115,7 @@ Vafast 的 OpenAPI 集成提供了完整的类型安全：
 
 ```typescript
 import { defineRoutes, createHandler } from 'vafast'
-import { Type } from '@sinclair/typebox'
+import { Type } from 'vafast'
 
 const routes = defineRoutes([
   {
@@ -146,7 +146,7 @@ const routes = defineRoutes([
 
 ```typescript
 import { defineRoutes, createHandler } from 'vafast'
-import { Type } from '@sinclair/typebox'
+import { Type } from 'vafast'
 
 const routes = defineRoutes([
   {

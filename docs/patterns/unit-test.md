@@ -152,7 +152,7 @@ describe('Vafast Middleware', () => {
 // test/validation.test.ts
 import { describe, expect, it } from 'bun:test'
 import { Server, defineRoutes, createHandler } from 'vafast'
-import { Type } from '@sinclair/typebox'
+import { Type } from 'vafast'
 
 describe('Vafast Validation', () => {
     const userSchema = Type.Object({

@@ -388,7 +388,7 @@ export default app
 
 ```typescript
 import { Server, defineRoutes, createHandler, serve, Type, json } from 'vafast'
-import { cors } from 'vafast/middleware'
+import { cors } from '@vafast/cors'
 
 const UserSchema = Type.Object({
   name: Type.String({ minLength: 1 }),

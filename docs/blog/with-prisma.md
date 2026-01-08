@@ -36,17 +36,15 @@ Prisma 的一个突出特点是它与流行数据库的无缝集成，例如：
 
 Prisma 是 Vafast 的灵感之一，其声明性 API 和流畅的开发体验让人愉悦。
 
-现在，我们可以通过 [Bun 0.6.7 的发布](https://bun.sh/blog/bun-v0.6.7) 让期待已久的想法成真，Bun 现在原生支持 Prisma。
-
 ## Vafast
 
-当你问应该使用什么框架和 Bun 搭配时，Vafast 是显而易见的选择。
+当你问应该使用什么框架时，Vafast 是一个优秀的选择。
 
-虽然你可以使用 Express 与 Bun，但 Vafast 是专为 Bun 构建的。
+Vafast 是一个高性能的 TypeScript Web 框架，支持 Node.js 和 Bun 等多种运行时。
 
-Vafast 的性能几乎比 Express 快了 19 倍，结合了声明性 API，能够创建统一的类型系统和端到端的类型安全。
+Vafast 的性能远超传统框架，结合了声明性 API，能够创建统一的类型系统和端到端的类型安全。
 
-Vafast 以其流畅的开发者体验而闻名，尤其是自早期以来 Vafast 就被设计用于与 Prisma 一起使用。
+Vafast 以其流畅的开发者体验而闻名，其设计非常适合与 Prisma 一起使用。
 
 凭借 Vafast 的严格类型验证，我们可以轻松地使用声明性 API 集成 Vafast 和 Prisma。
 
@@ -54,25 +52,24 @@ Vafast 以其流畅的开发者体验而闻名，尤其是自早期以来 Vafast
 
 ## 设置
 
-我们开始的第一步是运行 `bun create` 来设置一个 Vafast 服务器。
+我们开始的第一步是创建一个 Vafast 项目。
 
 ```bash
-bun create vafast vafast-prisma
+npx create-vafast-app vafast-prisma
+cd vafast-prisma
 ```
 
-其中 `vafast-prisma` 是我们的项目名称（文件夹目的地），可以自由更改为你喜欢的名称。
+其中 `vafast-prisma` 是我们的项目名称，可以自由更改为你喜欢的名称。
 
-现在进入我们的文件夹，安装 Prisma CLI 作为开发依赖。
-```ts
-bun add -d prisma
+现在安装 Prisma CLI 作为开发依赖。
+```bash
+npm add -D prisma
 ```
 
 然后我们可以使用 `prisma init` 设置 Prisma 项目。
-```ts
-bunx prisma init
+```bash
+npx prisma init
 ```
-
-`bunx` 是 Bun 的命令，相当于 `npx`，允许我们执行包的执行文件。
 
 设置完成后，我们可以看到 Prisma 会更新 `.env` 文件，并生成一个名为 **prisma** 的文件夹，文件夹内有 **schema.prisma** 文件。
 
@@ -117,7 +114,7 @@ DATABASE_URL="postgresql://postgres:12345678@localhost:5432/db?schema=public"
 
 然后我们可以运行 `prisma migrate` 来同步数据库与 Prisma 模式：
 ```bash
-bunx prisma migrate dev --name init
+npx prisma migrate dev --name init
 ```
 
 之后 Prisma 将根据我们的模式生成强类型的 Prisma Client 代码。
@@ -129,62 +126,65 @@ bunx prisma migrate dev --name init
 在我们的 **src/index.ts** 中，更新 Vafast 服务器以创建一个简单的用户注册接口。
 
 ```ts
-import { Vafast } from 'vafast'
-import { PrismaClient } from '@prisma/client' // [!code ++]
+import { Server, defineRoutes, createHandler, serve } from 'vafast'
+import { PrismaClient } from '@prisma/client'
 
-const db = new PrismaClient() // [!code ++]
+const db = new PrismaClient()
 
-const app = new Vafast()
-    .post( // [!code ++]
-        '/sign-up', // [!code ++]
-        async ({ body }) => db.user.create({ // [!code ++]
-            data: body // [!code ++]
-        }) // [!code ++]
-    ) // [!code ++]
-    .listen(3000)
+const routes = defineRoutes([
+  {
+    method: 'POST',
+    path: '/sign-up',
+    handler: createHandler(async ({ body }) => {
+      return await db.user.create({
+        data: body as { username: string; password: string }
+      })
+    })
+  }
+])
 
-console.log(
-    `🦊 Vafast 正在运行于 ${app.server?.hostname}:${app.server?.port}`
-)
+const server = new Server(routes)
+
+serve({ fetch: server.fetch, port: 3000 }, () => {
+  console.log('🚀 Vafast 正在运行于 http://localhost:3000')
+})
 ```
 
 我们刚刚创建了一个简单的接口，用于使用 Vafast 和 Prisma 向数据库插入新用户。
-
-::: tip
-**重要**的是，在返回 Prisma 函数时，你应该始终将回调函数标记为 async。
-
-因为 Prisma 函数不返回原生 Promise，Vafast 不能动态处理自定义 Promise 类型，但通过静态代码分析，通过将回调函数标记为 async，Vafast 会尝试等待函数的返回类型，从而允许我们映射 Prisma 结果。
-:::
 
 现在问题是，body 可能是任何内容，而不仅限于我们预期定义的类型。
 
 我们可以通过使用 Vafast 的类型系统来改进这一点。
 ```ts
-import { Vafast, t } from 'vafast' // [!code ++]
+import { Server, defineRoutes, createHandler, serve, Type } from 'vafast'
 import { PrismaClient } from '@prisma/client'
 
 const db = new PrismaClient()
 
-const app = new Vafast()
-    .post(
-        '/sign-up', 
-        async ({ body }) => db.user.create({
-            data: body
-        }),
-        { // [!code ++]
-            body: t.Object({ // [!code ++]
-                username: t.String(), // [!code ++]
-                password: t.String({ // [!code ++]
-                    minLength: 8 // [!code ++]
-                }) // [!code ++]
-            }) // [!code ++]
-        } // [!code ++]
-    )
-    .listen(3000)
+// 定义验证 Schema
+const SignUpBody = Type.Object({
+  username: Type.String(),
+  password: Type.String({ minLength: 8 })
+})
 
-console.log(
-    `🦊 Vafast 正在运行于 ${app.server?.hostname}:${app.server?.port}`
-)
+const routes = defineRoutes([
+  {
+    method: 'POST',
+    path: '/sign-up',
+    handler: createHandler(
+      { body: SignUpBody },
+      async ({ body }) => {
+        return await db.user.create({ data: body })
+      }
+    )
+  }
+])
+
+const server = new Server(routes)
+
+serve({ fetch: server.fetch, port: 3000 }, () => {
+  console.log('🚀 Vafast 正在运行于 http://localhost:3000')
+})
 ```
 
 这告诉 Vafast 验证传入请求的 body 是否匹配指定的形状，并将回调中 `body` 的 TypeScript 类型更新为匹配相同类型：
@@ -208,195 +208,134 @@ Invalid `prisma.user.create()` invocation:
 Unique constraint failed on the fields: (`username`)
 ```
 
-默认的 Vafast 错误处理程序可以自动处理这种情况，但我们可以通过指定使用 Vafast 的局部 `onError` 钩子来改进：
+我们可以使用中间件来处理 Prisma 错误：
 ```ts
-import { Vafast, t } from 'vafast'
-import { PrismaClient } from '@prisma/client'
+import { Server, defineRoutes, createHandler, serve, Type, json } from 'vafast'
+import { PrismaClient, Prisma } from '@prisma/client'
 
 const db = new PrismaClient()
 
-const app = new Vafast()
-    .post(
-        '/',
-        async ({ body }) => db.user.create({
-            data: body
-        }),
-        {
-            error({ code }) {  // [!code ++]
-                switch (code) {  // [!code ++]
-                    // Prisma P2002: "Unique constraint failed on the {constraint}"  // [!code ++]
-                    case 'P2002':  // [!code ++]
-                        return {  // [!code ++]
-                            error: '用户名必须是唯一的'  // [!code ++]
-                        }  // [!code ++]
-                }  // [!code ++]
-            },  // [!code ++]
-            body: t.Object({
-                username: t.String(),
-                password: t.String({
-                    minLength: 8
-                })
-            })
-        }
-    )
-    .listen(3000)
+const SignUpBody = Type.Object({
+  username: Type.String(),
+  password: Type.String({ minLength: 8 })
+})
 
-console.log(
-    `🦊 Vafast 正在运行于 ${app.server?.hostname}:${app.server?.port}`
-)
+// Prisma 错误处理中间件
+const prismaErrorHandler = async (req: Request, next: () => Promise<Response>) => {
+  try {
+    return await next()
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      switch (error.code) {
+        // P2002: "Unique constraint failed on the {constraint}"
+        case 'P2002':
+          return json({ error: '用户名必须是唯一的' }, 400)
+        default:
+          return json({ error: '数据库错误' }, 500)
+      }
+    }
+    throw error
+  }
+}
+
+const routes = defineRoutes([
+  {
+    method: 'POST',
+    path: '/sign-up',
+    middleware: [prismaErrorHandler],
+    handler: createHandler(
+      { body: SignUpBody },
+      async ({ body }) => {
+        return await db.user.create({ data: body })
+      }
+    )
+  }
+])
+
+const server = new Server(routes)
+
+serve({ fetch: server.fetch, port: 3000 }, () => {
+  console.log('🚀 Vafast 正在运行于 http://localhost:3000')
+})
 ```
 
-使用 `error` 钩子，回调内部抛出的任何错误都会传递到 `error` 钩子，允许我们定义自定义错误处理。
+使用中间件，回调内部抛出的任何错误都会被捕获，允许我们定义自定义错误处理。
 
 根据 [Prisma 文档](https://www.prisma.io/docs/reference/api-reference/error-reference#p2002)，错误代码 'P2002' 意味着执行查询时违反了唯一约束。
 
-由于此表只有一个 `username` 字段是唯一的，我们可以推断该错误是由于用户名不唯一引起，因此我们返回自定义错误消息：
+由于此表只有一个 `username` 字段是唯一的，我们可以推断该错误是由于用户名不唯一引起，因此我们返回自定义错误消息。
+
+## 组织代码
+
+当我们的服务器变得复杂时，建议将代码分离到不同的模块中：
+
 ```ts
-{
-    error: '用户名必须是唯一的'
+// models/user.ts
+import { Type } from 'vafast'
+
+export const UserModel = {
+  signUp: Type.Object({
+    username: Type.String(),
+    password: Type.String({ minLength: 8 })
+  }),
+  
+  response: Type.Object({
+    id: Type.Number(),
+    username: Type.String()
+  })
 }
 ```
 
-当唯一约束失败时，这将返回我们自定义错误消息的 JSON 等效项。
-
-使我们能够流畅地从 Prisma 错误中定义任何自定义错误。
-
-## 奖励：参考模式
-当我们的服务器变得复杂，类型变得冗余并成为模板代码时，使用 **参考模式** 可以改进内联的 Vafast 类型。
-
-简单地说，我们可以为我们的模式命名，并通过名称引用类型。
-
 ```ts
-import { Vafast, t } from 'vafast'
+// routes/user.ts
+import { defineRoutes, createHandler } from 'vafast'
 import { PrismaClient } from '@prisma/client'
+import { UserModel } from '../models/user'
+import { prismaErrorHandler } from '../middleware/prisma'
 
 const db = new PrismaClient()
 
-const app = new Vafast()
-    .model({ // [!code ++]
-        'user.sign': t.Object({ // [!code ++]
-            username: t.String(), // [!code ++]
-            password: t.String({ // [!code ++]
-                minLength: 8 // [!code ++]
-            }) // [!code ++]
-        }) // [!code ++]
-    }) // [!code ++]
-    .post(
-        '/',
-        async ({ body }) => db.user.create({
-            data: body
-        }),
-        {
-            error({ code }) {
-                switch (code) {
-                    // Prisma P2002: "Unique constraint failed on the {constraint}"
-                    case 'P2002':
-                        return {
-                            error: '用户名必须是唯一的'
-                        }
-                }
-            },
-            body: 'user.sign', // [!code ++]
-            body: t.Object({ // [!code --]
-                username: t.String(), // [!code --]
-                password: t.String({ // [!code --]
-                    minLength: 8 // [!code --]
-                }) // [!code --]
-            }) // [!code --]
-        }
+export const userRoutes = defineRoutes([
+  {
+    method: 'POST',
+    path: '/sign-up',
+    middleware: [prismaErrorHandler],
+    handler: createHandler(
+      { body: UserModel.signUp },
+      async ({ body }) => {
+        const user = await db.user.create({
+          data: body,
+          select: { id: true, username: true }
+        })
+        return user
+      }
     )
-    .listen(3000)
-
-console.log(
-    `🦊 Vafast 正在运行于 ${app.server?.hostname}:${app.server?.port}`
-)
+  }
+])
 ```
-
-这与使用内联相同，但你只需定义一次，然后通过名称引用模式以消除冗余的验证代码。
-
-TypeScript 和验证代码会按预期工作。
-
-## 奖励：文档
-作为奖励，Vafast 的类型系统也是 OpenAPI Schema 3.0 的兼容版，这意味着它能够与支持 OpenAPI Schema 的工具（如 Swagger）生成文档。
-
-我们可以使用 Vafast Swagger 插件以一行代码生成 API 文档。
-
-```bash
-bun add @vafastjs/swagger
-```
-
-然后只需添加插件：
 
 ```ts
-import { Vafast, t } from 'vafast'
-import { PrismaClient } from '@prisma/client'
-import { swagger } from '@vafastjs/swagger' // [!code ++]
+// index.ts
+import { Server, serve } from 'vafast'
+import { userRoutes } from './routes/user'
 
-const db = new PrismaClient()
+const server = new Server([...userRoutes])
 
-const app = new Vafast()
-    .use(swagger()) // [!code ++]
-    .post(
-        '/',
-        async ({ body }) =>
-            db.user.create({
-                data: body,
-                select: { // [!code ++]
-                    id: true, // [!code ++]
-                    username: true // [!code ++]
-                } // [!code ++]
-            }),
-        {
-            error({ code }) {
-                switch (code) {
-                    // Prisma P2002: "Unique constraint failed on the {constraint}"
-                    case 'P2002':
-                        return {
-                            error: '用户名必须是唯一的'
-                        }
-                }
-            },
-            body: t.Object({
-                username: t.String(),
-                password: t.String({
-                    minLength: 8
-                })
-            }),
-            response: t.Object({ // [!code ++]
-                id: t.Number(), // [!code ++]
-                username: t.String() // [!code ++]
-            }) // [!code ++]
-        }
-    )
-    .listen(3000)
-
-console.log(
-    `🦊 Vafast 正在运行于 ${app.server?.hostname}:${app.server?.port}`
-)
+serve({ fetch: server.fetch, port: 3000 }, () => {
+  console.log('🚀 Vafast 正在运行于 http://localhost:3000')
+})
 ```
 
-这就是创建一个良好定义的 API 文档所需的一切。
-
-<img class="-png" src="/blog/with-prisma/swagger.webp" alt="通过 Vafast 生成的 Swagger 文档" />
-
-由于严格定义类型的文档，我们发现由于不应返回私密信息而意外返回了 `password` 字段。
-
-得益于 Vafast 的类型系统，我们定义响应不应包含 `password`，这会自动警告我们 Prisma 查询返回了密码，允许我们提前修复这个问题。
-
-此外，我们无须担心可能会忘记 OpenAPI Schema 3.0 的规范，因为我们也有自动补全和类型安全。
-
-我们可以用 `detail` 定义我们的路由细节，它也遵循 OpenAPI Schema 3.0，因此我们可以轻松创建文档。
+这种结构使代码更易于维护和测试。
 
 ## 接下来是什么
-在 Bun 和 Vafast 的支持下，我们进入了一个全新的开发者体验时代。
+Vafast 进入了一个全新的开发者体验时代。
 
 通过 Prisma，我们可以加速与数据库的交互，Vafast 则加速了我们在开发者体验和性能方面创建后台 Web 服务器的过程。
 
 > 与之工作是一种绝对的乐趣。
 
-Vafast 正在努力创建一个更好的开发者体验的新标准，以 Bun 构建高性能的 TypeScript 服务器，能够与 Go 和 Rust 的性能相匹配。
-
-如果你在寻找学习 Bun 的起点，可以考虑看看 Vafast，特别是在 [类型安全 API 客户端](/api-client/overview) 方面，类似于 tRPC，但基于 REST 标准，而无需任何代码生成。
+Vafast 正在努力创建一个更好的开发者体验的新标准，构建高性能的 TypeScript 服务器。
 
 如果你对 Vafast 感兴趣，欢迎查看我们的 [GitHub](https://github.com/vafast/vafast)
 </Blog>

@@ -315,7 +315,7 @@ export const tagQueries = {
 ```typescript
 // src/routes.ts
 import { defineRoutes, createHandler } from 'vafast'
-import { Type } from '@sinclair/typebox'
+import { Type } from 'vafast'
 import { userQueries, postQueries, tagQueries } from './db/queries'
 import { hashPassword, verifyPassword } from './utils/auth'
 

@@ -56,7 +56,7 @@ export const handler = app.handler
 ```typescript
 // server/api/routes.ts
 import { defineRoutes, createHandler } from 'vafast'
-import { Type } from '@sinclair/typebox'
+import { Type } from 'vafast'
 
 export const routes = defineRoutes([
   {
@@ -188,7 +188,7 @@ export default defineEventHandler(async (event) => {
 
 ```typescript
 // server/api/types.ts
-import { Type } from '@sinclair/typebox'
+import { Type } from 'vafast'
 
 export const ProductSchema = Type.Object({
   id: Type.Number(),

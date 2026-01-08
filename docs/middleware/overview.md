@@ -41,13 +41,11 @@ Vafast 旨在实现模块化和轻量化。
 ```typescript
 import { Server, defineRoutes, createHandler } from 'vafast'
 import { cors } from '@vafast/cors'
-import { rateLimit } from '@vafast/rate-limit'
 
 const routes = defineRoutes([
   {
     method: 'GET',
     path: '/api/users',
-    middleware: [rateLimit({ max: 100, windowMs: 60000 })],
     handler: createHandler(() => ({ users: [] }))
   }
 ])

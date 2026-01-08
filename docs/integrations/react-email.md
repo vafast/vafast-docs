@@ -577,7 +577,7 @@ export const emailService = new EmailService({
 ```typescript
 // src/routes.ts
 import { defineRoutes, createHandler } from 'vafast'
-import { Type } from '@sinclair/typebox'
+import { Type } from 'vafast'
 import { emailService } from './services/emailService'
 import { userService } from './services/userService'
 import { authMiddleware } from './middleware/auth'

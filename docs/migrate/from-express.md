@@ -313,7 +313,6 @@ app.listen(3000)
 ```typescript
 import { Server, defineRoutes, createHandler } from 'vafast'
 import { cors } from '@vafast/cors'
-import { helmet } from '@vafast/helmet'
 
 const routes = defineRoutes([
   {
@@ -344,7 +343,6 @@ const routes = defineRoutes([
 
 const server = new Server(routes)
 server.use(cors())
-server.use(helmet())
 
 export default { fetch: server.fetch }
 ```

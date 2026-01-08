@@ -241,7 +241,7 @@ export default { fetch: (req: Request) => server.fetch(req) }
 ```typescript
 import { Server, createHandler } from 'vafast'
 import { jwt } from '@vafast/jwt'
-import { Type as t } from '@sinclair/typebox'
+import { Type as t } from 'vafast'
 
 // 定义用户模式
 const UserSchema = t.Object({
@@ -450,7 +450,7 @@ export default { fetch: (req: Request) => server.fetch(req) }
 ```typescript
 import { Server, createHandler } from 'vafast'
 import { jwt } from '@vafast/jwt'
-import { Type as t } from '@sinclair/typebox'
+import { Type as t } from 'vafast'
 
 // 定义用户模式
 const UserSchema = t.Object({

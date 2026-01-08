@@ -401,7 +401,7 @@ const routes = [
 ### 3. 类型安全（使用 Schema）
 
 ```typescript
-import { Type } from '@sinclair/typebox'
+import { Type } from 'vafast'
 
 const routes = [
   {

@@ -1,37 +1,36 @@
 ---
-title: 最佳实践 - VafastJS
+title: 最佳实践 - Vafast
 ---
 
 # 最佳实践
 
 Vafast 是一个与模式无关的框架，选择何种编码模式由您和您的团队决定。
 
-然而，在尝试将 MVC 模式 [(Model-View-Controller)](https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller) 适配到 Vafast 时，我们发现很难解耦和处理类型。
-
-本页面是关于如何结合 MVC 模式遵循 Vafast 结构最佳实践的指南，但也可以适用于任何您喜欢的编码模式。
+本页面是关于如何结合 MVC 模式 [(Model-View-Controller)](https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller) 遵循 Vafast 结构最佳实践的指南，但也可以适用于任何您喜欢的编码模式。
 
 ## 文件夹结构
 
 Vafast 对文件夹结构没有固定看法，留给您 **自行决定** 如何组织代码。
 
-然而，**如果您没有具体结构的想法**，我们推荐基于功能的文件夹结构。每个功能模块拥有自己的文件夹，里面包含控制器、服务和模型。
+然而，**如果您没有具体结构的想法**，我们推荐基于功能的文件夹结构。每个功能模块拥有自己的文件夹，里面包含路由、服务和模型。
 
 ```
 | src
   | modules
-	| auth
-	  | index.ts (Vafast 控制器)
-	  | service.ts (服务)
-	  | model.ts (模型)
-	| user
-	  | index.ts (Vafast 控制器)
-	  | service.ts (服务)
-	  | model.ts (模型)
+    | auth
+      | routes.ts (路由定义)
+      | service.ts (服务)
+      | model.ts (模型)
+    | user
+      | routes.ts (路由定义)
+      | service.ts (服务)
+      | model.ts (模型)
   | utils
-	| a
-	  | index.ts
-	| b
-	  | index.ts
+    | a
+      | index.ts
+    | b
+      | index.ts
+  | index.ts (入口文件)
 ```
 
 这种结构使您更容易找到和管理代码，并将相关代码集中在一起。
@@ -40,521 +39,500 @@ Vafast 对文件夹结构没有固定看法，留给您 **自行决定** 如何�
 
 ::: code-group
 
-```typescript [auth/index.ts]
-// 控制器处理 HTTP 相关，如路由、请求验证
-import { Vafast } from 'vafast'
-
-import { Auth } from './service'
+```typescript [auth/routes.ts]
+// 路由定义处理 HTTP 相关，如路由、请求验证
+import { defineRoutes, createHandler, Type } from 'vafast'
+import { AuthService } from './service'
 import { AuthModel } from './model'
 
-export const auth = new Vafast({ prefix: '/auth' })
-	.get(
-		'/sign-in',
-		async ({ body, cookie: { session } }) => {
-			const response = await Auth.signIn(body)
-
-			// 设置 session cookie
-			session.value = response.token
-
-			return response
-		}, {
-			body: AuthModel.signInBody,
-			response: {
-				200: AuthModel.signInResponse,
-				400: AuthModel.signInInvalid
-			}
-		}
-	)
+export const authRoutes = defineRoutes([
+  {
+    method: 'POST',
+    path: '/auth/sign-in',
+    handler: createHandler(
+      { body: AuthModel.signInBody },
+      async ({ body }) => {
+        const response = await AuthService.signIn(body)
+        return response
+      }
+    )
+  },
+  {
+    method: 'POST',
+    path: '/auth/sign-up',
+    handler: createHandler(
+      { body: AuthModel.signUpBody },
+      async ({ body }) => {
+        const user = await AuthService.signUp(body)
+        return { data: user, status: 201 }
+      }
+    )
+  }
+])
 ```
 
 ```typescript [auth/service.ts]
-// 服务处理业务逻辑，解耦于 Vafast 控制器
-import { status } from 'vafast'
+// 服务处理业务逻辑，解耦于路由定义
+import type { Static } from 'vafast'
+import { AuthModel } from './model'
 
-import type { AuthModel } from './model'
+type SignInBody = Static<typeof AuthModel.signInBody>
+type SignUpBody = Static<typeof AuthModel.signUpBody>
 
-// If the class doesn't need to store a property,
-// you may use `abstract class` to avoid class allocation
-export abstract class Auth {
-	static async signIn({ username, password }: AuthModel.signInBody) {
-		const user = await sql`
-			SELECT password
-			FROM users
-			WHERE username = ${username}
-			LIMIT 1`
+export abstract class AuthService {
+  static async signIn({ username, password }: SignInBody) {
+    const user = await db.user.findUnique({ where: { username } })
+    
+    if (!user || !await verifyPassword(password, user.password)) {
+      throw new Error('Invalid username or password')
+    }
 
-		if (!await Bun.password.verify(password, user.password))
-			// 你可以直接抛出 HTTP 错误
-			throw status(
-				400,
-				'Invalid username or password' satisfies AuthModel.signInInvalid
-			)
+    return {
+      username,
+      token: await generateToken(user.id)
+    }
+  }
 
-		return {
-			username,
-			token: await generateAndSaveTokenToDB(user.id)
-		}
-	}
+  static async signUp({ username, password, email }: SignUpBody) {
+    const hashedPassword = await hashPassword(password)
+    
+    return await db.user.create({
+      data: { username, password: hashedPassword, email }
+    })
+  }
 }
 ```
 
 ```typescript [auth/model.ts]
 // 模型定义请求和响应的数据结构和验证
-import { t } from 'vafast'
+import { Type } from 'vafast'
 
-export namespace AuthModel {
-	// 定义用于 Vafast 验证的数据传输对象
-	export const signInBody = t.Object({
-		username: t.String(),
-		password: t.String(),
-	})
+export const AuthModel = {
+  signInBody: Type.Object({
+    username: Type.String({ minLength: 1 }),
+    password: Type.String({ minLength: 6 }),
+  }),
 
-	// 以 TypeScript 类型定义
-	export type signInBody = typeof signInBodyBody.static
+  signUpBody: Type.Object({
+    username: Type.String({ minLength: 1 }),
+    password: Type.String({ minLength: 6 }),
+    email: Type.String({ format: 'email' }),
+  }),
 
-	// 其它模型同理
-	export const signInResponse = t.Object({
-		username: t.String(),
-		token: t.String(),
-	})
-
-	export type signInResponse = typeof signInResponse.static
-
-	export const signInInvalid = t.Literal('Invalid username or password')
-	export type signInInvalid = typeof signInInvalid.static
+  signInResponse: Type.Object({
+    username: Type.String(),
+    token: Type.String(),
+  }),
 }
+```
+
+```typescript [index.ts]
+// 入口文件：组合所有路由
+import { Server, serve } from 'vafast'
+import { authRoutes } from './modules/auth/routes'
+import { userRoutes } from './modules/user/routes'
+
+const server = new Server([
+  ...authRoutes,
+  ...userRoutes,
+])
+
+serve({ fetch: server.fetch, port: 3000 }, () => {
+  console.log('🚀 Server running on http://localhost:3000')
+})
 ```
 
 :::
 
 每个文件的职责如下：
-- **控制器（Controller）**：处理 HTTP 路由、请求验证和 Cookie。
-- **服务（Service）**：处理业务逻辑，尽可能解耦于 Vafast 控制器。
-- **模型（Model）**：定义请求和响应的数据结构及验证。
+- **路由（Routes）**：处理 HTTP 路由、请求验证和响应。
+- **服务（Service）**：处理业务逻辑，完全解耦于框架。
+- **模型（Model）**：定义请求和响应的数据结构及验证 Schema。
 
 您可以随意调整此结构以满足自己的需求，使用任何您喜欢的编码模式。
 
-## 方法链
+## 路由组织
 
-Vafast 代码应始终使用 **方法链**。
+### ✅ 推荐：使用 defineRoutes 定义路由
 
-由于 Vafast 的类型系统较复杂，Vafast 的每个方法都会返回一个新的类型引用。
-
-**这非常重要**，以确保类型的完整性和推断。
+使用 `defineRoutes` 定义路由数组，获得更好的类型推断：
 
 ```typescript
-import { Vafast } from 'vafast'
+import { defineRoutes, createHandler } from 'vafast'
 
-new Vafast()
-    .state('build', 1)
-    // 存储是强类型的 // [!code ++]
-    .get('/', ({ store: { build } }) => build)
-    .listen(3000)
+export const userRoutes = defineRoutes([
+  {
+    method: 'GET',
+    path: '/users',
+    handler: createHandler(() => getUsers())
+  },
+  {
+    method: 'GET',
+    path: '/users/:id',
+    handler: createHandler(({ params }) => getUserById(params.id))
+  }
+])
 ```
 
-在上述代码中，**state** 返回了一个新的 **VafastInstance** 类型，并添加了 `build` 类型。
+### ✅ 推荐：按功能模块分组路由
 
-### ❌ 不要：不要不使用方法链来使用 Vafast
-
-如果不使用方法链，Vafast 无法保存新增类型，导致类型推断丢失。
+将相关路由放在同一模块中，便于维护：
 
 ```typescript
-import { Vafast } from 'vafast'
+// modules/user/routes.ts
+export const userRoutes = defineRoutes([
+  { method: 'GET', path: '/users', handler: ... },
+  { method: 'GET', path: '/users/:id', handler: ... },
+  { method: 'POST', path: '/users', handler: ... },
+])
 
-const app = new Vafast()
-
-app.state('build', 1)
-
-app.get('/', ({ store: { build } }) => build)
-
-app.listen(3000)
+// modules/post/routes.ts
+export const postRoutes = defineRoutes([
+  { method: 'GET', path: '/posts', handler: ... },
+  { method: 'GET', path: '/posts/:id', handler: ... },
+])
 ```
 
-我们建议 <u>**始终使用方法链**</u> 以确保准确的类型推断。
-
-## 控制器
-
-> 1 个 Vafast 实例 = 1 个控制器
-
-Vafast 在多个方面确保类型完整性，如果您直接把整个 `Context` 类型传递给控制器，可能会遇到以下问题：
-
-1. Vafast 类型复杂，严重依赖插件和多级链。
-2. 类型难以准确化，且可能因装饰器和状态变化而随时改变。
-3. 类型转换容易导致类型完整性丢失，无法确保类型与运行时代码匹配。
-4. 这会使得 [Sucrose](/blog/vafast-10#sucrose) *(Vafast 的“编译器”)* 更难对代码做静态分析。
-
-### ❌ 不要：创建一个单独的控制器类
-
-不要创建单独的控制器类，而是直接使用 Vafast 实例作为控制器：
+### ✅ 推荐：在入口文件组合路由
 
 ```typescript
-import { Vafast, t, type Context } from 'vafast'
+import { Server, serve } from 'vafast'
+import { userRoutes } from './modules/user/routes'
+import { postRoutes } from './modules/post/routes'
 
-abstract class Controller {
-    static root(context: Context) {
-        return Service.doStuff(context.stuff)
-    }
-}
+const server = new Server([
+  ...userRoutes,
+  ...postRoutes,
+])
 
-// ❌ 不要这样用
-new Vafast()
-    .get('/', Controller.root)
+serve({ fetch: server.fetch, port: 3000 })
 ```
 
-将整个 `Controller.method` 传给 Vafast 等同于传递了两层控制器，这违背框架设计原则和 MVC 模式本质。
+## 服务层
 
-### ✅ 做法：将 Vafast 本身作为控制器使用
+服务是独立的工具/辅助函数集合，作为业务逻辑被解耦出来，供路由使用。
 
-代替上面做法，直接将 Vafast 实例本身视为控制器。
+任何可以从路由处理函数中解耦的技术逻辑都可以放在 **服务** 中。
 
-```typescript
-import { Vafast } from 'vafast'
-import { Service } from './service'
-
-new Vafast()
-    .get('/', ({ stuff }) => {
-        Service.doStuff(stuff)
-    })
-```
-
-### 测试
-
-您可以使用 `handle` 方法直接调用控制器函数以进行测试（包括其生命周期）：
-
-```typescript
-import { Vafast } from 'vafast'
-import { Service } from './service'
-
-import { describe, it, expect } from 'bun:test'
-
-const app = new Vafast()
-    .get('/', ({ stuff }) => {
-        Service.doStuff(stuff)
-
-        return 'ok'
-    })
-
-describe('控制器', () => {
-	it('应该工作', async () => {
-		const response = await app
-			.handle(new Request('http://localhost/'))
-			.then((x) => x.text())
-
-		expect(response).toBe('ok')
-	})
-})
-```
-
-您可以在 [单元测试](/patterns/unit-test.html) 中了解更多相关信息。
-
-## 服务
-
-服务是独立的工具/辅助函数集合，作为业务逻辑被解耦出来，供模块或控制器使用，在此处即 Vafast 实例。
-
-任何可以从控制器中解耦的技术逻辑都可以放在 **服务** 中。
-
-Vafast 中有两种类型的服务：
-1. 不依赖请求的服务
-2. 依赖请求的服务
-
-### ✅ 做：抽象不依赖请求的服务
+### ✅ 推荐：抽象不依赖请求的服务
 
 建议将服务类或函数与 Vafast 解耦。
 
-如果服务或函数不依赖 HTTP 请求或 `Context`，推荐将其抽象为静态类或函数。
+如果服务或函数不依赖 HTTP 请求，推荐将其抽象为静态类或函数：
 
 ```typescript
-import { Vafast, t } from 'vafast'
-
-abstract class Service {
-    static fibo(number: number): number {
-        if(number < 2)
-            return number
-
-        return Service.fibo(number - 1) + Service.fibo(number - 2)
-    }
+// services/math.ts
+export abstract class MathService {
+  static fibo(n: number): number {
+    if (n < 2) return n
+    return MathService.fibo(n - 1) + MathService.fibo(n - 2)
+  }
 }
 
-new Vafast()
-    .get('/fibo', ({ body }) => {
-        return Service.fibo(body)
-    }, {
-        body: t.Numeric()
-    })
+// routes.ts
+import { defineRoutes, createHandler, Type } from 'vafast'
+import { MathService } from './services/math'
+
+export const routes = defineRoutes([
+  {
+    method: 'GET',
+    path: '/fibo/:n',
+    handler: createHandler(
+      { params: Type.Object({ n: Type.String() }) },
+      ({ params }) => MathService.fibo(parseInt(params.n))
+    )
+  }
+])
 ```
 
 如果服务不需要存储属性，可以使用 `abstract class` 和 `static`，避免创建类实例。
 
-### ✅ 做：请求依赖的服务作为 Vafast 实例
+### ✅ 推荐：依赖请求的逻辑使用中间件
 
-**如果服务依赖请求**或需要处理 HTTP 请求，建议将其抽象为 Vafast 实例，以确保类型完整性和推断：
+如果逻辑依赖请求（如身份验证），推荐使用中间件：
 
 ```typescript
-import { Vafast } from 'vafast'
+import { defineRoutes, createHandler, json } from 'vafast'
 
-// ✅ 推荐做法
-const AuthService = new Vafast({ name: 'Auth.Service' })
-    .macro({
-        isSignIn: {
-            resolve({ cookie, status }) {
-                if (!cookie.session.value) return status(401)
+// 身份验证中间件
+const authMiddleware = async (req: Request, next: () => Promise<Response>) => {
+  const token = req.headers.get('authorization')?.replace('Bearer ', '')
+  
+  if (!token) {
+    return json({ error: 'Unauthorized' }, 401)
+  }
+  
+  const user = await verifyToken(token)
+  if (!user) {
+    return json({ error: 'Invalid token' }, 401)
+  }
+  
+  // 将用户信息附加到请求
+  ;(req as any).user = user
+  return await next()
+}
 
-                return {
-                	session: cookie.session.value,
-                }
-            }
-        }
+export const protectedRoutes = defineRoutes([
+  {
+    method: 'GET',
+    path: '/profile',
+    middleware: [authMiddleware],
+    handler: createHandler(({ req }) => {
+      const user = (req as any).user
+      return { id: user.id, username: user.username }
     })
-
-const UserController = new Vafast()
-    .use(AuthService)
-    .get('/profile', ({ Auth: { session } }) => session, {
-    	isSignIn: true
-    })
+  }
+])
 ```
 
-::: tip
-Vafast 默认自动处理[插件去重](/essential/plugin.html#plugin-deduplication)，所以您无需担心性能问题，只要指定了 **"name"** 属性，它就会是单例。
-:::
+### ❌ 不推荐：在服务中处理 HTTP 响应
 
-### ✅ 做：只装饰请求依赖属性
-
-建议 `decorate`（装饰） 仅针对请求依赖的属性，如 `requestIP`、`requestTime` 或 `session`。
-
-过度使用装饰器可能导致代码与 Vafast 紧耦合，增加测试和重用难度。
-
-```typescript
-import { Vafast } from 'vafast'
-
-new Vafast()
-	.decorate('requestIP', ({ request }) => request.headers.get('x-forwarded-for') || request.ip)
-	.decorate('requestTime', () => Date.now())
-	.decorate('session', ({ cookie }) => cookie.session.value)
-	.get('/', ({ requestIP, requestTime, session }) => {
-		return { requestIP, requestTime, session }
-	})
-```
-
-### ❌ 不要：将整个 `Context` 传递给服务
-
-**Context 是一个高度动态的类型**，可以从 Vafast 实例推断得到。
-
-不要直接将整个 `Context` 传递给服务，而应对象解构只提取所需字段再传入服务：
-
-```typescript
-import type { Context } from 'vafast'
-
-class AuthService {
-	constructor() {}
-
-	// ❌ 不建议这样写
-	isSignIn({ status, cookie: { session } }: Context) {
-		if (session.value)
-			return status(401)
-	}
-}
-```
-
-由于 Vafast 类型复杂，且强依赖插件和多层链式调用，手动准确类型化很有挑战。
-
-### ⚠️ 从 Vafast 实例推断 Context
-
-在 **非常必要** 的情况下，可以从 Vafast 实例推断 `Context` 类型：
-
-```typescript
-import { Vafast, type InferContext } from 'vafast'
-
-const setup = new Vafast()
-	.state('a', 'a')
-	.decorate('b', 'b')
-
-class AuthService {
-	constructor() {}
-
-	// ✅ 推荐写法
-	isSignIn({ status, cookie: { session } }: InferContext<typeof setup>) {
-		if (session.value)
-			return status(401)
-	}
-}
-```
-
-不过建议尽量避免这样，并优先使用 [Vafast 作为服务实例](#✅-做-请求依赖的服务作为-vafast-实例)。
-
-更多关于 [InferContext](/essential/handler#infercontext) 的信息，详见 [基础：处理程序](/essential/handler)。
-
-## 模型
-
-模型或 [DTO（数据传输对象）](https://en.wikipedia.org/wiki/Data_transfer_object) 使用 [Vafast.t（验证系统）](/essential/validation.html#vafast-type) 处理。
-
-Vafast 内置验证系统能从代码推断类型并进行运行时校验。
-
-### ❌ 不要：将类实例作为模型声明
-
-不要将类实例用于模型声明：
-
-```typescript
-// ❌ 不建议
-class CustomBody {
-	username: string
-	password: string
-
-	constructor(username: string, password: string) {
-		this.username = username
-		this.password = password
-	}
-}
-
-// ❌ 不建议
-interface ICustomBody {
-	username: string
-	password: string
-}
-```
-
-### ✅ 做：使用 Vafast 验证系统定义模型
-
-使用 Vafast 验证系统而非类或接口声明模型：
-
-```typescript
-// ✅ 推荐做法
-import { Vafast, t } from 'vafast'
-
-const customBody = t.Object({
-	username: t.String(),
-	password: t.String()
-})
-
-// 可选：获取模型对应类型
-// 通常无须专门使用该类型，因为 Vafast 已推断
-type CustomBody = typeof customBody.static
-
-export { customBody }
-```
-
-我们可以用 `typeof` 和 `.static` 来获取类型。
-
-这样可以通过 `CustomBody` 类型正确推断请求体。
-
-```typescript
-import { Vafast, t } from 'vafast'
-
-const customBody = t.Object({
-	username: t.String(),
-	password: t.String()
-})
-
-// ✅ 推荐写法
-new Vafast()
-	.post('/login', ({ body }) => {
-		return body
-	}, {
-		body: customBody
-	})
-```
-
-### ❌ 不要：把类型和模型分开声明
-
-不要把模型和类型分开声明，应通过模型的 `typeof` 和 `.static` 获取类型。
+服务应该只处理业务逻辑，不要在服务中构造 HTTP 响应：
 
 ```typescript
 // ❌ 不推荐
-import { Vafast, t } from 'vafast'
-
-const customBody = t.Object({
-	username: t.String(),
-	password: t.String()
-})
-
-type CustomBody = {
-	username: string
-	password: string
+class UserService {
+  static async getUser(id: string) {
+    const user = await db.user.findUnique({ where: { id } })
+    if (!user) {
+      return new Response('Not Found', { status: 404 }) // ❌
+    }
+    return user
+  }
 }
 
-// ✅ 推荐写法
-const customBody = t.Object({
-	username: t.String(),
-	password: t.String()
-})
-
-type CustomBody = typeof customBody.static
-```
-
-### 分组
-
-您可以将多个模型归组到一个对象中，便于管理：
-
-```typescript
-import { Vafast, t } from 'vafast'
-
-export const AuthModel = {
-	sign: t.Object({
-		username: t.String(),
-		password: t.String()
-	})
+// ✅ 推荐
+class UserService {
+  static async getUser(id: string) {
+    const user = await db.user.findUnique({ where: { id } })
+    if (!user) {
+      throw new Error('User not found') // 或返回 null
+    }
+    return user
+  }
 }
 
-const models = AuthModel.models
+// 在路由中处理 HTTP 响应
+{
+  method: 'GET',
+  path: '/users/:id',
+  handler: createHandler(async ({ params }) => {
+    const user = await UserService.getUser(params.id)
+    if (!user) {
+      return { data: { error: 'User not found' }, status: 404 }
+    }
+    return user
+  })
+}
 ```
 
-### 模型注入
+## 模型（Schema）
 
-虽然可选，但如严格遵循 MVC 模式，您可能希望像使用服务一样，将模型注入控制器中。
+模型或 [DTO（数据传输对象）](https://en.wikipedia.org/wiki/Data_transfer_object) 使用 TypeBox（通过 vafast 导出的 `Type`）处理。
 
-推荐使用 [Vafast 引用模型](/essential/validation#reference-model)。
+Vafast 内置验证系统能从代码推断类型并进行运行时校验。
 
-使用 Vafast 的模型引用示例：
+### ✅ 推荐：使用 Type 定义 Schema
 
 ```typescript
-import { Vafast, t } from 'vafast'
+import { Type, type Static } from 'vafast'
 
-const customBody = t.Object({
-	username: t.String(),
-	password: t.String()
+// 定义 Schema
+export const UserSchema = Type.Object({
+  username: Type.String({ minLength: 1 }),
+  email: Type.String({ format: 'email' }),
+  age: Type.Optional(Type.Number({ minimum: 0 }))
 })
 
-const AuthModel = new Vafast()
-    .model({
-        'auth.sign': customBody
-    })
-
-const models = AuthModel.models
-
-const UserController = new Vafast({ prefix: '/auth' })
-    .use(AuthModel)
-    .post('/sign-in', async ({ body, cookie: { session } }) => {
-        return true
-    }, {
-        body: 'auth.sign'
-    })
+// 获取 TypeScript 类型
+export type User = Static<typeof UserSchema>
 ```
 
-这种方法带来若干优势：
-1. 允许模型命名并获得自动补全。
-2. 可以修改架构用于后续用途，或执行 [重映射](/essential/handler.html#remap)。
-3. 在 OpenAPI 兼容客户端中作为“模型”，例如 Swagger。
-4. 加快 TypeScript 推断速度，因为模型类型注册时已缓存。
+### ✅ 推荐：组织 Schema 到模型对象
 
-## 重用插件
-
-多次重用插件以支持类型推断是可行的。
-
-Vafast 默认自动处理插件去重，性能影响极小。
-
-要创建唯一插件，您可以给 Vafast 实例指定一个 **name** 或可选的 **seed**。
+将相关 Schema 归组到一个对象中，便于管理：
 
 ```typescript
-import { Vafast } from 'vafast'
+import { Type } from 'vafast'
 
-const plugin = new Vafast({ name: 'my-plugin' })
-	.decorate("type", "plugin")
-
-const app = new Vafast()
-    .use(plugin)
-    .use(plugin)
-    .use(plugin)
-    .use(plugin)
-    .listen(3000)
+export const UserModel = {
+  create: Type.Object({
+    username: Type.String({ minLength: 1 }),
+    email: Type.String({ format: 'email' }),
+    password: Type.String({ minLength: 6 })
+  }),
+  
+  update: Type.Object({
+    username: Type.Optional(Type.String({ minLength: 1 })),
+    email: Type.Optional(Type.String({ format: 'email' }))
+  }),
+  
+  response: Type.Object({
+    id: Type.String(),
+    username: Type.String(),
+    email: Type.String(),
+    createdAt: Type.String()
+  })
+}
 ```
 
-这样 Vafast 会复用已注册插件提升性能，而不是重复加载插件。
+### ❌ 不推荐：使用类或接口定义模型
+
+不要将类实例或接口用于模型声明，因为它们无法进行运行时验证：
+
+```typescript
+// ❌ 不推荐 - 无法运行时验证
+class UserDto {
+  username: string
+  password: string
+}
+
+// ❌ 不推荐 - 只是类型，无法运行时验证
+interface IUser {
+  username: string
+  password: string
+}
+
+// ✅ 推荐 - 可以运行时验证
+const UserSchema = Type.Object({
+  username: Type.String(),
+  password: Type.String()
+})
+```
+
+### ❌ 不推荐：把类型和 Schema 分开声明
+
+不要把 Schema 和类型分开声明，应通过 Schema 的 `Static` 获取类型：
+
+```typescript
+// ❌ 不推荐 - 重复定义，容易不同步
+const userSchema = Type.Object({
+  username: Type.String(),
+  password: Type.String()
+})
+
+type User = {
+  username: string
+  password: string
+}
+
+// ✅ 推荐 - 从 Schema 推断类型
+const userSchema = Type.Object({
+  username: Type.String(),
+  password: Type.String()
+})
+
+type User = Static<typeof userSchema>
+```
+
+## 错误处理
+
+### ✅ 推荐：使用中间件统一处理错误
+
+```typescript
+import { json } from 'vafast'
+
+const errorHandler = async (req: Request, next: () => Promise<Response>) => {
+  try {
+    return await next()
+  } catch (error) {
+    console.error('Error:', error)
+    
+    if (error instanceof ValidationError) {
+      return json({ error: 'Validation failed', details: error.details }, 400)
+    }
+    
+    if (error instanceof NotFoundError) {
+      return json({ error: 'Not found' }, 404)
+    }
+    
+    return json({ error: 'Internal server error' }, 500)
+  }
+}
+
+const server = new Server(routes)
+server.use(errorHandler)
+```
+
+### ✅ 推荐：使用自定义错误类
+
+```typescript
+// errors.ts
+export class AppError extends Error {
+  constructor(
+    message: string,
+    public statusCode: number = 500,
+    public code?: string
+  ) {
+    super(message)
+    this.name = 'AppError'
+  }
+}
+
+export class NotFoundError extends AppError {
+  constructor(resource: string) {
+    super(`${resource} not found`, 404, 'NOT_FOUND')
+  }
+}
+
+export class ValidationError extends AppError {
+  constructor(public details: Record<string, string>) {
+    super('Validation failed', 400, 'VALIDATION_ERROR')
+  }
+}
+```
+
+## 测试
+
+### ✅ 推荐：使用 server.fetch 测试路由
+
+```typescript
+import { describe, it, expect } from 'vitest'
+import { Server, defineRoutes, createHandler } from 'vafast'
+
+const routes = defineRoutes([
+  {
+    method: 'GET',
+    path: '/',
+    handler: createHandler(() => 'Hello World')
+  }
+])
+
+const server = new Server(routes)
+
+describe('Routes', () => {
+  it('should return Hello World', async () => {
+    const response = await server.fetch(new Request('http://localhost/'))
+    const text = await response.text()
+    
+    expect(response.status).toBe(200)
+    expect(text).toBe('Hello World')
+  })
+})
+```
+
+### ✅ 推荐：服务层单独测试
+
+```typescript
+import { describe, it, expect } from 'vitest'
+import { MathService } from './services/math'
+
+describe('MathService', () => {
+  it('should calculate fibonacci', () => {
+    expect(MathService.fibo(0)).toBe(0)
+    expect(MathService.fibo(1)).toBe(1)
+    expect(MathService.fibo(10)).toBe(55)
+  })
+})
+```
+
+## 总结
+
+| 推荐做法 | 原因 |
+|---------|------|
+| 使用 `defineRoutes` 定义路由 | 更好的类型推断 |
+| 按功能模块分组代码 | 便于维护和查找 |
+| 服务层解耦于框架 | 易于测试和重用 |
+| 使用 `Type` 定义 Schema | 运行时验证 + 类型推断 |
+| 使用中间件处理横切关注点 | 统一处理认证、日志、错误 |
+| 使用 `server.fetch` 测试 | 完整的集成测试 |
