@@ -22,6 +22,7 @@ jobs:
         run: |
           rm -rf node_modules package-lock.json
           npm install
+          npm install @rolldown/binding-linux-x64-gnu --save-optional
 
       - name: Build
         run: npm run build
