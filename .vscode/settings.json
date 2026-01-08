@@ -4,5 +4,8 @@
   "less.validate": false,
   "tailwindCSS.experimental.classRegex": [
     ["@apply\\s+([^;]*)", "([\\w-]+)"]
-  ]
+  ],
+  "files.associations": {
+    "*.css": "tailwindcss"
+  }
 }
