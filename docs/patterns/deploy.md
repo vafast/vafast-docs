@@ -110,12 +110,12 @@ Bun 支持将应用编译为单个可执行文件：
 
 ```bash
 bun build \
-  --compile \
-  --minify-whitespace \
-  --minify-syntax \
-  --target bun \
-  --outfile server \
-  ./src/index.ts
+	--compile \
+	--minify-whitespace \
+	--minify-syntax \
+	--target bun \
+	--outfile server \
+	./src/index.ts
 ```
 
 参数说明：
@@ -148,11 +148,11 @@ Bun 要求机器支持 AVX2 指令集。如果遇到随机中文字符错误，�
 
 ```bash
 bun build \
-  --minify-whitespace \
-  --minify-syntax \
-  --target bun \
-  --outfile ./dist/index.js \
-  ./src/index.ts
+	--minify-whitespace \
+	--minify-syntax \
+	--target bun \
+	--outfile ./dist/index.js \
+	./src/index.ts
 ```
 
 ### Docker 部署（Bun）
