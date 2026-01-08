@@ -98,6 +98,7 @@ const flyIn = useFlyIn(isInView)
 const form = ref(0)
 const labels = ['路径参数', 'Schema 验证', '错误处理', '额外上下文']
 
+// 进入视图后默认选中第一个 tab
 watch(isInView, () => {
     if (isInView) {
         setTimeout(() => {

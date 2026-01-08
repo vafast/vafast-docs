@@ -24,9 +24,8 @@
             <h1
                 class="text-4xl md:text-6xl lg:text-7xl font-bold text-center leading-tight md:leading-tight lg:leading-tight mb-6"
             >
-                <span class="text-gray-700 dark:text-gray-200">用最少的代码</span>
+                <span class="text-gray-700 dark:text-gray-200">构建现代</span>
                 <br />
-                <span class="text-gray-700 dark:text-gray-200">构建</span>
                 <span
                     class="text-transparent bg-clip-text bg-gradient-to-r from-violet-500 to-sky-400"
                 >
