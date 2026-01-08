@@ -786,6 +786,106 @@ test('POST /users creates new user', async () => {
 })
 ```
 
+## 监控模块
+
+Vafast 内置了零依赖的监控系统，位于 `vafast/monitoring`。
+
+### withMonitoring
+
+为 Server 添加监控能力。
+
+```typescript
+import { Server } from 'vafast'
+import { withMonitoring } from 'vafast/monitoring'
+
+const server = new Server(routes)
+const monitored = withMonitoring(server, {
+  slowThreshold: 500,
+  excludePaths: ['/health']
+})
+```
+
+### MonitoringConfig
+
+| 属性 | 类型 | 默认值 | 说明 |
+|------|------|--------|------|
+| `enabled` | `boolean` | `true` | 是否启用监控 |
+| `console` | `boolean` | `true` | 是否输出到控制台 |
+| `slowThreshold` | `number` | `1000` | 慢请求阈值（毫秒） |
+| `maxRecords` | `number` | `1000` | 最大记录数 |
+| `samplingRate` | `number` | `1` | 采样率 0-1 |
+| `excludePaths` | `string[]` | `[]` | 排除的路径 |
+| `onRequest` | `(metrics) => void` | - | 请求完成回调 |
+| `onSlowRequest` | `(metrics) => void` | - | 慢请求回调 |
+
+### MonitoredServer 方法
+
+| 方法 | 返回值 | 说明 |
+|------|--------|------|
+| `getMonitoringStatus()` | `MonitoringStatus` | 完整监控状态 |
+| `getMonitoringMetrics()` | `MonitoringMetrics[]` | 原始指标数据 |
+| `getPathStats(path)` | `PathStats` | 单路径统计 |
+| `getTimeWindowStats(ms)` | `TimeWindowStats` | 时间窗口统计 |
+| `getRPS()` | `number` | 当前每秒请求数 |
+| `getStatusCodeDistribution()` | `StatusCodeDistribution` | 状态码分布 |
+| `resetMonitoring()` | `void` | 重置监控数据 |
+
+### MonitoringStatus
+
+```typescript
+interface MonitoringStatus {
+  enabled: boolean
+  uptime: number                    // 服务运行时间（毫秒）
+  totalRequests: number
+  successfulRequests: number
+  failedRequests: number
+  errorRate: number
+  avgResponseTime: number           // 平均响应时间
+  p50: number                       // P50 响应时间
+  p95: number                       // P95 响应时间
+  p99: number                       // P99 响应时间
+  minTime: number
+  maxTime: number
+  rps: number                       // 当前 RPS
+  statusCodes: StatusCodeDistribution
+  timeWindows: {
+    last1min: TimeWindowStats
+    last5min: TimeWindowStats
+    last1hour: TimeWindowStats
+  }
+  byPath: Record<string, PathStats>
+  memoryUsage: { heapUsed: string; heapTotal: string }
+  recentRequests: MonitoringMetrics[]
+}
+```
+
+### TimeWindowStats
+
+```typescript
+interface TimeWindowStats {
+  requests: number      // 请求数
+  successful: number    // 成功数
+  failed: number        // 失败数
+  errorRate: number     // 错误率
+  avgTime: number       // 平均响应时间
+  rps: number           // 每秒请求数
+}
+```
+
+### StatusCodeDistribution
+
+```typescript
+interface StatusCodeDistribution {
+  '2xx': number
+  '3xx': number
+  '4xx': number
+  '5xx': number
+  detail: Record<number, number>  // 详细分布如 { 200: 100, 404: 5 }
+}
+```
+
+详细用法请参考 [性能监控](/patterns/trace)。
+
 ## 总结
 
 Vafast 提供了完整的 API 参考，包括：
@@ -798,12 +898,14 @@ Vafast 提供了完整的 API 参考，包括：
 - ✅ 性能优化
 - ✅ 部署配置
 - ✅ 测试支持
+- ✅ 内置监控
 
 ### 下一步
 
 - 查看 [路由指南](/routing) 了解路由系统
 - 学习 [中间件系统](/middleware) 了解中间件用法
 - 探索 [组件路由](/component-routing) 了解组件路由功能
+- 查看 [性能监控](/patterns/trace) 了解监控功能
 - 查看 [最佳实践](/essential/best-practice) 获取开发建议
 
 如果您有任何问题，请查看我们的 [社区页面](/community) 或 [GitHub 仓库](https://github.com/vafast/vafast)。
