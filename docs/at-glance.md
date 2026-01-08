@@ -48,7 +48,7 @@ export default { port: 3000, fetch: server.fetch }
 ```
 
 ### 零样板代码 <span class="tag">No Boilerplate</span>
-无 CLI，无配置文件夹。一个文件，即刻运行。
+一个文件即刻运行。可选 CLI 脚手架：`npx create-vafast-app`
 
 </div>
 
@@ -76,7 +76,7 @@ export default { port: 3000, fetch: server.fetch }
 - ✅ **结构化响应** — `{ data, status }` 统一格式，错误也是数据
 - ✅ **内置响应工具** — `json()`、`html()`、`text()` 等，简洁统一
 - ✅ **多运行时** — 支持 Node.js、Bun、Deno、Workers 等
-- ✅ **零样板代码** — 无 CLI，无配置文件，一个文件即可运行
+- ✅ **零样板代码** — 一个文件即可运行，可选 `npx create-vafast-app` 快速开始
 - ✅ **类型安全** — 路由、处理器、响应，全部 TypeScript 类型推断
 
 ## 🚀 技术特性
@@ -92,7 +92,7 @@ export default { port: 3000, fetch: server.fetch }
 以下是在 Vafast 中的简单 hello world 示例。
 
 ```typescript
-import { Server, defineRoutes, createHandler } from 'vafast'
+import { Server, defineRoutes, createHandler, serve } from 'vafast'
 
 const routes = defineRoutes([
   {
@@ -118,7 +118,12 @@ const routes = defineRoutes([
 ])
 
 const server = new Server(routes)
-export default { fetch: server.fetch }
+
+// Node.js 启动方式
+serve({ fetch: server.fetch, port: 3000 })
+
+// 或者导出给 Bun/Workers 使用
+// export default { fetch: server.fetch }
 ```
 
 打开 [localhost:3000](http://localhost:3000/)，结果应该显示 'Hello Vafast'。
