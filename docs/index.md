@@ -84,7 +84,7 @@ const adminHandler = createHandlerWithExtra<AuthContext>(
 
 <template v-slot:easy>
 
-```typescript
+```typescript twoslash
 import { Server, defineRoutes, createHandler } from 'vafast'
 
 const routes = defineRoutes([
@@ -108,7 +108,7 @@ export default { fetch: server.fetch }
 
 <template v-slot:doc>
 
-```typescript
+```typescript twoslash
 import { Server, defineRoutes, createHandler } from 'vafast'
 
 const routes = defineRoutes([
@@ -127,7 +127,7 @@ export default { fetch: server.fetch }
 
 <template v-slot:e2e-type-safety>
 
-```typescript
+```typescript twoslash
 import { Server, defineRoutes, createHandler, Type, err } from 'vafast'
 
 const routes = defineRoutes([
@@ -155,7 +155,7 @@ export default { fetch: server.fetch }
 
 <template v-slot:test-code>
 
-```typescript
+```typescript twoslash
 import { Server, defineRoutes, createHandler, Type, err } from 'vafast'
 
 const routes = defineRoutes([
