@@ -1,6 +1,6 @@
 <template>
     <section
-        class="flex flex-col-reverse lg:flex-row justify-center items-center gap-16 md:gap-8 lg:gap-20 max-w-5xl w-full px-6 py-20 mx-auto"
+        class="flex flex-col justify-center items-center gap-12 max-w-5xl w-full px-6 py-20 mx-auto"
         ref="scope"
     >
         <!-- 左侧圆形图标阵列 -->
@@ -57,9 +57,9 @@
             </template>
         </div>
 
-        <!-- 右侧文案 -->
-        <div class="my-auto text-xl max-w-md">
-            <h2 class="flex flex-col font-medium leading-loose mb-6">
+        <!-- 文案 -->
+        <div class="text-center text-xl max-w-2xl">
+            <h2 class="flex flex-col font-medium leading-loose mb-6 items-center">
                 <motion.span class="text-gray-600 dark:text-gray-400" v-bind="flyIn()">
                     你的代码
                 </motion.span>
@@ -81,7 +81,7 @@
             <motion.p class="text-gray-500 dark:text-gray-400 mt-6" v-bind="flyIn(0.4)">
                 一套代码，部署到任何地方
             </motion.p>
-            <motion.div class="flex flex-wrap gap-2 mt-6" v-bind="flyIn(0.5)">
+            <motion.div class="flex flex-wrap gap-2 mt-6 justify-center" v-bind="flyIn(0.5)">
                 <span class="px-3 py-1 text-sm bg-gray-100 dark:bg-gray-800 rounded-full text-gray-600 dark:text-gray-300">Node.js</span>
                 <span class="px-3 py-1 text-sm bg-gray-100 dark:bg-gray-800 rounded-full text-gray-600 dark:text-gray-300">Bun</span>
                 <span class="px-3 py-1 text-sm bg-gray-100 dark:bg-gray-800 rounded-full text-gray-600 dark:text-gray-300">Deno</span>

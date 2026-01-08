@@ -17,9 +17,9 @@ const flyIn = useFlyIn(isInView)
         class="relative max-w-5xl w-full mx-auto py-20 px-6"
         ref="scope"
     >
-        <div class="flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
-            <!-- 左侧文案 -->
-            <div class="flex-1 lg:max-w-md">
+        <div class="flex flex-col items-center gap-10">
+            <!-- 顶部文案 -->
+            <div class="text-center max-w-2xl">
                 <motion.p
                     class="text-sm font-medium text-violet-500 mb-2"
                     v-bind="flyIn()"
@@ -58,9 +58,9 @@ const flyIn = useFlyIn(isInView)
                 </motion.p>
             </div>
 
-            <!-- 右侧代码展示 -->
+            <!-- 代码展示 -->
             <motion.div
-                class="flex-1 w-full lg:max-w-xl"
+                class="w-full max-w-3xl"
                 v-bind="flyIn(0.4)"
             >
                 <div

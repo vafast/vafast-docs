@@ -40,9 +40,9 @@ const principles = [
         class="relative max-w-5xl w-full mx-auto py-20 px-6"
         ref="scope"
     >
-        <div class="flex flex-col lg:flex-row gap-12 lg:gap-16 items-center">
-            <!-- 左侧文案 -->
-            <div class="flex-1 lg:max-w-md">
+        <div class="flex flex-col gap-10 items-center">
+            <!-- 顶部文案 -->
+            <div class="text-center max-w-2xl">
                 <motion.p
                     class="text-sm font-medium text-violet-500 mb-2"
                     v-bind="flyIn()"
@@ -80,9 +80,9 @@ const principles = [
                 </motion.p>
             </div>
 
-            <!-- 右侧代码展示 -->
+            <!-- 代码展示 -->
             <motion.div
-                class="flex-1 w-full lg:max-w-xl"
+                class="w-full max-w-3xl"
                 v-bind="flyIn(0.3)"
             >
                 <div

@@ -32,7 +32,7 @@
         </div>
 
         <!-- 代码展示 -->
-        <div class="grid md:grid-cols-2 gap-6">
+        <div class="flex flex-col gap-6 max-w-3xl mx-auto w-full">
             <!-- 服务端代码 -->
             <motion.div
                 class="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden"
