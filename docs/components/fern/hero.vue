@@ -11,49 +11,45 @@
         style="min-height: calc(100vh - 64px)"
     >
         <div class="flex flex-col justify-center items-center transition-all">
-            <div class="flex items-center gap-3 mb-2">
+            <div class="flex items-center gap-4 mb-4">
                 <img
                     :src="asset('assets/vafast.svg')"
                     alt="Vafast"
-                    class="w-16 h-16 md:w-20 md:h-20"
+                    class="w-20 h-20 md:w-24 md:h-24"
                 />
-                <h1
-                    class="text-5xl md:text-6xl leading-relaxed font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400"
-                >
-                    Vafast
-                </h1>
             </div>
+            <h1
+                class="text-5xl md:text-6xl leading-relaxed font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400 mb-2"
+            >
+                Vafast
+            </h1>
             <h2
-                class="relative md:leading-tight font-bold leading-tight text-transparent bg-clip-text bg-gradient-to-r from-sky-300 to-violet-400 mb-6 text-4xl md:text-5xl text-center"
+                class="relative font-semibold text-transparent bg-clip-text bg-gradient-to-r from-sky-300 to-violet-400 mb-4 text-2xl md:text-3xl text-center"
             >
                 高性能 TypeScript Web 框架
             </h2>
-            <h3
-                class="text-xl md:text-2xl text-gray-500 dark:text-gray-400 !leading-normal w-full max-w-2xl text-center"
+            <p
+                class="text-lg md:text-xl text-gray-500 dark:text-gray-400 leading-relaxed w-full max-w-xl text-center mb-8"
             >
-                <span
-                    class="text-transparent font-semibold bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400"
-                    >声明式路由</span
-                >
-                · 端到端类型安全 ·
-                <span
-                    class="text-transparent font-semibold bg-clip-text bg-gradient-to-r from-sky-400 to-cyan-400"
-                    >~101K reqs/s</span
-                >
-            </h3>
+                <span class="text-transparent font-medium bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">声明式路由</span>
+                ·
+                <span class="font-medium">端到端类型安全</span>
+                ·
+                <span class="text-transparent font-medium bg-clip-text bg-gradient-to-r from-sky-400 to-cyan-400">101K req/s</span>
+            </p>
             <section
-                class="flex flex-col sm:flex-row items-center w-full md:w-auto gap-4 mt-8 mb-12"
+                class="flex flex-col sm:flex-row items-center w-full md:w-auto gap-4 mb-10"
             >
                 <a
-                    class="hero-btn text-white font-semibold text-lg bg-pink-400 dark:bg-pink-500 px-6 py-2.5 rounded-full transform hover:scale-110"
+                    class="hero-btn text-white font-semibold text-lg bg-pink-400 dark:bg-pink-500 px-8 py-3 rounded-full transform hover:scale-110"
                     id="hero-get-started"
                     href="/at-glance"
                 >
-                    开始使用
+                    快速开始
                 </a>
                 <div class="relative flex flex-1 gap-3 text-pink-500">
                     <code
-                        class="text-pink-500 font-mono font-medium text-lg bg-pink-200/25 dark:bg-pink-500/20 px-6 py-2.5 rounded-full"
+                        class="text-pink-500 font-mono font-medium text-lg bg-pink-200/25 dark:bg-pink-500/20 px-6 py-3 rounded-full"
                     >
                         npm i vafast
                     </code>
@@ -93,19 +89,19 @@
                     </p>
                 </div>
             </section>
-            <p class="flex justify-center items-center gap-2 text-gray-400">
-                了解为什么开发者喜欢 Vafast
+            <p class="flex justify-center items-center gap-2 text-gray-400 text-sm">
+                向下滚动了解更多
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
+                    width="20"
+                    height="20"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
                     stroke-width="1.5"
                     stroke-linecap="round"
                     stroke-linejoin="round"
-                    class="w-6 h-6 motion-safe:animate-bounce"
+                    class="motion-safe:animate-bounce"
                 >
                     <line x1="12" y1="5" x2="12" y2="19"></line>
                     <polyline points="19 12 12 19 5 12"></polyline>
