@@ -426,7 +426,7 @@ const routes = defineRoutes([
       { body: userSchema },
       ({ body }) => {
         // body 已经通过验证，类型安全
-        return { data: 'User created', status: 201 }
+        return { message: 'User created' }
       }
     )
   }

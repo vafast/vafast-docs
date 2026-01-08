@@ -243,7 +243,7 @@ const routes = [
   handler: createHandler(async ({ body }) => {
     // body 已自动解析
     const user = await createUser(body)
-    return { data: user, status: 201 }
+    return user
   })
 }
 ```
@@ -328,16 +328,7 @@ handler: createHandler(() => {
 // 自动返回 500 错误响应
 ```
 
-### 返回错误状态
-
-```typescript
-handler: createHandler(() => ({
-  data: { error: 'Not found' },
-  status: 404
-}))
-```
-
-### 使用 VafastError
+### 使用 VafastError 返回错误状态
 
 ```typescript
 import { VafastError } from 'vafast'

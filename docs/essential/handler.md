@@ -233,11 +233,11 @@ const routes = defineRoutes([
       const userId = params.id
       
       if (!userId || isNaN(Number(userId))) {
-        return { data: { error: 'Invalid user ID' }, status: 400 }
+        throw new VafastError('Invalid user ID', { status: 400, type: 'VALIDATION_ERROR', expose: true })
       }
       
       if (userId === '999') {
-        return { data: { error: 'User not found' }, status: 404 }
+        throw new VafastError('User not found', { status: 404, type: 'NOT_FOUND', expose: true })
       }
       
       return { id: userId, name: 'John Doe' }
@@ -345,7 +345,7 @@ const routes = defineRoutes([
     handler: createHandler(async ({ params }) => {
         const user = await getUserById(params.id)
         if (!user) {
-        return { data: { error: 'User not found' }, status: 404 }
+          throw new VafastError('User not found', { status: 404, type: 'NOT_FOUND', expose: true })
         }
         return user
       // 注意：未捕获的错误由 createHandler 内置错误处理自动返回 500

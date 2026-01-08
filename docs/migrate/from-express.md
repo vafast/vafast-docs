@@ -334,7 +334,7 @@ const routes = defineRoutes([
     handler: createHandler(({ params }) => {
       const user = getUserById(params.id)
       if (!user) {
-        return { data: { error: 'User not found' }, status: 404 }
+        throw new VafastError('User not found', { status: 404, type: 'NOT_FOUND', expose: true })
       }
       return user
     })

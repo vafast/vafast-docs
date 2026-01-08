@@ -204,7 +204,7 @@ const routes = defineRoutes([
       const note = notes.find(n => n.id === params.id)
       
       if (!note) {
-        return { data: { error: 'Note not found' }, status: 404 }
+        throw new VafastError('Note not found', { status: 404, type: 'NOT_FOUND', expose: true })
       }
       
       return note
@@ -227,7 +227,7 @@ const routes = defineRoutes([
         }
         
         notes.push(note)
-        return { data: note, status: 201 }
+        return note
       }
     )
   },
@@ -242,7 +242,7 @@ const routes = defineRoutes([
         const noteIndex = notes.findIndex(n => n.id === params.id)
         
         if (noteIndex === -1) {
-          return { data: { error: 'Note not found' }, status: 404 }
+          throw new VafastError('Note not found', { status: 404, type: 'NOT_FOUND', expose: true })
         }
         
         notes[noteIndex] = {
@@ -265,7 +265,7 @@ const routes = defineRoutes([
       const noteIndex = notes.findIndex(n => n.id === params.id)
       
       if (noteIndex === -1) {
-        return { data: { error: 'Note not found' }, status: 404 }
+        throw new VafastError('Note not found', { status: 404, type: 'NOT_FOUND', expose: true })
       }
       
       const deletedNote = notes.splice(noteIndex, 1)[0]
@@ -412,7 +412,7 @@ const routes = defineRoutes([
         }
         
         notes.push(note)
-        return { data: note, status: 201 }
+        return note
       }
     )
   }

@@ -30,7 +30,7 @@ const routes = [
 错误包含状态、类型和可见性。不是混乱，而是契约。
 
 ```typescript
-return { data: { error: 'Not Found' }, status: 404 }
+throw new VafastError('Not Found', { status: 404, type: 'not_found', expose: true })
 ```
 
 ### 组合优于约定 <span class="tag">Composition Matters</span>

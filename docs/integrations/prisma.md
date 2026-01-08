@@ -603,7 +603,7 @@ export const routes = defineRoutes([
     path: '/api/tags',
     handler: createHandler(async ({ body }) => {
       const newTag = await tagService.create(body)
-      return { tag: newTag }, { status: 201 }
+      return { tag: newTag }
     }),
     body: Type.Object({
       name: Type.String({ minLength: 1 })

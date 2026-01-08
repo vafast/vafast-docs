@@ -81,7 +81,7 @@ export const routes = defineRoutes([
         createdAt: new Date().toISOString()
       }
       
-      return { user: newUser }, { status: 201 }
+      return { user: newUser }
     }),
     body: Type.Object({
       name: Type.String({ minLength: 1 }),

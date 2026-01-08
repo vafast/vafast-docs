@@ -83,7 +83,7 @@ export const routes = defineRoutes([
         createdAt: new Date().toISOString()
       }
       
-      return { product: newProduct }, { status: 201 }
+      return { product: newProduct }
     }),
     body: Type.Object({
       name: Type.String({ minLength: 1 }),

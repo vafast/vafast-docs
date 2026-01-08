@@ -64,7 +64,7 @@ export const authRoutes = defineRoutes([
       { body: AuthModel.signUpBody },
       async ({ body }) => {
         const user = await AuthService.signUp(body)
-        return { data: user, status: 201 }
+        return user
 		}
 	)
   }
@@ -319,7 +319,7 @@ class UserService {
   handler: createHandler(async ({ params }) => {
     const user = await UserService.getUser(params.id)
     if (!user) {
-      return { data: { error: 'User not found' }, status: 404 }
+      throw new VafastError('User not found', { status: 404, type: 'NOT_FOUND', expose: true })
     }
     return user
   })
