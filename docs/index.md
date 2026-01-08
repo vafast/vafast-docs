@@ -203,7 +203,6 @@ const api = eden<Api>('https://api.example.com')
 
 // 完整类型提示 + 自动补全
 const { data } = await api.profile.patch({
-      // ^?
   age: 21
 })
 ```
