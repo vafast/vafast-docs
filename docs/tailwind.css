@@ -201,7 +201,7 @@ button.copy::after {
 }
 
 #VPSidebarNav > .group:nth-child(5) > .VPSidebarItem > .item > .text::before {
-    background-image: url(/assets/integration.svg);
+    background-image: url(/assets/lifecycle.svg);
 }
 
 #VPSidebarNav > .group:nth-child(6) > .VPSidebarItem > .item > .text::before {
@@ -209,12 +209,20 @@ button.copy::after {
 }
 
 #VPSidebarNav > .group:nth-child(7) > .VPSidebarItem > .item > .text::before {
+    background-image: url(/assets/hexagon.svg);
+}
+
+#VPSidebarNav > .group:nth-child(8) > .VPSidebarItem > .item > .text::before {
+    background-image: url(/assets/integration.svg);
+}
+
+#VPSidebarNav > .group:nth-child(9) > .VPSidebarItem > .item > .text::before {
     background-image: url(/assets/book.svg);
 }
 
 .dark
     #VPSidebarNav
-    > .group:nth-child(-n + 8):not(:first-child)
+    > .group:nth-child(-n + 10):not(:first-child)
     > .VPSidebarItem
     > .item
     > .text::before {
