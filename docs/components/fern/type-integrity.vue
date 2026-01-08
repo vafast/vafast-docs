@@ -99,11 +99,11 @@ watch(isInView, () => {
 </script>
 
 <style scoped>
-.code-body :deep(> div > div) {
+.code-body :deep(*) {
     background: transparent !important;
 }
 
-.code-body :deep(> div > div > pre) {
+.code-body :deep(pre) {
     padding: 1rem !important;
     margin: 0;
 }

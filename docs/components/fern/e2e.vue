@@ -111,21 +111,11 @@ const flyIn = useFlyIn(isInView)
 </script>
 
 <style scoped>
-.code-body :deep(> div) {
+.code-body :deep(*) {
     background: transparent !important;
 }
 
-.code-body :deep(> div > div) {
-    background: transparent !important;
-}
-
-.code-body :deep(> div > pre) {
-    padding: 1rem !important;
-    margin: 0;
-    font-size: 14px;
-}
-
-.code-body :deep(> div > div > pre) {
+.code-body :deep(pre) {
     padding: 1rem !important;
     margin: 0;
     font-size: 14px;

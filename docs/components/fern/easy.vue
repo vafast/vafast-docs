@@ -141,11 +141,11 @@ const principles = [
 </template>
 
 <style scoped>
-.code-body :deep(> div) {
+.code-body :deep(*) {
     background: transparent !important;
 }
 
-.code-body :deep(> div > pre) {
+.code-body :deep(pre) {
     padding: 1rem !important;
     margin: 0;
 }
