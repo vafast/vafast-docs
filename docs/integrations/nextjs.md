@@ -461,20 +461,61 @@ describe('Users API', () => {
 
 ### Docker 部署
 
-```dockerfile
-FROM oven/bun:1
+**Node.js 版本（推荐）：**
 
+```dockerfile
+FROM node:20-alpine AS deps
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci
+
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+RUN npm run build
+
+FROM node:20-alpine AS runner
 WORKDIR /app
 
-COPY package.json bun.lock ./
-RUN bun install --production
+ENV NODE_ENV=production
+
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+COPY --from=builder /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+USER nextjs
+
+EXPOSE 3000
+
+CMD ["node", "server.js"]
+```
+
+**Bun 版本：**
+
+```dockerfile
+FROM oven/bun:1 AS builder
+WORKDIR /app
+
+COPY package.json bun.lockb ./
+RUN bun install --frozen-lockfile
 
 COPY . .
 RUN bun run build
 
+FROM oven/bun:1-slim
+WORKDIR /app
+
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/public ./public
+
 EXPOSE 3000
 
-CMD ["bun", "run", "start"]
+CMD ["bun", "server.js"]
 ```
 
 ## 最佳实践

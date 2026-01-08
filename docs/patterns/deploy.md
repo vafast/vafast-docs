@@ -3,149 +3,211 @@ title: 部署到生产环境 - Vafast
 ---
 
 # 部署到生产环境
-本页面是关于如何将 Vafast 部署到生产环境的指南。
 
-## 编译为二进制
-我们建议在部署到生产环境之前运行构建命令，因为这可能会显著减少内存使用和文件大小。
+本页面是关于如何将 Vafast 部署到生产环境的指南。Vafast 支持 **Node.js** 和 **Bun** 两种运行时。
 
-我们推荐使用以下命令将 Vafast 编译成单个二进制文件：
+## Node.js 部署
+
+### 编译为 JavaScript
+
+使用 TypeScript 编译器或打包工具将代码编译为 JavaScript：
+
 ```bash
-bun build \
-	--compile \
-	--minify-whitespace \
-	--minify-syntax \
-	--target bun \
-	--outfile server \
-	./src/index.ts
+# 使用 tsc 编译
+npx tsc
+
+# 或使用 tsup（推荐，更快更小）
+npm install -D tsup
+npx tsup src/index.ts --format esm --dts
 ```
 
-这将生成一个可移植的二进制文件 `server`，我们可以运行它来启动我们的服务器。
+运行编译后的代码：
 
-将服务器编译为二进制文件通常会将内存使用量显著减少 2-3 倍，相较于开发环境。
+```bash
+node dist/index.js
+```
 
-这个命令有点长，所以让我们分解一下：
-1. `--compile` - 将 TypeScript 编译为二进制
-2. `--minify-whitespace` - 删除不必要的空白
-3. `--minify-syntax` - 压缩 JavaScript 语法以减少文件大小
-4. `--target bun` - 针对 `bun` 平台，可以为目标平台优化二进制文件
-5. `--outfile server` - 输出二进制文件为 `server`
-6. `./src/index.ts` - 我们服务器的入口文件（代码库）
+### Docker 部署（Node.js）
 
-要启动我们的服务器，只需运行二进制文件。
+```dockerfile
+# 使用 Node.js 官方镜像
+FROM node:20-alpine AS base
+WORKDIR /app
+
+# 安装依赖
+FROM base AS deps
+COPY package.json package-lock.json ./
+RUN npm ci --only=production
+
+# 构建应用
+FROM base AS builder
+COPY package.json package-lock.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+# 生产镜像
+FROM node:20-alpine AS runner
+WORKDIR /app
+
+ENV NODE_ENV=production
+
+# 复制必要文件
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/package.json ./
+
+# 创建非 root 用户
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 vafast
+USER vafast
+
+EXPOSE 3000
+
+CMD ["node", "dist/index.js"]
+```
+
+### PM2 进程管理
+
+推荐使用 PM2 管理 Node.js 进程：
+
+```bash
+npm install -g pm2
+```
+
+创建 `ecosystem.config.js`：
+
+```javascript
+module.exports = {
+  apps: [{
+    name: 'vafast-app',
+    script: 'dist/index.js',
+    instances: 'max',
+    exec_mode: 'cluster',
+    env_production: {
+      NODE_ENV: 'production',
+      PORT: 3000
+    }
+  }]
+}
+```
+
+启动应用：
+
+```bash
+pm2 start ecosystem.config.js --env production
+pm2 save
+pm2 startup
+```
+
+---
+
+## Bun 部署
+
+### 编译为二进制
+
+Bun 支持将应用编译为单个可执行文件：
+
+```bash
+bun build \
+  --compile \
+  --minify-whitespace \
+  --minify-syntax \
+  --target bun \
+  --outfile server \
+  ./src/index.ts
+```
+
+参数说明：
+- `--compile` - 编译为二进制文件
+- `--minify-whitespace` - 删除不必要的空白
+- `--minify-syntax` - 压缩 JavaScript 语法
+- `--target bun` - 针对 Bun 平台优化
+- `--outfile server` - 输出文件名
+
+运行编译后的二进制：
+
 ```bash
 ./server
 ```
 
-一旦二进制文件编译完成，您就不需要在机器上安装 `Bun` 以运行服务器。
+::: tip 优势
+编译后的二进制文件：
+- 不需要安装 Bun 运行时
+- 内存占用降低 2-3 倍
+- 便于分发和部署
+:::
 
-这很好，因为部署服务器不需要安装额外的运行时，使得二进制文件便于移植。
+::: warning AVX2 要求
+Bun 要求机器支持 AVX2 指令集。如果遇到随机中文字符错误，说明机器不支持 AVX2。
+:::
 
-### 为什么不使用 --minify
-Bun 确实有 `--minify` 标志，用于压缩二进制文件。
+### 编译为 JavaScript
 
-然而，如果我们正在使用 [OpenTelemetry](/middleware/opentelemetry)，它会将函数名缩减为单个字符。
-
-这使得跟踪变得比应该的更加困难，因为 OpenTelemetry 依赖于函数名。
-
-但是，如果您不使用 OpenTelemetry，您可以选择使用 `--minify`：
-```bash
-bun build \
-	--compile \
-	--minify \
-	--target bun \
-	--outfile server \
-	./src/index.ts
-```
-
-### 权限
-一些 Linux 发行版可能无法运行二进制文件，如果您使用的是 Linux，建议为二进制文件启用可执行权限：
-```bash
-chmod +x ./server
-
-./server
-```
-
-### 未知的随机中文错误
-如果您尝试将二进制文件部署到服务器但无法运行，并出现随机中文字符错误。
-
-这意味着您运行的机器 **不支持 AVX2**。
-
-不幸的是，Bun 要求机器具有 `AVX2` 硬件支持。
-
-据我们所知没有替代方案。
-
-## 编译为 JavaScript
-如果您无法编译为二进制文件或您正在 Windows 服务器上进行部署。
-
-您可以将服务器打包为一个 JavaScript 文件。
+如果无法编译为二进制，可以打包为 JavaScript：
 
 ```bash
 bun build \
-	--minify-whitespace \
-	--minify-syntax \
-	--target bun \
-	--outfile ./dist/index.js \
-	./src/index.ts
+  --minify-whitespace \
+  --minify-syntax \
+  --target bun \
+  --outfile ./dist/index.js \
+  ./src/index.ts
 ```
 
-这将生成一个压缩的 JavaScript 文件，您可以使用 Node.js 或 Bun 运行它。
-
-```bash
-# 使用 Bun 运行
-bun ./dist/index.js
-
-# 或使用 Node.js 运行
-node ./dist/index.js
-```
-
-## Docker 部署
-
-### 创建 Dockerfile
+### Docker 部署（Bun）
 
 ```dockerfile
 # 使用 Bun 官方镜像
-FROM oven/bun:1 as base
-WORKDIR /usr/src/app
+FROM oven/bun:1 AS base
+WORKDIR /app
 
 # 安装依赖
+FROM base AS deps
 COPY package.json bun.lockb ./
-RUN bun install --frozen-lockfile
-
-# 复制源代码
-COPY . .
+RUN bun install --frozen-lockfile --production
 
 # 构建应用
+FROM base AS builder
+COPY package.json bun.lockb ./
+RUN bun install --frozen-lockfile
+COPY . .
 RUN bun run build
 
 # 生产镜像
-FROM oven/bun:1-slim
-WORKDIR /usr/src/app
+FROM oven/bun:1-slim AS runner
+WORKDIR /app
 
-# 复制构建产物和依赖
-COPY --from=base /usr/src/app/dist ./dist
-COPY --from=base /usr/src/app/node_modules ./node_modules
-COPY --from=base /usr/src/app/package.json ./
+# 复制必要文件
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/package.json ./
 
-# 暴露端口
 EXPOSE 3000
 
-# 启动应用
 CMD ["bun", "dist/index.js"]
 ```
 
-### 构建和运行 Docker 镜像
+### 为什么不使用 --minify
+
+如果使用 [OpenTelemetry](/integrations/opentelemetry)，`--minify` 会将函数名缩减为单个字符，影响跟踪可读性。
+
+不使用 OpenTelemetry 时可以使用：
 
 ```bash
-# 构建镜像
-docker build -t vafast-app .
-
-# 运行容器
-docker run -p 3000:3000 vafast-app
+bun build \
+  --compile \
+  --minify \
+  --target bun \
+  --outfile server \
+  ./src/index.ts
 ```
 
-## 环境变量配置
+---
 
-在生产环境中，建议使用环境变量来配置应用：
+## 通用配置
+
+### 环境变量配置
 
 ```bash
 # .env.production
@@ -160,86 +222,18 @@ JWT_SECRET=your-secret-key
 ```typescript
 // src/config.ts
 export const config = {
-  port: process.env.PORT || 3000,
+  port: Number(process.env.PORT) || 3000,
   databaseUrl: process.env.DATABASE_URL,
   jwtSecret: process.env.JWT_SECRET,
   nodeEnv: process.env.NODE_ENV || 'development'
 }
 ```
 
-## 性能优化
-
-### 1. 启用压缩
+### 健康检查端点
 
 ```typescript
-// src/index.ts
-import { Server, defineRoutes, createHandler } from 'vafast'
-import { compress } from '@vafast/compress'
+import { Server, defineRoutes, createHandler, serve } from 'vafast'
 
-const routes = defineRoutes([
-  // ... 你的路由
-])
-
-const server = new Server(routes)
-
-// 应用压缩中间件
-server.use(compress())
-
-export default { fetch: server.fetch }
-```
-
-### 2. 缓存策略
-
-```typescript
-// 添加缓存头
-const routes = defineRoutes([
-  {
-    method: 'GET',
-    path: '/static/:file',
-    handler: createHandler(({ params }) => {
-      const file = getStaticFile(params.file)
-      return new Response(file, {
-        headers: {
-          'Cache-Control': 'public, max-age=31536000', // 1年
-          'ETag': generateETag(file)
-        }
-      })
-    })
-  }
-])
-```
-
-### 3. 负载均衡
-
-如果您的应用需要处理高流量，可以考虑使用负载均衡器：
-
-```bash
-# 使用 Nginx 作为反向代理
-upstream vafast_backend {
-    server 127.0.0.1:3000;
-    server 127.0.0.1:3001;
-    server 127.0.0.1:3002;
-}
-
-server {
-    listen 80;
-    server_name yourdomain.com;
-
-    location / {
-        proxy_pass http://vafast_backend;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-}
-```
-
-## 监控和日志
-
-### 1. 健康检查端点
-
-```typescript
 const routes = defineRoutes([
   {
     method: 'GET',
@@ -252,13 +246,15 @@ const routes = defineRoutes([
     }))
   }
 ])
+
+const server = new Server(routes)
+
+serve({ fetch: server.fetch, port: 3000 })
 ```
 
-### 2. 结构化日志
+### 结构化日志
 
 ```typescript
-import { Server, defineRoutes, createHandler } from 'vafast'
-
 const loggingMiddleware = async (req: Request, next: () => Promise<Response>) => {
   const startTime = Date.now()
   const response = await next()
@@ -280,39 +276,42 @@ const server = new Server(routes)
 server.use(loggingMiddleware)
 ```
 
-### 3. 性能监控
+---
 
-```typescript
-import { withMonitoring } from 'vafast/monitoring'
+## 负载均衡
 
-const server = new Server(routes)
-const monitoredServer = withMonitoring(server, {
-  enableMetrics: true,
-  enableLogging: true
-})
+### Nginx 反向代理
 
-export default { fetch: monitoredServer.fetch }
+```nginx
+upstream vafast_backend {
+    server 127.0.0.1:3000;
+    server 127.0.0.1:3001;
+    server 127.0.0.1:3002;
+}
+
+server {
+    listen 80;
+    server_name yourdomain.com;
+
+    location / {
+        proxy_pass http://vafast_backend;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
 ```
+
+---
 
 ## 安全配置
 
-### 1. HTTPS 配置
-
-在生产环境中，强烈建议使用 HTTPS：
-
-```typescript
-// 使用 Bun 的内置 HTTPS 支持
-const server = Bun.serve({
-  port: 3000,
-  fetch: server.fetch,
-  tls: {
-    cert: Bun.file('path/to/cert.pem'),
-    key: Bun.file('path/to/key.pem')
-  }
-})
-```
-
-### 2. 安全头
+### 安全头
 
 ```typescript
 import { helmet } from '@vafast/helmet'
@@ -321,7 +320,7 @@ const server = new Server(routes)
 server.use(helmet())
 ```
 
-### 3. 速率限制
+### 速率限制
 
 ```typescript
 import { rateLimit } from '@vafast/rate-limit'
@@ -329,9 +328,75 @@ import { rateLimit } from '@vafast/rate-limit'
 const server = new Server(routes)
 server.use(rateLimit({
   windowMs: 15 * 60 * 1000, // 15分钟
-  max: 100 // 限制每个IP 15分钟内最多100个请求
+  max: 100 // 每个 IP 最多 100 次请求
 }))
 ```
+
+### HTTPS 配置
+
+**Node.js:**
+
+```typescript
+import { createServer } from 'node:https'
+import { readFileSync } from 'node:fs'
+
+const server = new Server(routes)
+
+createServer({
+  cert: readFileSync('path/to/cert.pem'),
+  key: readFileSync('path/to/key.pem')
+}, (req, res) => {
+  // 适配 fetch
+}).listen(443)
+```
+
+**Bun:**
+
+```typescript
+Bun.serve({
+  port: 443,
+  fetch: server.fetch,
+  tls: {
+    cert: Bun.file('path/to/cert.pem'),
+    key: Bun.file('path/to/key.pem')
+  }
+})
+```
+
+---
+
+## 性能优化
+
+### 启用压缩
+
+```typescript
+import { compress } from '@vafast/compress'
+
+const server = new Server(routes)
+server.use(compress())
+```
+
+### 缓存策略
+
+```typescript
+const routes = defineRoutes([
+  {
+    method: 'GET',
+    path: '/static/:file',
+    handler: createHandler(({ params }) => {
+      const file = getStaticFile(params.file)
+      return new Response(file, {
+        headers: {
+          'Cache-Control': 'public, max-age=31536000',
+          'ETag': generateETag(file)
+        }
+      })
+    })
+  }
+])
+```
+
+---
 
 ## 部署检查清单
 
@@ -348,23 +413,25 @@ server.use(rateLimit({
 - [ ] HTTPS 已配置（如果适用）
 - [ ] 备份策略已制定
 
-## 总结
+---
 
-Vafast 的生产部署提供了：
+## 运行时对比
 
-- ✅ 二进制编译支持
-- ✅ Docker 容器化
-- ✅ 环境变量配置
-- ✅ 性能优化选项
-- ✅ 监控和日志
-- ✅ 安全配置
-- ✅ 负载均衡支持
+| 特性 | Node.js | Bun |
+|------|---------|-----|
+| 启动速度 | 较慢 | 快 |
+| 内存占用 | 较高 | 较低 |
+| 二进制编译 | ❌ | ✅ |
+| 生态兼容 | ✅ 完全兼容 | ✅ 大部分兼容 |
+| 生产稳定性 | ✅ 成熟稳定 | ✅ 快速发展 |
+| PM2 支持 | ✅ | ✅ |
+| Docker 支持 | ✅ | ✅ |
 
-### 下一步
+---
 
-- 查看 [路由系统](/essential/route) 了解如何组织路由
+## 下一步
+
+- 查看 [路由系统](/routing) 了解如何组织路由
 - 学习 [中间件系统](/middleware) 了解如何增强功能
 - 探索 [验证系统](/essential/validation) 了解类型安全
 - 查看 [最佳实践](/essential/best-practice) 获取更多开发建议
-
-如果您有任何问题，请查看我们的 [社区页面](/community) 或 [GitHub 仓库](https://github.com/vafast/vafast)。

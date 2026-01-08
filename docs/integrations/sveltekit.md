@@ -785,20 +785,54 @@ server.listen(port, () => {
 
 ### Docker 部署
 
-```dockerfile
-FROM oven/bun:1
+**Node.js 版本：**
 
+```dockerfile
+FROM node:20-alpine AS builder
 WORKDIR /app
 
-COPY package.json bun.lock ./
-RUN bun install --production
+COPY package.json package-lock.json ./
+RUN npm ci
+
+COPY . .
+RUN npm run build
+
+FROM node:20-alpine
+WORKDIR /app
+
+ENV NODE_ENV=production
+
+COPY --from=builder /app/build ./build
+COPY --from=builder /app/package.json ./
+RUN npm ci --only=production
+
+EXPOSE 3000
+
+CMD ["node", "build"]
+```
+
+**Bun 版本：**
+
+```dockerfile
+FROM oven/bun:1 AS builder
+WORKDIR /app
+
+COPY package.json bun.lockb ./
+RUN bun install --frozen-lockfile
 
 COPY . .
 RUN bun run build
 
+FROM oven/bun:1-slim
+WORKDIR /app
+
+COPY --from=builder /app/build ./build
+COPY --from=builder /app/package.json ./
+RUN bun install --production --frozen-lockfile
+
 EXPOSE 3000
 
-CMD ["bun", "run", "start"]
+CMD ["bun", "build"]
 ```
 
 ## 最佳实践
