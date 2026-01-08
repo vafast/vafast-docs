@@ -172,83 +172,19 @@ export default defineConfig({
         logo: '/assets/vafast.svg',
         nav: [
             {
-                text: '中间件',
+                text: '生态',
                 items: [
                     {
-                        text: '概述',
+                        text: '中间件',
                         link: '/middleware/overview'
                     },
                     {
-                        text: 'Bearer',
-                        link: '/middleware/bearer'
+                        text: 'API 客户端',
+                        link: '/api-client/overview'
                     },
                     {
-                        text: 'Compress',
-                        link: '/middleware/compress'
-                    },
-                    {
-                        text: 'Cookie',
-                        link: '/middleware/cookie'
-                    },
-                    {
-                        text: 'CORS',
-                        link: '/middleware/cors'
-                    },
-                    {
-                        text: 'Cron',
-                        link: '/middleware/cron'
-                    },
-                    {
-                        text: 'Helmet',
-                        link: '/middleware/helmet'
-                    },
-                    {
-                        text: 'HTML',
-                        link: '/middleware/html'
-                    },
-                    {
-                        text: 'IP',
-                        link: '/middleware/ip'
-                    },
-                    {
-                        text: 'JWT',
-                        link: '/middleware/jwt'
-                    },
-                    {
-                        text: 'Logger',
-                        link: '/middleware/logger'
-                    },
-                    {
-                        text: 'OpenTelemetry',
-                        link: '/middleware/opentelemetry'
-                    },
-                    {
-                        text: 'Rate Limit',
-                        link: '/middleware/rate-limit'
-                    },
-                    {
-                        text: 'Request ID',
-                        link: '/middleware/request-id'
-                    },
-                    {
-                        text: 'Request Logger',
-                        link: '/middleware/request-logger'
-                    },
-                    {
-                        text: 'Server Timing',
-                        link: '/middleware/server-timing'
-                    },
-                    {
-                        text: 'Static',
-                        link: '/middleware/static'
-                    },
-                    {
-                        text: 'Swagger',
-                        link: '/middleware/swagger'
-                    },
-                    {
-                        text: 'Webhook',
-                        link: '/middleware/webhook'
+                        text: '集成',
+                        link: '/integrations/drizzle'
                     }
                 ]
             },
@@ -264,7 +200,7 @@ export default defineConfig({
         sidebar: [
             {
                 text: '入门',
-                collapsed: true,
+                collapsed: false,
                 items: [
                     {
                         text: '概览',
@@ -276,26 +212,7 @@ export default defineConfig({
                     },
                     {
                         text: '教程',
-                        link: '/tutorial',
-                        collapsed: true,
-                        items: [
-                            {
-                                text: '从 Express 迁移',
-                                link: '/migrate/from-express'
-                            },
-                            {
-                                text: '从 Fastify 迁移',
-                                link: '/migrate/from-fastify'
-                            },
-                            {
-                                text: '从 Hono 迁移',
-                                link: '/migrate/from-hono'
-                            },
-                            {
-                                text: '从 Elysia 迁移',
-                                link: '/migrate/from-elysia'
-                            }
-                        ]
+                        link: '/tutorial'
                     },
                     {
                         text: '关键概念',
@@ -304,24 +221,12 @@ export default defineConfig({
                 ]
             },
             {
-                text: '基础',
+                text: '核心',
                 collapsed: true,
                 items: [
                     {
-                        text: '路由指南',
+                        text: '路由',
                         link: '/routing'
-                    },
-                    {
-                        text: '中间件系统',
-                        link: '/middleware'
-                    },
-                    {
-                        text: '组件路由',
-                        link: '/component-routing'
-                    },
-                    {
-                        text: 'API 参考',
-                        link: '/api'
                     },
                     {
                         text: '处理程序',
@@ -332,34 +237,60 @@ export default defineConfig({
                         link: '/essential/validation'
                     },
                     {
-                        text: '最佳实践',
-                        link: '/best-practices'
+                        text: '中间件系统',
+                        link: '/middleware'
+                    },
+                    {
+                        text: '组件路由',
+                        link: '/component-routing'
                     }
                 ]
             },
             {
-                text: '模式',
+                text: '进阶',
                 collapsed: true,
                 items: [
                     {
-                        text: 'Cookie',
-                        link: '/patterns/cookie'
+                        text: '最佳实践',
+                        link: '/essential/best-practice'
                     },
                     {
-                        text: '生产环境部署',
-                        link: '/patterns/deploy'
-                    },
-                    {
-                        text: '跟踪',
-                        link: '/patterns/trace'
-                    },
-                    {
-                        text: '类型',
+                        text: '类型系统',
                         link: '/patterns/type'
                     },
                     {
                         text: '单元测试',
                         link: '/patterns/unit-test'
+                    },
+                    {
+                        text: '部署指南',
+                        link: '/patterns/deploy'
+                    },
+                    {
+                        text: '链路追踪',
+                        link: '/patterns/trace'
+                    }
+                ]
+            },
+            {
+                text: '迁移指南',
+                collapsed: true,
+                items: [
+                    {
+                        text: '从 Express 迁移',
+                        link: '/migrate/from-express'
+                    },
+                    {
+                        text: '从 Fastify 迁移',
+                        link: '/migrate/from-fastify'
+                    },
+                    {
+                        text: '从 Hono 迁移',
+                        link: '/migrate/from-hono'
+                    },
+                    {
+                        text: '从 Elysia 迁移',
+                        link: '/migrate/from-elysia'
                     }
                 ]
             },
@@ -373,15 +304,15 @@ export default defineConfig({
                     },
                     {
                         text: '安装',
-                        link: '/api-client/installation.md'
+                        link: '/api-client/installation'
                     },
                     {
                         text: '基础用法',
-                        link: '/api-client/fetch.md'
+                        link: '/api-client/fetch'
                     },
                     {
                         text: '测试',
-                        link: '/api-client/test.md'
+                        link: '/api-client/test'
                     }
                 ]
             },
@@ -392,10 +323,6 @@ export default defineConfig({
                     {
                         text: '概述',
                         link: '/middleware/overview'
-                    },
-                    {
-                        text: 'API Client',
-                        link: '/middleware/api-client'
                     },
                     {
                         text: 'Bearer',
@@ -476,48 +403,73 @@ export default defineConfig({
                 collapsed: true,
                 items: [
                     {
-                        text: 'Astro',
-                        link: '/integrations/astro'
+                        text: '数据库',
+                        items: [
+                            {
+                                text: 'Drizzle',
+                                link: '/integrations/drizzle'
+                            },
+                            {
+                                text: 'Prisma',
+                                link: '/integrations/prisma'
+                            }
+                        ]
                     },
                     {
-                        text: 'Better Auth',
-                        link: '/integrations/better-auth'
+                        text: '前端框架',
+                        items: [
+                            {
+                                text: 'Next.js',
+                                link: '/integrations/nextjs'
+                            },
+                            {
+                                text: 'Nuxt',
+                                link: '/integrations/nuxt'
+                            },
+                            {
+                                text: 'Astro',
+                                link: '/integrations/astro'
+                            },
+                            {
+                                text: 'SvelteKit',
+                                link: '/integrations/sveltekit'
+                            },
+                            {
+                                text: 'Expo',
+                                link: '/integrations/expo'
+                            }
+                        ]
                     },
                     {
-                        text: 'Drizzle',
-                        link: '/integrations/drizzle'
-                    },
+                        text: '工具',
+                        items: [
+                            {
+                                text: 'OpenAPI',
+                                link: '/integrations/openapi'
+                            },
+                            {
+                                text: 'OpenTelemetry',
+                                link: '/integrations/opentelemetry'
+                            },
+                            {
+                                text: 'Better Auth',
+                                link: '/integrations/better-auth'
+                            },
+                            {
+                                text: 'React Email',
+                                link: '/integrations/react-email'
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                text: 'API 参考',
+                collapsed: true,
+                items: [
                     {
-                        text: 'Expo',
-                        link: '/integrations/expo'
-                    },
-                    {
-                        text: 'Nextjs',
-                        link: '/integrations/nextjs'
-                    },
-                    {
-                        text: 'Nuxt',
-                        link: '/integrations/nuxt'
-                    },
-                    {
-                        text: 'OpenAPI',
-                        link: '/integrations/openapi'
-                    },
-                    {
-                        text: 'OpenTelemetry',
-                        link: '/integrations/opentelemetry'
-                    },
-                    {
-                        text: 'Prisma',
-                        link: '/integrations/prisma'
-                    },
-                    {
-                        text: 'React Email',
-                        link: '/integrations/react-email'
-                    },
-                    {
-                        text: 'SvelteKit',
-                        link: '/integrations/sveltekit'
+                        text: 'API 文档',
+                        link: '/api'
                     }
                 ]
             }
