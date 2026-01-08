@@ -1,11 +1,11 @@
 <template>
     <section
-        class="flex flex-col justify-center items-center gap-12 max-w-5xl w-full px-6 py-20 mx-auto"
+        class="flex flex-col-reverse lg:flex-row justify-center items-center gap-16 md:gap-8 lg:gap-20 max-w-5xl w-full px-6 py-20 mx-auto"
         ref="scope"
     >
         <!-- 左侧圆形图标阵列 -->
         <div
-            class="relative flex justify-center items-center w-full size-72 sm:size-96 md:size-128"
+            class="relative flex justify-center items-center size-72 sm:size-96 md:size-128"
         >
             <div class="relative flex justify-center items-center overflow-hidden lg:overflow-visible size-72 sm:size-96 md:size-128">
                 <motion.div v-bind="fadeIn()" class="absolute size-36 rotate-45 border-t border-l border-b border-gray-300 dark:border-gray-700 rounded-full" />
@@ -57,31 +57,24 @@
             </template>
         </div>
 
-        <!-- 文案 -->
-        <div class="text-center text-xl max-w-2xl">
-            <h2 class="flex flex-col font-medium leading-loose mb-6 items-center">
-                <motion.span class="text-gray-600 dark:text-gray-400" v-bind="flyIn()">
-                    你的代码
-                </motion.span>
-                <motion.span
-                    class="text-5xl md:text-6xl text-transparent bg-clip-text bg-gradient-to-r from-violet-500 to-sky-400 font-bold"
-                    v-bind="flyIn(0.1)"
-                >
-                    任意运行时
-                </motion.span>
-            </h2>
-            <motion.p class="text-gray-500 dark:text-gray-400 mt-4" v-bind="flyIn(0.2)">
-                Vafast 基于 Web 标准构建
+        <!-- 右侧文案 -->
+        <div class="text-xl max-w-md">
+            <motion.p
+                class="text-sm font-medium text-violet-500 mb-2"
+                v-bind="flyIn()"
+            >
+                跨平台部署
             </motion.p>
-            <motion.p class="text-gray-500 dark:text-gray-400 mt-2" v-bind="flyIn(0.3)">
-                <span class="text-transparent bg-clip-text bg-gradient-to-r from-violet-500 to-pink-400 font-semibold">
-                    不绑定任何运行时
-                </span>
+            <motion.h2
+                class="text-4xl md:text-5xl font-bold mb-6 text-gray-800 dark:text-gray-100"
+                v-bind="flyIn(0.1)"
+            >
+                一套代码，到处运行
+            </motion.h2>
+            <motion.p class="text-gray-500 dark:text-gray-400 text-base leading-relaxed" v-bind="flyIn(0.2)">
+                基于 Web 标准 Fetch API 构建，不绑定任何运行时。同一份代码可以部署到 Node.js、Bun、Cloudflare Workers 等任意平台。
             </motion.p>
-            <motion.p class="text-gray-500 dark:text-gray-400 mt-6" v-bind="flyIn(0.4)">
-                一套代码，部署到任何地方
-            </motion.p>
-            <motion.div class="flex flex-wrap gap-2 mt-6 justify-center" v-bind="flyIn(0.5)">
+            <motion.div class="flex flex-wrap gap-2 mt-8" v-bind="flyIn(0.3)">
                 <span class="px-3 py-1 text-sm bg-gray-100 dark:bg-gray-800 rounded-full text-gray-600 dark:text-gray-300">Node.js</span>
                 <span class="px-3 py-1 text-sm bg-gray-100 dark:bg-gray-800 rounded-full text-gray-600 dark:text-gray-300">Bun</span>
                 <span class="px-3 py-1 text-sm bg-gray-100 dark:bg-gray-800 rounded-full text-gray-600 dark:text-gray-300">Deno</span>

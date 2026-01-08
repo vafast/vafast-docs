@@ -14,22 +14,22 @@ const principles = [
     {
         icon: 'M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16zM3.27 6.96L12 12.01l8.73-5.05M12 22.08V12',
         title: '自动响应',
-        desc: '返回对象自动转 JSON，字符串自动 text/plain'
+        desc: '返回对象自动转 JSON，返回字符串自动设置 Content-Type'
     },
     {
         icon: 'M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM12 8v4M12 16h.01',
         title: '语义化错误',
-        desc: 'err.notFound() 统一的错误响应格式'
+        desc: '内置 err.notFound() 等方法，统一错误响应格式'
     },
     {
         icon: 'M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01',
         title: '声明式路由',
-        desc: '路由是数组，一眼看清所有 API 端点'
+        desc: '路由就是数组，所有接口一目了然'
     },
     {
         icon: 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zM2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z',
         title: '跨运行时',
-        desc: 'Node.js / Bun / Workers 同一套代码'
+        desc: '同一份代码跑在 Node.js、Bun、Workers'
     }
 ]
 </script>
@@ -47,36 +47,19 @@ const principles = [
                     class="text-sm font-medium text-violet-500 mb-2"
                     v-bind="flyIn()"
                 >
-                    设计原则
+                    简单直观
                 </motion.p>
                 <motion.h2
-                    class="text-4xl md:text-5xl font-bold mb-6"
+                    class="text-4xl md:text-5xl font-bold mb-6 text-gray-800 dark:text-gray-100"
                     v-bind="flyIn(0.1)"
                 >
-                    <span class="text-gray-800 dark:text-gray-100">开发者</span>
-                    <br />
-                    <span
-                        class="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-violet-500"
-                    >
-                        优先
-                    </span>
+                    为开发者而生
                 </motion.h2>
                 <motion.p
-                    class="text-gray-500 dark:text-gray-400 mb-4 leading-relaxed"
+                    class="text-gray-500 dark:text-gray-400 leading-relaxed"
                     v-bind="flyIn(0.2)"
                 >
-                    符合直觉的 API 设计，零学习成本上手。
-                </motion.p>
-                <motion.p
-                    class="text-gray-500 dark:text-gray-400 leading-relaxed"
-                    v-bind="flyIn(0.3)"
-                >
-                    拒绝过度抽象，
-                    <span
-                        class="text-transparent bg-clip-text bg-gradient-to-r from-violet-500 to-sky-400 font-semibold"
-                    >
-                        写你所想，即你所得。
-                    </span>
+                    API 设计符合直觉，几乎没有学习成本。不搞复杂抽象，你写的代码就是最终运行的样子。
                 </motion.p>
             </div>
 

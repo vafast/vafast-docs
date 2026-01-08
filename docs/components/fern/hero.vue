@@ -20,31 +20,25 @@
                 />
             </div>
 
-            <!-- 主标题 - 分行展示 -->
+            <!-- 主标题 -->
             <h1
-                class="text-4xl md:text-6xl lg:text-7xl font-bold text-center leading-tight md:leading-tight lg:leading-tight mb-6"
+                class="text-4xl md:text-6xl lg:text-7xl font-bold text-center leading-tight md:leading-tight lg:leading-tight mb-6 text-gray-800 dark:text-gray-100"
             >
-                <span class="text-gray-700 dark:text-gray-200">构建现代</span>
-                <br />
-                <span
-                    class="text-transparent bg-clip-text bg-gradient-to-r from-violet-500 to-sky-400"
-                >
-                    高性能 API
-                </span>
+                轻量、快速、类型安全
             </h1>
 
             <!-- 副标题 -->
             <p
                 class="text-lg md:text-xl text-gray-500 dark:text-gray-400 text-center max-w-2xl mb-4 leading-relaxed"
             >
-                声明式路由 · 自动类型推断 · Schema 验证
+                基于 TypeScript 的现代 Web 框架，声明式路由、自动类型推断、内置 Schema 验证
             </p>
 
             <!-- 支持的运行时 -->
             <p
                 class="text-sm md:text-base text-gray-400 dark:text-gray-500 text-center mb-10"
             >
-                支持 Node.js / Bun / Cloudflare Workers
+                支持 Node.js、Bun、Cloudflare Workers
             </p>
 
             <!-- CTA 区域 -->

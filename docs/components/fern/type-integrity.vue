@@ -10,18 +10,13 @@
                 class="text-sm font-medium text-cyan-500 mb-2"
                 v-bind="flyIn()"
             >
-                更先进的开发体验
+                类型安全
             </motion.p>
             <motion.h2
-                class="text-4xl md:text-5xl font-bold"
+                class="text-4xl md:text-5xl font-bold text-gray-800 dark:text-gray-100"
                 v-bind="flyIn(0.1)"
             >
-                <span class="text-gray-800 dark:text-gray-100">端到端</span>
-                <span
-                    class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-500"
-                >
-                    类型安全
-                </span>
+                从请求到响应，全程有类型
             </motion.h2>
         </div>
 

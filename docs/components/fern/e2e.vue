@@ -10,29 +10,24 @@
                 class="text-sm font-medium text-emerald-500 mb-2"
                 v-bind="flyIn()"
             >
-                Single Source of Truth
+                前后端协作
             </motion.p>
             <motion.h2
-                class="text-4xl md:text-5xl font-bold"
+                class="text-4xl md:text-5xl font-bold text-gray-800 dark:text-gray-100"
                 v-bind="flyIn(0.1)"
             >
-                <span class="text-gray-800 dark:text-gray-100">客户端-服务端</span>
-                <span
-                    class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-500"
-                >
-                    类型同步
-                </span>
+                类型自动同步
             </motion.h2>
             <motion.p
                 class="mt-4 text-gray-500 dark:text-gray-400 max-w-2xl mx-auto"
                 v-bind="flyIn(0.15)"
             >
-                通过 vafast-api-client，客户端自动推断服务端的类型定义，无需手动同步
+                服务端定义好接口，客户端自动获得完整类型提示，不用手动写类型、不用生成代码。
             </motion.p>
         </div>
 
         <!-- 代码展示 -->
-        <div class="flex flex-col gap-6 max-w-3xl mx-auto w-full">
+        <div class="grid md:grid-cols-2 gap-6">
             <!-- 服务端代码 -->
             <motion.div
                 class="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden"
