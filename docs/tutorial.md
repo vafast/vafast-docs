@@ -5,11 +5,16 @@ next:
   link: '/key-concept'
 ---
 
+<script setup>
+import Card from './components/nearl/card.vue'
+import Deck from './components/nearl/card-deck.vue'
+</script>
+
 # Vafast 教程
 
 我们将构建一个简单的 CRUD 笔记 API 服务器。
 
-这里没有数据库，也没有其他"生产就绪"功能。本教程将重点介绍 Vafast 的功能以及如何仅使用 Vafast。
+这里没有数据库，也没有其他"生产就绪"功能。本教程将重点介绍 Vafast 的功能以及如何使用 Vafast。
 
 如果你跟着做，我们预计大约需要 15-20 分钟。
 
@@ -17,17 +22,20 @@ next:
 
 ### 来自其他框架？
 
-如果您使用过其他流行框架，如 Express、Fastify 或 Hono，您会发现 Vafast 非常熟悉，只是有一些小差异。
+如果您使用过其他流行框架，您会发现 Vafast 非常熟悉，只是有一些小差异。
 
 <Deck>
-	<Card title="From Express" href="/migrate/from-express">
-  		从 Express 迁移到 Vafast 的指南
-	</Card>
+    <Card title="From Express" href="/migrate/from-express">
+        从 Express 迁移到 Vafast 的指南
+    </Card>
     <Card title="From Fastify" href="/migrate/from-fastify">
-  		从 Fastify 迁移到 Vafast 的指南
+        从 Fastify 迁移到 Vafast 的指南
     </Card>
     <Card title="From Hono" href="/migrate/from-hono">
-  		从 Hono 迁移到 Vafast 的指南
+        从 Hono 迁移到 Vafast 的指南
+    </Card>
+    <Card title="From Elysia" href="/migrate/from-elysia">
+        从 Elysia 迁移到 Vafast 的指南
     </Card>
 </Deck>
 
@@ -35,14 +43,9 @@ next:
 
 如果您更倾向于自己动手的方式，可以跳过这个教程，直接访问 [关键概念](/key-concept) 页面，深入了解 Vafast 的工作原理。
 
-<script setup>
-import Card from './components/nearl/card.vue'
-import Deck from './components/nearl/card-deck.vue'
-</script>
-
 <Deck>
     <Card title="关键概念（5 分钟）" href="/key-concept">
-    	Vafast 的核心概念及其使用方法。
+        Vafast 的核心概念及其使用方法。
     </Card>
 </Deck>
 
@@ -52,45 +55,72 @@ import Deck from './components/nearl/card-deck.vue'
 
 <Deck>
     <Card title="llms.txt" href="/llms.txt" download>
-   		下载带有参考的 Vafast 文档摘要，格式为 Markdown，以便提示 LLM。
+        下载带有参考的 Vafast 文档摘要，格式为 Markdown，以便提示 LLM。
     </Card>
     <Card title="llms-full.txt" href="/llms-full.txt" download>
-  		下载完整的 Vafast 文档，以 Markdown 格式在一个文件中供 LLM 提示使用。
+        下载完整的 Vafast 文档，以 Markdown 格式在一个文件中供 LLM 提示使用。
     </Card>
 </Deck>
 
 
 ## 设置
 
-Vafast 支持多种运行时，包括 Node.js、[Bun](https://bun.sh) 和任何支持 Web 标准 API 的运行时。
+### 使用脚手架（推荐）
 
-在本教程中，我们使用 Node.js。如果你更喜欢 Bun，可以将 `npm` 命令替换为 `bun`。
-
-::: code-group
-
-```bash [MacOS/Linux]
-curl -fsSL https://bun.sh/install | bash
-```
-
-```bash [Windows]
-powershell -c "irm bun.sh/install.ps1 | iex"
-```
-
-:::
-
-### 创建一个新项目
+最快的方式是使用官方脚手架：
 
 ```bash
-# 创建一个新目录
+npx create-vafast-app
+```
+
+按照提示输入项目名称（如 `hi-vafast`），然后：
+
+```bash
+cd hi-vafast
+npm install
+npm run dev
+```
+
+### 手动创建
+
+如果你更喜欢手动配置：
+
+```bash
 mkdir hi-vafast
 cd hi-vafast
+npm init -y
+npm install vafast
+npm install -D typescript tsx @types/node
+```
 
-# 初始化项目
-bun init
+创建 `tsconfig.json`：
 
-# 安装 Vafast
-bun add vafast
-bun add -d @types/bun
+```json
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "outDir": "dist",
+    "rootDir": "src"
+  },
+  "include": ["src/**/*"]
+}
+```
+
+在 `package.json` 中添加脚本：
+
+```json
+{
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "tsx src/index.ts"
+  }
+}
 ```
 
 ### 项目结构
@@ -101,15 +131,15 @@ bun add -d @types/bun
 hi-vafast/
 ├── src/
 │   └── index.ts
+├── .gitignore
 ├── package.json
-├── tsconfig.json
-└── README.md
+└── tsconfig.json
 ```
 
 ### 启动开发服务器
 
 ```bash
-bun run --hot src/index.ts
+npm run dev
 ```
 
 现在您应该能够在 [http://localhost:3000](http://localhost:3000) 看到 "Hello Vafast!" 消息。
@@ -140,11 +170,20 @@ const notes: Note[] = []
 现在让我们创建我们的 API 路由：
 
 ```typescript
-import { Server, defineRoutes, createHandler } from 'vafast'
-import { Type } from '@sinclair/typebox'
+import { Server, defineRoutes, createHandler, serve, Type } from 'vafast'
+
+interface Note {
+  id: string
+  title: string
+  content: string
+  createdAt: Date
+  updatedAt: Date
+}
+
+const notes: Note[] = []
 
 // 笔记 Schema
-const noteSchema = Type.Object({
+const NoteSchema = Type.Object({
   title: Type.String({ minLength: 1 }),
   content: Type.String({ minLength: 1 })
 })
@@ -177,17 +216,17 @@ const routes = defineRoutes([
     method: 'POST',
     path: '/notes',
     handler: createHandler(
-      { body: noteSchema },
+      { body: NoteSchema },
       ({ body }) => {
-      const note: Note = {
-        id: Date.now().toString(),
+        const note: Note = {
+          id: Date.now().toString(),
           title: body.title,
           content: body.content,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      }
-      
-      notes.push(note)
+          createdAt: new Date(),
+          updatedAt: new Date()
+        }
+        
+        notes.push(note)
         return { data: note, status: 201 }
       }
     )
@@ -198,22 +237,22 @@ const routes = defineRoutes([
     method: 'PUT',
     path: '/notes/:id',
     handler: createHandler(
-      { body: noteSchema },
+      { body: NoteSchema },
       ({ params, body }) => {
         const noteIndex = notes.findIndex(n => n.id === params.id)
-      
-      if (noteIndex === -1) {
+        
+        if (noteIndex === -1) {
           return { data: { error: 'Note not found' }, status: 404 }
-      }
-      
-      notes[noteIndex] = {
-        ...notes[noteIndex],
+        }
+        
+        notes[noteIndex] = {
+          ...notes[noteIndex],
           title: body.title,
           content: body.content,
-        updatedAt: new Date()
-      }
-      
-      return notes[noteIndex]
+          updatedAt: new Date()
+        }
+        
+        return notes[noteIndex]
       }
     )
   },
@@ -236,7 +275,10 @@ const routes = defineRoutes([
 ])
 
 const server = new Server(routes)
-export default { fetch: server.fetch }
+
+serve({ fetch: server.fetch, port: 3000 }, () => {
+  console.log('🚀 Server running on http://localhost:3000')
+})
 ```
 
 ### 3. 测试 API
@@ -244,7 +286,7 @@ export default { fetch: server.fetch }
 现在让我们测试我们的 API。重启开发服务器：
 
 ```bash
-bun run --hot src/index.ts
+npm run dev
 ```
 
 #### 创建笔记
@@ -264,13 +306,13 @@ curl http://localhost:3000/notes
 #### 获取单个笔记
 
 ```bash
-curl http://localhost:3000/notes/1234567890
+curl http://localhost:3000/notes/<id>
 ```
 
 #### 更新笔记
 
 ```bash
-curl -X PUT http://localhost:3000/notes/1234567890 \
+curl -X PUT http://localhost:3000/notes/<id> \
   -H "Content-Type: application/json" \
   -d '{"title": "更新的标题", "content": "更新的内容"}'
 ```
@@ -278,7 +320,7 @@ curl -X PUT http://localhost:3000/notes/1234567890 \
 #### 删除笔记
 
 ```bash
-curl -X DELETE http://localhost:3000/notes/1234567890
+curl -X DELETE http://localhost:3000/notes/<id>
 ```
 
 ## 添加中间件
@@ -312,7 +354,7 @@ const errorHandler = async (req: Request, next: () => Promise<Response>) => {
   } catch (error) {
     console.error('Error:', error)
     return json({ 
-        error: 'Internal Server Error', 
+      error: 'Internal Server Error', 
       message: error instanceof Error ? error.message : 'Unknown error'
     }, 500)
   }
@@ -327,22 +369,28 @@ const routes = defineRoutes([
     method: 'GET',
     path: '/notes',
     middleware: [logMiddleware, errorHandler],
-    handler: createHandler(() => {
-      return notes
-    })
+    handler: createHandler(() => notes)
   }
   // ... 其他路由
 ])
 ```
 
-## 添加验证
-
-让我们为我们的 API 添加一些基本的验证。Vafast 集成了 TypeBox 进行 Schema 验证：
+或者添加全局中间件：
 
 ```typescript
-import { Type } from '@sinclair/typebox'
+const server = new Server(routes)
+server.use(logMiddleware)
+server.use(errorHandler)
+```
 
-const noteSchema = Type.Object({
+## 添加验证
+
+Vafast 内置 TypeBox 进行 Schema 验证，直接从 `vafast` 导入 `Type`：
+
+```typescript
+import { Server, defineRoutes, createHandler, serve, Type } from 'vafast'
+
+const NoteSchema = Type.Object({
   title: Type.String({ minLength: 1, maxLength: 100 }),
   content: Type.String({ minLength: 1, maxLength: 1000 })
 })
@@ -351,23 +399,22 @@ const routes = defineRoutes([
   {
     method: 'POST',
     path: '/notes',
-    handler: createHandler(async ({ req, body }) => {
-      // body 已经通过验证，类型安全
-      const { title, content } = body
-      
-      const note: Note = {
-        id: Date.now().toString(),
-        title,
-        content,
-        createdAt: new Date(),
-        updatedAt: new Date()
+    handler: createHandler(
+      { body: NoteSchema },
+      ({ body }) => {
+        // body 已经通过验证，类型安全
+        const note: Note = {
+          id: Date.now().toString(),
+          title: body.title,
+          content: body.content,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        }
+        
+        notes.push(note)
+        return { data: note, status: 201 }
       }
-      
-      notes.push(note)
-      
-      return note
-    }),
-    body: noteSchema
+    )
   }
 ])
 ```
@@ -398,4 +445,4 @@ const routes = defineRoutes([
 - [中间件系统](/middleware) - 探索中间件的强大功能
 - [API 参考](/api) - 完整的 API 文档
 
-如果您有任何问题或需要帮助，请查看我们的 [社区页面](/community) 或 [GitHub 仓库](https://github.com/vafast/vafast)。
+如果您有任何问题或需要帮助，请查看我们的 [GitHub 仓库](https://github.com/vafast/vafast)。

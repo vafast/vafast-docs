@@ -290,6 +290,10 @@ export default defineConfig({
                             {
                                 text: '从 Hono 迁移',
                                 link: '/migrate/from-hono'
+                            },
+                            {
+                                text: '从 Elysia 迁移',
+                                link: '/migrate/from-elysia'
                             }
                         ]
                     },
