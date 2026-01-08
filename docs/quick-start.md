@@ -2,125 +2,98 @@
 title: 快速入门 - Vafast
 ---
 
-<script setup>
-import Card from './components/nearl/card.vue'
-import Deck from './components/nearl/card-deck.vue'
-import Tab from './components/fern/tab.vue'
-</script>
-
 # 快速入门
 
 Vafast 是一个高性能、类型安全的 TypeScript Web 框架。内置 JIT 编译验证器、中间件预编译等优化技术，比 Express/Hono 快约 **1.8x**。
 
-<Tab
-	id="quickstart"
-	:names="['Node.js', 'Bun', 'Web Standard']"
-	:tabs="['bun', 'node', 'web-standard']"
->
+## 使用脚手架（推荐）
 
-<template v-slot:bun>
-
-Vafast 支持多种 JavaScript 运行时，包括 Node.js、Bun 和其他支持 Web 标准的运行时。
-
-你可以使用下面的命令安装 Bun：
-
-::: code-group
-
-```bash [MacOS/Linux]
-curl -fsSL https://bun.sh/install | bash
-```
-
-```bash [Windows]
-powershell -c "irm bun.sh/install.ps1 | iex"
-```
-
-:::
-
-<Tab
-	id="quickstart"
-	:names="['自动安装', '手动安装']"
-	:tabs="['auto', 'manual']"
->
-
-<template v-slot:auto>
-
-我们建议使用 `bun create vafast` 启动一个新的 Vafast 服务器，该命令会自动设置所有内容。
+最快的方式是使用官方脚手架：
 
 ```bash
-bun create vafast my-app
+npx create-vafast-app
 ```
 
-完成后，你应该会在目录中看到名为 `my-app` 的文件夹。
+按照提示输入项目名称，然后：
 
 ```bash
-cd my-app
+cd my-vafast-app
+npm install
+npm run dev
 ```
 
-通过以下命令启动开发服务器：
+访问 [localhost:3000](http://localhost:3000) 即可看到 "Hello Vafast!"。
+
+## 手动配置
+
+如果你想手动配置项目，请按以下步骤操作。
+
+确保你已安装 Node.js（推荐版本 18+）。
+
+### 1. 创建项目目录
 
 ```bash
-bun dev
+mkdir my-vafast-app
+cd my-vafast-app
+npm init -y
 ```
 
-访问 [localhost:3000](http://localhost:3000) 应该会显示 "Hello Vafast"。
-
-::: tip
-Vafast 提供了 `dev` 命令，能够在文件更改时自动重新加载你的服务器。
-:::
-
-</template>
-
-<template v-slot:manual>
-
-要手动创建一个新的 Vafast 应用，请将 Vafast 作为一个包安装：
-
-```bash
-bun add vafast
-bun add -d @types/bun
-```
-
-这将安装 Vafast 和 Bun 的类型定义。
-
-创建一个新文件 `src/index.ts`，并添加以下代码：
-
-```typescript
-import { Server, defineRoutes, createHandler } from 'vafast'
-
-const routes = defineRoutes([
-  {
-    method: 'GET',
-    path: '/',
-    handler: createHandler(() => 'Hello Vafast!')
-  }
-])
-
-const server = new Server(routes)
-export default { fetch: server.fetch }
-```
-
-保存文件后，运行以下命令启动开发服务器：
-
-```bash
-bun run --hot src/index.ts
-```
-
-</template>
-
-</Tab>
-
-</template>
-
-<template v-slot:node>
-
-Vafast 也支持 Node.js 环境。
-
-首先安装 Node.js（推荐版本 18+），然后安装 Vafast：
+### 2. 安装依赖
 
 ```bash
 npm install vafast
+npm install -D typescript tsx @types/node
 ```
 
-创建一个新文件 `src/index.ts`：
+### 3. 配置 TypeScript
+
+创建 `tsconfig.json`：
+
+```json
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "outDir": "dist",
+    "rootDir": "src"
+  },
+  "include": ["src/**/*"]
+}
+```
+
+### 4. 配置 package.json
+
+在 `package.json` 中添加：
+
+```json
+{
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "tsx src/index.ts",
+    "build": "tsc",
+    "serve": "node dist/index.js"
+  }
+}
+```
+
+### 5. 项目结构
+
+```
+my-vafast-app/
+├── src/
+│   └── index.ts
+├── package.json
+└── tsconfig.json
+```
+
+## 创建应用
+
+创建 `src/index.ts`：
 
 ```typescript
 import { Server, defineRoutes, createHandler, serve } from 'vafast'
@@ -140,49 +113,20 @@ serve({ fetch: server.fetch, port: 3000 }, () => {
 })
 ```
 
-使用 Node.js 启动：
+## 启动服务
 
 ```bash
 npx tsx src/index.ts
 ```
 
-</template>
-
-<template v-slot:web-standard>
-
-Vafast 基于 Web 标准构建，可以在任何支持 Web 标准的运行时中运行。
-
-```bash
-npm install vafast
-```
-
-创建应用文件：
-
-```typescript
-import { Server, defineRoutes, createHandler } from 'vafast'
-
-const routes = defineRoutes([
-  {
-    method: 'GET',
-    path: '/',
-    handler: createHandler(() => 'Hello Vafast!')
-  }
-])
-
-const server = new Server(routes)
-export default { fetch: server.fetch }
-```
-
-</template>
-
-</Tab>
+访问 [localhost:3000](http://localhost:3000) 应该会显示 "Hello Vafast"。
 
 ## 基础示例
 
 ### 简单路由
 
 ```typescript
-import { Server, defineRoutes, createHandler } from 'vafast'
+import { Server, defineRoutes, createHandler, serve } from 'vafast'
 
 const routes = defineRoutes([
   {
@@ -198,7 +142,8 @@ const routes = defineRoutes([
 ])
 
 const server = new Server(routes)
-export default { fetch: server.fetch }
+
+serve({ fetch: server.fetch, port: 3000 })
 ```
 
 ### 带参数的路由
@@ -225,11 +170,11 @@ const routes = defineRoutes([
 ### 使用 Schema 验证
 
 ```typescript
-import { Type } from '@sinclair/typebox'
+import { Server, defineRoutes, createHandler, serve, Type } from 'vafast'
 
-const userSchema = Type.Object({
+const UserSchema = Type.Object({
   name: Type.String({ minLength: 1 }),
-  email: Type.String({ pattern: '^[^@]+@[^@]+\\.[^@]+$' }),
+  email: Type.String({ format: 'email' }),
   age: Type.Optional(Type.Number({ minimum: 0 }))
 })
 
@@ -238,7 +183,7 @@ const routes = defineRoutes([
     method: 'POST',
     path: '/users',
     handler: createHandler(
-      { body: userSchema },
+      { body: UserSchema },
       ({ body }) => {
         // body 已验证并自动推导类型
         return { success: true, user: body }
@@ -246,6 +191,10 @@ const routes = defineRoutes([
     )
   }
 ])
+
+const server = new Server(routes)
+
+serve({ fetch: server.fetch, port: 3000 })
 ```
 
 ## 下一步
@@ -255,6 +204,3 @@ const routes = defineRoutes([
 - 查看 [核心概念](/key-concept) 了解 Vafast 的基本原理
 - 阅读 [路由指南](/routing) 学习如何定义路由
 - 探索 [中间件系统](/middleware) 了解如何扩展功能
-- 查看 [示例项目](/examples) 获取更多灵感
-
-如果你遇到任何问题，请查看 [故障排除](/troubleshooting) 页面或加入我们的社区。
