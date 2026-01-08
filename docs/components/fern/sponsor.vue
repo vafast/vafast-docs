@@ -254,7 +254,7 @@ const scope = ref(null)
 const isInView = useInView(scope, {
     once: true,
     margin: '0px 0px -35% 0px'
-})
+} as Parameters<typeof useInView>[1])
 const flyIn = useFlyIn(isInView)
 
 const sponsors: Sponsor[] = data
