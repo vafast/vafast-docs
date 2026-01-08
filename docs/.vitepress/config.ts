@@ -399,7 +399,7 @@ export default defineConfig({
                 ]
             },
             {
-                text: '集成',
+                text: '数据库',
                 collapsed: true,
                 items: [
                     {
@@ -409,7 +409,13 @@ export default defineConfig({
                     {
                         text: 'Prisma',
                         link: '/integrations/prisma'
-                    },
+                    }
+                ]
+            },
+            {
+                text: '前端框架',
+                collapsed: true,
+                items: [
                     {
                         text: 'Next.js',
                         link: '/integrations/nextjs'
@@ -429,7 +435,13 @@ export default defineConfig({
                     {
                         text: 'Expo',
                         link: '/integrations/expo'
-                    },
+                    }
+                ]
+            },
+            {
+                text: '工具集成',
+                collapsed: true,
+                items: [
                     {
                         text: 'OpenAPI',
                         link: '/integrations/openapi'
@@ -450,7 +462,13 @@ export default defineConfig({
             },
             {
                 text: 'API 参考',
-                link: '/api'
+                collapsed: true,
+                items: [
+                    {
+                        text: 'API 文档',
+                        link: '/api'
+                    }
+                ]
             }
         ],
         outline: {

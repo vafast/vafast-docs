@@ -249,7 +249,7 @@ const routes = defineRoutes([
         return await db.user.create({ data: body })
       }
     )
-  }
+        }
 ])
 
 const server = new Server(routes)

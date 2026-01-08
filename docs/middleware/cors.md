@@ -164,7 +164,7 @@ const routes = defineRoutes([
 
 const server = new Server(routes)
 server.use(cors({
-  origin: /.*\.example\.com$/
+			origin: /.*\.example\.com$/
 }))
 
 serve({ fetch: server.fetch, port: 3000 })

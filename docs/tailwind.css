@@ -217,12 +217,20 @@ button.copy::after {
 }
 
 #VPSidebarNav > .group:nth-child(9) > .VPSidebarItem > .item > .text::before {
+    background-image: url(/assets/vite.svg);
+}
+
+#VPSidebarNav > .group:nth-child(10) > .VPSidebarItem > .item > .text::before {
+    background-image: url(/assets/clock.svg);
+}
+
+#VPSidebarNav > .group:nth-child(11) > .VPSidebarItem > .item > .text::before {
     background-image: url(/assets/book.svg);
 }
 
 .dark
     #VPSidebarNav
-    > .group:nth-child(-n + 10):not(:first-child)
+    > .group:nth-child(-n + 12):not(:first-child)
     > .VPSidebarItem
     > .item
     > .text::before {

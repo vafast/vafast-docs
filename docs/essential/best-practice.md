@@ -17,19 +17,19 @@ Vafast 对文件夹结构没有固定看法，留给您 **自行决定** 如何�
 ```
 | src
   | modules
-    | auth
+	| auth
       | routes.ts (路由定义)
-      | service.ts (服务)
-      | model.ts (模型)
-    | user
+	  | service.ts (服务)
+	  | model.ts (模型)
+	| user
       | routes.ts (路由定义)
-      | service.ts (服务)
-      | model.ts (模型)
+	  | service.ts (服务)
+	  | model.ts (模型)
   | utils
-    | a
-      | index.ts
-    | b
-      | index.ts
+	| a
+	  | index.ts
+	| b
+	  | index.ts
   | index.ts (入口文件)
 ```
 
@@ -53,7 +53,7 @@ export const authRoutes = defineRoutes([
       { body: AuthModel.signInBody },
       async ({ body }) => {
         const response = await AuthService.signIn(body)
-        return response
+			return response
       }
     )
   },
@@ -65,8 +65,8 @@ export const authRoutes = defineRoutes([
       async ({ body }) => {
         const user = await AuthService.signUp(body)
         return { data: user, status: 201 }
-      }
-    )
+		}
+	)
   }
 ])
 ```
@@ -82,15 +82,15 @@ type SignUpBody = Static<typeof AuthModel.signUpBody>
 export abstract class AuthService {
   static async signIn({ username, password }: SignInBody) {
     const user = await db.user.findUnique({ where: { username } })
-    
+
     if (!user || !await verifyPassword(password, user.password)) {
       throw new Error('Invalid username or password')
     }
 
-    return {
-      username,
+		return {
+			username,
       token: await generateToken(user.id)
-    }
+		}
   }
 
   static async signUp({ username, password, email }: SignUpBody) {
@@ -99,7 +99,7 @@ export abstract class AuthService {
     return await db.user.create({
       data: { username, password: hashedPassword, email }
     })
-  }
+	}
 }
 ```
 
@@ -226,7 +226,7 @@ export abstract class MathService {
   static fibo(n: number): number {
     if (n < 2) return n
     return MathService.fibo(n - 1) + MathService.fibo(n - 2)
-  }
+    }
 }
 
 // routes.ts
@@ -383,14 +383,14 @@ export const UserModel = {
 ```typescript
 // ❌ 不推荐 - 无法运行时验证
 class UserDto {
-  username: string
-  password: string
+	username: string
+	password: string
 }
 
 // ❌ 不推荐 - 只是类型，无法运行时验证
 interface IUser {
-  username: string
-  password: string
+	username: string
+	password: string
 }
 
 // ✅ 推荐 - 可以运行时验证
@@ -412,8 +412,8 @@ const userSchema = Type.Object({
 })
 
 type User = {
-  username: string
-  password: string
+	username: string
+	password: string
 }
 
 // ✅ 推荐 - 从 Schema 推断类型
@@ -508,7 +508,7 @@ describe('Routes', () => {
     expect(response.status).toBe(200)
     expect(text).toBe('Hello World')
   })
-})
+    })
 ```
 
 ### ✅ 推荐：服务层单独测试
