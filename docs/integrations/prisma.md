@@ -9,6 +9,11 @@ Vafast 可以与 Prisma ORM 无缝集成，为您提供类型安全的数据库�
 ## 安装依赖
 
 ```bash
+# npm
+npm install @prisma/client
+npm install -D prisma
+
+# 或使用 bun
 bun add @prisma/client
 bun add -D prisma
 ```
@@ -17,7 +22,7 @@ bun add -D prisma
 
 ```bash
 # 初始化 Prisma 项目
-bunx prisma init
+npx prisma init
 
 # 选择数据库类型（例如：PostgreSQL, MySQL, SQLite）
 ```
@@ -413,7 +418,7 @@ export const tagService = new TagService()
 
 ```typescript
 // src/routes.ts
-import { defineRoutes, createHandler, VafastError, Type } from 'vafast'
+import { defineRoutes, createHandler, err, Type } from 'vafast'
 import { userService, postService, tagService } from './services'
 import { authMiddleware } from './middleware/auth'
 

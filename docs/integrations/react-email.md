@@ -9,6 +9,11 @@ Vafast 可以与 React Email 无缝集成，为您提供类型安全的邮件模
 ## 安装依赖
 
 ```bash
+# npm
+npm install react-email @react-email/components @react-email/render
+npm install -D @types/nodemailer nodemailer
+
+# 或使用 bun
 bun add react-email @react-email/components @react-email/render
 bun add -D @types/nodemailer nodemailer
 ```
@@ -576,7 +581,7 @@ export const emailService = new EmailService({
 
 ```typescript
 // src/routes.ts
-import { defineRoutes, createHandler, VafastError, Type } from 'vafast'
+import { defineRoutes, createHandler, err, Type } from 'vafast'
 import { emailService } from './services/emailService'
 import { userService } from './services/userService'
 import { authMiddleware } from './middleware/auth'

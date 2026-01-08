@@ -26,6 +26,11 @@ my-vafast-nuxt-app/
 ## 安装依赖
 
 ```bash
+# npm
+npm install vafast @vafast/cors @vafast/helmet
+npm install -D @types/node
+
+# 或使用 bun
 bun add vafast @vafast/cors @vafast/helmet
 bun add -D @types/node
 ```
