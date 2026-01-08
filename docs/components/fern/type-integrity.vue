@@ -85,10 +85,10 @@ const clipPath = ref('inset(0px 75.233645% 0px 0.623053% round 25px)')
 
 const activeElements = useTemplateRef<HTMLElement[]>('active')
 const labels = [
-    '类型推断',
-    '强制类型',
-    '返回类型',
-    '代码提示'
+    '路径参数',
+    'Schema 验证',
+    '错误处理',
+    '额外上下文'
 ]
 
 watch(isInView, () => {

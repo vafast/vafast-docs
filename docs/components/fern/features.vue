@@ -50,22 +50,40 @@ const flyIn = useFlyIn(isInView)
         </div>
         <div class="list">
             <motion.section v-bind="flyIn(0.2)">
-                <h3>高性能</h3>
+                <h3>⚡ 高性能</h3>
                 <h4 class="text-purple-400">比 Express 快 1.8x</h4>
-                <p>JIT 编译验证器 + 中间件预编译</p>
-                <p>达到 ~101K reqs/s 的超高吞吐量</p>
+                <p>JIT 编译验证器自动缓存</p>
+                <p>Radix Tree O(k) 路由匹配</p>
             </motion.section>
             <motion.section v-bind="flyIn(0.3)">
-                <h3>Schema 验证</h3>
-                <h4 class="text-blue-400">内置 TypeBox 支持</h4>
-                <p>声明式 Schema 定义</p>
-                <p>自动验证请求参数、类型推断</p>
+                <h3>🔒 类型安全</h3>
+                <h4 class="text-blue-400">端到端类型推断</h4>
+                <p>TypeBox Schema → TypeScript 类型</p>
+                <p>跨文件类型不丢失</p>
             </motion.section>
             <motion.section v-bind="flyIn(0.4)">
-                <h3>开发体验</h3>
-                <h4 class="text-teal-400">简洁直观的 API</h4>
-                <p>零配置开箱即用</p>
-                <p>完整的 TypeScript 类型支持</p>
+                <h3>📋 声明式路由</h3>
+                <h4 class="text-teal-400">结构即真相</h4>
+                <p>路由是一个数组，一目了然</p>
+                <p>中间件显式声明在路由上</p>
+            </motion.section>
+            <motion.section v-bind="flyIn(0.5)">
+                <h3>🌍 跨运行时</h3>
+                <h4 class="text-orange-400">一套代码，任意环境</h4>
+                <p>Node.js / Bun / Cloudflare Workers</p>
+                <p>serve() 自动适配运行时</p>
+            </motion.section>
+            <motion.section v-bind="flyIn(0.6)">
+                <h3>✅ 内置验证</h3>
+                <h4 class="text-green-400">30+ Format 验证器</h4>
+                <p>email, uuid, phone, url, date-time...</p>
+                <p>导入即用，无需手动注册</p>
+            </motion.section>
+            <motion.section v-bind="flyIn(0.7)">
+                <h3>📊 内置监控</h3>
+                <h4 class="text-pink-400">零依赖性能监控</h4>
+                <p>P50/P95/P99 百分位数</p>
+                <p>RPS、状态码分布、内存监控</p>
             </motion.section>
         </div>
         <motion.h5
@@ -86,6 +104,55 @@ const flyIn = useFlyIn(isInView)
 
     & > .list {
         @apply grid sm:grid-cols-2 lg:grid-cols-3 gap-4 z-10;
+
+        & > section:nth-child(4),
+        & > section:nth-child(5),
+        & > section:nth-child(6) {
+            @apply bg-white dark:bg-gray-900;
+            background-image: radial-gradient(
+                    closest-side at center,
+                    rgba(255, 255, 255, 0.9) 70%,
+                    transparent 150%
+                ),
+                radial-gradient(
+                    at 20% 80%,
+                    hsla(223, 100%, 65%, 0.12) 0px,
+                    transparent 50%
+                ),
+                radial-gradient(
+                    at 80% 20%,
+                    hsla(280, 100%, 75%, 0.18) 0px,
+                    transparent 50%
+                ),
+                radial-gradient(
+                    at 50% 50%,
+                    hsla(240, 100%, 87%, 0.25) 0px,
+                    transparent 50%
+                );
+
+            html.dark & {
+                background-image: radial-gradient(
+                        closest-side at center,
+                        var(--color-gray-800) 60%,
+                        transparent 140%
+                    ),
+                    radial-gradient(
+                        at 20% 80%,
+                        hsla(223, 100%, 65%, 0.12) 0px,
+                        transparent 50%
+                    ),
+                    radial-gradient(
+                        at 80% 20%,
+                        hsla(280, 100%, 75%, 0.18) 0px,
+                        transparent 50%
+                    ),
+                    radial-gradient(
+                        at 50% 50%,
+                        hsla(240, 100%, 87%, 0.25) 0px,
+                        transparent 50%
+                    );
+            }
+        }
 
         & > section {
             @apply relative flex flex-col w-full rounded-3xl p-6 border border-r-blue-100 border-b-purple-100 border-t-purple-200 border-l-blue-200 dark:border-r-blue-300/40 dark:border-b-purple-300/40 dark:border-t-purple-400/50 dark:border-l-blue-400/40 transform hover:-translate-y-2 transition-all ease-out duration-200 dark:text-gray-400;

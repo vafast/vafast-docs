@@ -31,11 +31,14 @@
             <h3
                 class="text-xl md:text-2xl text-gray-500 dark:text-gray-400 !leading-normal w-full max-w-2xl text-center"
             >
-                内置
                 <span
                     class="text-transparent font-semibold bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400"
-                    >Schema 验证</span
-                >，完整的类型推断，简洁的 API 设计。
+                    >声明式路由</span
+                > · 端到端类型安全 · 
+                <span
+                    class="text-transparent font-semibold bg-clip-text bg-gradient-to-r from-sky-400 to-cyan-400"
+                    >~101K reqs/s</span
+                >
             </h3>
             <section
                 class="flex flex-col sm:flex-row items-center w-full md:w-auto gap-4 mt-8 mb-12"

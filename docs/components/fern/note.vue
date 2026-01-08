@@ -22,7 +22,7 @@
         </div>
 
         <h2 class="text-center leading-normal opacity-80">
-            生产就绪的高性能 <br class="block sm:none">TypeScript Web 框架
+            结构即真相 · 类型即契约 · <br class="block sm:none">为开发者而生的 Web 框架
         </h2>
     </div>
 </template>

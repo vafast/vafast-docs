@@ -72,10 +72,10 @@ const flyIn = useFlyIn(isInView)
                         ></polyline>
                         <line x1="12" y1="22.08" x2="12" y2="12"></line>
                     </svg>
-                    返回值
+                    自动响应
                 </h4>
-                <p>一个字符串、数字或复杂的 JSON</p>
-                <p>我们所需要做的就是返回。</p>
+                <p>返回对象自动转 JSON</p>
+                <p>返回字符串自动 text/plain</p>
             </motion.article>
             <motion.article v-bind="flyIn(0.7)">
                 <h4>
@@ -89,23 +89,20 @@ const flyIn = useFlyIn(isInView)
                         stroke-width="2"
                         stroke-linecap="round"
                         stroke-linejoin="round"
-                        class="feather feather-image"
+                        class="feather feather-alert-circle"
                     >
-                        <rect
-                            x="3"
-                            y="3"
-                            width="18"
-                            height="18"
-                            rx="2"
-                            ry="2"
-                        ></rect>
-                        <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                        <polyline points="21 15 16 10 5 21"></polyline>
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
                     </svg>
-                    内置文件支持
+                    语义化错误
                 </h4>
-                <p>要发送文件或图像，只需返回</p>
-                <p>没有什么更多或更少</p>
+                <p>
+                    <span class="font-mono text-violet-500 font-bold"
+                        >err.notFound()</span
+                    >
+                </p>
+                <p>统一的错误响应格式</p>
             </motion.article>
             <motion.article v-bind="flyIn(0.8)">
                 <h4>
@@ -119,28 +116,19 @@ const flyIn = useFlyIn(isInView)
                         stroke-width="2"
                         stroke-linecap="round"
                         stroke-linejoin="round"
-                        class="feather feather-cloud-drizzle"
+                        class="feather feather-list"
                     >
-                        <line x1="8" y1="19" x2="8" y2="21"></line>
-                        <line x1="8" y1="13" x2="8" y2="15"></line>
-                        <line x1="16" y1="19" x2="16" y2="21"></line>
-                        <line x1="16" y1="13" x2="16" y2="15"></line>
-                        <line x1="12" y1="21" x2="12" y2="23"></line>
-                        <line x1="12" y1="15" x2="12" y2="17"></line>
-                        <path
-                            d="M20 16.58A5 5 0 0 0 18 7h-1.26A8 8 0 1 0 4 15.25"
-                        ></path>
+                        <line x1="8" y1="6" x2="21" y2="6"></line>
+                        <line x1="8" y1="12" x2="21" y2="12"></line>
+                        <line x1="8" y1="18" x2="21" y2="18"></line>
+                        <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                        <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                        <line x1="3" y1="18" x2="3.01" y2="18"></line>
                     </svg>
-                    流响应
+                    声明式路由
                 </h4>
-                <p>
-                    使用
-                    <span class="font-mono text-violet-500 font-bold"
-                        >yield</span
-                    >
-                    流响应
-                </p>
-                <p>我们所需要做的就是返回</p>
+                <p>路由是一个数组</p>
+                <p>一眼看清所有 API 端点</p>
             </motion.article>
             <motion.article v-bind="flyIn(0.9)">
                 <h4>
@@ -154,16 +142,16 @@ const flyIn = useFlyIn(isInView)
                         stroke-width="2"
                         stroke-linecap="round"
                         stroke-linejoin="round"
-                        class="feather feather-activity"
+                        class="feather feather-globe"
                     >
-                        <polyline
-                            points="22 12 18 12 15 21 9 3 6 12 2 12"
-                        ></polyline>
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="2" y1="12" x2="22" y2="12"></line>
+                        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
                     </svg>
-                    实时数据
+                    跨运行时
                 </h4>
-                <p>内置 µWebSocket</p>
-                <p>发送实时数据只需 3 行代码</p>
+                <p>Node.js / Bun / Workers</p>
+                <p>同一套代码，任意运行时</p>
             </motion.article>
         </footer>
     </article>
