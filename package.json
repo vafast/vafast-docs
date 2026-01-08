@@ -50,7 +50,6 @@
         "vue": "^3.5.18"
     },
     "overrides": {
-        "oxc-minify": "0.78.0",
         "vite": "npm:rolldown-vite@latest",
         "vitepress": "^2.0.0-alpha.9",
         "vue": "^3.5.18"
