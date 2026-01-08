@@ -24,18 +24,15 @@
                 Vafast
             </h1>
             <h2
-                class="relative font-semibold text-transparent bg-clip-text bg-gradient-to-r from-sky-300 to-violet-400 mb-4 text-2xl md:text-3xl text-center"
+                class="relative font-medium text-gray-600 dark:text-gray-300 mb-6 text-xl md:text-2xl text-center max-w-lg leading-relaxed"
             >
-                高性能 TypeScript Web 框架
+                用最少的代码构建
+                <span class="text-transparent font-semibold bg-clip-text bg-gradient-to-r from-sky-400 to-violet-400">高性能 API</span>
             </h2>
             <p
-                class="text-lg md:text-xl text-gray-500 dark:text-gray-400 leading-relaxed w-full max-w-xl text-center mb-8"
+                class="text-base md:text-lg text-gray-400 dark:text-gray-500 leading-relaxed w-full max-w-2xl text-center mb-8"
             >
-                <span class="text-transparent font-medium bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">声明式路由</span>
-                ·
-                <span class="font-medium">端到端类型安全</span>
-                ·
-                <span class="text-transparent font-medium bg-clip-text bg-gradient-to-r from-sky-400 to-cyan-400">101K req/s</span>
+                声明式路由定义 · 自动类型推断 · Schema 验证 · 101K req/s
             </p>
             <section
                 class="flex flex-col sm:flex-row items-center w-full md:w-auto gap-4 mb-10"
