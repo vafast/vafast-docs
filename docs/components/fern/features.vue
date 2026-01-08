@@ -85,18 +85,13 @@ const colorMap: Record<string, { icon: string; subtitle: string; bg: string }> =
                 class="text-4xl md:text-5xl font-bold text-gray-800 dark:text-gray-100 mb-4"
                 v-bind="flyIn()"
             >
-                为什么选择
-                <span
-                    class="text-transparent bg-clip-text bg-gradient-to-r from-violet-500 to-sky-400"
-                >
-                    Vafast
-                </span>
+                核心特性
             </motion.h2>
             <motion.p
                 class="text-lg text-gray-500 dark:text-gray-400 max-w-2xl mx-auto"
                 v-bind="flyIn(0.1)"
             >
-                专注于开发者体验，提供简洁的 API、强大的类型推断和内置验证
+                简洁的 API、强大的类型推断、内置验证，专为高效开发设计
             </motion.p>
         </div>
 

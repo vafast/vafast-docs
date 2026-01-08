@@ -27,22 +27,16 @@ const flyIn = useFlyIn(isInView)
             <!-- 文案 -->
             <div>
                 <motion.h2
-                    class="text-4xl md:text-5xl font-bold mb-4"
+                    class="text-4xl md:text-5xl font-bold mb-4 text-gray-800 dark:text-gray-100"
                     v-bind="flyIn()"
                 >
-                    <span class="text-gray-800 dark:text-gray-100">和我们一起</span>
-                    <br />
-                    <span
-                        class="text-transparent bg-clip-text bg-gradient-to-r from-violet-500 to-sky-400"
-                    >
-                        构建未来
-                    </span>
+                    准备好了吗？
                 </motion.h2>
                 <motion.p
                     class="text-gray-500 dark:text-gray-400 max-w-md"
                     v-bind="flyIn(0.1)"
                 >
-                    开始使用 Vafast，体验更简单、更高效的 API 开发方式
+                    几分钟搭建你的第一个 Vafast 项目，体验高效的 API 开发
                 </motion.p>
             </div>
 
