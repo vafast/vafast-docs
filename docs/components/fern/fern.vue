@@ -3,6 +3,7 @@ import Hero from './hero.vue'
 import Features from './features.vue'
 import Easy from './easy.vue'
 import TypeIntegrity from './type-integrity.vue'
+import Deploy from './deploy.vue'
 import Benchmark from './benchmark.vue'
 import Test from './test.vue'
 import Sponsors from './sponsor.vue'
@@ -39,6 +40,9 @@ import BuiltWithLove from './built-with-love.vue'
                     <slot name="type-4" />
                 </template>
             </TypeIntegrity>
+
+            <!-- 跨运行时部署 -->
+            <Deploy />
 
             <!-- 性能对比 -->
             <Benchmark />
