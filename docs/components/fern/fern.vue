@@ -3,6 +3,7 @@ import Hero from './hero.vue'
 import Features from './features.vue'
 import Easy from './easy.vue'
 import TypeIntegrity from './type-integrity.vue'
+import E2E from './e2e.vue'
 import Deploy from './deploy.vue'
 import Benchmark from './benchmark.vue'
 import Test from './test.vue'
@@ -40,6 +41,16 @@ import BuiltWithLove from './built-with-love.vue'
                     <slot name="type-4" />
                 </template>
             </TypeIntegrity>
+
+            <!-- 端到端类型同步 -->
+            <E2E>
+                <template v-slot:server>
+                    <slot name="e2e-server" />
+                </template>
+                <template v-slot:client>
+                    <slot name="e2e-client" />
+                </template>
+            </E2E>
 
             <!-- 跨运行时部署 -->
             <Deploy />

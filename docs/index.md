@@ -153,6 +153,63 @@ export default { fetch: server.fetch }
 
 </template>
 
+<template v-slot:e2e-server>
+
+```typescript twoslash
+import { Server, defineRoutes, createHandler, Type, err } from 'vafast'
+
+const routes = defineRoutes([
+  {
+    method: 'PATCH',
+    path: '/profile',
+    handler: createHandler(
+      { body: Type.Object({ age: Type.Number() }) },
+      ({ body }) => {
+        if (body.age < 18)
+          throw err.badRequest('年龄不足')
+        return { success: true, data: body }
+      }
+    )
+  }
+])
+
+const server = new Server(routes)
+// 导出类型供客户端使用
+export type AppRoutes = typeof routes
+```
+
+</template>
+
+<template v-slot:e2e-client>
+
+```typescript twoslash
+import { eden, type InferEden } from '@vafast/api-client'
+import { defineRoutes, createHandler, Type } from 'vafast'
+
+// 从服务端路由推断类型（实际项目中 import type { AppRoutes } from './server'）
+const routes = defineRoutes([
+  {
+    method: 'PATCH',
+    path: '/profile',
+    handler: createHandler(
+      { body: Type.Object({ age: Type.Number() }) },
+      ({ body }) => ({ success: true, data: body })
+    )
+  }
+])
+
+type Api = InferEden<typeof routes>
+const api = eden<Api>('https://api.example.com')
+
+// 完整类型提示 + 自动补全
+const { data } = await api.profile.patch({
+      // ^?
+  age: 21
+})
+```
+
+</template>
+
 <template v-slot:test-code>
 
 ```typescript twoslash

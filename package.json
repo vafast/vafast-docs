@@ -24,7 +24,8 @@
         "motion-v": "^1.6.1",
         "shiki": "^3.9.2",
         "tailwindcss": "^4.1.11",
-        "vafast": "^0.4.2"
+        "vafast": "^0.4.23",
+        "@vafast/api-client": "^0.1.5"
     },
     "devDependencies": {
         "@nolebase/vitepress-plugin-inline-link-preview": "^2.18.1",
