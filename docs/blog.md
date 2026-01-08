@@ -15,6 +15,18 @@ authors: []
 <Blogs
   :blogs="[
       {
+        title: 'Vafast + Drizzle：轻量高效的全栈类型安全方案',
+        href: '/blog/with-drizzle',
+        cover: 'drizzle.webp',
+        detail: 'Drizzle ORM 与 Vafast 的组合为 TypeScript 开发者提供了一套轻量、高效、类型安全的全栈解决方案。零代码生成、边缘运行时友好、类 SQL 语法。'
+      },
+      {
+        title: 'Vafast 中间件设计模式与最佳实践',
+        href: '/blog/middleware-patterns',
+        cover: 'cover.webp',
+        detail: '中间件是 Web 框架中最强大的概念之一。本文介绍认证、限流、日志、错误处理、CORS、缓存等 7 种常用中间件设计模式。'
+      },
+      {
         title: '用 Vafast 加速你的下一个 Prisma 服务器',
         href: '/blog/with-prisma',
         cover: 'prism.webp',
