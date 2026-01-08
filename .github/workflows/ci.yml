@@ -19,10 +19,9 @@ jobs:
           node-version: "22"
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Build
         run: npm run build
         env:
           NODE_OPTIONS: "--max-old-space-size=8192"
-
