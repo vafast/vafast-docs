@@ -220,7 +220,7 @@ const fullHandler = createHandler(
 )
 ```
 
-## 🔄 请求处理流程
+## 请求处理流程
 
 Vafast 的请求处理流程如下：
 
@@ -287,7 +287,7 @@ const token = getHeader(req, 'Authorization')
 - **智能路径匹配**: 静态路径 > 动态参数 > 通配符
 - **冲突检测**: 自动检测并警告路由冲突
 
-## 📚 下一步
+## 下一步
 
 现在你已经了解了 Vafast 的核心概念，建议你：
 

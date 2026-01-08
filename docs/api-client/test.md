@@ -302,7 +302,7 @@ describe('Retry Mechanism', () => {
 })
 ```
 
-## 🔄 中间件测试
+## 中间件测试
 
 ### 请求中间件测试
 
@@ -721,7 +721,7 @@ describe('Test Cleanup', () => {
 })
 ```
 
-## 📚 测试最佳实践
+## 测试最佳实践
 
 ### 1. 测试隔离
 - 每个测试用例都应该是独立的
@@ -782,7 +782,7 @@ npm run test:coverage
 npm run test:watch
 ```
 
-## 📚 下一步
+## 下一步
 
 现在您已经了解了如何测试 Vafast API 客户端，接下来可以：
 

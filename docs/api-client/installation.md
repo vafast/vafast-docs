@@ -210,7 +210,7 @@ const client = new VafastApiClient({
 })
 ```
 
-## 🔐 环境变量配置
+## 环境变量配置
 
 ### 创建环境配置文件
 
@@ -247,7 +247,7 @@ const client = new VafastApiClient({
 })
 ```
 
-## 📱 浏览器环境
+## 浏览器环境
 
 ### 使用 CDN
 
@@ -408,7 +408,7 @@ const client = new VafastApiClient({
 client.setLogLevel('debug')
 ```
 
-## 📚 下一步
+## 下一步
 
 安装完成后，您可以：
 

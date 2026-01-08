@@ -23,7 +23,7 @@ Vafast API 客户端是一个专门为 Vafast 框架打造的现代化、类型�
 - 支持动态路径参数
 - 智能的查询参数处理
 
-### 🔄 自动重试
+### 自动重试
 - 内置指数退避重试机制
 - 可配置的重试策略
 - 智能的错误处理
@@ -82,7 +82,7 @@ VafastApiClient
 ### 类型安全
 通过 TypeScript 和 Vafast 的类型系统，API 客户端提供完整的类型检查，确保请求和响应的类型安全。
 
-## 📱 使用场景
+## 使用场景
 
 ### 前端应用
 - 与后端 API 交互
@@ -155,7 +155,7 @@ const user = await typedClient.post('/users', { name: 'John', email: 'john@examp
 - [基础用法](/api-client/fetch) - 学习基本的 HTTP 请求
 - [测试指南](/api-client/test) - 学习如何测试
 
-## 📚 下一步
+## 下一步
 
 现在您已经了解了 Vafast API 客户端的基本概念和特性，接下来可以：
 

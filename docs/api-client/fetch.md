@@ -335,7 +335,7 @@ client.use(async (response, next) => {
 })
 ```
 
-## 🔄 重试机制
+## 重试机制
 
 ### 自动重试
 
@@ -548,7 +548,7 @@ async function main() {
 main()
 ```
 
-## 📚 下一步
+## 下一步
 
 现在您已经掌握了 Vafast API 客户端的基础用法，接下来可以：
 

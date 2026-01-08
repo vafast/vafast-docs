@@ -753,7 +753,7 @@ export default {
 
 console.log('Vafast JWT Authentication API 服务器启动成功！')
 console.log('用户注册: POST /auth/register')
-console.log('🔐 用户登录: POST /auth/login')
+console.log('用户登录: POST /auth/login')
 console.log('👤 获取资料: GET /profile')
 console.log('更新资料: PUT /profile')
 console.log('👑 管理端点: GET /admin')
