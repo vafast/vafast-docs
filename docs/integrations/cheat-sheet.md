@@ -11,7 +11,7 @@ title: 集成速查表 - Vafast
 ### Prisma
 
 ```typescript
-import { defineRoutes, createHandler } from 'vafast'
+import { defineRoutes, createHandler, Type } from 'vafast'
 import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
@@ -47,8 +47,8 @@ const routes = defineRoutes([
 
 ```typescript
 import { defineRoutes, createHandler } from 'vafast'
-import { drizzle } from 'drizzle-orm/bun-sqlite'
-import { Database } from 'bun:sqlite3'
+import { drizzle } from 'drizzle-orm/better-sqlite3'
+import Database from 'better-sqlite3'
 import { users } from './schema'
 
 const db = drizzle(new Database('sqlite.db'))
@@ -91,7 +91,7 @@ const routes = defineRoutes([
 ### JWT
 
 ```typescript
-import { defineRoutes, createHandler } from 'vafast'
+import { defineRoutes, createHandler, Type } from 'vafast'
 import { jwt } from '@vafast/jwt'
 
 const routes = defineRoutes([
@@ -226,6 +226,7 @@ const app = createHandler(routes)
 
 ```typescript
 import { defineRoutes, createHandler } from 'vafast'
+import { writeFile } from 'node:fs/promises'
 
 const routes = defineRoutes([
   {
@@ -240,12 +241,15 @@ const routes = defineRoutes([
         const buffer = Buffer.from(bytes)
         
         // 保存文件
-        await Bun.write(`./uploads/${file.name}`, buffer)
+        await writeFile(`./uploads/${file.name}`, buffer)
         
         return { success: true, filename: file.name }
       }
       
-      return { error: 'No file uploaded' }, { status: 400 }
+      return new Response(JSON.stringify({ error: 'No file uploaded' }), { 
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      })
     })
   }
 ])
@@ -394,7 +398,7 @@ const routes = defineRoutes([
 ### 单元测试
 
 ```typescript
-import { describe, expect, it } from 'bun:test'
+import { describe, expect, it } from 'vitest'
 import { createHandler } from 'vafast'
 
 describe('User Routes', () => {
@@ -423,19 +427,19 @@ describe('User Routes', () => {
 ### Docker
 
 ```dockerfile
-FROM oven/bun:1
+FROM node:20-alpine
 
 WORKDIR /app
 
-COPY package.json bun.lock ./
-RUN bun install --production
+COPY package.json package-lock.json ./
+RUN npm ci --production
 
 COPY . .
-RUN bun run build
+RUN npm run build
 
 EXPOSE 3000
 
-CMD ["bun", "run", "start"]
+CMD ["npm", "run", "start"]
 ```
 
 ### 环境变量
@@ -466,6 +470,6 @@ OTEL_EXPORTER_OTLP_ENDPOINT="http://localhost:4317"
 ## 相关链接
 
 - [中间件系统](/middleware) - 探索可用的中间件
-- [路由定义](/essential/route) - 学习如何定义路由
+- [路由指南](/routing) - 学习如何定义路由
 - [类型验证](/patterns/type) - 了解类型验证系统
 - [部署指南](/patterns/deploy) - 生产环境部署建议

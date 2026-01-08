@@ -457,6 +457,10 @@ export default defineConfig({
                     {
                         text: 'React Email',
                         link: '/integrations/react-email'
+                    },
+                    {
+                        text: '速查表',
+                        link: '/integrations/cheat-sheet'
                     }
                 ]
             },
