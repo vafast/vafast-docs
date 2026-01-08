@@ -47,35 +47,35 @@ const principles = [
                     class="text-sm font-medium text-violet-500 mb-2"
                     v-bind="flyIn()"
                 >
-                    我们的设计原则
+                    设计原则
                 </motion.p>
                 <motion.h2
                     class="text-4xl md:text-5xl font-bold mb-6"
                     v-bind="flyIn(0.1)"
                 >
-                    <span class="text-gray-800 dark:text-gray-100">设计</span>
+                    <span class="text-gray-800 dark:text-gray-100">开发者</span>
                     <br />
                     <span
                         class="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-violet-500"
                     >
-                        以人为本
+                        优先
                     </span>
                 </motion.h2>
                 <motion.p
                     class="text-gray-500 dark:text-gray-400 mb-4 leading-relaxed"
                     v-bind="flyIn(0.2)"
                 >
-                    我们的目标是设计一个符合人体工程学、合理且高效的框架，即使是初学者也能轻松使用。
+                    符合直觉的 API 设计，零学习成本上手。
                 </motion.p>
                 <motion.p
                     class="text-gray-500 dark:text-gray-400 leading-relaxed"
                     v-bind="flyIn(0.3)"
                 >
-                    避免不必要的复杂性，简化类型，让您专注于业务逻辑。
+                    拒绝过度抽象，
                     <span
                         class="text-transparent bg-clip-text bg-gradient-to-r from-violet-500 to-sky-400 font-semibold"
                     >
-                        像写 JavaScript 一样简单。
+                        写你所想，即你所得。
                     </span>
                 </motion.p>
             </div>

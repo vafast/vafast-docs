@@ -21,6 +21,9 @@ import BuiltWithLove from './built-with-love.vue'
             <!-- 核心特性 4 卡片 -->
             <Features />
 
+            <!-- 性能对比 - 最吸引眼球的数据 -->
+            <Benchmark />
+
             <!-- 设计以人为本 -->
             <Easy>
                 <slot name="easy" />
@@ -52,13 +55,7 @@ import BuiltWithLove from './built-with-love.vue'
                 </template>
             </E2E>
 
-            <!-- 跨运行时部署 -->
-            <Deploy />
-
-            <!-- 性能对比 -->
-            <Benchmark />
-
-            <!-- 测试展示 -->
+            <!-- 测试展示 - 与类型安全形成连贯 -->
             <Test>
                 <template v-slot:test-code>
                     <slot name="test-code" />
@@ -67,6 +64,9 @@ import BuiltWithLove from './built-with-love.vue'
                     <slot name="test-script" />
                 </template>
             </Test>
+
+            <!-- 跨运行时部署 -->
+            <Deploy />
 
             <!-- 社区/赞助 -->
             <Sponsors />
