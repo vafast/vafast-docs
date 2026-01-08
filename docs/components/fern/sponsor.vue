@@ -25,7 +25,7 @@
         <motion.div class="flex sm:justify-center my-8" v-bind="flyIn(0.3)">
             <a
                 id="become-sponsor"
-                class="inline-flex items-center text-white font-semibold bg-gradient-to-br from-rose-400 to-pink-400 rounded-full px-6 py-3 box-shadow shadow-pink-400/40 shadow-lg transition-transform transform hover:scale-110 focus:scale-110"
+                class="become-sponsor-btn inline-flex items-center text-white font-semibold bg-gradient-to-br from-rose-400 to-pink-400 rounded-full px-6 py-3 box-shadow shadow-pink-400/40 shadow-lg transition-transform transform hover:scale-110 focus:scale-110"
                 href="https://github.com/vafast/vafast"
                 target="_blank"
             >
@@ -57,7 +57,11 @@
                     Gold Sponsors <span class="text-pink-400 ml-0.5">💖</span>
                 </motion.h4>
             </header>
-            <motion.ul id="sponsors-fern-gold" class="my-4" v-bind="flyIn(0.5)">
+            <motion.ul
+                id="sponsors-fern-gold"
+                class="sponsors-gold grid gap-2 grid-cols-1 my-4"
+                v-bind="flyIn(0.5)"
+            >
                 <li
                     v-for="sponsor in goldSponsors"
                     :key="sponsor.sponsorEntity.login"
@@ -65,25 +69,28 @@
                     <a
                         :href="`https://github.com/${sponsor.sponsorEntity.login}`"
                         target="_blank"
-                        class="sponsor"
+                        class="sponsor-gold flex justify-center items-center gap-3 text-xs text-center py-2"
                     >
-                        <div>
+                        <div
+                            class="min-w-21 min-h-21 overflow-hidden rounded-full"
+                        >
                             <img
                                 v-if="sponsor.sponsorEntity.avatarUrl"
                                 :src="sponsor.sponsorEntity.avatarUrl"
                                 alt="Sponsor avatar"
                                 loading="lazy"
+                                class="w-21 h-21 rounded-full object-cover object-center"
                             />
                         </div>
-                        <section>
-                            <h5>
+                        <section class="flex flex-col gap-1 sponsor-info">
+                            <h5 class="text-left text-xl font-medium m-0">
                                 {{
                                     sponsor.sponsorEntity.name ??
                                     sponsor.sponsorEntity.login ??
                                     '[Private]'
                                 }}
                             </h5>
-                            <p>
+                            <p class="text-left my-0">
                                 {{ sponsor.duration }}
                             </p>
                         </section>
@@ -105,7 +112,7 @@
             <motion.ul
                 id="sponsors-fern-silver"
                 v-if="sponsors.length > 0"
-                class="my-4"
+                class="sponsors-silver grid gap-2 grid-cols-1 my-4"
                 v-bind="flyIn(0.6)"
             >
                 <li
@@ -115,25 +122,28 @@
                     <a
                         :href="`https://github.com/${sponsor.sponsorEntity.login}`"
                         target="_blank"
-                        class="sponsor"
+                        class="sponsor-silver flex justify-center items-center gap-3 text-xs text-center py-2"
                     >
-                        <div>
+                        <div
+                            class="min-w-16 min-h-16 bg-gray-100 overflow-hidden rounded-full"
+                        >
                             <img
                                 v-if="sponsor.sponsorEntity.avatarUrl"
                                 :src="sponsor.sponsorEntity.avatarUrl"
                                 alt="Sponsor avatar"
                                 loading="lazy"
+                                class="w-16 h-16 rounded-full object-cover object-center"
                             />
                         </div>
-                        <section>
-                            <h6>
+                        <section class="flex flex-col">
+                            <h6 class="text-left text-lg font-medium m-0">
                                 {{
                                     sponsor.sponsorEntity.name ??
                                     sponsor.sponsorEntity.login ??
                                     '[Private]'
                                 }}
                             </h6>
-                            <p>
+                            <p class="text-left my-0">
                                 {{ sponsor.duration }}
                             </p>
                         </section>
@@ -156,7 +166,7 @@
             <motion.ul
                 id="sponsors-fern"
                 v-if="individualSponsors.length > 0"
-                class="my-4"
+                class="sponsors-individual grid gap-0.5 grid-cols-3 my-4"
                 v-bind="flyIn(0.8)"
             >
                 <li
@@ -166,24 +176,27 @@
                     <a
                         :href="`https://github.com/${sponsor.sponsorEntity.login}`"
                         target="_blank"
-                        class="sponsor"
+                        class="sponsor-individual flex flex-col justify-center items-center text-xs text-center hover:bg-pink-500/10 focus:bg-pink-500/10 dark:hover:bg-pink-500/25 dark:focus:bg-pink-500/25 px-0.5 py-4 rounded-xl transition-colors text-gray-500 hover:text-pink-500 dark:text-gray-400 dark:hover:text-pink-400"
                     >
-                        <div>
+                        <div
+                            class="w-16 h-16 bg-gray-100 overflow-hidden rounded-full mb-3"
+                        >
                             <img
                                 v-if="sponsor.sponsorEntity.avatarUrl"
                                 :src="sponsor.sponsorEntity.avatarUrl"
                                 alt="Sponsor avatar"
                                 loading="lazy"
+                                class="w-16 h-16 rounded-full object-cover object-center"
                             />
                         </div>
-                        <p>
+                        <p class="my-0">
                             {{
                                 sponsor.sponsorEntity.name ??
                                 sponsor.sponsorEntity.login ??
                                 '[Private]'
                             }}
                         </p>
-                        <p>
+                        <p class="my-0">
                             {{ sponsor.duration }}
                         </p>
                     </a>
@@ -259,97 +272,22 @@ const individualSponsors = sponsors.filter(
 )
 </script>
 
-<style>
-@reference "../../tailwind.css";
-
-#sponsors-fern {
-    @apply grid gap-0.5 grid-cols-3;
-
-    & > li > .sponsor {
-        @apply flex flex-col justify-center items-center text-xs text-center hover:bg-pink-500/10 focus:bg-pink-500/10 dark:hover:bg-pink-500/25 dark:focus:bg-pink-500/25 px-0.5 py-4 rounded-xl transition-colors text-gray-500 hover:text-pink-500 dark:text-gray-400 dark:hover:text-pink-400;
-
-        & > div {
-            @apply w-16 h-16 bg-gray-100 overflow-hidden rounded-full mb-3;
-
-            & > img {
-                @apply w-16 h-16 rounded-full object-cover object-center;
-            }
-        }
-
-        & > p {
-            @apply my-0;
-        }
-    }
-}
-
-#sponsors-fern-gold {
-    @apply grid gap-2 grid-cols-1;
-
-    & > li > .sponsor {
-        @apply flex justify-center items-center gap-3 text-xs text-center py-2;
-
-        & > div {
-            @apply min-w-21 min-h-21 overflow-hidden rounded-full;
-
-            & > img {
-                @apply w-21 h-21 rounded-full object-cover object-center;
-            }
-        }
-
-        & > section {
-            @apply flex flex-col gap-1;
-            zoom: 0.9;
-
-            & > h5 {
-                @apply text-left text-xl font-medium m-0;
-            }
-
-            & > p {
-                @apply text-left my-0;
-            }
-        }
-    }
-}
-
-#sponsors-fern-silver {
-    @apply grid gap-2 grid-cols-1;
-
-    & > li > .sponsor {
-        @apply flex justify-center items-center gap-3 text-xs text-center py-2;
-
-        & > div {
-            @apply min-w-16 min-h-16 bg-gray-100 overflow-hidden rounded-full;
-
-            & > img {
-                @apply w-16 h-16 rounded-full object-cover object-center;
-            }
-        }
-
-        & > section {
-            @apply flex flex-col;
-
-            & > h6 {
-                @apply text-left text-lg font-medium m-0;
-            }
-
-            & > p {
-                @apply text-left my-0;
-            }
-        }
-    }
-}
-
-#become-sponsor {
+<style scoped>
+.become-sponsor-btn {
     transition: all 0.35s cubic-bezier(0.68, -0.6, 0.32, 1.6);
+}
+
+.sponsor-info {
+    zoom: 0.9;
 }
 
 /* equivalent to md screen */
 @media (min-width: 40rem) {
-    #sponsors-fern {
+    .sponsors-individual {
         grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)) !important;
     }
 
-    #sponsors-fern-gold {
+    .sponsors-gold {
         grid-template-columns: repeat(
             auto-fit,
             minmax(224px, 256px)
@@ -357,7 +295,7 @@ const individualSponsors = sponsors.filter(
         justify-content: center;
     }
 
-    #sponsors-fern-silver {
+    .sponsors-silver {
         grid-template-columns: repeat(
             auto-fit,
             minmax(192px, 224px)

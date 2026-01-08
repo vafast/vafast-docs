@@ -12,9 +12,9 @@
     >
         <div class="flex flex-col justify-center items-center transition-all">
             <div class="flex items-center gap-3 mb-2">
-                <img 
-                    :src="asset('assets/vafast.svg')" 
-                    alt="Vafast" 
+                <img
+                    :src="asset('assets/vafast.svg')"
+                    alt="Vafast"
                     class="w-16 h-16 md:w-20 md:h-20"
                 />
                 <h1
@@ -34,7 +34,8 @@
                 <span
                     class="text-transparent font-semibold bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400"
                     >声明式路由</span
-                > · 端到端类型安全 · 
+                >
+                · 端到端类型安全 ·
                 <span
                     class="text-transparent font-semibold bg-clip-text bg-gradient-to-r from-sky-400 to-cyan-400"
                     >~101K reqs/s</span
@@ -44,7 +45,7 @@
                 class="flex flex-col sm:flex-row items-center w-full md:w-auto gap-4 mt-8 mb-12"
             >
                 <a
-                    class="text-white font-semibold text-lg bg-pink-400 dark:bg-pink-500 px-6 py-2.5 rounded-full"
+                    class="hero-btn text-white font-semibold text-lg bg-pink-400 dark:bg-pink-500 px-6 py-2.5 rounded-full transform hover:scale-110"
                     id="hero-get-started"
                     href="/at-glance"
                 >
@@ -58,7 +59,7 @@
                     </code>
                     <button
                         id="hero-copy"
-                        class="hidden sm:inline-flex p-3 rounded-xl active:rounded-4xl interact:bg-pink-200/25 active:bg-pink-200/50 interact:dark:bg-pink-500/20 active:dark:bg-pink-500/20 transition-all"
+                        class="hero-btn hidden sm:inline-flex p-3 rounded-xl active:rounded-4xl interact:bg-pink-200/25 active:bg-pink-200/50 interact:dark:bg-pink-500/20 active:dark:bg-pink-500/20 transform hover:scale-110"
                         :class="{ '!rounded-4xl': copied }"
                         @click="copied = true"
                     >
@@ -139,15 +140,10 @@ watch(copied, (value) => {
 })
 </script>
 
-<style>
-@reference "../../tailwind.css";
-
+<style scoped>
 .gradient {
     width: 1100px;
     height: 1100px;
-}
-
-.gradient {
     background: radial-gradient(
         ellipse at center,
         #d7e0ff 0%,
@@ -164,9 +160,7 @@ watch(copied, (value) => {
     );
 }
 
-#hero-get-started,
-#hero-copy {
-    @apply transform interact:scale-110;
+.hero-btn {
     transition:
         all 0.35s cubic-bezier(0.68, -0.6, 0.32, 1.6),
         color 0.35s ease-out;

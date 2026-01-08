@@ -1,5 +1,9 @@
 <template>
-    <article id="type-integrity" ref="scope">
+    <article
+        id="type-integrity"
+        class="relative max-w-5xl w-full mx-auto mt-8 mb-12"
+        ref="scope"
+    >
         <div
             class="relative z-10 flex justify-between items-end w-full mb-7 fern-gap"
         >
@@ -15,17 +19,23 @@
                 </motion.span>
             </h1>
         </div>
-        <motion.section class="showcase" v-bind="flyIn(0.2)">
+        <motion.section
+            class="showcase flex flex-col justify-center relative mx-auto w-full h-[38rem] lg:rounded-xl my-4 px-4 bg-center bg-no-repeat"
+            v-bind="flyIn(0.2)"
+        >
             <motion.div
                 layout
-                class="window"
+                class="window lg:max-w-3xl w-full mx-auto !bg-white/80 dark:!bg-gray-800/80 border-2 dark:border-gray-700 rounded-xl overflow-auto backdrop-blur-lg shadow-xl"
                 v-bind="flyIn(0.3)"
-                :transition="{ duration: 0.5, ease: cubicBezier(0.16, 1, 0.3, 1) }"
+                :transition="{
+                    duration: 0.5,
+                    ease: cubicBezier(0.16, 1, 0.3, 1)
+                }"
             >
-                <div class="control">
-                    <div />
-                    <div />
-                    <div />
+                <div class="control flex gap-2 pt-3 px-3">
+                    <div class="control-dot" />
+                    <div class="control-dot" />
+                    <div class="control-dot" />
                 </div>
                 <motion.div class="body" v-if="form === 1" layoutId="code">
                     <slot name="type-1" />
@@ -41,26 +51,50 @@
                 </motion.div>
             </motion.div>
         </motion.section>
-        <section class="selector">
-            <form>
-                <div v-for="(label, index) in labels" ref="active">
+        <section
+            class="selector absolute z-10 flex justify-center items-center w-full md:min-h-12 -translate-y-16 md:-translate-y-10"
+        >
+            <form
+                class="selector-form grid grid-cols-2 md:grid-cols-4 items-center justify-center gap-1 h-full px-1 py-1 mx-auto bg-white/75 dark:bg-gray-800/75 backdrop-blur-lg rounded-3xl border dark:border-gray-700 dark:border-t-gray-600 dark:border-l-gray-600"
+            >
+                <div
+                    v-for="(label, index) in labels"
+                    ref="active"
+                    class="selector-item flex justify-center items-center min-h-10 h-full font-medium text-gray-500 dark:text-gray-300 rounded-full hover:text-blue-500 md:has-[:checked]:bg-transparent md:has-[:checked]:dark:bg-transparent has-[:checked]:bg-gray-400/20 has-[:checked]:dark:bg-white/15 transition-colors ease-out duration-200 cursor-pointer"
+                >
                     <input
+                        class="appearance-none w-0 h-0 hidden"
                         name="type-integrity"
                         :id="'type-integrity-' + (index + 1)"
                         type="radio"
                         :value="index + 1"
                         v-model.number="form"
                     />
-                    <label :for="'type-integrity-' + (index + 1)">
+                    <label
+                        class="flex justify-center items-center text-center cursor-pointer px-6 md:px-4 w-full h-full"
+                        :for="'type-integrity-' + (index + 1)"
+                    >
                         {{ label }}
                     </label>
                 </div>
             </form>
         </section>
-        <section class="selector -active !hidden md:!flex">
-            <form :style="{ 'clip-path': clipPath }">
-                <div v-for="label in labels">
-                    <label>{{ label }}</label>
+        <section
+            class="selector-active absolute z-10 flex justify-center items-center w-full md:min-h-12 -translate-y-16 md:-translate-y-10 pointer-events-none !hidden md:!flex"
+        >
+            <form
+                class="active-form grid grid-cols-2 md:grid-cols-4 items-center justify-center gap-1 h-full px-1 py-0 my-1 mx-auto bg-blue-500 backdrop-blur-lg rounded-3xl border-blue-500"
+                :style="{ 'clip-path': clipPath }"
+            >
+                <div
+                    v-for="label in labels"
+                    class="flex justify-center items-center min-h-10 h-full font-medium text-white rounded-full cursor-pointer"
+                >
+                    <label
+                        class="flex justify-center items-center text-center cursor-pointer px-6 md:px-4 w-full h-full"
+                    >
+                        {{ label }}
+                    </label>
                 </div>
             </form>
         </section>
@@ -84,12 +118,7 @@ const form = ref(0)
 const clipPath = ref('inset(0px 75.233645% 0px 0.623053% round 25px)')
 
 const activeElements = useTemplateRef<HTMLElement[]>('active')
-const labels = [
-    '路径参数',
-    'Schema 验证',
-    '错误处理',
-    '额外上下文'
-]
+const labels = ['路径参数', 'Schema 验证', '错误处理', '额外上下文']
 
 watch(isInView, () => {
     if (isInView) {
@@ -118,93 +147,53 @@ watch(form, (index) => {
 })
 </script>
 
-<style>
-@reference "../../tailwind.css";
+<style scoped>
+.showcase {
+    background-image: url(/assets/sequoia.webp);
+    background-size: cover;
+}
 
-#type-integrity {
-    @apply relative max-w-5xl w-full mx-auto mt-8 mb-12;
+.control-dot {
+    border-radius: 9999px;
+    background-color: rgb(156 163 175);
+    border-width: 1px;
+    width: 0.825rem;
+    height: 0.825rem;
+}
 
-    & > .showcase {
-        @apply flex flex-col justify-center relative mx-auto w-full h-[38rem] lg:rounded-xl my-4 px-4 bg-center bg-no-repeat;
+.control-dot:nth-child(1) {
+    background-color: rgba(237, 106, 94);
+    border: 0.5px solid rgba(195, 75, 70);
+}
 
-        background-image: url(/assets/sequoia.webp);
-        background-size: cover;
+.control-dot:nth-child(2) {
+    background-color: rgba(245, 191, 79);
+    border: 0.5px solid rgba(203, 156, 78);
+}
 
-        & > .window {
-            @apply lg:max-w-3xl w-full mx-auto !bg-white/80 dark:!bg-gray-800/80 border-2 dark:border-gray-700 rounded-xl overflow-auto backdrop-blur-lg shadow-xl;
+.control-dot:nth-child(3) {
+    background-color: rgba(101, 192, 93);
+    border: 0.5px solid rgba(82, 162, 74);
+}
 
-            & > .control {
-                @apply flex gap-2 pt-3 px-3;
+.body :deep(> div) {
+    background: transparent !important;
+}
 
-                & > div {
-                    @apply rounded-full bg-gray-400 border;
-                    width: 0.825rem;
-                    height: 0.825rem;
+.body :deep(> div > pre) {
+    padding: 0.75rem !important;
+}
 
-                    &:nth-child(1) {
-                        background-color: rgba(237, 106, 94);
-                        border: 0.5px solid rgba(195, 75, 70);
-                    }
+.selector-form {
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.075);
+}
 
-                    &:nth-child(2) {
-                        background-color: rgba(245, 191, 79);
-                        border: 0.5px solid rgba(203, 156, 78);
-                    }
+html.dark .selector-form {
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+}
 
-                    &:nth-child(3) {
-                        background-color: rgba(101, 192, 93);
-                        border: 0.5px solid rgba(82, 162, 74);
-                    }
-                }
-            }
-
-            & > .body > div {
-                @apply !bg-transparent;
-
-                & > pre {
-                    @apply !p-3;
-                }
-            }
-        }
-    }
-
-    & > .selector {
-        @apply absolute z-10 flex justify-center items-center w-full md:min-h-12 -translate-y-16 md:-translate-y-10;
-
-        &.-active {
-            @apply absolute my-auto pointer-events-none;
-
-            & > form {
-                @apply bg-blue-500 py-0 my-1 border-blue-500;
-                will-change: clip-path;
-                transition: clip-path 0.275s cubic-bezier(0.16, 1, 0.3, 1);
-
-                & > div {
-                    @apply text-white;
-                }
-            }
-        }
-
-        & > form {
-            @apply grid grid-cols-2 md:grid-cols-4 items-center justify-center gap-1 h-full px-1 py-1 mx-auto bg-white/75 dark:bg-gray-800/75 backdrop-blur-lg rounded-3xl border dark:border-gray-700 dark:border-t-gray-600 dark:border-l-gray-600;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.075);
-
-            html.dark & {
-                box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
-            }
-
-            & > div {
-                @apply flex justify-center items-center min-h-10 h-full font-medium text-gray-500 dark:text-gray-300 rounded-full hover:text-blue-500 md:has-[:checked]:bg-transparent md:has-[:checked]:dark:bg-transparent has-[:checked]:bg-gray-400/20 has-[:checked]:dark:bg-white/15 transition-colors ease-out duration-200 cursor-pointer;
-
-                & > input[type='radio'] {
-                    @apply appearance-none w-0 h-0 hidden;
-                }
-
-                & > label {
-                    @apply flex justify-center items-center text-center cursor-pointer px-6 md:px-4 w-full h-full;
-                }
-            }
-        }
-    }
+.active-form {
+    will-change: clip-path;
+    transition: clip-path 0.275s cubic-bezier(0.16, 1, 0.3, 1);
 }
 </style>

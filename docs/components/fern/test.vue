@@ -12,8 +12,14 @@ const flyIn = useFlyIn(isInView)
 </script>
 
 <template>
-    <article id="test-with-confidence" class="fern-gap" ref="scope">
-        <div class="body">
+    <article
+        id="test-with-confidence"
+        class="fern-gap flex flex-col max-w-5xl w-full mx-auto gap-8 my-4"
+        ref="scope"
+    >
+        <div
+            class="flex flex-col lg:flex-row justify-between items-center gap-8 w-full mb-6"
+        >
             <header class="flex flex-col w-full lg:w-5/12 text-xl gap-6">
                 <div class="flex flex-col gap-3">
                     <h2
@@ -79,7 +85,8 @@ const flyIn = useFlyIn(isInView)
                     class="lg:max-w-md leading-normal"
                     v-bind="flyIn(0.3)"
                 >
-                    Vafast 提供了一个类型安全层，用于与您的服务器进行交互和测试，涵盖从路由到参数的各个环节。
+                    Vafast
+                    提供了一个类型安全层，用于与您的服务器进行交互和测试，涵盖从路由到参数的各个环节。
                 </motion.p>
                 <motion.p
                     class="lg:max-w-md leading-normal"
@@ -89,119 +96,111 @@ const flyIn = useFlyIn(isInView)
                 </motion.p>
                 <!-- <slot name="test-script" /> -->
             </header>
-            <motion.section class="showcase" v-bind="flyIn(0.5)">
+            <motion.section
+                class="showcase flex flex-col w-full lg:w-7/12 rounded-2xl overflow-hidden border dark:border-gray-700 bg-white dark:bg-gray-800"
+                v-bind="flyIn(0.5)"
+            >
                 <slot name="test-code" />
             </motion.section>
         </div>
     </article>
 </template>
 
-<style>
-@reference "../../tailwind.css";
+<style scoped>
+.showcase {
+    box-shadow: 0 16px 40px rgba(0, 123, 255, 0.075);
+    background-image: radial-gradient(
+            closest-side at center,
+            rgba(255, 255, 255, 0.8) 70%,
+            transparent 150%
+        ),
+        radial-gradient(
+            at 29% 66%,
+            hsla(223, 100%, 65%, 0.14) 0px,
+            transparent 50%
+        ),
+        radial-gradient(
+            at 47% 51%,
+            hsla(210, 100%, 69%, 0.29) 0px,
+            transparent 50%
+        ),
+        radial-gradient(
+            at 34% 34%,
+            hsla(240, 100%, 87%, 0.35) 0px,
+            transparent 50%
+        ),
+        radial-gradient(
+            at 74% 32%,
+            hsla(280, 100%, 75%, 0.26) 0px,
+            transparent 50%
+        ),
+        radial-gradient(
+            at 57% 66%,
+            hsla(22, 100%, 77%, 0.19) 0px,
+            transparent 50%
+        ),
+        radial-gradient(
+            at 42% 84%,
+            hsla(240, 100%, 70%, 0.15) 0px,
+            transparent 50%
+        ),
+        radial-gradient(
+            at 59% 10%,
+            hsla(343, 100%, 76%, 0.17) 0px,
+            transparent 50%
+        );
+}
 
-#test-with-confidence {
-    @apply flex flex-col max-w-5xl w-full mx-auto gap-8 my-4;
+html.dark .showcase {
+    box-shadow: 0 16px 40px rgba(0, 123, 255, 0.075);
+    background-image: radial-gradient(
+            closest-side at center,
+            var(--color-gray-800) 0%,
+            transparent 120%
+        ),
+        radial-gradient(
+            at 29% 66%,
+            hsla(223, 100%, 65%, 0.14) 0px,
+            transparent 50%
+        ),
+        radial-gradient(
+            at 47% 51%,
+            hsla(210, 100%, 69%, 0.29) 0px,
+            transparent 50%
+        ),
+        radial-gradient(
+            at 34% 34%,
+            hsla(240, 100%, 87%, 0.35) 0px,
+            transparent 50%
+        ),
+        radial-gradient(
+            at 74% 32%,
+            hsla(280, 100%, 75%, 0.26) 0px,
+            transparent 50%
+        ),
+        radial-gradient(
+            at 57% 66%,
+            hsla(22, 100%, 77%, 0.19) 0px,
+            transparent 50%
+        ),
+        radial-gradient(
+            at 42% 84%,
+            hsla(240, 100%, 70%, 0.15) 0px,
+            transparent 50%
+        ),
+        radial-gradient(
+            at 59% 10%,
+            hsla(343, 100%, 76%, 0.17) 0px,
+            transparent 50%
+        );
+}
 
-    & > .body {
-        @apply flex flex-col lg:flex-row justify-between items-center gap-8 w-full mb-6;
+.showcase :deep(> div) {
+    background: transparent !important;
+}
 
-        & > .showcase {
-            @apply flex flex-col w-full lg:w-7/12 rounded-2xl overflow-hidden border dark:border-gray-700 bg-white dark:bg-gray-800;
-
-            box-shadow: 0 16px 40px rgba(0, 123, 255, 0.075);
-            background-image: radial-gradient(
-                    closest-side at center,
-                    rgba(255, 255, 255, 0.8) 70%,
-                    transparent 150%
-                ),
-                radial-gradient(
-                    at 29% 66%,
-                    hsla(223, 100%, 65%, 0.14) 0px,
-                    transparent 50%
-                ),
-                radial-gradient(
-                    at 47% 51%,
-                    hsla(210, 100%, 69%, 0.29) 0px,
-                    transparent 50%
-                ),
-                radial-gradient(
-                    at 34% 34%,
-                    hsla(240, 100%, 87%, 0.35) 0px,
-                    transparent 50%
-                ),
-                radial-gradient(
-                    at 74% 32%,
-                    hsla(280, 100%, 75%, 0.26) 0px,
-                    transparent 50%
-                ),
-                radial-gradient(
-                    at 57% 66%,
-                    hsla(22, 100%, 77%, 0.19) 0px,
-                    transparent 50%
-                ),
-                radial-gradient(
-                    at 42% 84%,
-                    hsla(240, 100%, 70%, 0.15) 0px,
-                    transparent 50%
-                ),
-                radial-gradient(
-                    at 59% 10%,
-                    hsla(343, 100%, 76%, 0.17) 0px,
-                    transparent 50%
-                );
-
-            html.dark & {
-                box-shadow: 0 16px 40px rgba(0, 123, 255, 0.075);
-                background-image: radial-gradient(
-                        closest-side at center,
-                        var(--color-gray-800) 0%,
-                        transparent 120%
-                    ),
-                    radial-gradient(
-                        at 29% 66%,
-                        hsla(223, 100%, 65%, 0.14) 0px,
-                        transparent 50%
-                    ),
-                    radial-gradient(
-                        at 47% 51%,
-                        hsla(210, 100%, 69%, 0.29) 0px,
-                        transparent 50%
-                    ),
-                    radial-gradient(
-                        at 34% 34%,
-                        hsla(240, 100%, 87%, 0.35) 0px,
-                        transparent 50%
-                    ),
-                    radial-gradient(
-                        at 74% 32%,
-                        hsla(280, 100%, 75%, 0.26) 0px,
-                        transparent 50%
-                    ),
-                    radial-gradient(
-                        at 57% 66%,
-                        hsla(22, 100%, 77%, 0.19) 0px,
-                        transparent 50%
-                    ),
-                    radial-gradient(
-                        at 42% 84%,
-                        hsla(240, 100%, 70%, 0.15) 0px,
-                        transparent 50%
-                    ),
-                    radial-gradient(
-                        at 59% 10%,
-                        hsla(343, 100%, 76%, 0.17) 0px,
-                        transparent 50%
-                    );
-            }
-
-            & > div {
-                @apply !bg-transparent;
-
-                & > pre {
-                    @apply !py-3.5;
-                }
-            }
-        }
-    }
+.showcase :deep(> div > pre) {
+    padding-top: 0.875rem !important;
+    padding-bottom: 0.875rem !important;
 }
 </style>

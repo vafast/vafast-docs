@@ -58,10 +58,8 @@ import BuiltWithLove from './built-with-love.vue'
     </div>
 </template>
 
-<style>
-@reference "../../tailwind.css";
-
-#landing div[class*='language-'] > pre > code {
+<style scoped>
+#landing :deep(div[class*='language-'] > pre > code) {
     display: block;
     width: -moz-fit-content;
     width: fit-content;
@@ -73,7 +71,7 @@ import BuiltWithLove from './built-with-love.vue'
     font-size: 16px;
 }
 
-#landing div[class*='language-'] > pre {
+#landing :deep(div[class*='language-'] > pre) {
     position: relative;
     z-index: 1;
     padding: 1em;
@@ -81,12 +79,12 @@ import BuiltWithLove from './built-with-love.vue'
     overflow-x: auto;
 }
 
-#landing div[class*='language-'] > span.lang,
-#landing div[class*='language-'] > button {
+#landing :deep(div[class*='language-'] > span.lang),
+#landing :deep(div[class*='language-'] > button) {
     display: none;
 }
 
-#landing div[class*='language-'] {
+#landing :deep(div[class*='language-']) {
     border-radius: 8px;
     position: relative;
     overflow-x: auto;
@@ -94,12 +92,8 @@ import BuiltWithLove from './built-with-love.vue'
     transition: background-color 0.5s;
 }
 
-html.dark pre[class*='language-'] {
-    @apply bg-slate-800;
-}
-
-html.dark {
-    @apply bg-slate-900;
+html.dark :deep(pre[class*='language-']) {
+    background-color: rgb(30 41 59);
 }
 
 .token.operator,

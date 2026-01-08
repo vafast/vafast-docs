@@ -1,50 +1,42 @@
 <template>
-	<section class="code-compare">
-		<article>
-			<section>
-				<slot name="left" />
-			</section>
-			<slot name="left-content" />
-		</article>
-		<article>
-			<section>
-				<slot name="right" />
-			</section>
-			<slot name="right-content" />
-		</article>
-	</section>
+    <section class="code-compare z-40 grid grid-cols-1 lg:grid-cols-2 gap-2.5 rounded-xl w-full">
+        <article class="flex flex-col gap-4 *:!m-0">
+            <section class="compare-section flex flex-1 *:w-full rounded-xl">
+                <slot name="left" />
+            </section>
+            <slot name="left-content" />
+        </article>
+        <article class="flex flex-col gap-4 *:!m-0">
+            <section class="compare-section flex flex-1 *:w-full rounded-xl">
+                <slot name="right" />
+            </section>
+            <slot name="right-content" />
+        </article>
+    </section>
 </template>
 
-<style>
-@reference "../../tailwind.css";
-
+<style scoped>
 .code-compare {
-	@apply z-40 grid grid-cols-1 lg:grid-cols-2 gap-2.5 rounded-xl w-full;
-	grid-auto-rows: 1fr;
+    grid-auto-rows: 1fr;
+}
 
-	& > article {
-		@apply flex flex-col gap-4 *:!m-0;
+.compare-section :deep(.vp-code-group > .blocks) {
+    height: 100%;
+}
 
-		& > section {
-			@apply flex flex-1 *:w-full rounded-xl;
+.compare-section :deep(.vp-code-group > .blocks > div) {
+    margin: 0;
+    height: calc(100% - 50px);
+}
 
-			& > .vp-code-group > .blocks {
-				@apply h-full;
+@media (max-width: 640px) {
+    .compare-section :deep(.vp-code-group > .blocks > div) {
+        margin: 0 -24px;
+    }
+}
 
-				& > div {
-					@apply m-0;
-					height: calc(100% - 50px);
-
-					@media (max-width: theme(--breakpoint-sm)) {
-						margin: 0 -24px;
-					}
-
-					& > pre {
-						@apply h-full overflow-y-hidden;
-					}
-				}
-			}
-		}
-	}
+.compare-section :deep(.vp-code-group > .blocks > div > pre) {
+    height: 100%;
+    overflow-y: hidden;
 }
 </style>

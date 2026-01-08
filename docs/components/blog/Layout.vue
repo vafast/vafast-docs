@@ -1,6 +1,6 @@
 <template>
-    <article id="blog" class="flex flex-col max-w-3xl w-full mx-auto mt-8">
-        <h1 class="!text-3xl !md:text-4xl font-medium">
+    <article id="blog" class="blog-article flex flex-col max-w-3xl w-full mx-auto mt-8 text-lg">
+        <h1 class="blog-title !text-3xl md:!text-4xl font-semibold">
             {{ props.title }}
         </h1>
         <aside class="flex gap-2 items-center mt-3">
@@ -23,7 +23,7 @@
         <img
             :src="props.src"
             :alt="props.alt"
-            class="w-full mt-5 mb-2"
+            class="blog-img w-full mt-5 mb-2 rounded-2xl"
             :class="props.shadow ? 'shadow-xl shadow-black/7.5' : 'border'"
         />
         <main id="blog-content">
@@ -71,9 +71,25 @@ onUnmounted(() => {
 })
 </script>
 
-<style>
-@reference "../../tailwind.css";
+<style scoped>
+.blog-title {
+    line-height: 3.25rem !important;
+}
 
+#blog-content :deep(video),
+#blog-content :deep(img) {
+    border-radius: 0.75rem;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+}
+
+.-png {
+    box-shadow: unset !important;
+    background: transparent !important;
+}
+</style>
+
+<style>
 .blog.aside {
     position: fixed !important;
     z-index: 10;
@@ -87,44 +103,5 @@ onUnmounted(() => {
 
 .blog.VPDocFooter {
     display: none !important;
-}
-
-#blog {
-    @apply text-lg mt-0;
-}
-
-#blog > img {
-    @apply rounded-2xl;
-}
-
-#blog > h1 {
-    @apply !text-3xl md:!text-4xl font-semibold;
-}
-
-#blog > h2 {
-    @apply !text-2xl md:!text-3xl font-semibold;
-}
-
-#blog > h3 {
-    @apply !text-xl md:!text-2xl font-semibold;
-}
-
-#blog-content > video,
-#blog-content > * > video,
-#blog-content > img,
-#blog-content > * > img {
-    @apply rounded-xl my-4;
-    /* box-shadow: 0 8px 25px rgba(0,0,0,.1) */
-}
-
-.-png {
-    box-shadow: unset !important;
-    background: transparent !important;
-}
-
-@media (min-width: 768px) {
-    #blog > h1 {
-        line-height: 3.25rem !important;
-    }
 }
 </style>
