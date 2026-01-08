@@ -35,11 +35,11 @@
         <div class="grid md:grid-cols-2 gap-6">
             <!-- 服务端代码 -->
             <motion.div
-                class="relative bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-xl"
+                class="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden"
                 v-bind="flyIn(0.2)"
             >
                 <!-- 窗口头部 -->
-                <div class="flex items-center gap-2 px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+                <div class="flex items-center gap-2 px-4 py-3 border-b border-gray-200 dark:border-gray-700">
                     <div class="w-3 h-3 rounded-full bg-red-400" />
                     <div class="w-3 h-3 rounded-full bg-yellow-400" />
                     <div class="w-3 h-3 rounded-full bg-green-400" />
@@ -53,11 +53,11 @@
 
             <!-- 客户端代码 -->
             <motion.div
-                class="relative bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-xl"
+                class="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden"
                 v-bind="flyIn(0.3)"
             >
                 <!-- 窗口头部 -->
-                <div class="flex items-center gap-2 px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+                <div class="flex items-center gap-2 px-4 py-3 border-b border-gray-200 dark:border-gray-700">
                     <div class="w-3 h-3 rounded-full bg-red-400" />
                     <div class="w-3 h-3 rounded-full bg-yellow-400" />
                     <div class="w-3 h-3 rounded-full bg-green-400" />
@@ -111,8 +111,18 @@ const flyIn = useFlyIn(isInView)
 </script>
 
 <style scoped>
+.code-body :deep(> div) {
+    background: transparent !important;
+}
+
 .code-body :deep(> div > div) {
     background: transparent !important;
+}
+
+.code-body :deep(> div > pre) {
+    padding: 1rem !important;
+    margin: 0;
+    font-size: 14px;
 }
 
 .code-body :deep(> div > div > pre) {

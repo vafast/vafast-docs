@@ -64,9 +64,17 @@ const flyIn = useFlyIn(isInView)
                 v-bind="flyIn(0.4)"
             >
                 <div
-                    class="showcase rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800/50"
+                    class="rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700"
                 >
-                    <slot name="test-code" />
+                    <!-- 窗口控制按钮 -->
+                    <div class="flex items-center gap-2 px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+                        <div class="w-3 h-3 rounded-full bg-red-400" />
+                        <div class="w-3 h-3 rounded-full bg-yellow-400" />
+                        <div class="w-3 h-3 rounded-full bg-green-400" />
+                    </div>
+                    <div class="code-body">
+                        <slot name="test-code" />
+                    </div>
                 </div>
             </motion.div>
         </div>
@@ -74,19 +82,12 @@ const flyIn = useFlyIn(isInView)
 </template>
 
 <style scoped>
-.showcase {
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.05);
-}
-
-html.dark .showcase {
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
-}
-
-.showcase :deep(> div) {
+.code-body :deep(> div) {
     background: transparent !important;
 }
 
-.showcase :deep(> div > pre) {
+.code-body :deep(> div > pre) {
     padding: 1rem !important;
+    margin: 0;
 }
 </style>

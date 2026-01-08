@@ -27,37 +27,27 @@
 
         <!-- 代码展示窗口 -->
         <motion.div
-            class="showcase relative mx-auto w-full max-w-4xl rounded-2xl overflow-hidden"
+            layout
+            class="mx-auto w-full max-w-4xl rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden"
             v-bind="flyIn(0.2)"
+            :transition="{
+                duration: 0.5,
+                ease: cubicBezier(0.16, 1, 0.3, 1)
+            }"
         >
-            <!-- macOS 风格背景 -->
-            <div class="showcase-bg absolute inset-0 bg-center bg-cover" />
-
-            <!-- 代码窗口 -->
-            <motion.div
-                layout
-                class="relative mx-4 my-8 lg:mx-8 lg:my-12 bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-2xl"
-                v-bind="flyIn(0.3)"
-                :transition="{
-                    duration: 0.5,
-                    ease: cubicBezier(0.16, 1, 0.3, 1)
-                }"
-            >
-                <!-- 窗口控制按钮 -->
-                <div class="flex items-center gap-2 px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-                    <div class="w-3 h-3 rounded-full bg-red-400" />
-                    <div class="w-3 h-3 rounded-full bg-yellow-400" />
-                    <div class="w-3 h-3 rounded-full bg-green-400" />
-                </div>
-
-                <!-- 代码内容 -->
-                <div class="code-body">
-                    <div v-if="form === 1"><slot name="type-1" /></div>
-                    <div v-else-if="form === 2"><slot name="type-2" /></div>
-                    <div v-else-if="form === 3"><slot name="type-3" /></div>
-                    <div v-else-if="form === 4"><slot name="type-4" /></div>
-                </div>
-            </motion.div>
+            <!-- 窗口控制按钮 -->
+            <div class="flex items-center gap-2 px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+                <div class="w-3 h-3 rounded-full bg-red-400" />
+                <div class="w-3 h-3 rounded-full bg-yellow-400" />
+                <div class="w-3 h-3 rounded-full bg-green-400" />
+            </div>
+            <!-- 代码内容 -->
+            <div class="code-body">
+                <div v-if="form === 1"><slot name="type-1" /></div>
+                <div v-else-if="form === 2"><slot name="type-2" /></div>
+                <div v-else-if="form === 3"><slot name="type-3" /></div>
+                <div v-else-if="form === 4"><slot name="type-4" /></div>
+            </div>
         </motion.div>
 
         <!-- 选项卡 -->
@@ -109,15 +99,6 @@ watch(isInView, () => {
 </script>
 
 <style scoped>
-.showcase {
-    min-height: 480px;
-}
-
-.showcase-bg {
-    background-image: url(/assets/sequoia.webp);
-    filter: blur(0px);
-}
-
 .code-body :deep(> div > div) {
     background: transparent !important;
 }
