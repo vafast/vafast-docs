@@ -50,37 +50,75 @@ const flyIn = useFlyIn(isInView)
         </div>
         <div class="list">
             <motion.section v-bind="flyIn(0.2)">
-                <h3>⚡ 高性能</h3>
+                <h3>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon text-purple-400">
+                        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                    </svg>
+                    高性能
+                </h3>
                 <h4 class="text-purple-400">比 Express 快 1.8x</h4>
                 <p>JIT 编译验证器自动缓存</p>
                 <p>Radix Tree O(k) 路由匹配</p>
             </motion.section>
             <motion.section v-bind="flyIn(0.3)">
-                <h3>🔒 类型安全</h3>
+                <h3>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon text-blue-400">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                    </svg>
+                    类型安全
+                </h3>
                 <h4 class="text-blue-400">端到端类型推断</h4>
                 <p>TypeBox Schema → TypeScript 类型</p>
                 <p>跨文件类型不丢失</p>
             </motion.section>
             <motion.section v-bind="flyIn(0.4)">
-                <h3>📋 声明式路由</h3>
+                <h3>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon text-teal-400">
+                        <line x1="8" y1="6" x2="21" y2="6"></line>
+                        <line x1="8" y1="12" x2="21" y2="12"></line>
+                        <line x1="8" y1="18" x2="21" y2="18"></line>
+                        <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                        <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                        <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                    </svg>
+                    声明式路由
+                </h3>
                 <h4 class="text-teal-400">结构即真相</h4>
                 <p>路由是一个数组，一目了然</p>
                 <p>中间件显式声明在路由上</p>
             </motion.section>
             <motion.section v-bind="flyIn(0.5)">
-                <h3>🌍 跨运行时</h3>
+                <h3>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon text-orange-400">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="2" y1="12" x2="22" y2="12"></line>
+                        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                    </svg>
+                    跨运行时
+                </h3>
                 <h4 class="text-orange-400">一套代码，任意环境</h4>
                 <p>Node.js / Bun / Cloudflare Workers</p>
                 <p>serve() 自动适配运行时</p>
             </motion.section>
             <motion.section v-bind="flyIn(0.6)">
-                <h3>✅ 内置验证</h3>
+                <h3>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon text-green-400">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    </svg>
+                    内置验证
+                </h3>
                 <h4 class="text-green-400">30+ Format 验证器</h4>
                 <p>email, uuid, phone, url, date-time...</p>
                 <p>导入即用，无需手动注册</p>
             </motion.section>
             <motion.section v-bind="flyIn(0.7)">
-                <h3>📊 内置监控</h3>
+                <h3>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon text-pink-400">
+                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                    </svg>
+                    内置监控
+                </h3>
                 <h4 class="text-pink-400">零依赖性能监控</h4>
                 <p>P50/P95/P99 百分位数</p>
                 <p>RPS、状态码分布、内存监控</p>
@@ -171,7 +209,11 @@ const flyIn = useFlyIn(isInView)
             }
 
             & > h3 {
-                @apply text-2xl font-medium text-gray-700 dark:text-gray-300;
+                @apply flex items-center gap-2 text-2xl font-medium text-gray-700 dark:text-gray-300;
+
+                & > .icon {
+                    @apply w-6 h-6 flex-shrink-0;
+                }
             }
 
             & > h4 {
