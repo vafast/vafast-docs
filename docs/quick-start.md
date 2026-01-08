@@ -81,12 +81,37 @@ npm install -D typescript tsx @types/node
 }
 ```
 
-### 5. 项目结构
+### 5. 创建 .gitignore
+
+```gitignore
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# IDE
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+
+# Logs
+*.log
+
+# Environment
+.env
+.env.local
+```
+
+### 6. 项目结构
 
 ```
 my-vafast-app/
 ├── src/
 │   └── index.ts
+├── .gitignore
 ├── package.json
 └── tsconfig.json
 ```
