@@ -96,17 +96,15 @@ my-vafast-app/
 创建 `src/index.ts`：
 
 ```typescript
-import { Server, defineRoutes, createHandler, serve } from 'vafast'
+import { Server, createHandler, serve } from 'vafast'
 
-const routes = defineRoutes([
+const server = new Server([
   {
     method: 'GET',
     path: '/',
     handler: createHandler(() => 'Hello Vafast!')
   }
 ])
-
-const server = new Server(routes)
 
 serve({ fetch: server.fetch, port: 3000 }, () => {
   console.log('Server running on http://localhost:3000')
@@ -126,9 +124,9 @@ npx tsx src/index.ts
 ### 简单路由
 
 ```typescript
-import { Server, defineRoutes, createHandler, serve } from 'vafast'
+import { Server, createHandler, serve } from 'vafast'
 
-const routes = defineRoutes([
+const server = new Server([
   {
     method: 'GET',
     path: '/',
@@ -141,15 +139,15 @@ const routes = defineRoutes([
   }
 ])
 
-const server = new Server(routes)
-
 serve({ fetch: server.fetch, port: 3000 })
 ```
 
 ### 带参数的路由
 
 ```typescript
-const routes = defineRoutes([
+import { Server, createHandler, serve } from 'vafast'
+
+const server = new Server([
   {
     method: 'GET',
     path: '/users/:id',
@@ -165,12 +163,14 @@ const routes = defineRoutes([
     })
   }
 ])
+
+serve({ fetch: server.fetch, port: 3000 })
 ```
 
 ### 使用 Schema 验证
 
 ```typescript
-import { Server, defineRoutes, createHandler, serve, Type } from 'vafast'
+import { Server, createHandler, serve, Type } from 'vafast'
 
 const UserSchema = Type.Object({
   name: Type.String({ minLength: 1 }),
@@ -178,7 +178,7 @@ const UserSchema = Type.Object({
   age: Type.Optional(Type.Number({ minimum: 0 }))
 })
 
-const routes = defineRoutes([
+const server = new Server([
   {
     method: 'POST',
     path: '/users',
@@ -191,8 +191,6 @@ const routes = defineRoutes([
     )
   }
 ])
-
-const server = new Server(routes)
 
 serve({ fetch: server.fetch, port: 3000 })
 ```
