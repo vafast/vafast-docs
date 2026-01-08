@@ -600,6 +600,10 @@ const commentSchema = Type.Recursive(This => Type.Object({
 
 #### 预编译验证器
 
+::: tip 推荐
+`createHandler` 内部已自动预编译 Schema，通常无需手动预编译。以下仅用于了解底层原理或脱离 Vafast 单独使用 TypeBox。
+:::
+
 ```typescript
 import { TypeCompiler } from '@sinclair/typebox/compiler'
 import { Type } from 'vafast'
@@ -609,7 +613,7 @@ const userSchema = Type.Object({
   email: Type.String()
 })
 
-// 预编译验证器以提高性能
+// 手动预编译（createHandler 已内置，通常不需要）
 const userValidator = TypeCompiler.Compile(userSchema)
 
 // 使用预编译的验证器
