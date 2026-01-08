@@ -14,14 +14,14 @@ sidebar: false
 
 <template v-slot:type-1>
 
-```typescript
+```typescript twoslash
 import { createHandler, Type } from 'vafast'
 
 // 使用 createHandler 创建类型安全的处理器
 const getUser = createHandler(
   { params: Type.Object({ id: Type.String() }) },
   ({ params }) => {
-    const id = params.id // id: string ✓
+    const id = params.id
     return `User ID: ${id}`
   }
 )
@@ -31,14 +31,14 @@ const getUser = createHandler(
 
 <template v-slot:type-2>
 
-```typescript
+```typescript twoslash
 import { createHandler, Type } from 'vafast'
 
 // Schema 验证 + 类型推断
 const createProfile = createHandler(
   { body: Type.Object({ name: Type.String(), age: Type.Number() }) },
   ({ body }) => {
-    const name = body.name // name: string ✓
+    const name = body.name
     return { success: true, data: body }
   }
 )
@@ -48,12 +48,12 @@ const createProfile = createHandler(
 
 <template v-slot:type-3>
 
-```typescript
+```typescript twoslash
 import { createHandler, err } from 'vafast'
 
 // 自动响应转换：对象 -> JSON，字符串 -> text/plain
 const getProfile = createHandler((ctx) => {
-  const req = ctx.req // req: Request ✓
+  const req = ctx.req
   if(Math.random() > .5) {
     throw err.unauthorized('Unauthorized')
   }
@@ -65,7 +65,7 @@ const getProfile = createHandler((ctx) => {
 
 <template v-slot:type-4>
 
-```typescript
+```typescript twoslash
 import { createHandlerWithExtra, Type } from 'vafast'
 
 // 带中间件注入的额外上下文
@@ -74,7 +74,7 @@ type AuthContext = { user: { id: string; role: string } }
 const adminHandler = createHandlerWithExtra<AuthContext>(
   { body: Type.Object({ action: Type.String() }) },
   ({ body, user }) => {
-    const role = user.role // role: string ✓
+    const role = user.role
     return { success: true, userId: user.id }
   }
 )
