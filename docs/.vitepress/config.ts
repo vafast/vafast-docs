@@ -403,63 +403,48 @@ export default defineConfig({
                 collapsed: true,
                 items: [
                     {
-                        text: '数据库',
-                        items: [
-                            {
-                                text: 'Drizzle',
-                                link: '/integrations/drizzle'
-                            },
-                            {
-                                text: 'Prisma',
-                                link: '/integrations/prisma'
-                            }
-                        ]
+                        text: 'Drizzle',
+                        link: '/integrations/drizzle'
                     },
                     {
-                        text: '前端框架',
-                        items: [
-                            {
-                                text: 'Next.js',
-                                link: '/integrations/nextjs'
-                            },
-                            {
-                                text: 'Nuxt',
-                                link: '/integrations/nuxt'
-                            },
-                            {
-                                text: 'Astro',
-                                link: '/integrations/astro'
-                            },
-                            {
-                                text: 'SvelteKit',
-                                link: '/integrations/sveltekit'
-                            },
-                            {
-                                text: 'Expo',
-                                link: '/integrations/expo'
-                            }
-                        ]
+                        text: 'Prisma',
+                        link: '/integrations/prisma'
                     },
                     {
-                        text: '工具',
-                        items: [
-                            {
-                                text: 'OpenAPI',
-                                link: '/integrations/openapi'
-                            },
-                            {
-                                text: 'OpenTelemetry',
-                                link: '/integrations/opentelemetry'
-                            },
-                            {
-                                text: 'Better Auth',
-                                link: '/integrations/better-auth'
-                            },
-                            {
-                                text: 'React Email',
-                                link: '/integrations/react-email'
-                            }
-                        ]
+                        text: 'Next.js',
+                        link: '/integrations/nextjs'
+                    },
+                    {
+                        text: 'Nuxt',
+                        link: '/integrations/nuxt'
+                    },
+                    {
+                        text: 'Astro',
+                        link: '/integrations/astro'
+                    },
+                    {
+                        text: 'SvelteKit',
+                        link: '/integrations/sveltekit'
+                    },
+                    {
+                        text: 'Expo',
+                        link: '/integrations/expo'
+                    },
+                    {
+                        text: 'OpenAPI',
+                        link: '/integrations/openapi'
+                    },
+                    {
+                        text: 'OpenTelemetry',
+                        link: '/integrations/opentelemetry'
+                    },
+                    {
+                        text: 'Better Auth',
+                        link: '/integrations/better-auth'
+                    },
+                    {
+                        text: 'React Email',
+                        link: '/integrations/react-email'
                     }
                 ]
             },
