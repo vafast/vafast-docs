@@ -258,61 +258,62 @@ interface CorsOptions {
 
 ## 中间件类型
 
-### 内置中间件
+### 官方中间件包
 
-Vafast 提供了一些内置中间件：
+Vafast 提供独立的中间件包，功能更丰富：
 
-#### authMiddleware
+| 包名 | 功能 | 文档 |
+|------|------|------|
+| `@vafast/cors` | CORS 跨域处理 | [查看](/middleware/cors) |
+| `@vafast/jwt` | JWT 认证 | [查看](/middleware/jwt) |
+| `@vafast/rate-limit` | 速率限制 | [查看](/middleware/rate-limit) |
 
-身份验证中间件。
+#### 示例：CORS
 
 ```typescript
-import { authMiddleware } from 'vafast'
+import { cors } from '@vafast/cors'
 
-const routes: any[] = [
+server.use(cors({
+  origin: ['https://example.com'],
+  credentials: true
+}))
+```
+
+#### 示例：JWT 认证
+
+```typescript
+import { jwt } from '@vafast/jwt'
+
+const authMiddleware = jwt({ secret: 'your-secret' })
+
+const routes = defineRoutes([
   {
     method: 'GET',
     path: '/admin',
     middleware: [authMiddleware],
-    handler: () => 'Admin panel'
+    handler: createHandler(() => 'Admin panel')
   }
-]
+])
 ```
 
-#### corsMiddleware
-
-CORS 中间件。
+#### 示例：速率限制
 
 ```typescript
-import { corsMiddleware } from 'vafast'
+import { rateLimit } from '@vafast/rate-limit'
 
-const routes: any[] = [
-  {
-    path: '/api',
-    middleware: [corsMiddleware],
-    children: [
-      // API 路由
-    ]
-  }
-]
-```
+const rateLimitMiddleware = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15分钟
+  max: 100 // 最多100次请求
+})
 
-#### rateLimitMiddleware
-
-速率限制中间件。
-
-```typescript
-import { rateLimitMiddleware } from 'vafast'
-
-const routes: any[] = [
+const routes = defineRoutes([
   {
     method: 'POST',
     path: '/login',
     middleware: [rateLimitMiddleware],
-    handler: () => 'Login'
+    handler: createHandler(() => 'Login')
   }
-]
-```
+])
 
 ## 工具函数
 
@@ -485,6 +486,11 @@ const routes: any[] = [
 ### 中间件优化
 
 ```typescript
+import { jwt } from '@vafast/jwt'
+
+// 创建认证中间件
+const authMiddleware = jwt({ secret: 'your-secret' })
+
 // 使用条件中间件避免不必要的执行
 const conditionalMiddleware = (condition: (req: Request) => boolean, middleware: Middleware) => {
   return async (req: Request, next: () => Promise<Response>) => {
@@ -495,7 +501,7 @@ const conditionalMiddleware = (condition: (req: Request) => boolean, middleware:
   }
 }
 
-const routes: any[] = [
+const routes = defineRoutes([
   {
     method: 'GET',
     path: '/admin',
@@ -505,9 +511,9 @@ const routes: any[] = [
         authMiddleware
       )
     ],
-    handler: () => 'Admin panel'
+    handler: createHandler(() => 'Admin panel')
   }
-]
+])
 ```
 
 ## 部署配置
