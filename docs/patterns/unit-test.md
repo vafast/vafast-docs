@@ -38,10 +38,10 @@ describe('Vafast', () => {
 })
 ```
 
-然后我们可以通过运行 **bun test** 来进行测试。
+然后我们可以通过运行 **npm test** 来进行测试。
 
 ```bash
-bun test
+npm test
 ```
 
 对 Vafast 服务器的新请求必须是一个完全有效的 URL，**不能**是 URL 的一部分。
@@ -343,9 +343,9 @@ describe('Vafast Integration', () => {
 ```json
 {
   "scripts": {
-    "test": "bun test",
-    "test:watch": "bun test --watch",
-    "test:coverage": "bun test --coverage"
+    "test": "npm test",
+    "test:watch": "npm test --watch",
+    "test:coverage": "npm test --coverage"
   }
 }
 ```

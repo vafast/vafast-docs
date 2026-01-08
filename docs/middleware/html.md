@@ -19,7 +19,7 @@ title: HTML 中间件 - Vafast
 通过以下命令安装：
 
 ```bash
-bun add @vafast/html
+npm install @vafast/html
 ```
 
 ## 快速开始
@@ -273,7 +273,7 @@ export default {
 要添加类型安全提醒，请安装：
 
 ```bash
-bun add @kitajs/ts-html-plugin
+npm install @kitajs/ts-html-plugin
 ```
 
 然后在 **tsconfig.json** 中添加以下内容：
@@ -360,7 +360,7 @@ export default {
 ## 测试
 
 ```bash
-bun test
+npm test
 ```
 
 ## 相关链接

@@ -6,61 +6,116 @@ title: 路由指南 - Vafast
 
 Vafast 的路由系统是框架的核心，它提供了强大而灵活的方式来定义 API 端点。本指南将详细介绍 Vafast 的路由功能。
 
+## 路由类型定义
+
+### Route 接口
+
+```typescript
+import type { Route, NestedRoute, Method, Handler, Middleware } from 'vafast'
+
+// HTTP 方法类型
+type Method = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'OPTIONS' | 'HEAD'
+
+// 基本路由接口
+interface Route {
+  method: Method
+  path: string
+  handler: Handler
+  middleware?: Middleware[]
+  name?: string         // 路由名称（用于文档、事件等）
+  description?: string  // 路由描述
+  [key: string]: unknown // 允许任意扩展（支持 Webhook、权限等插件）
+}
+
+// 嵌套路由配置
+interface NestedRoute {
+  path: string
+  middleware?: Middleware[]
+  children?: (NestedRoute | Route)[]
+  name?: string         // 路由组名称
+  description?: string  // 路由组描述
+  [key: string]: unknown
+}
+```
+
+### Handler 类型
+
+```typescript
+// Handler 支持两种风格
+type Handler = LegacyHandler | FactoryHandler
+
+// 传统 Handler（不推荐）
+type LegacyHandler = (
+  req: Request,
+  params?: Record<string, string>,
+  user?: Record<string, any>
+) => ResponseBody | Promise<ResponseBody>
+
+// createHandler 返回的类型（推荐）
+type FactoryHandler = (req: Request) => Promise<Response>
+```
+
+### Middleware 类型
+
+```typescript
+type Middleware = (
+  req: Request,
+  next: () => Promise<Response>
+) => Response | Promise<Response>
+```
+
 ## 基本路由
 
 路由是 Vafast 应用的基础构建块。每个路由都定义了 HTTP 方法、路径和处理函数。
 
-### 路由结构
+### 定义路由
+
+使用 `defineRoutes()` 定义路由数组，支持完整的类型推断：
 
 ```typescript
-import { Server, createHandler } from 'vafast'
+import { Server, defineRoutes, createHandler } from 'vafast'
 
-const routes = [
+const routes = defineRoutes([
   {
     method: 'GET',
     path: '/',
     handler: createHandler(() => 'Hello Vafast!')
+  },
+  {
+    method: 'POST',
+    path: '/users',
+    handler: createHandler(({ body }) => ({ user: body }))
   }
-]
+])
 
 const server = new Server(routes)
 export default { fetch: server.fetch }
 ```
 
+::: tip 类型推断
+`defineRoutes()` 使用 `const T` 泛型，自动保留 `'GET'`、`'/users'` 等字面量类型，支持端到端类型推断。
+:::
+
 ### 支持的 HTTP 方法
 
-Vafast 支持所有标准的 HTTP 方法：
+| 方法 | 说明 |
+|------|------|
+| `GET` | 获取资源 |
+| `POST` | 创建资源 |
+| `PUT` | 完整更新资源 |
+| `DELETE` | 删除资源 |
+| `PATCH` | 部分更新资源 |
+| `OPTIONS` | CORS 预检请求 |
+| `HEAD` | 获取头部信息 |
 
 ```typescript
-import { createHandler } from 'vafast'
-
-const routes = [
-  {
-    method: 'GET',     // 获取资源
-    path: '/users',
-    handler: createHandler(() => ({ users: [] }))
-  },
-  {
-    method: 'POST',    // 创建资源
-    path: '/users',
-    handler: createHandler(({ body }) => ({ message: 'Create user', data: body }))
-  },
-  {
-    method: 'PUT',     // 更新资源
-    path: '/users/:id',
-    handler: createHandler(({ params }) => ({ message: `Update user ${params.id}` }))
-  },
-  {
-    method: 'DELETE',  // 删除资源
-    path: '/users/:id',
-    handler: createHandler(({ params }) => ({ message: `Delete user ${params.id}` }))
-  },
-  {
-    method: 'PATCH',   // 部分更新
-    path: '/users/:id',
-    handler: createHandler(({ params, body }) => ({ message: `Patch user ${params.id}`, data: body }))
-  }
-]
+const routes = defineRoutes([
+  { method: 'GET', path: '/users', handler: createHandler(() => ({ users: [] })) },
+  { method: 'POST', path: '/users', handler: createHandler(({ body }) => body) },
+  { method: 'PUT', path: '/users/:id', handler: createHandler(({ params }) => params) },
+  { method: 'DELETE', path: '/users/:id', handler: createHandler(() => null) },  // 返回 204
+  { method: 'PATCH', path: '/users/:id', handler: createHandler(({ params, body }) => ({ ...body })) }
+])
 ```
 
 ## 动态路由
@@ -392,9 +447,9 @@ const routes = [
 ### 3. 类型安全（使用 Schema）
 
 ```typescript
-import { Type } from 'vafast'
+import { defineRoutes, createHandler, Type } from 'vafast'
 
-const routes = [
+const routes = defineRoutes([
   {
     method: 'GET',
     path: '/posts/:id/:category?',
@@ -412,20 +467,72 @@ const routes = [
       })
     )
   }
-]
+])
 ```
 
-## 总结
+### 4. 端到端类型推断（用于 API 客户端）
+
+`defineRoutes()` 自动保留字面量类型，配合 `vafast-api-client` 实现端到端类型安全：
+
+```typescript
+import { defineRoutes, createHandler, Type } from 'vafast'
+import type { InferEden } from 'vafast-api-client'
+
+const routes = defineRoutes([
+  {
+    method: 'GET',
+    path: '/users',
+    handler: createHandler(
+      { query: Type.Object({ page: Type.Number() }) },
+      async ({ query }) => ({ users: [], total: 0 })
+    )
+  },
+  {
+    method: 'POST',
+    path: '/users',
+    handler: createHandler(
+      { body: Type.Object({ name: Type.String() }) },
+      async ({ body }) => ({ id: '1', name: body.name })
+    )
+  },
+  {
+    method: 'GET',
+    path: '/users/:id',
+    handler: createHandler(
+      { params: Type.Object({ id: Type.String() }) },
+      async ({ params }) => ({ id: params.id, name: 'User' })
+    )
+  }
+])
+
+// ✅ 自动推断字面量类型，无需 as const！
+type Api = InferEden<typeof routes>
+```
+
+## 路由类型总结
+
+| 类型/函数 | 说明 | 用途 |
+|-----------|------|------|
+| `Route` | 基本路由接口 | 定义单个路由 |
+| `NestedRoute` | 嵌套路由接口 | 定义路由组 |
+| `Method` | HTTP 方法联合类型 | 类型约束 |
+| `Handler` | 处理函数类型 | 类型约束 |
+| `Middleware` | 中间件类型 | 类型约束 |
+| `defineRoutes()` | 创建路由数组 | 自动保留字面量类型，支持端到端类型推断 |
+
+## 功能总结
 
 Vafast 的路由系统提供了：
 
+- ✅ **defineRoutes()** - 自动保留字面量类型，支持端到端类型推断
 - ✅ **createHandler** - 推荐的处理器工厂，提供统一上下文
 - ✅ **自动响应转换** - 直接返回数据，无需手动创建 Response
-- ✅ 完整的 HTTP 方法支持
-- ✅ 动态路由参数
-- ✅ 嵌套路由结构
-- ✅ 灵活的中间件系统
-- ✅ Schema 验证与类型推导
+- ✅ **完整的 HTTP 方法支持** - GET, POST, PUT, DELETE, PATCH, OPTIONS, HEAD
+- ✅ **动态路由参数** - `:id` 必选参数，`:id?` 可选参数
+- ✅ **嵌套路由结构** - children 支持无限嵌套
+- ✅ **灵活的中间件系统** - 路由级和组级中间件
+- ✅ **Schema 验证与类型推导** - 配合 TypeBox 实现运行时验证
+- ✅ **端到端类型安全** - 配合 vafast-api-client 实现 API 类型推断
 
 ### 下一步
 

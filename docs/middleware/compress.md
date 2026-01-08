@@ -11,7 +11,7 @@ title: Compress 中间件 - Vafast
 通过以下命令安装：
 
 ```bash
-bun add @vafast/compress
+npm install @vafast/compress
 ```
 
 ## 基本用法

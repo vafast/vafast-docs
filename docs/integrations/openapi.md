@@ -10,7 +10,7 @@ Vafast 可以通过提供 Swagger 中间件自动生成 API 文档页面。
 
 要生成 Swagger 页面，请安装中间件：
 ```bash
-bun add @vafast/swagger
+npm install @vafast/swagger
 ```
 
 并将中间件注册到服务器：

@@ -14,8 +14,8 @@ npm install @prisma/client
 npm install -D prisma
 
 # 或使用 bun
-bun add @prisma/client
-bun add -D prisma
+npm install @prisma/client
+npm install -D prisma
 ```
 
 ## 初始化 Prisma

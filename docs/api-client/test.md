@@ -12,7 +12,7 @@ title: 测试指南 - Vafast API 客户端
 
 ```bash
 # 使用 Bun（推荐）
-bun add -d bun @types/node
+npm install -d bun @types/node
 
 # 使用 npm
 npm install -D jest @types/jest ts-jest
@@ -754,16 +754,16 @@ describe('Test Cleanup', () => {
 
 ```bash
 # 运行所有测试
-bun test
+npm test
 
 # 运行特定测试文件
-bun test test/client.test.ts
+npm test test/client.test.ts
 
 # 运行测试并显示覆盖率
-bun test --coverage
+npm test --coverage
 
 # 监听模式
-bun test --watch
+npm test --watch
 ```
 
 ### 使用 npm

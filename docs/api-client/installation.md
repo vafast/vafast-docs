@@ -11,7 +11,7 @@ Vafast API 客户端提供了多种安装方式，您可以根据项目需求选
 ### 使用 Bun（推荐）
 
 ```bash
-bun add @vafast/api-client
+npm install @vafast/api-client
 ```
 
 ### 使用 npm
@@ -38,7 +38,7 @@ pnpm add @vafast/api-client
 
 ```bash
 # Bun
-bun add -d @vafast/api-client
+npm install -d @vafast/api-client
 
 # npm
 npm install -D @vafast/api-client
@@ -81,7 +81,7 @@ cd my-api-client
 ### 2. 安装依赖
 
 ```bash
-bun add @vafast/api-client
+npm install @vafast/api-client
 ```
 
 ### 3. 创建客户端
@@ -126,7 +126,7 @@ main()
 ### 5. 运行项目
 
 ```bash
-bun run src/index.ts
+npm run src/index.ts
 ```
 
 ## ⚙️ 配置选项
@@ -298,7 +298,7 @@ const client = new VafastApiClient({
 
 ```bash
 # Bun
-bun add -d bun @types/node
+npm install -d bun @types/node
 
 # npm
 npm install -D jest @types/jest ts-jest
@@ -348,7 +348,7 @@ describe('VafastApiClient', () => {
 
 ```bash
 # Bun
-bun test
+npm test
 
 # npm
 npm test
@@ -367,7 +367,7 @@ pnpm test
 #### 1. 类型错误
 ```bash
 # 确保安装了正确的类型定义
-bun add -d @types/node
+npm install -d @types/node
 
 # 检查 TypeScript 配置
 npx tsc --noEmit

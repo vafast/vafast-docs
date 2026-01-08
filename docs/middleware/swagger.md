@@ -10,7 +10,7 @@ title: Swagger 中间件 - Vafast
 
 安装命令：
 ```bash
-bun add @vafast/swagger
+npm install @vafast/swagger
 ```
 
 ## 基本用法

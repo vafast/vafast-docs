@@ -5,20 +5,20 @@
 ## 本地开发
 
 ```bash
-bun install
-bun run dev
+npm install
+npm run dev
 ```
 
 ## 构建
 
 ```bash
-bun run build
+npm run build
 ```
 
 ## 预览
 
 ```bash
-bun run preview
+npm run preview
 ```
 
 ## 相关链接

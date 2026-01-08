@@ -11,7 +11,7 @@ Vafast 提供了完整的 OpenTelemetry 集成支持，包括分布式追踪、�
 ## 安装
 
 ```bash
-bun add @vafast/opentelemetry
+npm install @vafast/opentelemetry
 ```
 
 ## 基本用法

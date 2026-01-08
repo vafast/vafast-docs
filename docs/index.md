@@ -188,7 +188,7 @@ export default { fetch: server.fetch }
 <template v-slot:test-script>
 
 ```bash
-$ bun test
+$ npm test
 ```
 
 </template>

@@ -11,7 +11,7 @@ Web 服务器使用请求的 **路径和 HTTP 方法** 来查找正确的资源�
 
 ## 基本路由
 
-### 定义路由
+### 定义路由（对象字面量方式）
 
 ```typescript
 import { Server, defineRoutes, createHandler } from 'vafast'
@@ -33,32 +33,14 @@ export default { fetch: server.fetch }
 Vafast 支持所有标准的 HTTP 方法：
 
 ```typescript
+import { defineRoutes, createHandler } from 'vafast'
+
 const routes = defineRoutes([
-  {
-    method: 'GET',     // 获取资源
-    path: '/users',
-    handler: createHandler(() => 'Get users')
-  },
-  {
-    method: 'POST',    // 创建资源
-    path: '/users',
-    handler: createHandler(() => 'Create user')
-  },
-  {
-    method: 'PUT',     // 更新资源
-    path: '/users/:id',
-    handler: createHandler(() => 'Update user')
-  },
-  {
-    method: 'DELETE',  // 删除资源
-    path: '/users/:id',
-    handler: createHandler(() => 'Delete user')
-  },
-  {
-    method: 'PATCH',   // 部分更新资源
-    path: '/users/:id',
-    handler: createHandler(() => 'Patch user')
-  }
+  { method: 'GET', path: '/users', handler: createHandler(() => 'Get users') },
+  { method: 'POST', path: '/users', handler: createHandler(() => 'Create user') },
+  { method: 'PUT', path: '/users/:id', handler: createHandler(() => 'Update user') },
+  { method: 'DELETE', path: '/users/:id', handler: createHandler(() => 'Delete user') },
+  { method: 'PATCH', path: '/users/:id', handler: createHandler(() => 'Patch user') }
 ])
 ```
 
@@ -90,15 +72,13 @@ const routes = defineRoutes([
 查询参数通过 `query` 对象访问：
 
 ```typescript
+import { defineRoutes, createHandler } from 'vafast'
+
 const routes = defineRoutes([
-  {
-    method: 'GET',
-    path: '/search',
-    handler: createHandler(({ query }) => {
-      const { q, page = '1', limit = '10' } = query
-      return `Search: ${q}, Page: ${page}, Limit: ${limit}`
-    })
-  }
+  get('/search', createHandler(({ query }) => {
+    const { q, page = '1', limit = '10' } = query
+    return `Search: ${q}, Page: ${page}, Limit: ${limit}`
+  }))
 ])
 ```
 
@@ -176,15 +156,33 @@ const routes = defineRoutes([
 每个路由可以配置以下选项：
 
 ```typescript
+import { defineRoutes, createHandler, Type } from 'vafast'
+
 const routes = defineRoutes([
   {
     method: 'GET',
-    path: '/protected',
-    handler: createHandler(() => 'Protected content'),
+    path: '/protected/:id',
     middleware: [authMiddleware],  // 路由级中间件
-    body: userSchema,             // 请求体验证
-    query: querySchema,           // 查询参数验证
-    params: paramsSchema          // 路径参数验证
+    handler: createHandler(
+      {
+        params: Type.Object({ id: Type.String() }),    // 路径参数验证
+        query: Type.Object({ page: Type.Number() })    // 查询参数验证
+      },
+      ({ params, query }) => ({ id: params.id, page: query.page })
+    )
+  },
+  {
+    method: 'POST',
+    path: '/users',
+    handler: createHandler(
+      {
+        body: Type.Object({                            // 请求体验证
+          name: Type.String(),
+          email: Type.String({ format: 'email' })
+        })
+      },
+      ({ body }) => ({ user: body })
+    )
   }
 ])
 ```
@@ -205,27 +203,19 @@ path: '/p/:p/c'
 
 ### 2. 保持路由结构清晰
 
+使用嵌套路由组织 API：
+
 ```typescript
+import { defineRoutes, createHandler } from 'vafast'
+
 const routes = defineRoutes([
   // 用户相关路由
   {
     path: '/users',
     children: [
-      {
-        method: 'GET',
-        path: '/',
-        handler: createHandler(() => 'List users')
-      },
-      {
-        method: 'POST',
-        path: '/',
-        handler: createHandler(() => 'Create user')
-      },
-      {
-        method: 'GET',
-        path: '/:id',
-        handler: createHandler(({ params }) => `User ${params.id}`)
-      }
+      { method: 'GET', path: '/', handler: createHandler(() => 'List users') },
+      { method: 'POST', path: '/', handler: createHandler(() => 'Create user') },
+      { method: 'GET', path: '/:id', handler: createHandler(({ params }) => `User ${params.id}`) }
     ]
   },
   
@@ -233,16 +223,8 @@ const routes = defineRoutes([
   {
     path: '/posts',
     children: [
-      {
-        method: 'GET',
-        path: '/',
-        handler: createHandler(() => 'List posts')
-      },
-      {
-        method: 'POST',
-        path: '/',
-        handler: createHandler(() => 'Create post')
-      }
+      { method: 'GET', path: '/', handler: createHandler(() => 'List posts') },
+      { method: 'POST', path: '/', handler: createHandler(() => 'Create post') }
     ]
   }
 ])
@@ -251,32 +233,45 @@ const routes = defineRoutes([
 ### 3. 使用适当的 HTTP 方法
 
 ```typescript
+import { defineRoutes, createHandler } from 'vafast'
+
+const routes = defineRoutes([
+  { method: 'GET', path: '/users', handler: createHandler(() => 'Get users') },      // 获取数据
+  { method: 'POST', path: '/users', handler: createHandler(() => 'Create user') },   // 创建数据
+  { method: 'PUT', path: '/users/:id', handler: createHandler(() => 'Update user') }, // 完全更新
+  { method: 'PATCH', path: '/users/:id', handler: createHandler(() => 'Patch user') }, // 部分更新
+  { method: 'DELETE', path: '/users/:id', handler: createHandler(() => null) }        // 删除（返回 204）
+])
+```
+
+### 4. 类型安全的路由定义
+
+`defineRoutes()` 自动保留字面量类型，支持端到端类型推断：
+
+```typescript
+import { defineRoutes, createHandler, Type } from 'vafast'
+import type { InferEden } from 'vafast-api-client'
+
 const routes = defineRoutes([
   {
-    method: 'GET',     // 获取数据
+    method: 'GET',
+    path: '/users/:id',
+    handler: createHandler(
+      { params: Type.Object({ id: Type.String() }) },
+      ({ params }) => ({ userId: params.id })
+    )
+  },
+  {
+    method: 'POST',
     path: '/users',
-    handler: createHandler(() => 'Get users')
-  },
-  {
-    method: 'POST',    // 创建数据
-    path: '/users',
-    handler: createHandler(() => 'Create user')
-  },
-  {
-    method: 'PUT',     // 完全更新
-    path: '/users/:id',
-    handler: createHandler(() => 'Update user')
-  },
-  {
-    method: 'PATCH',   // 部分更新
-    path: '/users/:id',
-    handler: createHandler(() => 'Patch user')
-  },
-  {
-    method: 'DELETE',  // 删除数据
-    path: '/users/:id',
-    handler: createHandler(() => 'Delete user')
+    handler: createHandler(
+      { body: Type.Object({ name: Type.String() }) },
+      ({ body }) => ({ name: body.name })
+    )
   }
 ])
+
+// ✅ 自动推断字面量类型
+type Api = InferEden<typeof routes>
 ```
 

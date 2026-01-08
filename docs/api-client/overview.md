@@ -109,7 +109,7 @@ VafastApiClient
 ### 安装
 
 ```bash
-bun add @vafast/api-client
+npm install @vafast/api-client
 ```
 
 ### 基础用法

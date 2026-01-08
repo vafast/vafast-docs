@@ -27,8 +27,8 @@ my-vafast-astro-app/
 ## 安装依赖
 
 ```bash
-bun add vafast @vafast/cors @vafast/helmet
-bun add -D @types/node
+npm install vafast @vafast/cors @vafast/helmet
+npm install -D @types/node
 ```
 
 ## 创建 Vafast API 服务器
@@ -549,10 +549,10 @@ FROM oven/bun:1 AS builder
 WORKDIR /app
 
 COPY package.json bun.lockb ./
-RUN bun install --frozen-lockfile
+RUN npm install --frozen-lockfile
 
 COPY . .
-RUN bun run build
+RUN npm run build
 
 FROM oven/bun:1-slim
 WORKDIR /app

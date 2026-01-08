@@ -58,6 +58,48 @@ const UserSchema = Type.Object({
 type User = Static<typeof UserSchema>
 ```
 
+### 内置 Format 验证
+
+Vafast 内置了常用的 format 验证器，框架启动时自动注册，对标 Zod 的内置验证：
+
+| 分类 | Format | 说明 |
+|------|--------|------|
+| **标识符** | `email`, `uuid`, `uuid-any`, `cuid`, `cuid2`, `ulid`, `nanoid`, `objectid`, `slug` | 各种 ID 格式 |
+| **网络** | `url`, `uri`, `ipv4`, `ipv6`, `ip`, `cidr`, `hostname` | 网络地址 |
+| **日期时间** | `date`, `time`, `date-time`, `datetime`, `duration` | ISO 8601 格式 |
+| **手机号** | `phone` (中国), `phone-cn`, `phone-e164` (国际) | 电话号码 |
+| **编码** | `base64`, `base64url`, `jwt` | 编码格式 |
+| **颜色** | `hex-color`, `rgb-color`, `color` | 颜色值 |
+| **其他** | `emoji`, `semver`, `credit-card` | 特殊格式 |
+
+**使用示例：**
+
+```typescript
+import { Type } from 'vafast'
+
+const UserSchema = Type.Object({
+  email: Type.String({ format: 'email' }),
+  uuid: Type.String({ format: 'uuid' }),
+  website: Type.String({ format: 'url' }),
+  phone: Type.String({ format: 'phone-e164' }),
+  createdAt: Type.String({ format: 'date-time' })
+})
+```
+
+**自定义 Format：**
+
+```typescript
+import { registerFormat, Patterns } from 'vafast'
+
+// 注册自定义 format
+registerFormat('order-id', (v) => /^ORD-\d{8}$/.test(v))
+
+// 使用内置正则（供外部使用）
+const isEmail = Patterns.EMAIL.test('test@example.com')
+```
+
+> **源码位置：** `src/utils/formats.ts`
+
 ## 基本验证
 
 ### 请求体验证

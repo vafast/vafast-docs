@@ -27,8 +27,8 @@ my-vafast-sveltekit-app/
 ## 安装依赖
 
 ```bash
-bun add vafast @vafast/cors @vafast/helmet
-bun add -D @types/node
+npm install vafast @vafast/cors @vafast/helmet
+npm install -D @types/node
 ```
 
 ## 创建 Vafast API 服务器
@@ -818,17 +818,17 @@ FROM oven/bun:1 AS builder
 WORKDIR /app
 
 COPY package.json bun.lockb ./
-RUN bun install --frozen-lockfile
+RUN npm install --frozen-lockfile
 
 COPY . .
-RUN bun run build
+RUN npm run build
 
 FROM oven/bun:1-slim
 WORKDIR /app
 
 COPY --from=builder /app/build ./build
 COPY --from=builder /app/package.json ./
-RUN bun install --production --frozen-lockfile
+RUN npm install --production --frozen-lockfile
 
 EXPOSE 3000
 

@@ -11,7 +11,7 @@ title: Helmet 中间件 - Vafast
 通过以下命令安装：
 
 ```bash
-bun add @vafast/helmet
+npm install @vafast/helmet
 ```
 
 ## 基本用法

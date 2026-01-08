@@ -165,14 +165,14 @@ WORKDIR /app
 # 安装依赖
 FROM base AS deps
 COPY package.json bun.lockb ./
-RUN bun install --frozen-lockfile --production
+RUN npm install --frozen-lockfile --production
 
 # 构建应用
 FROM base AS builder
 COPY package.json bun.lockb ./
-RUN bun install --frozen-lockfile
+RUN npm install --frozen-lockfile
 COPY . .
-RUN bun run build
+RUN npm run build
 
 # 生产镜像
 FROM oven/bun:1-slim AS runner

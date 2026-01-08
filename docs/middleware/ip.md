@@ -11,7 +11,7 @@ title: IP 中间件 - Vafast
 通过以下命令安装：
 
 ```bash
-bun add @vafast/ip
+npm install @vafast/ip
 ```
 
 ## 基本用法

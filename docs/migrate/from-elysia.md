@@ -279,7 +279,7 @@ server.use(errorHandler)
 ```bash
 npm install vafast
 # 或
-bun add vafast
+npm install vafast
 ```
 
 ### 步骤 2: 重构路由定义

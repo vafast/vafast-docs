@@ -11,7 +11,7 @@ title: Cron 中间件 - Vafast
 通过以下方式安装：
 
 ```bash
-bun add @vafast/cron
+npm install @vafast/cron
 ```
 
 ## 基本用法

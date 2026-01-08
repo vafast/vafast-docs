@@ -9,7 +9,7 @@ Better Auth 是一个现代化的身份验证库，专为现代 Web 应用设计
 ## 安装
 
 ```bash
-bun add better-auth
+npm install better-auth
 ```
 
 ## 基本设置

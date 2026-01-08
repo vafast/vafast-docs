@@ -11,7 +11,7 @@ title: Bearer 中间件 - Vafast
 通过以下命令安装：
 
 ```bash
-bun add @vafast/bearer
+npm install @vafast/bearer
 ```
 
 ## 基本用法

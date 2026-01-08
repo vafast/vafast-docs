@@ -14,8 +14,8 @@ npm install react-email @react-email/components @react-email/render
 npm install -D @types/nodemailer nodemailer
 
 # 或使用 bun
-bun add react-email @react-email/components @react-email/render
-bun add -D @types/nodemailer nodemailer
+npm install react-email @react-email/components @react-email/render
+npm install -D @types/nodemailer nodemailer
 ```
 
 ## 邮件模板组件

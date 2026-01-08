@@ -10,7 +10,7 @@ title: JWT 中间件 - Vafast
 
 安装命令：
 ```bash
-bun add @vafast/jwt
+npm install @vafast/jwt
 ```
 
 ## 基本用法

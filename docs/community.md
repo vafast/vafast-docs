@@ -135,20 +135,20 @@ git clone https://github.com/vafast/vafast.git
 cd vafast
 
 # 安装依赖
-bun install
+npm install
 ```
 
 #### 运行测试
 
 ```bash
 # 运行所有测试
-bun test
+npm test
 
 # 运行特定测试
-bun test --grep "user"
+npm test --grep "user"
 
 # 运行性能测试
-bun run test:perf
+npm run test:perf
 ```
 
 #### 代码规范
@@ -162,13 +162,13 @@ bun run test:perf
 
 ```bash
 # 代码检查
-bun run lint
+npm run lint
 
 # 代码格式化
-bun run format
+npm run format
 
 # 类型检查
-bun run type-check
+npm run type-check
 ```
 
 ### 提交规范

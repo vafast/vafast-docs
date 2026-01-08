@@ -10,7 +10,7 @@ title: Static 中间件 - Vafast
 
 安装命令：
 ```bash
-bun add @vafast/static
+npm install @vafast/static
 ```
 
 ## 基本用法

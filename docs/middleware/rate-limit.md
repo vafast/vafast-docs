@@ -10,7 +10,7 @@ title: Rate Limit 中间件 - Vafast
 
 安装命令：
 ```bash
-bun add @vafast/rate-limit
+npm install @vafast/rate-limit
 ```
 
 ## 基本用法

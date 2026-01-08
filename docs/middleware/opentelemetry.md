@@ -10,7 +10,7 @@ title: OpenTelemetry 中间件 - Vafast
 
 安装命令：
 ```bash
-bun add @vafast/opentelemetry
+npm install @vafast/opentelemetry
 ```
 
 ## 基本用法

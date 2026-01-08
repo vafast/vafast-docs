@@ -148,13 +148,13 @@ const base = '/vafast-docs/'
 
 ```bash
 # 本地开发
-bun run dev
+npm run dev
 
 # 本地构建
-bun run build
+npm run build
 
 # 预览构建结果
-bun run preview
+npm run preview
 
 # 检查部署状态
 gh run list --workflow="Deploy Docs (GitHub Pages)" --limit 5

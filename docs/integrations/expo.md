@@ -27,8 +27,8 @@ my-vafast-expo-app/
 ## 安装依赖
 
 ```bash
-bun add vafast @vafast/api-client
-bun add -D @types/react @types/react-native
+npm install vafast @vafast/api-client
+npm install -D @types/react @types/react-native
 ```
 
 ## 创建 Vafast API 客户端

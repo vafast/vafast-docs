@@ -69,19 +69,13 @@ new ComponentServer(routes: ComponentRoute[], options?: ServerOptions)
 
 ```typescript
 interface Route {
-  method: HTTPMethod
+  method: Method
   path: string
-  handler: RouteHandler
+  handler: Handler
   middleware?: Middleware[]
-  body?: any
-  query?: any
-  params?: any
-  headers?: any
-  cookies?: any
-  docs?: RouteDocs
-  timeout?: number
-  maxBodySize?: string
-  [key: string]: any
+  name?: string         // 路由名称（用于文档、事件等）
+  description?: string  // 路由描述
+  [key: string]: unknown // 允许任意扩展
 }
 ```
 
@@ -90,14 +84,9 @@ interface Route {
 - `path`: 路由路径
 - `handler`: 路由处理函数
 - `middleware`: 中间件数组
-- `body`: 请求体验证配置
-- `query`: 查询参数验证配置
-- `params`: 路径参数验证配置
-- `headers`: 请求头验证配置
-- `cookies`: Cookie 验证配置
-- `docs`: API 文档配置
-- `timeout`: 请求超时时间
-- `maxBodySize`: 最大请求体大小
+- `name`: 路由名称（用于文档生成、事件等）
+- `description`: 路由描述
+- `[key]`: 允许任意扩展（支持 Webhook、权限等插件）
 
 ### ComponentRoute
 
@@ -127,6 +116,9 @@ interface NestedRoute {
   path: string
   middleware?: Middleware[]
   children?: (Route | NestedRoute)[]
+  name?: string         // 路由组名称
+  description?: string  // 路由组描述
+  [key: string]: unknown
 }
 ```
 
@@ -134,6 +126,54 @@ interface NestedRoute {
 - `path`: 路由路径
 - `middleware`: 中间件数组
 - `children`: 子路由配置
+- `name`: 路由组名称
+- `description`: 路由组描述
+
+## 路由函数
+
+### defineRoutes()
+
+创建路由数组，自动保留字面量类型，支持端到端类型推断。
+
+```typescript
+function defineRoutes<const T extends readonly Route[]>(routes: T): T
+```
+
+**参数：**
+- `routes`: 路由配置数组
+
+**示例：**
+
+```typescript
+import { defineRoutes, createHandler, Type } from 'vafast'
+import type { InferEden } from 'vafast-api-client'
+
+const routes = defineRoutes([
+  {
+    method: 'GET',
+    path: '/users',
+    handler: createHandler(
+      { query: Type.Object({ page: Type.Number() }) },
+      async ({ query }) => ({ users: [], page: query.page })
+    )
+  },
+  {
+    method: 'POST',
+    path: '/users',
+    handler: createHandler(
+      { body: Type.Object({ name: Type.String() }) },
+      async ({ body }) => ({ id: '1', name: body.name })
+    )
+  }
+])
+
+// ✅ 自动推断字面量类型，支持端到端类型推断
+type Api = InferEden<typeof routes>
+```
+
+::: tip
+`defineRoutes()` 使用 `const T` 泛型，自动将 `'GET'`、`'/users'` 推断为字面量类型，无需 `as const`。
+:::
 
 ### Middleware
 

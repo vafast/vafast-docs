@@ -10,7 +10,7 @@ title: Server Timing 中间件 - Vafast
 
 安装命令：
 ```bash
-bun add @vafast/server-timing
+npm install @vafast/server-timing
 ```
 
 ## 基本用法

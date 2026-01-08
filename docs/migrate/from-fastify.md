@@ -256,7 +256,7 @@ const errorHandler = async (req: Request, next: () => Promise<Response>) => {
 ### 步骤 1: 安装 Vafast
 
 ```bash
-bun add vafast
+npm install vafast
 ```
 
 ### 步骤 2: 重构路由定义
