@@ -92,7 +92,7 @@ export default { port: 3000, fetch: server.fetch }
 以下是在 Vafast 中的简单 hello world 示例。
 
 ```typescript
-import { Server, defineRoutes, createHandler, serve } from 'vafast'
+import { Server, defineRoutes, createHandler, serve, err } from 'vafast'
 
 const routes = defineRoutes([
   {

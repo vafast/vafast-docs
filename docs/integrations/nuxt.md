@@ -60,7 +60,7 @@ export const handler = app.handler
 
 ```typescript
 // server/api/routes.ts
-import { defineRoutes, createHandler, VafastError, Type } from 'vafast'
+import { defineRoutes, createHandler, err, Type } from 'vafast'
 
 export const routes = defineRoutes([
   {

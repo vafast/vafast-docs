@@ -53,7 +53,7 @@ export const auth = new BetterAuth({
 
 ```typescript
 // src/index.ts
-import { defineRoutes, createHandler, VafastError, Type } from 'vafast'
+import { defineRoutes, createHandler, err, Type } from 'vafast'
 import { auth } from './auth/config'
 import { authMiddleware } from './auth/middleware'
 
@@ -104,6 +104,7 @@ const app = createHandler(routes)
 
 ```typescript
 // src/auth/middleware.ts
+import { err } from 'vafast'
 import { auth } from './config'
 
 export const authMiddleware = async (request: Request, next: () => Promise<Response>) => {
@@ -251,7 +252,7 @@ export const auth = new BetterAuth({
 使用角色保护路由：
 
 ```typescript
-import { defineRoutes, createHandler, VafastError } from 'vafast'
+import { defineRoutes, createHandler, err } from 'vafast'
 
 const requireRole = (role: string) => {
   return async (request: Request) => {
@@ -282,7 +283,7 @@ const routes = defineRoutes([
 ## 错误处理
 
 ```typescript
-import { defineRoutes, createHandler, VafastError, Type } from 'vafast'
+import { defineRoutes, createHandler, err, Type } from 'vafast'
 import { auth } from './auth/config'
 
 const routes = defineRoutes([

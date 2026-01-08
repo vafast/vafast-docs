@@ -51,7 +51,7 @@ const createProfile = createHandler(
 <template v-slot:type-3>
 
 ```typescript twoslash
-import { createHandler } from 'vafast'
+import { createHandler, err } from 'vafast'
 
 // 自动响应转换：对象 -> JSON，字符串 -> text/plain
 const getProfile = createHandler((ctx) => {
@@ -132,7 +132,7 @@ export default { fetch: server.fetch }
 <template v-slot:e2e-type-safety>
 
 ```typescript
-import { Server, defineRoutes, createHandler, Type } from 'vafast'
+import { Server, defineRoutes, createHandler, Type, err } from 'vafast'
 
 const routes = defineRoutes([
   {
@@ -160,7 +160,7 @@ export default { fetch: server.fetch }
 <template v-slot:test-code>
 
 ```typescript
-import { Server, defineRoutes, createHandler, Type } from 'vafast'
+import { Server, defineRoutes, createHandler, Type, err } from 'vafast'
 
 const routes = defineRoutes([
   {

@@ -211,7 +211,7 @@ console.log(`P99: ${p99}ms`)  // 99% 请求在此时间内完成
 ## 暴露监控端点
 
 ```typescript
-import { Server, defineRoutes, createHandler, serve } from 'vafast'
+import { Server, defineRoutes, createHandler, serve, err } from 'vafast'
 import { withMonitoring, type MonitoredServer } from 'vafast/monitoring'
 
 // 创建监控端点路由
@@ -384,9 +384,9 @@ const routes = defineRoutes([
       return html(`
         <!DOCTYPE html>
         <html>
-        <head>
+          <head>
           <title>Vafast 监控仪表盘</title>
-          <style>
+            <style>
             * { box-sizing: border-box; }
             body { font-family: system-ui; margin: 0; padding: 20px; background: #0f172a; color: #e2e8f0; }
             h1 { color: #38bdf8; }
@@ -401,10 +401,10 @@ const routes = defineRoutes([
             table { width: 100%; border-collapse: collapse; margin-top: 20px; }
             th, td { padding: 12px; text-align: left; border-bottom: 1px solid #334155; }
             th { color: #94a3b8; }
-          </style>
+            </style>
           <meta http-equiv="refresh" content="5">
-        </head>
-        <body>
+          </head>
+          <body>
           <h1>📊 Vafast 监控仪表盘</h1>
           
           <div class="grid">
@@ -538,7 +538,7 @@ const routes = defineRoutes([
           </div>
           
           <p style="color: #64748b; margin-top: 20px;">页面每 5 秒自动刷新</p>
-        </body>
+          </body>
         </html>
       `)
     })

@@ -278,6 +278,8 @@ const routes = defineRoutes([
 ### 异步验证
 
 ```typescript
+import { defineRoutes, createHandler, err, Type } from 'vafast'
+
 const asyncValidationSchema = Type.Object({
   email: Type.String({ format: 'email' }),
   username: Type.String({ minLength: 3, maxLength: 20 })
