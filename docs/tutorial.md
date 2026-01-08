@@ -179,15 +179,15 @@ const routes = defineRoutes([
     handler: createHandler(
       { body: noteSchema },
       ({ body }) => {
-        const note: Note = {
-          id: Date.now().toString(),
+      const note: Note = {
+        id: Date.now().toString(),
           title: body.title,
           content: body.content,
-          createdAt: new Date(),
-          updatedAt: new Date()
-        }
-        
-        notes.push(note)
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+      
+      notes.push(note)
         return { data: note, status: 201 }
       }
     )
@@ -201,19 +201,19 @@ const routes = defineRoutes([
       { body: noteSchema },
       ({ params, body }) => {
         const noteIndex = notes.findIndex(n => n.id === params.id)
-        
-        if (noteIndex === -1) {
+      
+      if (noteIndex === -1) {
           return { data: { error: 'Note not found' }, status: 404 }
-        }
-        
-        notes[noteIndex] = {
-          ...notes[noteIndex],
+      }
+      
+      notes[noteIndex] = {
+        ...notes[noteIndex],
           title: body.title,
           content: body.content,
-          updatedAt: new Date()
-        }
-        
-        return notes[noteIndex]
+        updatedAt: new Date()
+      }
+      
+      return notes[noteIndex]
       }
     )
   },
@@ -312,7 +312,7 @@ const errorHandler = async (req: Request, next: () => Promise<Response>) => {
   } catch (error) {
     console.error('Error:', error)
     return json({ 
-      error: 'Internal Server Error', 
+        error: 'Internal Server Error', 
       message: error instanceof Error ? error.message : 'Unknown error'
     }, 500)
   }

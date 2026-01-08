@@ -465,9 +465,9 @@ const routes = defineRoutes([
     handler: createHandler(
       { headers: headersSchema },
       ({ headers }) => {
-        const token = headers.authorization.replace('Bearer ', '')
-        return { token }
-      }
+      const token = headers.authorization.replace('Bearer ', '')
+      return { token }
+    }
     )
   }
 ])

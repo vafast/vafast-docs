@@ -428,7 +428,7 @@ const routes = defineRoutes([
       ({ query }) => {
         // query 已经通过验证，类型安全
         return `Page: ${query.page}, Limit: ${query.limit}, Sort: ${query.sort}`
-      }
+    }
     )
   }
 ])

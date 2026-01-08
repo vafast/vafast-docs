@@ -290,18 +290,18 @@ const routes = defineRoutes([
     handler: createHandler(
       { body: asyncValidationSchema },
       async ({ body }) => {
-        // 异步验证
-        const emailExists = await checkEmailExists(body.email)
-        if (emailExists) {
+      // 异步验证
+      const emailExists = await checkEmailExists(body.email)
+      if (emailExists) {
           return { data: { error: 'Email already exists' }, status: 400 }
-        }
-        
-        const usernameExists = await checkUsernameExists(body.username)
-        if (usernameExists) {
+      }
+      
+      const usernameExists = await checkUsernameExists(body.username)
+      if (usernameExists) {
           return { data: { error: 'Username already exists' }, status: 400 }
-        }
-        
-        return createUser(body)
+      }
+      
+      return createUser(body)
       }
     )
   }

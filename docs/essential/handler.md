@@ -210,7 +210,7 @@ const routes = defineRoutes([
     path: '/custom',
     handler: createHandler(() => ({
       data: 'Custom response',
-      status: 200,
+        status: 200,
       headers: { 'X-Custom-Header': 'value' }
     }))
   },
@@ -343,11 +343,11 @@ const routes = defineRoutes([
     method: 'GET',
     path: '/user/:id',
     handler: createHandler(async ({ params }) => {
-      const user = await getUserById(params.id)
-      if (!user) {
+        const user = await getUserById(params.id)
+        if (!user) {
         return { data: { error: 'User not found' }, status: 404 }
-      }
-      return user
+        }
+        return user
       // 注意：未捕获的错误由 createHandler 内置错误处理自动返回 500
     })
   }

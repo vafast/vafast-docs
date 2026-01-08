@@ -304,7 +304,7 @@ const routes = [
         return { success: true, user: body, source: query.source }
       }
     )
-  }
+    }
 ]
 ```
 
