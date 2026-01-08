@@ -196,7 +196,7 @@ button.copy::after {
 }
 
 #VPSidebarNav > .group:nth-child(9) > .VPSidebarItem > .item > .text::before {
-    background-image: url(/assets/vite.svg);
+    background-image: url(/assets/frontend.svg);
 }
 
 #VPSidebarNav > .group:nth-child(10) > .VPSidebarItem > .item > .text::before {
