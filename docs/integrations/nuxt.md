@@ -55,8 +55,7 @@ export const handler = app.handler
 
 ```typescript
 // server/api/routes.ts
-import { defineRoutes, createHandler } from 'vafast'
-import { Type } from 'vafast'
+import { defineRoutes, createHandler, VafastError, Type } from 'vafast'
 
 export const routes = defineRoutes([
   {
@@ -108,7 +107,7 @@ export const routes = defineRoutes([
       }
       
       if (!product) {
-        return { error: 'Product not found' }, { status: 404 }
+        throw new VafastError('Product not found', { status: 404, type: 'NOT_FOUND', expose: true })
       }
       
       return { product }

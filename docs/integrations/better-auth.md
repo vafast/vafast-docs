@@ -53,7 +53,7 @@ export const auth = new BetterAuth({
 
 ```typescript
 // src/index.ts
-import { defineRoutes, createHandler } from 'vafast'
+import { defineRoutes, createHandler, VafastError, Type } from 'vafast'
 import { auth } from './auth/config'
 import { authMiddleware } from './auth/middleware'
 
@@ -64,7 +64,7 @@ const routes = defineRoutes([
     handler: createHandler(async ({ request }) => {
       const session = await auth.api.getSession(request)
       if (!session) {
-        return { error: 'Unauthorized' }, { status: 401 }
+        throw new VafastError('Unauthorized', { status: 401, type: 'UNAUTHORIZED', expose: true })
       }
       return { user: session.user }
     }),
@@ -82,7 +82,7 @@ const routes = defineRoutes([
       })
       
       if (result.error) {
-        return { error: result.error }, { status: 400 }
+        throw new VafastError(result.error, { status: 400, type: 'AUTH_ERROR', expose: true })
       }
       
       return { success: true, user: result.user }
@@ -124,7 +124,7 @@ export const requireAuth = (handler: Function) => {
     const session = await auth.api.getSession(request)
     
     if (!session) {
-      return { error: 'Authentication required' }, { status: 401 }
+      throw new VafastError('Authentication required', { status: 401, type: 'UNAUTHORIZED', expose: true })
     }
     
     // 将用户信息添加到请求上下文
@@ -251,18 +251,17 @@ export const auth = new BetterAuth({
 使用角色保护路由：
 
 ```typescript
-import { defineRoutes, createHandler } from 'vafast'
+import { defineRoutes, createHandler, VafastError } from 'vafast'
 
 const requireRole = (role: string) => {
   return async (request: Request) => {
     const session = await auth.api.getSession(request)
     
     if (!session || session.user.role !== role) {
-      return { error: 'Insufficient permissions' }, { status: 403 }
+      throw new VafastError('Insufficient permissions', { status: 403, type: 'FORBIDDEN', expose: true })
     }
     
     request.user = session.user
-    return true
   }
 }
 
@@ -271,8 +270,7 @@ const routes = defineRoutes([
     method: 'GET',
     path: '/api/admin/users',
     handler: createHandler(async ({ request }) => {
-      const authResult = await requireRole('admin')(request)
-      if (authResult !== true) return authResult
+      await requireRole('admin')(request)
       
       const users = await getAllUsers()
       return { users }
@@ -284,7 +282,7 @@ const routes = defineRoutes([
 ## 错误处理
 
 ```typescript
-import { defineRoutes, createHandler } from 'vafast'
+import { defineRoutes, createHandler, VafastError, Type } from 'vafast'
 import { auth } from './auth/config'
 
 const routes = defineRoutes([
@@ -292,22 +290,21 @@ const routes = defineRoutes([
     method: 'POST',
     path: '/api/auth/signin',
     handler: createHandler(async ({ body, request }) => {
-      try {
-        const result = await auth.api.signIn('credentials', {
-          email: body.email,
-          password: body.password,
-          request
-        })
-        
-        if (result.error) {
-          return { error: result.error }, { status: 400 }
-        }
-        
-        return { success: true, user: result.user }
-      } catch (error) {
-        console.error('Authentication error:', error)
-        return { error: 'Internal server error' }, { status: 500 }
+      const result = await auth.api.signIn('credentials', {
+        email: body.email,
+        password: body.password,
+        request
+      })
+      
+      if (result.error) {
+        throw new VafastError(result.error, { status: 400, type: 'AUTH_ERROR', expose: true })
       }
+      
+      return { success: true, user: result.user }
+    }),
+    body: Type.Object({
+      email: Type.String({ format: 'email' }),
+      password: Type.String({ minLength: 6 })
     })
   }
 ])

@@ -427,59 +427,110 @@ type User = Static<typeof userSchema>
 
 ## 错误处理
 
-### ✅ 推荐：使用中间件统一处理错误
+### ✅ 推荐：使用框架内置的 VafastError
 
 ```typescript
-import { json } from 'vafast'
+import { VafastError, defineRoutes, createHandler } from 'vafast'
 
-const errorHandler = async (req: Request, next: () => Promise<Response>) => {
+const routes = defineRoutes([
+  {
+    method: 'GET',
+    path: '/users/:id',
+    handler: createHandler(async ({ params }) => {
+      const user = await db.user.findUnique({ where: { id: params.id } })
+      
+      if (!user) {
+        // 使用 VafastError 抛出错误
+        throw new VafastError('用户不存在', { 
+          status: 404, 
+          type: 'NOT_FOUND',
+          expose: true  // expose: true 会将消息返回给客户端
+        })
+      }
+      
+      return user
+    })
+  }
+])
+
+// 框架内置错误处理器会自动捕获 VafastError 并返回：
+// { "error": "NOT_FOUND", "message": "用户不存在" }
+```
+
+### ✅ 推荐：扩展 VafastError 创建自定义错误类
+
+```typescript
+import { VafastError } from 'vafast'
+
+// 继承 VafastError 创建业务错误
+export class NotFoundError extends VafastError {
+  constructor(resource: string) {
+    super(`${resource} not found`, { 
+      status: 404, 
+      type: 'NOT_FOUND',
+      expose: true 
+    })
+  }
+}
+
+export class UnauthorizedError extends VafastError {
+  constructor(message = '未授权访问') {
+    super(message, { 
+      status: 401, 
+      type: 'UNAUTHORIZED',
+      expose: true 
+    })
+  }
+}
+
+export class ValidationError extends VafastError {
+  constructor(message: string, public details?: Record<string, string>) {
+    super(message, { 
+      status: 400, 
+      type: 'VALIDATION_ERROR',
+      expose: true 
+    })
+  }
+}
+
+// 使用示例
+const routes = defineRoutes([
+  {
+    method: 'GET',
+    path: '/users/:id',
+    handler: createHandler(async ({ params }) => {
+      const user = await db.user.findUnique({ where: { id: params.id } })
+      if (!user) throw new NotFoundError('User')
+      return user
+    })
+  }
+])
+```
+
+### ✅ 可选：自定义错误处理中间件
+
+```typescript
+import { json, VafastError } from 'vafast'
+
+// 自定义错误处理（框架已内置，仅在需要特殊处理时使用）
+const customErrorHandler = async (req: Request, next: () => Promise<Response>) => {
   try {
     return await next()
   } catch (error) {
     console.error('Error:', error)
     
-    if (error instanceof ValidationError) {
-      return json({ error: 'Validation failed', details: error.details }, 400)
+    // VafastError 会被框架自动处理，这里可以处理其他类型的错误
+    if (error instanceof SomeExternalLibraryError) {
+      return json({ error: 'external_error', message: '外部服务错误' }, 502)
     }
     
-    if (error instanceof NotFoundError) {
-      return json({ error: 'Not found' }, 404)
-    }
-    
-    return json({ error: 'Internal server error' }, 500)
+    // 重新抛出让框架处理
+    throw error
   }
 }
 
 const server = new Server(routes)
-server.use(errorHandler)
-```
-
-### ✅ 推荐：使用自定义错误类
-
-```typescript
-// errors.ts
-export class AppError extends Error {
-  constructor(
-    message: string,
-    public statusCode: number = 500,
-    public code?: string
-  ) {
-    super(message)
-    this.name = 'AppError'
-  }
-}
-
-export class NotFoundError extends AppError {
-  constructor(resource: string) {
-    super(`${resource} not found`, 404, 'NOT_FOUND')
-  }
-}
-
-export class ValidationError extends AppError {
-  constructor(public details: Record<string, string>) {
-    super('Validation failed', 400, 'VALIDATION_ERROR')
-  }
-}
+server.use(customErrorHandler)
 ```
 
 ## 测试

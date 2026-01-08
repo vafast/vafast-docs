@@ -53,8 +53,7 @@ export const handler = app.handler
 
 ```typescript
 // src/api/routes.ts
-import { defineRoutes, createHandler } from 'vafast'
-import { Type } from 'vafast'
+import { defineRoutes, createHandler, VafastError, Type } from 'vafast'
 
 export const routes = defineRoutes([
   {
@@ -100,7 +99,7 @@ export const routes = defineRoutes([
       const user = { id: userId, name: 'John Doe', email: 'john@example.com' }
       
       if (!user) {
-        return { error: 'User not found' }, { status: 404 }
+        throw new VafastError('User not found', { status: 404, type: 'NOT_FOUND', expose: true })
       }
       
       return { user }

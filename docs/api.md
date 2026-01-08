@@ -349,30 +349,59 @@ const logMiddleware = createMiddleware({
 ### 内置错误类型
 
 ```typescript
+import { VafastError } from 'vafast'
+
+// VafastError 构造函数签名
 class VafastError extends Error {
+  status: number      // HTTP 状态码，默认 500
+  type: string        // 错误类型，默认 'internal_error'
+  expose: boolean     // 是否暴露错误消息给客户端，默认 false
+  
   constructor(
     message: string,
-    public status: number = 500,
-    public code?: string
-  ) {
-    super(message)
-    this.name = 'VafastError'
-  }
+    options?: {
+      status?: number    // HTTP 状态码
+      type?: string      // 错误类型标识
+      expose?: boolean   // 是否暴露消息给客户端
+      cause?: unknown    // 原始错误
+    }
+  )
 }
 ```
 
 ### 错误响应
 
 ```typescript
-const routes: any[] = [
+import { VafastError, defineRoutes, createHandler } from 'vafast'
+
+const routes = defineRoutes([
   {
     method: 'GET',
     path: '/error',
-    handler: () => {
-      throw new VafastError('Something went wrong', 500, 'INTERNAL_ERROR')
-    }
+    handler: createHandler(() => {
+      // 抛出错误，expose: true 表示消息会返回给客户端
+      throw new VafastError('Something went wrong', { 
+        status: 500, 
+        type: 'INTERNAL_ERROR',
+        expose: true 
+      })
+    })
+  },
+  {
+    method: 'GET',
+    path: '/not-found',
+    handler: createHandler(() => {
+      throw new VafastError('Resource not found', { 
+        status: 404, 
+        type: 'NOT_FOUND',
+        expose: true 
+      })
+    })
   }
-]
+])
+
+// 框架会自动将 VafastError 转换为 JSON 响应：
+// { "error": "NOT_FOUND", "message": "Resource not found" }
 ```
 
 ## 验证配置
