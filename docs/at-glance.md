@@ -83,7 +83,7 @@ export default { port: 3000, fetch: server.fetch }
 
 - **超高性能**: 比 Express/Hono 快约 **1.8x**，达到 ~101K reqs/s
 - **JIT 编译验证器**: Schema 验证器编译缓存，10000 次验证仅需 ~5ms
-- **中间件链预编译**: 路由注册时预编译处理链，运行时零开销
+- **Radix Tree 路由**: O(k) 时间复杂度的高效路由匹配
 - **快速请求解析**: 优化的 Query/Cookie 解析，比标准方法快 2x
 - **类型安全**: 完整的 TypeScript 支持和自动类型推断
 - **灵活中间件**: 可组合的中间件架构，支持全局和路由级
@@ -148,9 +148,9 @@ serve({ fetch: server.fetch, port: 3000 })
 ### 性能优化技术
 
 - **JIT 编译验证器**: TypeBox Schema 编译后缓存，避免重复编译开销
-- **中间件链预编译**: 路由注册时预编译完整处理链，每次请求仅需 0.004ms
 - **快速请求解析**: `parseQueryFast`、`getCookie` 等优化函数，比标准方法快 2x
 - **Radix Tree 路由**: O(k) 时间复杂度的高效路由匹配
+- **轻量中间件**: 灵活的中间件架构，支持全局和路由级
 
 ## TypeScript
 

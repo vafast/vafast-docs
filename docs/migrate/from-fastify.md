@@ -25,7 +25,7 @@ import Benchmark from '../components/fern/benchmark-fastify.vue'
 **Vafast** 是一个高性能的 TypeScript Web 框架，支持 Node.js、Bun 等多种运行时，专注于类型安全、中间件系统和性能优化。设计时强调简单性和开发者友好，提供完整的 TypeScript 支持。
 
 ## 性能
-由于智能路由匹配算法和中间件预编译，Vafast 在性能上相比 Fastify 有显著提高。
+由于 Radix Tree 路由匹配算法和 JIT 编译验证器，Vafast 在性能上相比 Fastify 有显著提高。
 
 <Benchmark />
 

@@ -262,23 +262,6 @@ precompileSchemas([UserSchema, PostSchema])
 
 **性能效果：10000 次验证仅需 ~5ms**
 
-### 中间件链预编译
-
-路由注册时自动预编译完整的中间件链，运行时零开销：
-
-```typescript
-const server = new Server(routes)
-
-// 添加全局中间件后手动触发预编译
-server.use(authMiddleware)
-server.use(logMiddleware)
-server.compile() // 预编译所有路由
-
-// 每次请求直接执行编译好的处理链
-```
-
-**性能效果：1000 次请求仅需 ~4ms，平均每次 0.004ms**
-
 ### 快速请求解析
 
 提供优化的解析函数，比标准方法快约 2x：

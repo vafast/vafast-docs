@@ -4,7 +4,7 @@ title: 快速入门 - Vafast
 
 # 快速入门
 
-Vafast 是一个高性能、类型安全的 TypeScript Web 框架。内置 JIT 编译验证器、中间件预编译等优化技术，比 Express/Hono 快约 **1.8x**。
+Vafast 是一个高性能、类型安全的 TypeScript Web 框架。内置 JIT 编译验证器、Radix Tree 路由等优化技术，比 Express/Hono 快约 **1.8x**。
 
 ## 使用脚手架（推荐）
 
