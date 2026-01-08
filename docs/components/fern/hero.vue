@@ -51,7 +51,7 @@
                     <code
                         class="text-pink-500 font-mono font-medium text-lg bg-pink-200/25 dark:bg-pink-500/20 px-6 py-3 rounded-full"
                     >
-                        npm i vafast
+                        npx create-vafast-app
                     </code>
                     <button
                         id="hero-copy"
@@ -127,7 +127,7 @@ const asset = (path: string) => {
 const copied = ref(false)
 watch(copied, (value) => {
     if (value && window.isSecureContext) {
-        navigator.clipboard.writeText('npm i vafast')
+        navigator.clipboard.writeText('npx create-vafast-app')
 
         setTimeout(() => {
             copied.value = false
