@@ -450,13 +450,7 @@ export default defineConfig({
             },
             {
                 text: 'API 参考',
-                collapsed: true,
-                items: [
-                    {
-                        text: 'API 文档',
-                        link: '/api'
-                    }
-                ]
+                link: '/api'
             }
         ],
         outline: {
