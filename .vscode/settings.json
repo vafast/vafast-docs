@@ -1,11 +1,7 @@
 {
-  "css.validate": false,
-  "scss.validate": false,
-  "less.validate": false,
-  "tailwindCSS.experimental.classRegex": [
-    ["@apply\\s+([^;]*)", "([\\w-]+)"]
-  ],
-  "files.associations": {
-    "*.css": "tailwindcss"
-  }
+    "css.validate": false,
+    "css.lint.unknownAtRules": "ignore",
+    "scss.validate": false,
+    "less.validate": false,
+    "stylelint.enable": false
 }
