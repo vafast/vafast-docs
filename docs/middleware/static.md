@@ -392,11 +392,11 @@ export default {
     fetch: (req: Request) => server.fetch(req)
 }
 
-console.log('🚀 Vafast Static File Server 启动成功！')
+console.log('Vafast Static File Server 启动成功！')
 console.log('📁 公共文件：/public/* (24小时缓存)')
-console.log('🔧 构建资源：/assets/* (1年缓存)')
+console.log('构建资源：/assets/* (1年缓存)')
 console.log('📚 文档文件：/docs/* (无缓存)')
-console.log('📊 总路由数：', allRoutes.length)
+console.log('总路由数：', allRoutes.length)
 ```
 
 ## 测试示例

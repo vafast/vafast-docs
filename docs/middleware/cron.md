@@ -685,11 +685,11 @@ export default {
     fetch: (req: Request) => server.fetch(req)
 }
 
-console.log('🚀 Vafast Cron Management API 服务器启动成功！')
-console.log('📊 健康检查: 每30秒执行一次')
-console.log('💾 数据备份: 每天凌晨2点执行')
+console.log('Vafast Cron Management API 服务器启动成功！')
+console.log('健康检查: 每30秒执行一次')
+console.log('数据备份: 每天凌晨2点执行')
 console.log('🧹 文件清理: 每天凌晨3点执行')
-console.log('🔧 系统维护: 每周日凌晨4点执行')
+console.log('系统维护: 每周日凌晨4点执行')
 ```
 
 ## 测试示例

@@ -6,7 +6,7 @@ title: 安装指南 - Vafast API 客户端
 
 Vafast API 客户端提供了多种安装方式，您可以根据项目需求选择最适合的方法。
 
-## 📦 包管理器安装
+## 包管理器安装
 
 ### 使用 Bun（推荐）
 
@@ -32,7 +32,7 @@ yarn add @vafast/api-client
 pnpm add @vafast/api-client
 ```
 
-## 🔧 开发依赖安装
+## 开发依赖安装
 
 如果您需要在开发环境中使用类型定义或测试工具：
 
@@ -50,7 +50,7 @@ yarn add -D @vafast/api-client
 pnpm add -D @vafast/api-client
 ```
 
-## 📋 系统要求
+## 系统要求
 
 ### Node.js 版本
 - **Node.js**: 18.0.0 或更高版本
@@ -64,7 +64,7 @@ pnpm add -D @vafast/api-client
 - **现代浏览器**: Chrome 88+, Firefox 85+, Safari 14+, Edge 88+
 - **不支持**: Internet Explorer
 
-## 🚀 快速开始
+## 快速开始
 
 ### 1. 创建项目
 
@@ -129,7 +129,7 @@ main()
 npm run src/index.ts
 ```
 
-## ⚙️ 配置选项
+## 配置选项
 
 ### 基础配置
 

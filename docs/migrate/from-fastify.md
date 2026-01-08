@@ -444,7 +444,7 @@ export default { fetch: server.fetch }
 | 特性 | Fastify | Vafast |
 |------|---------|---------|
 | 类型安全 | ⚠️ 需要额外配置 | ✅ 完整的 TypeScript 支持 |
-| 性能 | ✅ 高性能 | 🚀 超高性能 |
+| 性能 | ✅ 高性能 | 超高性能 |
 | Schema 验证 | ✅ JSON Schema | ✅ TypeBox |
 | 中间件系统 | ✅ 钩子系统 | ✅ 灵活可扩展 |
 | 路由定义 | ⚠️ 链式调用 | ✅ 配置对象 |

@@ -54,7 +54,7 @@
                     class="text-4xl text-center font-semibold text-gradient from-sky-500 to-violet-500"
                     v-bind="flyIn(0.4)"
                 >
-                    Gold Sponsors <span class="text-pink-400 ml-0.5">💖</span>
+                    Gold Sponsors
                 </motion.h4>
             </header>
             <motion.ul
@@ -105,7 +105,7 @@
                     class="text-3xl text-center font-semibold text-gradient from-violet-500 to-sky-400"
                     v-bind="flyIn(0.5)"
                 >
-                    Silver Sponsors <span class="text-pink-400 ml-0.5">💞</span>
+                    Silver Sponsors
                 </motion.h4>
             </header>
 
@@ -159,7 +159,6 @@
                     v-bind="flyIn(0.7)"
                 >
                     Individual Sponsors
-                    <span class="text-pink-400 ml-0.5">💕</span>
                 </motion.h4>
             </header>
 

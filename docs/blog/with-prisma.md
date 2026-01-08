@@ -146,7 +146,7 @@ const routes = defineRoutes([
 const server = new Server(routes)
 
 serve({ fetch: server.fetch, port: 3000 }, () => {
-  console.log('🚀 Vafast 正在运行于 http://localhost:3000')
+  console.log('Vafast 正在运行于 http://localhost:3000')
 })
 ```
 
@@ -183,7 +183,7 @@ const routes = defineRoutes([
 const server = new Server(routes)
 
 serve({ fetch: server.fetch, port: 3000 }, () => {
-  console.log('🚀 Vafast 正在运行于 http://localhost:3000')
+  console.log('Vafast 正在运行于 http://localhost:3000')
 })
 ```
 
@@ -255,7 +255,7 @@ const routes = defineRoutes([
 const server = new Server(routes)
 
 serve({ fetch: server.fetch, port: 3000 }, () => {
-  console.log('🚀 Vafast 正在运行于 http://localhost:3000')
+  console.log('Vafast 正在运行于 http://localhost:3000')
 })
 ```
 
@@ -322,7 +322,7 @@ import { userRoutes } from './routes/user'
 const server = new Server([...userRoutes])
 
 serve({ fetch: server.fetch, port: 3000 }, () => {
-  console.log('🚀 Vafast 正在运行于 http://localhost:3000')
+  console.log('Vafast 正在运行于 http://localhost:3000')
 })
 ```
 

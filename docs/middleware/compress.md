@@ -522,11 +522,11 @@ export default {
   fetch: (req: Request) => server.fetch(req)
 }
 
-console.log('🚀 Vafast Compression API 服务器启动成功！')
-console.log('📊 数据端点: GET /api/data (启用 Brotli/GZIP 压缩)')
-console.log('📝 文档端点: GET /api/markdown (启用多种压缩算法)')
+console.log('Vafast Compression API 服务器启动成功！')
+console.log('数据端点: GET /api/data (启用 Brotli/GZIP 压缩)')
+console.log('文档端点: GET /api/markdown (启用多种压缩算法)')
 console.log('🌊 流式端点: GET /api/stream (启用流压缩)')
-console.log('⚡ 优化端点: GET /api/optimized (启用 Brotli 最高质量压缩)')
+console.log('优化端点: GET /api/optimized (启用 Brotli 最高质量压缩)')
 ```
 
 ## 测试示例

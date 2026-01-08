@@ -338,10 +338,10 @@ export default {
   }
 }
 
-console.log('🚀 Bearer Token API 服务器启动成功！')
-console.log('📝 登录端点: POST /login')
+console.log('Bearer Token API 服务器启动成功！')
+console.log('登录端点: POST /login')
 console.log('👤 个人资料: GET /profile (需要 Bearer 令牌)')
-console.log('🔒 管理面板: GET /admin (需要管理员令牌)')
+console.log('管理面板: GET /admin (需要管理员令牌)')
 ```
 
 ## 测试示例

@@ -32,15 +32,15 @@ serve({ fetch: monitored.fetch, port: 3000 })
 
 ```
 ✅ Monitoring enabled
-📊 Config: { slowThreshold: '1000ms', maxRecords: 1000, samplingRate: 1, excludePaths: [] }
+Config: { slowThreshold: '1000ms', maxRecords: 1000, samplingRate: 1, excludePaths: [] }
 ```
 
 每个请求都会记录：
 
 ```
-✅ GET / - 200 (⚡ 0.52ms)
-✅ GET /users - 200 (⚡ 12.34ms)
-❌ GET /not-found - 404 (⚡ 0.31ms)
+✅ GET / - 200 (0.52ms)
+✅ GET /users - 200 (12.34ms)
+❌ GET /not-found - 404 (0.31ms)
 ⚠️ POST /slow - 200 (🐌 1523.45ms)  // 超过阈值显示慢请求
 ```
 
@@ -405,7 +405,7 @@ const routes = defineRoutes([
           <meta http-equiv="refresh" content="5">
           </head>
           <body>
-          <h1>📊 Vafast 监控仪表盘</h1>
+          <h1>Vafast 监控仪表盘</h1>
           
           <div class="grid">
             <div class="card">
@@ -556,8 +556,8 @@ monitoredServer = withMonitoring(server, {
 })
 
 serve({ fetch: monitoredServer.fetch, port: 3000 }, () => {
-  console.log('🚀 Server running on http://localhost:3000')
-  console.log('📊 Dashboard: http://localhost:3000/dashboard')
+  console.log('Server running on http://localhost:3000')
+  console.log('Dashboard: http://localhost:3000/dashboard')
 })
 ```
 

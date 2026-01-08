@@ -6,7 +6,7 @@ title: 关键概念 - Vafast
 
 Vafast 是一个高性能的 TypeScript Web 框架，支持 Node.js、Bun 等多种运行时。了解这些核心概念将帮助你更好地使用 Vafast 构建应用。
 
-## 🏗️ 架构概览
+## 架构概览
 
 Vafast 采用模块化架构设计，主要包含以下核心组件：
 
@@ -16,7 +16,7 @@ Vafast 采用模块化架构设计，主要包含以下核心组件：
 - **Types**: 完整的类型定义系统
 - **Utils**: 工具函数和辅助类
 
-## 🚀 Server 类
+## Server 类
 
 `Server` 类是 Vafast 的核心，继承自 `BaseServer`，提供了完整的 HTTP 服务器功能。
 
@@ -44,7 +44,7 @@ const server = new Server(routes)
 export default { fetch: server.fetch }
 ```
 
-## 🛣️ 路由系统
+## 路由系统
 
 Vafast 的路由系统基于配置对象，支持静态路径、动态参数和嵌套路由。
 
@@ -79,7 +79,7 @@ Vafast 使用智能路径匹配算法，支持：
 2. 动态参数（`:param`）
 3. 通配符（`*`）
 
-## 🔧 中间件系统
+## 中间件系统
 
 中间件是 Vafast 中扩展功能的核心机制，支持全局和路由级中间件。
 
@@ -134,7 +134,7 @@ const server = new Server(routes)
 server.use(loggingMiddleware) // 全局中间件
 ```
 
-## 📝 类型系统
+## 类型系统
 
 Vafast 提供完整的 TypeScript 支持，包括类型安全的处理器和验证器。
 
@@ -179,7 +179,7 @@ const routes = defineRoutes([
 ])
 ```
 
-## 🎯 路由处理器工厂
+## 路由处理器工厂
 
 `createHandler` 函数用于创建类型安全的路由处理器，自动处理参数解构和类型推断。
 
@@ -232,7 +232,7 @@ Vafast 的请求处理流程如下：
 6. **处理器执行**: 执行路由处理器
 7. **响应返回**: 返回 HTTP 响应
 
-## 🚀 性能优化
+## 性能优化
 
 Vafast 内置多项性能优化技术，无需额外配置即可获得高性能：
 

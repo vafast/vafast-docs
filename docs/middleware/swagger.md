@@ -696,9 +696,9 @@ export default {
     }
 }
 
-console.log('🚀 Vafast Swagger Example Server 启动成功！')
+console.log('Vafast Swagger Example Server 启动成功！')
 console.log('📚 API 文档：/swagger')
-console.log('🔗 OpenAPI 规范：/swagger/json')
+console.log('OpenAPI 规范：/swagger/json')
 console.log('🌐 健康检查：/api/health')
 ```
 

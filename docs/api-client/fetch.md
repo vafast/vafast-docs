@@ -6,7 +6,7 @@ title: 基础用法 - Vafast API 客户端
 
 Vafast API 客户端提供了简单而强大的 API 来发送 HTTP 请求。本章将介绍基本的用法和常见的操作模式。
 
-## 🚀 创建客户端
+## 创建客户端
 
 首先，创建一个 API 客户端实例：
 
@@ -117,7 +117,7 @@ const response = await client.delete('/users/:id', {
 })
 ```
 
-## 🔧 参数处理
+## 参数处理
 
 ### 路径参数
 
@@ -201,7 +201,7 @@ const response = await client.post('/logs', 'User logged in at 2024-01-01', {
 })
 ```
 
-## 📋 响应处理
+## 响应处理
 
 ### 基本响应结构
 
@@ -280,7 +280,7 @@ try {
 }
 ```
 
-## 🎛️ 请求配置
+## 请求配置
 
 ### 全局配置
 
@@ -370,7 +370,7 @@ const client = new VafastApiClient({
 })
 ```
 
-## 💾 缓存机制
+## 缓存机制
 
 ### 启用缓存
 
@@ -403,7 +403,7 @@ client.clearCache('/users')
 client.clearCache()
 ```
 
-## 📊 请求统计
+## 请求统计
 
 ### 启用统计
 
@@ -437,7 +437,7 @@ client.on('error', (error) => {
 })
 ```
 
-## 🔗 完整示例
+## 完整示例
 
 ```typescript
 import { VafastApiClient } from '@vafast/api-client'

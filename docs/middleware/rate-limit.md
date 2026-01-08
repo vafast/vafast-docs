@@ -626,9 +626,9 @@ export default {
   }
 }
 
-console.log('🚀 Vafast Rate Limiting API 服务器启动成功！')
-console.log('📊 不同端点应用了不同级别的速率限制')
-console.log('🔒 管理 API：5 请求/分钟')
+console.log('Vafast Rate Limiting API 服务器启动成功！')
+console.log('不同端点应用了不同级别的速率限制')
+console.log('管理 API：5 请求/分钟')
 console.log('👤 用户 API：50 请求/5分钟')
 console.log('🌐 公开 API：1000 请求/小时')
 console.log('✅ 健康检查和状态端点无限制')

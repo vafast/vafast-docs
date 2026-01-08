@@ -669,12 +669,12 @@ export default {
   fetch: (req: Request) => server.fetch(req),
 }
 
-console.log('🚀 Vafast Security Headers API 服务器启动成功！')
-console.log('🔒 基本安全: GET /basic')
-console.log('🛡️ 标准安全: GET /standard')
-console.log('⚡ 严格安全: GET /strict')
-console.log('🎯 自定义安全: GET /custom')
-console.log('📊 CSP 报告: POST /csp-report')
+console.log('Vafast Security Headers API 服务器启动成功！')
+console.log('基本安全: GET /basic')
+console.log('标准安全: GET /standard')
+console.log('严格安全: GET /strict')
+console.log('自定义安全: GET /custom')
+console.log('CSP 报告: POST /csp-report')
 ```
 
 ## 测试示例

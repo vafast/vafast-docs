@@ -844,8 +844,8 @@ export default {
     }
 }
 
-console.log('🚀 E-commerce API with OpenTelemetry 服务器启动成功！')
-console.log('📊 所有请求都将被自动追踪和监控')
+console.log('E-commerce API with OpenTelemetry 服务器启动成功！')
+console.log('所有请求都将被自动追踪和监控')
 console.log('🔍 查看 Jaeger 或其他 OpenTelemetry 后端以获取追踪数据')
 ```
 

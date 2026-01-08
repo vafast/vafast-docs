@@ -481,11 +481,11 @@ export default {
   }
 }
 
-console.log('🚀 Vafast Server Timing API 服务器启动成功！')
-console.log('📊 开发环境：所有 API 端点都将被监控')
-console.log('🔒 生产环境：Server Timing 默认禁用')
+console.log('Vafast Server Timing API 服务器启动成功！')
+console.log('开发环境：所有 API 端点都将被监控')
+console.log('生产环境：Server Timing 默认禁用')
 console.log('👑 管理员端点：需要正确的 x-admin-key 头部')
-console.log('💚 健康检查：无性能监控')
+console.log('健康检查：无性能监控')
 ```
 
 ## 测试示例

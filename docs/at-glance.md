@@ -12,7 +12,7 @@ import Playground from './components/nearl/playground.vue'
 
 Vafast 不只是一个框架，更是一种 **结构、清晰、可控** 的开发哲学。
 
-## 🎯 Vafast 哲学
+## Vafast 哲学
 
 <div class="philosophy-grid">
 
@@ -69,7 +69,7 @@ export default { port: 3000, fetch: server.fetch }
 }
 </style>
 
-## ✨ 核心特性
+## 核心特性
 
 - ✅ **结构优先的路由** — 用声明式对象定义整个 API，所见即所得
 - ✅ **可组合的中间件** — 显式组合，无装饰器，无全局污染
@@ -79,7 +79,7 @@ export default { port: 3000, fetch: server.fetch }
 - ✅ **零样板代码** — 一个文件即可运行，可选 `npx create-vafast-app` 快速开始
 - ✅ **类型安全** — 路由、处理器、响应，全部 TypeScript 类型推断
 
-## 🚀 技术特性
+## 技术特性
 
 - **超高性能**: 比 Express/Hono 快约 **1.8x**，达到 ~101K reqs/s
 - **JIT 编译验证器**: Schema 验证器编译缓存，10000 次验证仅需 ~5ms

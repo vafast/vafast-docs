@@ -523,13 +523,13 @@ export default {
   fetch: (req: Request) => server.fetch(req),
 }
 
-console.log('🚀 Vafast IP Tracking API 服务器启动成功！')
+console.log('Vafast IP Tracking API 服务器启动成功！')
 console.log('📱 基本 IP 获取: GET /basic')
-console.log('🎯 自定义头部: GET /custom')
-console.log('🔒 严格检查: GET /strict')
+console.log('自定义头部: GET /custom')
+console.log('严格检查: GET /strict')
 console.log('🔄 多实例跟踪: GET /multi')
 console.log('👑 管理访问: GET /admin')
-console.log('📝 活动记录: POST /api/log')
+console.log('活动记录: POST /api/log')
 ```
 
 ## 测试示例
