@@ -32,7 +32,7 @@
             <p
                 class="text-base md:text-lg text-gray-400 dark:text-gray-500 leading-relaxed w-full max-w-2xl text-center mb-8"
             >
-                声明式路由定义 · 自动类型推断 · Schema 验证 · 101K req/s
+                声明式路由定义 · 自动类型推断 · Schema 验证 · 极致性能
             </p>
             <section
                 class="flex flex-col sm:flex-row items-center w-full md:w-auto gap-4 mb-10"
