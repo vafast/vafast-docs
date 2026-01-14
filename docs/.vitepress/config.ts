@@ -443,6 +443,10 @@ export default defineConfig({
                 collapsed: true,
                 items: [
                     {
+                        text: '脚手架工具',
+                        link: '/tools/create-app'
+                    },
+                    {
                         text: 'CLI 工具',
                         link: '/tools/cli'
                     },

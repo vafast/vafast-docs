@@ -505,6 +505,146 @@ const routes = defineRoutes([
 type Api = InferEden<typeof routes>
 ```
 
+### 5. 封装自定义路由定义器（withContext）
+
+当中间件在父级定义时，可以使用 `withContext` 创建自定义的路由定义器，让子路由自动获得类型推断。
+
+#### 基本用法
+
+```typescript
+import { defineRoute, defineRoutes, withContext, defineMiddleware } from 'vafast'
+
+// 定义上下文类型
+type AuthContext = { userInfo: { id: string; role: string } }
+
+// 创建认证中间件
+const authMiddleware = defineMiddleware<AuthContext>(async (req, next) => {
+  const userInfo = await verifyToken(req)
+  return next({ userInfo })
+})
+
+// 使用 withContext 创建自定义路由定义器
+const defineAuthRoute = withContext<AuthContext>()
+
+const routes = defineRoutes([
+  defineRoute({
+    path: '/api',
+    middleware: [authMiddleware],  // 父级中间件注入 userInfo
+    children: [
+      defineAuthRoute({  // ← 使用自定义路由定义器
+        method: 'GET',
+        path: '/profile',
+        handler: ({ userInfo }) => {
+          // ✅ userInfo 自动有类型！
+          return { id: userInfo.id, role: userInfo.role }
+        }
+      })
+    ]
+  })
+])
+```
+
+#### 封装多个路由定义器
+
+在实际项目中，你可以根据不同的上下文需求封装多个路由定义器：
+
+```typescript
+// middleware/index.ts
+import { withContext } from 'vafast'
+import type { UserInfo } from './authenticateJwt'
+
+// 定义上下文类型
+type AuthContext = { userInfo: UserInfo }
+type AuthWithAppContext = { userInfo: UserInfo; appId: string }
+type AppContext = { appId: string }
+
+/**
+ * 带 UserInfo 上下文的路由定义器
+ * 用于需要认证但不需要 app-id 的路由
+ */
+export const defineAuthRoute = withContext<AuthContext>()
+
+/**
+ * 带 UserInfo 和 appId 上下文的路由定义器
+ * 用于需要认证且需要 app-id 的路由（最常用）
+ */
+export const defineAuthRouteWithAppId = withContext<AuthWithAppContext>()
+
+/**
+ * 只带 appId 上下文的路由定义器
+ * 用于需要 app-id 但不需要 userInfo 的路由
+ */
+export const defineRouteWithAppId = withContext<AppContext>()
+
+/**
+ * 带可选 UserInfo 上下文的路由定义器
+ * 用于可能有/没有认证的路由
+ */
+export const defineOptionalAuthRoute = withContext<{ userInfo?: UserInfo }>()
+```
+
+#### 使用示例
+
+```typescript
+// routes/apps.ts
+import { defineRoutes, defineRoute } from 'vafast'
+import { authenticate, guardAuth, guardUser } from '~/middleware'
+import { defineAuthRoute, defineAuthRouteWithAppId } from '~/middleware'
+
+export const appsRoutes = defineRoutes([
+  defineRoute({
+    path: '/apps',
+    name: '应用',
+    description: '应用管理相关接口',
+    middleware: [authenticate],  // 父级中间件注入 userInfo
+    children: [
+      // 使用 defineAuthRoute（只需要 userInfo）
+      defineAuthRoute({
+        method: 'GET',
+        path: '/list',
+        name: '获取应用列表',
+        handler: ({ userInfo }) => {
+          // ✅ userInfo 自动有类型
+          return getAppsByUserId(userInfo.id)
+        }
+      }),
+      
+      // 使用 defineAuthRouteWithAppId（需要 userInfo 和 appId）
+      defineAuthRouteWithAppId({
+        method: 'POST',
+        path: '/update',
+        name: '更新应用',
+        middleware: [guardAuth],  // guardAuth 会注入 appId
+        handler: ({ userInfo, appId }) => {
+          // ✅ userInfo 和 appId 都有类型
+          return updateApp(appId, userInfo.id)
+        }
+      }),
+      
+      // 使用 defineRouteWithAppId（只需要 appId）
+      defineRouteWithAppId({
+        method: 'GET',
+        path: '/:appId/info',
+        middleware: [guardAuth],  // guardAuth 会注入 appId
+        handler: ({ appId }) => {
+          // ✅ appId 有类型
+          return getAppInfo(appId)
+        }
+      })
+    ]
+  })
+])
+```
+
+#### 优势
+
+1. **类型安全**：子路由自动获得父级中间件注入的上下文类型
+2. **代码复用**：封装一次，多处使用
+3. **清晰明确**：通过命名就能知道路由需要什么上下文
+4. **易于维护**：上下文类型集中管理，修改时只需更新一处
+
+> 📖 更多详情请查看 [withContext 使用指南](/essential/with-context)（如果存在）或参考框架源码。
+
 ## 路由类型总结
 
 | 类型/函数 | 说明 | 用途 |
