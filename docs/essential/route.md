@@ -285,3 +285,43 @@ type Api = InferEden<typeof routes>
 > - Handler 函数直接定义，自动获得类型推断
 > - 类型安全完全保留，支持端到端类型推断
 
+### 5. 使用扩展字段
+
+Vafast 支持在路由定义中添加任意扩展字段，用于 Webhook、权限、计费等场景：
+
+```typescript
+import { defineRoute, defineRoutes, getRouteRegistry, defineMiddleware } from 'vafast'
+
+// 计费中间件
+const billingMiddleware = defineMiddleware(async (req, next) => {
+  const registry = getRouteRegistry()
+  const route = registry.get(req.method, new URL(req.url).pathname)
+  
+  if (route?.billing) {
+    await chargeUser(req, route.billing)
+  }
+  
+  return next()
+})
+
+const routes = defineRoutes([
+  defineRoute({
+    method: 'POST',
+    path: '/ai/generate',
+    name: 'AI 生成',
+    // ✨ 扩展字段：计费配置
+    billing: { price: 0.01, currency: 'USD', unit: 'request' },
+    // ✨ 扩展字段：Webhook 事件
+    webhook: { eventKey: 'ai.generate' },
+    // ✨ 扩展字段：权限要求
+    permission: 'ai.generate',
+    middleware: [billingMiddleware],
+    handler: async ({ body }) => {
+      return await generateAI(body.prompt)
+    }
+  })
+])
+```
+
+更多详情请查看 [路由指南 - 扩展字段](/routing#扩展字段-声明式元数据)。
+

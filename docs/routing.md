@@ -516,6 +516,183 @@ type Api = InferEden<typeof routes>
 | `Middleware` | 中间件类型 | 类型约束 |
 | `defineRoutes()` | 创建路由数组 | 自动保留字面量类型，支持端到端类型推断 |
 
+## 扩展字段 — 声明式元数据
+
+Vafast 的声明式路由支持**任意扩展字段**，让路由定义成为业务逻辑的单一数据源。你可以直接在路由定义中添加自定义字段，用于 Webhook、权限、计费、审计等场景。
+
+### 基本用法
+
+```typescript
+import { Server, defineRoute, defineRoutes } from 'vafast'
+
+const routes = defineRoutes([
+  defineRoute({
+    method: 'POST',
+    path: '/auth/signIn',
+    name: '用户登录',
+    description: '用户通过邮箱密码登录',
+    handler: signInHandler,
+    // ✨ 扩展字段：Webhook 事件
+    webhook: { eventKey: 'auth.signIn', enabled: true },
+    // ✨ 扩展字段：权限要求
+    permission: 'auth.signIn',
+    // ✨ 扩展字段：计费配置
+    billing: { price: 0, currency: 'USD' }, // 免费
+  }),
+  defineRoute({
+    method: 'POST',
+    path: '/ai/generate',
+    name: 'AI 生成',
+    description: '生成 AI 内容',
+    handler: generateAIHandler,
+    // ✨ 扩展字段：按请求计费
+    billing: { price: 0.01, currency: 'USD', unit: 'request' },
+    permission: 'ai.generate',
+  }),
+  defineRoute({
+    method: 'POST',
+    path: '/ai/chat',
+    name: 'AI 对话',
+    handler: chatAIHandler,
+    // ✨ 扩展字段：按 token 计费
+    billing: { price: 0.0001, currency: 'USD', unit: 'token' },
+    permission: 'ai.chat',
+  }),
+])
+```
+
+### 在中间件中使用扩展字段
+
+中间件可以通过 `RouteRegistry` 读取路由元数据：
+
+```typescript
+import { defineMiddleware, getRouteRegistry } from 'vafast'
+
+// 计费中间件：基于路由元数据自动计费
+const billingMiddleware = defineMiddleware(async (req, next) => {
+  const registry = getRouteRegistry()
+  const url = new URL(req.url)
+  const route = registry.get(req.method, url.pathname)
+  
+  if (route?.billing) {
+    const { price, currency, unit } = route.billing
+    const userId = getUserId(req)
+    
+    // 执行计费逻辑
+    await chargeUser(userId, {
+      api: `${req.method} ${url.pathname}`,
+      price,
+      currency,
+      unit,
+    })
+  }
+  
+  return next()
+})
+
+// 权限中间件：基于路由元数据检查权限
+const permissionMiddleware = defineMiddleware(async (req, next) => {
+  const registry = getRouteRegistry()
+  const url = new URL(req.url)
+  const route = registry.get(req.method, url.pathname)
+  
+  if (route?.permission) {
+    const user = await getUser(req)
+    if (!hasPermission(user, route.permission)) {
+      return new Response('Forbidden', { status: 403 })
+    }
+  }
+  
+  return next()
+})
+```
+
+## 路由注册表 (RouteRegistry)
+
+`RouteRegistry` 提供路由元信息的收集和查询能力，适用于 API 文档生成、Webhook 事件注册、权限检查、按 API 计费等场景。
+
+### 基本用法
+
+```typescript
+import { Server, defineRoute, defineRoutes, getRouteRegistry } from 'vafast'
+
+const routes = defineRoutes([
+  defineRoute({
+    method: 'POST',
+    path: '/auth/signIn',
+    name: '用户登录',
+    description: '用户通过邮箱密码登录',
+    handler: signInHandler,
+    webhook: { eventKey: 'auth.signIn' },
+    permission: 'auth.signIn',
+  }),
+  defineRoute({
+    method: 'GET',
+    path: '/users',
+    handler: getUsersHandler,
+    permission: 'users.read',
+  }),
+])
+
+const server = new Server(routes)
+
+// Server 创建时自动设置全局注册表，直接使用即可
+const registry = getRouteRegistry()
+
+// 查询路由元信息
+const route = registry.get('POST', '/auth/signIn')
+console.log(route?.name)        // '用户登录'
+console.log(route?.webhook)     // { eventKey: 'auth.signIn' }
+console.log(route?.permission)  // 'auth.signIn'
+```
+
+### 筛选路由
+
+```typescript
+// 筛选有特定字段的路由
+const webhookRoutes = registry.filter('webhook')      // 所有 Webhook 事件
+const paidRoutes = registry.filter('billing')         // 所有付费 API
+const aiRoutes = registry.filterBy(r => r.permission?.startsWith('ai.')) // AI 相关 API
+
+// 按分类获取
+const authRoutes = registry.getByCategory('auth')
+const aiCategoryRoutes = registry.getByCategory('ai')
+
+// 获取所有分类
+const categories = registry.getCategories()  // ['auth', 'users']
+```
+
+### 便捷函数
+
+```typescript
+import {
+  getRouteRegistry,  // 获取全局注册表实例
+  getRoute,          // 快速查询单个路由
+  getAllRoutes,      // 获取所有路由
+  filterRoutes,      // 按字段筛选
+  getRoutesByMethod, // 按 HTTP 方法获取
+} from 'vafast'
+
+// 方式一：使用全局注册表实例
+const registry = getRouteRegistry()
+const route = registry.get('POST', '/users')
+
+// 方式二：使用便捷函数（推荐，更简洁）
+const route = getRoute('POST', '/users')
+const allRoutes = getAllRoutes()
+const webhookRoutes = filterRoutes('webhook')
+const getRoutes = getRoutesByMethod('GET')
+const postRoutes = getRoutesByMethod('POST')
+```
+
+### 扩展字段的优势
+
+1. **单一数据源**：路由定义包含所有元数据，无需额外配置文件
+2. **类型安全**：扩展字段在 TypeScript 中完全类型化
+3. **运行时查询**：通过 `RouteRegistry` API 动态查询和筛选
+4. **业务集成**：中间件可直接读取路由元数据，实现计费、权限、审计等功能
+5. **API 网关友好**：声明式配置完美适配网关场景
+
 ## 功能总结
 
 Vafast 的路由系统提供了：
@@ -529,6 +706,8 @@ Vafast 的路由系统提供了：
 - ✅ **灵活的中间件系统** - 路由级和组级中间件
 - ✅ **Schema 验证与类型推导** - 配合 TypeBox 实现运行时验证
 - ✅ **端到端类型安全** - 配合 vafast-api-client 实现 API 类型推断
+- ✅ **扩展字段** - 支持任意自定义字段，用于 Webhook、权限、计费等场景
+- ✅ **RouteRegistry** - 路由元信息查询和筛选 API
 
 ### 下一步
 
