@@ -223,17 +223,15 @@ const { data } = await api.profile.patch({
 ```typescript twoslash
 // @errors: 2345
 import { eden, type InferEden } from '@vafast/api-client'
-import { defineRoutes, createHandler, Type } from 'vafast'
+import { defineRoute, defineRoutes, Type } from 'vafast'
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'PUT',
     path: '/user',
-    handler: createHandler(
-      { body: Type.Object({ username: Type.String(), password: Type.String() }) },
-      ({ body }) => ({ success: true, message: '用户创建成功' })
-    )
-  }
+    schema: { body: Type.Object({ username: Type.String(), password: Type.String() }) },
+    handler: ({ body }) => ({ success: true, message: '用户创建成功' })
+  })
 ])
 
 type Api = InferEden<typeof routes>

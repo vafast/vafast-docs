@@ -202,23 +202,23 @@ serve({ fetch: server.fetch, port: 3000 })
 ### 带参数的路由
 
 ```typescript
-import { Server, defineRoutes, createHandler, serve } from 'vafast'
+import { Server, defineRoute, defineRoutes, serve } from 'vafast'
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/users/:id',
-    handler: createHandler(({ params }) => {
+    handler: ({ params }) => {
       return `User ID: ${params.id}`
-    })
-  },
-  {
+    }
+  }),
+  defineRoute({
     method: 'POST',
     path: '/users',
-    handler: createHandler(async ({ body }) => {
+    handler: async ({ body }) => {
       return { success: true, user: body }
-    })
-  }
+    }
+  })
 ])
 
 const server = new Server(routes)
@@ -229,7 +229,7 @@ serve({ fetch: server.fetch, port: 3000 })
 ### 使用 Schema 验证
 
 ```typescript
-import { Server, defineRoutes, createHandler, serve, Type } from 'vafast'
+import { Server, defineRoute, defineRoutes, serve, Type } from 'vafast'
 
 const UserSchema = Type.Object({
   name: Type.String({ minLength: 1 }),
@@ -238,17 +238,15 @@ const UserSchema = Type.Object({
 })
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'POST',
     path: '/users',
-    handler: createHandler(
-      { body: UserSchema },
-      ({ body }) => {
-        // body 已验证并自动推导类型
-        return { success: true, user: body }
-      }
-    )
-  }
+    schema: { body: UserSchema },
+    handler: ({ body }) => {
+      // body 已验证并自动推导类型
+      return { success: true, user: body }
+    }
+  })
 ])
 
 const server = new Server(routes)

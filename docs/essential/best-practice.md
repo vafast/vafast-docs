@@ -41,33 +41,29 @@ Vafast 对文件夹结构没有固定看法，留给您 **自行决定** 如何�
 
 ```typescript [auth/routes.ts]
 // 路由定义处理 HTTP 相关，如路由、请求验证
-import { defineRoutes, createHandler, Type } from 'vafast'
+import { defineRoute, defineRoutes, Type } from 'vafast'
 import { AuthService } from './service'
 import { AuthModel } from './model'
 
 export const authRoutes = defineRoutes([
-  {
+  defineRoute({
     method: 'POST',
     path: '/auth/sign-in',
-    handler: createHandler(
-      { body: AuthModel.signInBody },
-      async ({ body }) => {
-        const response = await AuthService.signIn(body)
-			return response
-      }
-    )
-  },
-  {
+    schema: { body: AuthModel.signInBody },
+    handler: async ({ body }) => {
+      const response = await AuthService.signIn(body)
+      return response
+    }
+  }),
+  defineRoute({
     method: 'POST',
     path: '/auth/sign-up',
-    handler: createHandler(
-      { body: AuthModel.signUpBody },
-      async ({ body }) => {
-        const user = await AuthService.signUp(body)
-        return user
-		}
-	)
-  }
+    schema: { body: AuthModel.signUpBody },
+    handler: async ({ body }) => {
+      const user = await AuthService.signUp(body)
+      return user
+    }
+  })
 ])
 ```
 
@@ -158,19 +154,19 @@ serve({ fetch: server.fetch, port: 3000 }, () => {
 使用 `defineRoutes` 定义路由数组，获得更好的类型推断：
 
 ```typescript
-import { defineRoutes, createHandler } from 'vafast'
+import { defineRoute, defineRoutes } from 'vafast'
 
 export const userRoutes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/users',
-    handler: createHandler(() => getUsers())
-  },
-  {
+    handler: () => getUsers()
+  }),
+  defineRoute({
     method: 'GET',
     path: '/users/:id',
-    handler: createHandler(({ params }) => getUserById(params.id))
-  }
+    handler: ({ params }) => getUserById(params.id)
+  })
 ])
 ```
 
@@ -230,18 +226,16 @@ export abstract class MathService {
 }
 
 // routes.ts
-import { defineRoutes, createHandler, Type } from 'vafast'
+import { defineRoute, defineRoutes, Type } from 'vafast'
 import { MathService } from './services/math'
 
 export const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/fibo/:n',
-    handler: createHandler(
-      { params: Type.Object({ n: Type.String() }) },
-      ({ params }) => MathService.fibo(parseInt(params.n))
-    )
-  }
+    schema: { params: Type.Object({ n: Type.String() }) },
+    handler: ({ params }) => MathService.fibo(parseInt(params.n))
+  })
 ])
 ```
 
@@ -252,10 +246,10 @@ export const routes = defineRoutes([
 如果逻辑依赖请求（如身份验证），推荐使用中间件：
 
 ```typescript
-import { defineRoutes, createHandler, json } from 'vafast'
+import { defineRoute, defineRoutes, defineMiddleware, json } from 'vafast'
 
 // 身份验证中间件
-const authMiddleware = async (req: Request, next: () => Promise<Response>) => {
+const authMiddleware = defineMiddleware(async (req, next) => {
   const token = req.headers.get('authorization')?.replace('Bearer ', '')
   
   if (!token) {
@@ -267,23 +261,27 @@ const authMiddleware = async (req: Request, next: () => Promise<Response>) => {
     return json({ error: 'Invalid token' }, 401)
   }
   
-  // 将用户信息附加到请求
-  ;(req as any).user = user
-  return await next()
-}
+  // 通过 next 传递用户信息
+  return await next({ user })
+})
 
 export const protectedRoutes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/profile',
     middleware: [authMiddleware],
-    handler: createHandler(({ req }) => {
-      const user = (req as any).user
+    handler: ({ user }) => {
+      // user 自动有类型
       return { id: user.id, username: user.username }
-    })
-  }
+    }
+  })
 ])
 ```
+
+> **新框架用法说明**：
+> - 使用 `defineMiddleware` 定义中间件
+> - 通过 `next({ user })` 传递上下文
+> - Handler 自动获得类型推断，无需手动类型断言
 
 ### ❌ 不推荐：在服务中处理 HTTP 响应
 
@@ -316,14 +314,14 @@ class UserService {
 {
   method: 'GET',
   path: '/users/:id',
-  handler: createHandler(async ({ params }) => {
+  handler: async ({ params }) => {
     const user = await UserService.getUser(params.id)
     if (!user) {
       throw err.notFound('User not found')
     }
     return user
-  })
-}
+  }
+})
 ```
 
 ## 模型（Schema）
@@ -430,13 +428,13 @@ type User = Static<typeof userSchema>
 ### ✅ 推荐：使用 err() 错误工具函数
 
 ```typescript
-import { defineRoutes, createHandler, err } from 'vafast'
+import { defineRoute, defineRoutes, err } from 'vafast'
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/users/:id',
-    handler: createHandler(async ({ params }) => {
+    handler: async ({ params }) => {
       const user = await db.user.findUnique({ where: { id: params.id } })
       
       if (!user) {
@@ -445,8 +443,8 @@ const routes = defineRoutes([
       }
       
       return user
-    })
-  }
+    }
+  })
 ])
 
 // 框架内置错误处理器会自动捕获错误并返回：
@@ -506,12 +504,12 @@ const routes = defineRoutes([
   {
     method: 'GET',
     path: '/users/:id',
-    handler: createHandler(async ({ params }) => {
+    handler: async ({ params }) => {
       const user = await db.user.findUnique({ where: { id: params.id } })
       if (!user) throw new NotFoundError('User')
       return user
-    })
-  }
+    }
+  })
 ])
 ```
 
@@ -538,7 +536,7 @@ const customErrorHandler = async (req: Request, next: () => Promise<Response>) =
 }
 
 const server = new Server(routes)
-server.use(customErrorHandler)
+server.useGlobalMiddleware(customErrorHandler)
 ```
 
 ## 测试
@@ -547,14 +545,14 @@ server.use(customErrorHandler)
 
 ```typescript
 import { describe, it, expect } from 'vitest'
-import { Server, defineRoutes, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/',
-    handler: createHandler(() => 'Hello World')
-  }
+    handler: () => 'Hello World'
+  })
 ])
 
 const server = new Server(routes)

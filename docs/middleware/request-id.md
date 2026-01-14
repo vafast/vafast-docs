@@ -15,21 +15,21 @@ npm install @vafast/request-id
 ## 使用
 
 ```typescript
-import { Server, defineRoutes, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { requestId } from '@vafast/request-id'
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/',
-    handler: createHandler(({ requestId }) => {
+    handler: ({ requestId }) => {
       return { requestId, message: 'Hello World' }
-    })
-  }
+    }
+  })
 ])
 
 const server = new Server(routes)
-server.use(requestId())
+server.useGlobalMiddleware(requestId())
 
 export default { fetch: server.fetch }
 ```

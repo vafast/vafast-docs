@@ -23,23 +23,23 @@ npm install @vafast/webhook
 ## 快速开始
 
 ```typescript
-import { Server, defineRoutes, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { webhook, defineWebhooks } from '@vafast/webhook'
 
 // 定义路由，声明 Webhook
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'POST',
     path: '/users',
-    handler: createHandler(({ body }) => {
+    handler: ({ body }) => {
       return { id: '123', ...body }
-    }),
+    },
     webhook: {
       eventKey: 'user.created',
       name: '用户创建',
       description: '当新用户注册时触发'
     }
-  }
+  })
 ])
 
 // 定义 Webhook 订阅
@@ -54,7 +54,7 @@ const webhooks = defineWebhooks([
 const server = new Server(routes)
 
 // 使用 Webhook 中间件
-server.use(webhook({
+server.useGlobalMiddleware(webhook({
   storage: webhooks
 }))
 

@@ -25,15 +25,15 @@ npm install @vafast/html
 ## 快速开始
 
 ```typescript
-import { Server, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { html } from '@vafast/html'
 
 // 定义路由
-const routes = [
-  {
+const routes = defineRoutes([
+  defineRoute({
     method: 'GET',
     path: '/',
-    handler: createHandler(() => {
+    handler: () => {
       return `
         <!DOCTYPE html>
         <html>
@@ -45,20 +45,18 @@ const routes = [
           </body>
         </html>
       `
-    })
-  }
-]
+    }
+  })
+])
 
 // 创建服务器
 const server = new Server(routes)
 
-// 导出 fetch 函数，应用 HTML 中间件
-export default {
-  fetch: (req: Request) => {
-    // 应用 HTML 中间件
-    return html()(req, () => server.fetch(req))
-  }
-}
+// 应用 HTML 中间件
+server.useGlobalMiddleware(html())
+
+// 导出 fetch 函数
+export default { fetch: server.fetch }
 ```
 
 ## 基本用法

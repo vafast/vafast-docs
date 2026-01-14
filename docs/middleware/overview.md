@@ -39,19 +39,19 @@ Vafast 旨在实现模块化和轻量化。
 ## 快速示例
 
 ```typescript
-import { Server, defineRoutes, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { cors } from '@vafast/cors'
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/api/users',
-    handler: createHandler(() => ({ users: [] }))
-  }
+    handler: () => ({ users: [] })
+  })
 ])
 
 const server = new Server(routes)
-server.use(cors())
+server.useGlobalMiddleware(cors())
 
 export default { fetch: server.fetch }
 ```

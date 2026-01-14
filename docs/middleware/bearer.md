@@ -17,45 +17,46 @@ npm install @vafast/bearer
 ## 基本用法
 
 ```typescript
-import { Server, createHandler } from 'vafast'
-import { bearer, createTypedHandler } from '@vafast/bearer'
+import { Server, defineRoute, defineRoutes } from 'vafast'
+import { bearer } from '@vafast/bearer'
 
 // 定义路由处理器
-const routes = [
-  {
+const routes = defineRoutes([
+  defineRoute({
     method: 'GET',
     path: '/',
-    handler: createHandler(() => {
+    handler: () => {
       return { message: 'Bearer Token API' }
-    })
-  },
-  {
+    }
+  }),
+  defineRoute({
     method: 'GET',
     path: '/sign',
-    handler: createTypedHandler({}, ({ bearer }) => {
+    middleware: [bearer()],
+    handler: ({ bearer: bearerToken }) => {
       // 访问 bearer 令牌，具有完整的类型安全
-      if (!bearer) {
+      if (!bearerToken) {
         return {
           error: 'Unauthorized',
           message: 'Bearer token required'
         }
       }
-      return { token: bearer }
-    })
-  }
-]
+      return { token: bearerToken }
+    }
+  })
+])
 
 // 创建服务器
 const server = new Server(routes)
 
-// 导出 fetch 函数，应用 bearer 中间件
-export default {
-  fetch: (req: Request) => {
-    // 应用 bearer 中间件
-    return bearer()(req, () => server.fetch(req))
-  }
-}
+// 导出 fetch 函数
+export default { fetch: server.fetch }
 ```
+
+> **新框架用法说明**：
+> - 使用 `defineRoute` 定义路由
+> - Bearer 中间件通过 `middleware` 字段应用
+> - Handler 自动获得 `bearer` 参数的类型推断
 
 ## 配置选项
 

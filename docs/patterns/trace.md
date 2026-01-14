@@ -9,15 +9,15 @@ Vafast 提供了**零外部依赖**的内置监控系统，帮助您追踪请求
 ## 快速开始
 
 ```typescript
-import { Server, defineRoutes, createHandler, serve } from 'vafast'
+import { Server, defineRoute, defineRoutes, serve } from 'vafast'
 import { withMonitoring } from 'vafast/monitoring'
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/',
-    handler: createHandler(() => 'Hello Vafast!')
-  }
+    handler: () => 'Hello Vafast!'
+  })
 ])
 
 const server = new Server(routes)
@@ -211,61 +211,61 @@ console.log(`P99: ${p99}ms`)  // 99% 请求在此时间内完成
 ## 暴露监控端点
 
 ```typescript
-import { Server, defineRoutes, createHandler, serve, err } from 'vafast'
+import { Server, defineRoute, defineRoutes, serve, err } from 'vafast'
 import { withMonitoring, type MonitoredServer } from 'vafast/monitoring'
 
 // 创建监控端点路由
 function createMetricsRoutes(getServer: () => MonitoredServer) {
   return defineRoutes([
-    {
+    defineRoute({
       method: 'GET',
       path: '/metrics',
-      handler: createHandler(() => getServer().getMonitoringStatus())
-    },
-    {
+      handler: () => getServer().getMonitoringStatus()
+    }),
+    defineRoute({
       method: 'GET',
       path: '/metrics/rps',
-      handler: createHandler(() => ({ rps: getServer().getRPS() }))
-    },
-    {
+      handler: () => ({ rps: getServer().getRPS() })
+    }),
+    defineRoute({
       method: 'GET',
       path: '/metrics/status-codes',
-      handler: createHandler(() => getServer().getStatusCodeDistribution())
-    },
-    {
+      handler: () => getServer().getStatusCodeDistribution()
+    }),
+    defineRoute({
       method: 'GET',
       path: '/metrics/path/:path',
-      handler: createHandler(({ params }) => {
+      handler: ({ params }) => {
         const stats = getServer().getPathStats(`/${params.path}`)
         if (!stats) {
           throw err.notFound('路径未找到')
         }
         return stats
-      })
-    },
-    {
+      }
+    }),
+    defineRoute({
       method: 'POST',
       path: '/metrics/reset',
-      handler: createHandler(() => {
+      handler: () => {
         getServer().resetMonitoring()
         return { message: '监控数据已重置' }
-      })
-    }
+      }
+    })
   ])
 }
 
 // 主应用路由
 const appRoutes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/',
-    handler: createHandler(() => 'Hello Vafast!')
-  },
-  {
+    handler: () => 'Hello Vafast!'
+  }),
+  defineRoute({
     method: 'GET',
     path: '/users',
-    handler: createHandler(() => [{ id: 1, name: 'Alice' }])
-  }
+    handler: () => [{ id: 1, name: 'Alice' }]
+  })
 ])
 
 // 延迟获取 monitoredServer 的引用
@@ -364,21 +364,21 @@ serve({ fetch: monitored.fetch, port: 3000 })
 ## 监控仪表盘示例
 
 ```typescript
-import { Server, defineRoutes, createHandler, serve, html } from 'vafast'
+import { Server, defineRoute, defineRoutes, serve, html } from 'vafast'
 import { withMonitoring, type MonitoredServer } from 'vafast/monitoring'
 
 let monitoredServer: MonitoredServer
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/',
-    handler: createHandler(() => 'Hello Vafast!')
-  },
-  {
+    handler: () => 'Hello Vafast!'
+  }),
+  defineRoute({
     method: 'GET',
     path: '/dashboard',
-    handler: createHandler(() => {
+    handler: () => {
       const status = monitoredServer.getMonitoringStatus()
       
       return html(`
@@ -541,13 +541,13 @@ const routes = defineRoutes([
           </body>
         </html>
       `)
-    })
-  },
-  {
+    }
+  }),
+  defineRoute({
     method: 'GET',
     path: '/api/metrics',
-    handler: createHandler(() => monitoredServer.getMonitoringStatus())
-  }
+    handler: () => monitoredServer.getMonitoringStatus()
+  })
 ])
 
 const server = new Server(routes)

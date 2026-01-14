@@ -16,7 +16,7 @@ npm install @vafast/static
 ## 基本用法
 
 ```typescript
-import { Server, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { staticPlugin } from '@vafast/static'
 import { join } from 'path'
 
@@ -27,24 +27,22 @@ const staticRoutes = await staticPlugin({
 })
 
 // 添加自定义路由
-const customRoutes = [
-    {
-        method: 'GET',
-        path: '/',
-        handler: createHandler(() => {
-            return { message: 'Static file server is running' }
-        })
+const customRoutes = defineRoutes([
+  defineRoute({
+    method: 'GET',
+    path: '/',
+    handler: () => {
+      return { message: 'Static file server is running' }
     }
-]
+  })
+])
 
 // 合并路由
 const allRoutes = [...customRoutes, ...staticRoutes]
 
 const server = new Server(allRoutes)
 
-export default {
-    fetch: (req: Request) => server.fetch(req)
-}
+export default { fetch: server.fetch }
 ```
 
 ## 配置选项

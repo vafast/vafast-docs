@@ -87,11 +87,11 @@ const logMiddleware = async (req: Request, next: () => Promise<Response>) => {
 ### 2. 身份验证中间件
 
 ```typescript
-import { json, setLocals, createHandlerWithExtra } from 'vafast'
+import { defineRoute, defineRoutes, defineMiddleware, json } from 'vafast'
 
 type AuthContext = { user: { id: string; name: string } }
 
-const authMiddleware = async (req: Request, next: () => Promise<Response>) => {
+const authMiddleware = defineMiddleware<AuthContext>(async (req, next) => {
   const authHeader = req.headers.get('authorization')
   
   if (!authHeader) {
@@ -104,27 +104,30 @@ const authMiddleware = async (req: Request, next: () => Promise<Response>) => {
     // 验证 token
     const user = await validateToken(token)
     
-    // 注入类型化的用户信息
-    setLocals(req, { user })
-    
-    return await next()
+    // 通过 next 传递用户信息
+    return await next({ user })
   } catch (error) {
     return json({ error: 'Invalid token' }, 401)
   }
-}
+})
 
 // 使用示例
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/profile',
     middleware: [authMiddleware],
-    handler: createHandlerWithExtra<AuthContext>(({ user }) => ({
+    handler: ({ user }) => ({
       message: `Hello ${user.name}`
-    }))
-  }
+    })
+  })
 ])
 ```
+
+> **新框架用法说明**：
+> - 使用 `defineMiddleware` 定义带类型的中间件
+> - 通过 `next({ user })` 传递上下文
+> - Handler 自动获得类型推断，无需 `createHandlerWithExtra`
 
 ### 3. CORS 中间件
 
@@ -193,32 +196,29 @@ const errorHandler = async (req: Request, next: () => Promise<Response>) => {
 ### 6. 数据验证中间件
 
 ::: tip 推荐
-Vafast 的 `createHandler` 已内置 Schema 验证功能，无需手动编写验证中间件。
+Vafast 的 `defineRoute` 已内置 Schema 验证功能，无需手动编写验证中间件。
 :::
 
 ```typescript
-import { createHandler, json } from 'vafast'
-import { Type } from 'vafast'
+import { defineRoute, defineRoutes, Type } from 'vafast'
 
-// 使用 createHandler 内置验证（推荐）
+// 使用 defineRoute 内置验证（推荐）
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'POST',
     path: '/users',
-    handler: createHandler(
-      {
-        body: Type.Object({
-          name: Type.String({ minLength: 2 }),
-          email: Type.String({ format: 'email' }),
-          age: Type.Optional(Type.Number({ minimum: 18 }))
-        })
-      },
-      ({ body }) => ({
-        data: { message: 'User created', user: body },
-        status: 201
+    schema: {
+      body: Type.Object({
+        name: Type.String({ minLength: 2 }),
+        email: Type.String({ format: 'email' }),
+        age: Type.Optional(Type.Number({ minimum: 18 }))
       })
-    )
-  }
+    },
+    handler: ({ body }) => ({
+      data: { message: 'User created', user: body },
+      status: 201
+    })
+  })
 ])
 ```
 
@@ -252,12 +252,12 @@ const combinedMiddleware = combineMiddleware(
 )
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/api/users',
     middleware: [combinedMiddleware],
-    handler: createHandler(() => ({ message: 'Users' }))
-  }
+    handler: () => ({ message: 'Users' })
+  })
 ])
 ```
 

@@ -17,34 +17,32 @@ npm install @vafast/compress
 ## 基本用法
 
 ```typescript
-import { Server, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { compression } from '@vafast/compress'
 
 // 定义路由处理器
-const routes = [
-  {
+const routes = defineRoutes([
+  defineRoute({
     method: 'GET',
     path: '/',
-    handler: createHandler(() => {
-      return { message: 'Hello World!'.repeat(100) } // 生成足够长的响应以触发压缩
-    }),
     middleware: [
       compression({
         encodings: ['br', 'gzip', 'deflate'],
         threshold: 1024,
         compressStream: false
       })
-    ]
-  }
-]
+    ],
+    handler: () => {
+      return { message: 'Hello World!'.repeat(100) } // 生成足够长的响应以触发压缩
+    }
+  })
+])
 
 // 创建服务器
 const server = new Server(routes)
 
 // 导出 fetch 函数
-export default {
-  fetch: (req: Request) => server.fetch(req)
-}
+export default { fetch: server.fetch }
 ```
 
 ## 配置选项

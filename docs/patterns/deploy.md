@@ -232,19 +232,19 @@ export const config = {
 ### 健康检查端点
 
 ```typescript
-import { Server, defineRoutes, createHandler, serve } from 'vafast'
+import { Server, defineRoute, defineRoutes, serve } from 'vafast'
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/health',
-    handler: createHandler(() => ({
+    handler: () => ({
       status: 'ok',
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
       memory: process.memoryUsage()
-    }))
-  }
+    })
+  })
 ])
 
 const server = new Server(routes)
@@ -380,10 +380,10 @@ server.use(compress())
 
 ```typescript
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/static/:file',
-    handler: createHandler(({ params }) => {
+    handler: ({ params }) => {
       const file = getStaticFile(params.file)
       return new Response(file, {
         headers: {
@@ -391,8 +391,8 @@ const routes = defineRoutes([
           'ETag': generateETag(file)
         }
       })
-    })
-  }
+    }
+  })
 ])
 ```
 

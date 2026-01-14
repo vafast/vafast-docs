@@ -17,7 +17,7 @@ npm install @vafast/cron
 ## 基本用法
 
 ```typescript
-import { Server, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { cron } from '@vafast/cron'
 
 // 创建 cron 任务
@@ -30,23 +30,21 @@ const heartbeatCron = cron({
 })
 
 // 定义路由
-const routes = [
-    {
-        method: 'GET',
-        path: '/',
-        handler: createHandler(() => {
-            return { message: 'Vafast Cron API' }
-        })
+const routes = defineRoutes([
+  defineRoute({
+    method: 'GET',
+    path: '/',
+    handler: () => {
+      return { message: 'Vafast Cron API' }
     }
-]
+  })
+])
 
 // 创建服务器
 const server = new Server(routes)
 
 // 导出 fetch 函数
-export default {
-    fetch: (req: Request) => server.fetch(req)
-}
+export default { fetch: server.fetch }
 ```
 
 上述代码将每 30 秒记录一次 `heartbeat`。

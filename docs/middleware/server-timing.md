@@ -16,33 +16,29 @@ npm install @vafast/server-timing
 ## 基本用法
 
 ```typescript
-import { Server, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { serverTiming } from '@vafast/server-timing'
 
-// 创建 Server Timing 中间件
-const timing = serverTiming()
-
-const routes = [
-  {
+// 定义路由
+const routes = defineRoutes([
+  defineRoute({
     method: 'GET',
     path: '/',
-    handler: createHandler(async () => {
+    handler: async () => {
       // 模拟一些异步操作
       await new Promise(resolve => setTimeout(resolve, 100))
       return 'Server Timing Example'
-    })
-  }
-]
+    }
+  })
+])
 
 const server = new Server(routes)
 
-// 导出 fetch 函数，应用中间件
-export default {
-  fetch: (req: Request) => {
-    // 应用 Server-Timing 中间件
-    return timing(req, () => server.fetch(req))
-  }
-}
+// 应用 Server-Timing 中间件
+server.useGlobalMiddleware(serverTiming())
+
+// 导出 fetch 函数
+export default { fetch: server.fetch }
 ```
 
 ## 配置选项
@@ -89,64 +85,50 @@ const defaultOptions = {
 ### 1. 基本性能监控
 
 ```typescript
-import { Server, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { serverTiming } from '@vafast/server-timing'
 
-const timing = serverTiming({
-  enabled: true,
-  trace: { handle: true, total: true }
-})
-
-const routes = [
-  {
+const routes = defineRoutes([
+  defineRoute({
     method: 'GET',
     path: '/api/users',
-    handler: createHandler(async () => {
+    handler: async () => {
       // 模拟数据库查询
       await new Promise(resolve => setTimeout(resolve, 50))
       
       return { users: ['Alice', 'Bob', 'Charlie'] }
-    })
-  }
-]
+    }
+  })
+])
 
 const server = new Server(routes)
+server.useGlobalMiddleware(serverTiming({
+  enabled: true,
+  trace: { handle: true, total: true }
+}))
 
-export default {
-  fetch: (req: Request) => {
-    return timing(req, () => server.fetch(req))
-  }
-}
+export default { fetch: server.fetch }
 ```
 
 ### 2. 条件启用
 
 ```typescript
-import { Server, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { serverTiming } from '@vafast/server-timing'
 
-const timing = serverTiming({
-  enabled: process.env.NODE_ENV === 'development',
-  allow: (ctx) => {
-    // 只对特定路径启用
-    return ctx.request.url.includes('/api/')
-  },
-  trace: { handle: true, total: true }
-})
-
-const routes = [
-  {
+const routes = defineRoutes([
+  defineRoute({
     method: 'GET',
     path: '/api/data',
-    handler: createHandler(async () => {
+    handler: async () => {
       await new Promise(resolve => setTimeout(resolve, 100))
       return { data: 'Performance monitored data' }
-    })
-  },
-  {
+    }
+  }),
+  defineRoute({
     method: 'GET',
     path: '/static/info',
-    handler: createHandler(() => {
+    handler: () => {
       // 这个端点不会被监控
       return { info: 'Static information' }
     })

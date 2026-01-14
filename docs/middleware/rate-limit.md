@@ -16,7 +16,7 @@ npm install @vafast/rate-limit
 ## 基本用法
 
 ```typescript
-import { Server, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { rateLimit } from '@vafast/rate-limit'
 
 // 创建速率限制中间件
@@ -32,40 +32,37 @@ const rateLimitMiddleware = rateLimit({
 })
 
 // 定义路由
-const routes = [
-  {
+const routes = defineRoutes([
+  defineRoute({
     method: 'GET',
     path: '/',
-    handler: createHandler(() => {
+    middleware: [rateLimitMiddleware],
+    handler: () => {
       return 'Hello, Vafast with Rate Limiting!'
-    })
-  },
-  {
+    }
+  }),
+  defineRoute({
     method: 'GET',
     path: '/health',
-    handler: createHandler(() => {
+    handler: () => {
       return { status: 'OK', timestamp: new Date().toISOString() }
-    })
-  },
-  {
+    }
+  }),
+  defineRoute({
     method: 'POST',
     path: '/api/data',
-    handler: createHandler(() => {
+    middleware: [rateLimitMiddleware],
+    handler: () => {
       return { message: 'Data created successfully' }
-    })
-  }
-]
+    }
+  })
+])
 
 // 创建服务器
 const server = new Server(routes)
 
-// 导出 fetch 函数，应用中间件
-export default {
-  fetch: (req: Request) => {
-    // 应用速率限制中间件
-    return rateLimitMiddleware(req, () => server.fetch(req))
-  }
-}
+// 导出 fetch 函数
+export default { fetch: server.fetch }
 ```
 
 ## 配置选项

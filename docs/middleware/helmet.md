@@ -17,7 +17,7 @@ npm install @vafast/helmet
 ## 基本用法
 
 ```typescript
-import { Server, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { vafastHelmet } from '@vafast/helmet'
 
 // 创建安全头中间件
@@ -34,32 +34,30 @@ const helmet = vafastHelmet({
 })
 
 // 定义路由
-const routes = [
-  {
+const routes = defineRoutes([
+  defineRoute({
     method: 'GET',
     path: '/',
-    handler: createHandler(() => {
-      return { message: 'Hello World with Security Headers!' }
-    }),
     middleware: [helmet],
-  },
-  {
+    handler: () => {
+      return { message: 'Hello World with Security Headers!' }
+    }
+  }),
+  defineRoute({
     method: 'GET',
     path: '/api/data',
-    handler: createHandler(() => {
-      return { data: 'Protected API endpoint' }
-    }),
     middleware: [helmet],
-  },
-]
+    handler: () => {
+      return { data: 'Protected API endpoint' }
+    }
+  })
+])
 
 // 创建服务器
 const server = new Server(routes)
 
 // 导出 fetch 函数
-export default {
-  fetch: (req: Request) => server.fetch(req),
-}
+export default { fetch: server.fetch }
 ```
 
 ## 配置选项

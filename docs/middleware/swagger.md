@@ -16,40 +16,36 @@ npm install @vafast/swagger
 ## 基本用法
 
 ```typescript
-import { Server, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { swagger } from '@vafast/swagger'
 
-// 创建 Swagger 中间件
-const swaggerMiddleware = swagger({
-    provider: 'scalar',
-    documentation: {
-        info: {
-            title: 'My API',
-            version: '1.0.0'
-        }
-    }
-})
-
 // 定义路由
-const routes = [
-    {
-        method: 'GET',
-        path: '/api/',
-        handler: createHandler(() => {
-            return { message: 'Hello API' }
-        })
+const routes = defineRoutes([
+  defineRoute({
+    method: 'GET',
+    path: '/api/',
+    handler: () => {
+      return { message: 'Hello API' }
     }
-]
+  })
+])
 
 // 创建服务器
 const server = new Server(routes)
 
-// 导出 fetch 函数，应用 Swagger 中间件
-export default {
-    fetch: (req: Request) => {
-        return swaggerMiddleware(req, () => server.fetch(req))
+// 应用 Swagger 中间件
+server.useGlobalMiddleware(swagger({
+  provider: 'scalar',
+  documentation: {
+    info: {
+      title: 'My API',
+      version: '1.0.0'
     }
-}
+  }
+}))
+
+// 导出 fetch 函数
+export default { fetch: server.fetch }
 ```
 
 ## 配置选项
@@ -157,135 +153,120 @@ interface OpenAPIComponents {
 ### 1. 基本 Scalar 文档
 
 ```typescript
-import { Server, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { swagger } from '@vafast/swagger'
 
-const swaggerMiddleware = swagger({
-    provider: 'scalar',
-    documentation: {
-        info: {
-            title: 'Vafast API',
-            description: 'A modern TypeScript web framework API',
-            version: '1.0.0'
-        },
-        tags: [
-            {
-                name: 'Users',
-                description: 'User management endpoints'
-            },
-            {
-                name: 'Auth',
-                description: 'Authentication endpoints'
-            }
-        ]
+const routes = defineRoutes([
+  defineRoute({
+    method: 'GET',
+    path: '/api/users',
+    handler: () => {
+      return { users: [] }
     }
-})
-
-const routes = [
-    {
-        method: 'GET',
-        path: '/api/users',
-        handler: createHandler(() => {
-            return { users: [] }
-        })
-    }
-]
+  })
+])
 
 const server = new Server(routes)
+server.useGlobalMiddleware(swagger({
+  provider: 'scalar',
+  documentation: {
+    info: {
+      title: 'Vafast API',
+      description: 'A modern TypeScript web framework API',
+      version: '1.0.0'
+    },
+    tags: [
+      {
+        name: 'Users',
+        description: 'User management endpoints'
+      },
+      {
+        name: 'Auth',
+        description: 'Authentication endpoints'
+      }
+    ]
+  }
+}))
 
-export default {
-    fetch: (req: Request) => {
-        return swaggerMiddleware(req, () => server.fetch(req))
-    }
-}
+export default { fetch: server.fetch }
 ```
 
 ### 2. Swagger UI 文档
 
 ```typescript
-import { Server, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { swagger } from '@vafast/swagger'
 
-const swaggerMiddleware = swagger({
-    provider: 'swagger-ui',
-    version: '4.18.2',
-    documentation: {
-        info: {
-            title: 'Vafast API',
-            description: 'API documentation with Swagger UI',
-            version: '1.0.0'
-        }
-    },
-    swaggerOptions: {
-        persistAuthorization: true,
-        displayOperationId: true,
-        filter: true
-    },
-    theme: 'https://unpkg.com/swagger-ui-dist@4.18.2/swagger-ui.css',
-    autoDarkMode: true
-})
-
-const routes = [
-    {
-        method: 'GET',
-        path: '/api/health',
-        handler: createHandler(() => {
-            return { status: 'OK' }
-        })
+const routes = defineRoutes([
+  defineRoute({
+    method: 'GET',
+    path: '/api/health',
+    handler: () => {
+      return { status: 'OK' }
     }
-]
+  })
+])
 
 const server = new Server(routes)
-
-export default {
-    fetch: (req: Request) => {
-        return swaggerMiddleware(req, () => server.fetch(req))
+server.useGlobalMiddleware(swagger({
+  provider: 'swagger-ui',
+  version: '4.18.2',
+  documentation: {
+    info: {
+      title: 'Vafast API',
+      description: 'API documentation with Swagger UI',
+      version: '1.0.0'
     }
-}
+  },
+  swaggerOptions: {
+    persistAuthorization: true,
+    displayOperationId: true,
+    filter: true
+  },
+  theme: 'https://unpkg.com/swagger-ui-dist@4.18.2/swagger-ui.css',
+  autoDarkMode: true
+}))
+
+export default { fetch: server.fetch }
 ```
 
 ### 3. 自定义路径和配置
 
 ```typescript
-import { Server, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { swagger } from '@vafast/swagger'
 
-const swaggerMiddleware = swagger({
-    provider: 'scalar',
-    path: '/docs',                    // 自定义文档路径
-    specPath: '/docs/openapi.json',   // 自定义规范路径
-    scalarVersion: '1.0.0',           // 指定 Scalar 版本
-    scalarCDN: 'https://cdn.example.com/scalar', // 自定义 CDN
-    scalarConfig: {
-        theme: 'light',
-        search: true,
-        navigation: true
-    },
-    documentation: {
-        info: {
-            title: 'Custom API',
-            version: '2.0.0'
-        }
+const routes = defineRoutes([
+  defineRoute({
+    method: 'GET',
+    path: '/api/data',
+    handler: () => {
+      return { data: 'example' }
     }
-})
-
-const routes = [
-    {
-        method: 'GET',
-        path: '/api/data',
-        handler: createHandler(() => {
-            return { data: 'example' }
-        })
-    }
-]
+  })
+])
 
 const server = new Server(routes)
-
-export default {
-    fetch: (req: Request) => {
-        return swaggerMiddleware(req, () => server.fetch(req))
+server.useGlobalMiddleware(swagger({
+  provider: 'scalar',
+  path: '/docs',                    // 自定义文档路径
+  specPath: '/docs/openapi.json',   // 自定义规范路径
+  scalarVersion: '1.0.0',           // 指定 Scalar 版本
+  scalarCDN: 'https://cdn.example.com/scalar', // 自定义 CDN
+  scalarConfig: {
+    theme: 'light',
+    search: true,
+    navigation: true
+  },
+  documentation: {
+    info: {
+      title: 'Custom API',
+      version: '2.0.0'
     }
-}
+  }
+}))
+
+export default { fetch: server.fetch }
 ```
 
 ### 4. 完整的 API 文档

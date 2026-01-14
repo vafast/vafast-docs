@@ -15,19 +15,19 @@ npm add @vafast/cors
 然后使用它：
 
 ```typescript
-import { Server, defineRoutes, createHandler, serve } from 'vafast'
+import { Server, defineRoute, defineRoutes, serve } from 'vafast'
 import { cors } from '@vafast/cors'
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/',
-    handler: createHandler(() => 'Hello World')
-  }
+    handler: () => 'Hello World'
+  })
 ])
 
 const server = new Server(routes)
-server.use(cors())
+server.useGlobalMiddleware(cors())
 
 serve({ fetch: server.fetch, port: 3000 })
 ```

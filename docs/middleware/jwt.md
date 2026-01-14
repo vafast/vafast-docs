@@ -16,7 +16,7 @@ npm install @vafast/jwt
 ## 基本用法
 
 ```typescript
-import { Server, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { jwt } from '@vafast/jwt'
 
 // 创建 JWT 中间件
@@ -29,61 +29,55 @@ const jwtMiddleware = jwt({
 })
 
 // 定义路由
-const routes = [
-    {
-        method: 'GET',
-        path: '/sign/:name',
-        handler: createHandler(async ({ req, params }: { req: Request, params: Record<string, string> }) => {
-            // 应用 JWT 中间件
-            jwtMiddleware(req, () => Promise.resolve(new Response()))
-            
-            const name = params.name
-            
-            // 创建 JWT 令牌
-            const token = await (req as any).jwt.sign({ name })
-            
-            return {
-                data: `Sign in as ${name}`,
-                headers: {
-                    'Set-Cookie': `auth=${token}; HttpOnly; Max-Age=${7 * 86400}; Path=/`
-                }
-            }
-        })
-    },
-    {
-        method: 'GET',
-        path: '/profile',
-        handler: createHandler(async ({ req }: { req: Request }) => {
-            // 应用 JWT 中间件
-            jwtMiddleware(req, () => Promise.resolve(new Response()))
-            
-            // 从 Cookie 中获取令牌
-            const cookies = req.headers.get('cookie')
-            const authCookie = cookies?.split(';').find((c) => c.trim().startsWith('auth='))
-            const token = authCookie?.split('=')[1]
-            
-            // 验证 JWT 令牌
-            const profile = await (req as any).jwt.verify(token)
-            
-            if (!profile) {
-                return {
-                    status: 401,
-                    data: 'Unauthorized'
-                }
-            }
-            
-            return { message: `Hello ${profile.name}` }
-        })
+const routes = defineRoutes([
+  defineRoute({
+    method: 'GET',
+    path: '/sign/:name',
+    middleware: [jwtMiddleware],
+    handler: async ({ req, params }) => {
+      const name = params.name
+      
+      // 创建 JWT 令牌
+      const token = await (req as any).jwt.sign({ name })
+      
+      return {
+        data: `Sign in as ${name}`,
+        headers: {
+          'Set-Cookie': `auth=${token}; HttpOnly; Max-Age=${7 * 86400}; Path=/`
+        }
+      }
     }
-]
+  }),
+  defineRoute({
+    method: 'GET',
+    path: '/profile',
+    middleware: [jwtMiddleware],
+    handler: async ({ req }) => {
+      // 从 Cookie 中获取令牌
+      const cookies = req.headers.get('cookie')
+      const authCookie = cookies?.split(';').find((c) => c.trim().startsWith('auth='))
+      const token = authCookie?.split('=')[1]
+      
+      // 验证 JWT 令牌
+      const profile = await (req as any).jwt.verify(token)
+      
+      if (!profile) {
+        return {
+          status: 401,
+          data: 'Unauthorized'
+        }
+      }
+      
+      return { message: `Hello ${profile.name}` }
+    }
+  })
+])
 
 // 创建服务器
 const server = new Server(routes)
 
 // 导出 fetch 函数
-export default {
-    fetch: (req: Request) => server.fetch(req)
-}
+export default { fetch: server.fetch }
 ```
 
 ## 配置选项

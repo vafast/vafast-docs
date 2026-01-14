@@ -16,43 +16,38 @@ npm install @vafast/opentelemetry
 ## 基本用法
 
 ```typescript
-import { Server, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { opentelemetry } from '@vafast/opentelemetry'
 
-// 创建 OpenTelemetry 中间件
-const telemetryMiddleware = opentelemetry({
-    serviceName: 'example-app',
-    instrumentations: []
-})
-
 // 定义路由
-const routes = [
-    {
-        method: 'GET',
-        path: '/',
-        handler: createHandler(() => {
-            return 'Hello, Vafast with OpenTelemetry!'
-        })
-    },
-    {
-        method: 'GET',
-        path: '/health',
-        handler: createHandler(() => {
-            return { status: 200, data: 'OK' }
-        })
+const routes = defineRoutes([
+  defineRoute({
+    method: 'GET',
+    path: '/',
+    handler: () => {
+      return 'Hello, Vafast with OpenTelemetry!'
     }
-]
+  }),
+  defineRoute({
+    method: 'GET',
+    path: '/health',
+    handler: () => {
+      return { status: 200, data: 'OK' }
+    }
+  })
+])
 
 // 创建服务器
 const server = new Server(routes)
 
-// 导出 fetch 函数，应用中间件
-export default {
-    fetch: (req: Request) => {
-        // 应用 OpenTelemetry 中间件
-        return telemetryMiddleware(req, () => server.fetch(req))
-    }
-}
+// 应用 OpenTelemetry 中间件
+server.useGlobalMiddleware(opentelemetry({
+  serviceName: 'example-app',
+  instrumentations: []
+}))
+
+// 导出 fetch 函数
+export default { fetch: server.fetch }
 ```
 
 ## 预加载配置（推荐）
@@ -100,36 +95,32 @@ console.log('OpenTelemetry SDK 已启动')
 然后在你的主应用中：
 
 ```typescript
-import { Server, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { opentelemetry } from '@vafast/opentelemetry'
 
 // 导入预加载配置
 import './preload'
 
-// 创建 OpenTelemetry 中间件
-const telemetryMiddleware = opentelemetry({
-    serviceName: 'your-service-name'
-})
-
 // 定义路由
-const routes = [
-    {
-        method: 'GET',
-        path: '/api/users',
-        handler: createHandler(async () => {
-            // 这个请求会自动被 OpenTelemetry 追踪
-            return { users: ['Alice', 'Bob', 'Charlie'] }
-        })
+const routes = defineRoutes([
+  defineRoute({
+    method: 'GET',
+    path: '/api/users',
+    handler: async () => {
+      // 这个请求会自动被 OpenTelemetry 追踪
+      return { users: ['Alice', 'Bob', 'Charlie'] }
     }
-]
+  })
+])
 
 const server = new Server(routes)
 
-export default {
-    fetch: (req: Request) => {
-        return telemetryMiddleware(req, () => server.fetch(req))
-    }
-}
+// 应用 OpenTelemetry 中间件
+server.useGlobalMiddleware(opentelemetry({
+  serviceName: 'your-service-name'
+}))
+
+export default { fetch: server.fetch }
 ```
 
 ## 配置选项
@@ -186,21 +177,17 @@ interface VafastOpenTelemetryOptions {
 ### 1. 基本追踪
 
 ```typescript
-import { Server, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { opentelemetry, getTracer, startActiveSpan } from '@vafast/opentelemetry'
 
-const telemetryMiddleware = opentelemetry({
-    serviceName: 'basic-tracing-app'
-})
-
-const routes = [
-    {
-        method: 'GET',
-        path: '/api/data',
-        handler: createHandler(async () => {
-            const tracer = getTracer()
-            
-            // 创建自定义跨度
+const routes = defineRoutes([
+  defineRoute({
+    method: 'GET',
+    path: '/api/data',
+    handler: async () => {
+      const tracer = getTracer()
+      
+      // 创建自定义跨度
             return tracer.startActiveSpan('fetch-data', async (span) => {
                 try {
                     // 模拟数据获取
@@ -238,64 +225,61 @@ async function fetchDataFromDatabase() {
 ### 2. 自定义跨度和属性
 
 ```typescript
-import { Server, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { opentelemetry, getTracer, setAttributes } from '@vafast/opentelemetry'
 
-const telemetryMiddleware = opentelemetry({
-    serviceName: 'custom-spans-app'
-})
-
-const routes = [
-    {
-        method: 'POST',
-        path: '/api/users',
-        handler: createHandler(async ({ req }) => {
-            const tracer = getTracer()
-            
-            return tracer.startActiveSpan('create-user', {
-                attributes: {
-                    'http.method': 'POST',
-                    'http.route': '/api/users'
-                }
-            }, async (span) => {
-                try {
-                    const body = await req.json()
-                    
-                    // 设置用户相关属性
-                    span.setAttributes({
-                        'user.email': body.email,
-                        'user.role': body.role
-                    })
-                    
-                    // 模拟用户创建
-                    const user = await createUser(body)
-                    
-                    // 记录成功事件
-                    span.addEvent('user.created', {
-                        'user.id': user.id,
-                        'user.email': user.email
-                    })
-                    
-                    return { success: true, user }
-                } catch (error) {
-                    // 记录错误
-                    span.recordException(error as Error)
-                    throw error
-                } finally {
-                    span.end()
-                }
-            })
-        })
+const routes = defineRoutes([
+  defineRoute({
+    method: 'POST',
+    path: '/api/users',
+    handler: async ({ req }) => {
+      const tracer = getTracer()
+      
+      return tracer.startActiveSpan('create-user', {
+        attributes: {
+          'http.method': 'POST',
+          'http.route': '/api/users'
+        }
+      }, async (span) => {
+        try {
+          const body = await req.json()
+          
+          // 设置用户相关属性
+          span.setAttributes({
+            'user.email': body.email,
+            'user.role': body.role
+          })
+          
+          // 模拟用户创建
+          const user = await createUser(body)
+          
+          // 记录成功事件
+          span.addEvent('user.created', {
+            'user.id': user.id,
+            'user.email': user.email
+          })
+          
+          return { success: true, user }
+        } catch (error) {
+          // 记录错误
+          span.recordException(error as Error)
+          throw error
+        } finally {
+          span.end()
+        }
+      })
     }
-]
+  })
+])
 
 const server = new Server(routes)
 
-export default {
-    fetch: (req: Request) => {
-        return telemetryMiddleware(req, () => server.fetch(req))
-    }
-}
+// 应用 OpenTelemetry 中间件
+server.useGlobalMiddleware(opentelemetry({
+  serviceName: 'custom-spans-app'
+}))
+
+export default { fetch: server.fetch }
 
 async function createUser(userData: any) {
     // 模拟用户创建
@@ -309,32 +293,28 @@ async function createUser(userData: any) {
 ### 3. 分布式追踪
 
 ```typescript
-import { Server, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { opentelemetry, getTracer, getCurrentSpan } from '@vafast/opentelemetry'
 
-const telemetryMiddleware = opentelemetry({
-    serviceName: 'distributed-tracing-app'
-})
-
-const routes = [
-    {
-        method: 'GET',
-        path: '/api/orders/:id',
-        handler: createHandler(async ({ params }) => {
-            const tracer = getTracer()
-            
-            return tracer.startActiveSpan('get-order', async (span) => {
-                try {
-                    const orderId = params.id
-                    
-                    // 设置订单相关属性
-                    span.setAttributes({
-                        'order.id': orderId,
-                        'operation.type': 'read'
-                    })
-                    
-                    // 获取订单信息
-                    const order = await getOrder(orderId)
+const routes = defineRoutes([
+  defineRoute({
+    method: 'GET',
+    path: '/api/orders/:id',
+    handler: async ({ params }) => {
+      const tracer = getTracer()
+      
+      return tracer.startActiveSpan('get-order', async (span) => {
+        try {
+          const orderId = params.id
+          
+          // 设置订单相关属性
+          span.setAttributes({
+            'order.id': orderId,
+            'operation.type': 'read'
+          })
+          
+          // 获取订单信息
+          const order = await getOrder(orderId)
                     
                     // 获取用户信息（创建子跨度）
                     const user = await tracer.startActiveSpan('get-user', async (userSpan) => {
@@ -411,64 +391,61 @@ async function getProducts(productIds: string[]) {
 ### 4. 错误追踪和监控
 
 ```typescript
-import { Server, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { opentelemetry, getTracer } from '@vafast/opentelemetry'
 
-const telemetryMiddleware = opentelemetry({
-    serviceName: 'error-tracking-app'
-})
-
-const routes = [
-    {
-        method: 'GET',
-        path: '/api/risky-operation',
-        handler: createHandler(async () => {
-            const tracer = getTracer()
-            
-            return tracer.startActiveSpan('risky-operation', async (span) => {
-                try {
-                    // 模拟有风险的操作
-                    const result = await performRiskyOperation()
-                    
-                    span.setAttributes({
-                        'operation.success': true,
-                        'operation.result': result
-                    })
-                    
-                    return { success: true, result }
-                } catch (error) {
-                    // 详细记录错误信息
-                    span.setAttributes({
-                        'operation.success': false,
-                        'error.type': error.constructor.name,
-                        'error.message': error instanceof Error ? error.message : String(error)
-                    })
-                    
-                    // 记录异常
-                    span.recordException(error as Error)
-                    
-                    // 设置错误状态
-                    span.setStatus({
-                        code: 2, // ERROR
-                        message: error instanceof Error ? error.message : 'Unknown error'
-                    })
-                    
-                    throw error
-                } finally {
-                    span.end()
-                }
-            })
-        })
+const routes = defineRoutes([
+  defineRoute({
+    method: 'GET',
+    path: '/api/risky-operation',
+    handler: async () => {
+      const tracer = getTracer()
+      
+      return tracer.startActiveSpan('risky-operation', async (span) => {
+        try {
+          // 模拟有风险的操作
+          const result = await performRiskyOperation()
+          
+          span.setAttributes({
+            'operation.success': true,
+            'operation.result': result
+          })
+          
+          return { success: true, result }
+        } catch (error) {
+          // 详细记录错误信息
+          span.setAttributes({
+            'operation.success': false,
+            'error.type': error.constructor.name,
+            'error.message': error instanceof Error ? error.message : String(error)
+          })
+          
+          // 记录异常
+          span.recordException(error as Error)
+          
+          // 设置错误状态
+          span.setStatus({
+            code: 2, // ERROR
+            message: error instanceof Error ? error.message : 'Unknown error'
+          })
+          
+          throw error
+        } finally {
+          span.end()
+        }
+      })
     }
-]
+  })
+])
 
 const server = new Server(routes)
 
-export default {
-    fetch: (req: Request) => {
-        return telemetryMiddleware(req, () => server.fetch(req))
-    }
-}
+// 应用 OpenTelemetry 中间件
+server.useGlobalMiddleware(opentelemetry({
+  serviceName: 'error-tracking-app'
+}))
+
+export default { fetch: server.fetch }
 
 async function performRiskyOperation() {
     // 模拟有风险的操作

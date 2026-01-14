@@ -190,7 +190,7 @@ type Middleware = (
 
 ### RouteHandler
 
-路由处理函数类型。推荐使用 `createHandler` 创建处理函数。
+路由处理函数类型。Handler 直接是函数，不再需要 `createHandler` 包装。
 
 ```typescript
 // 基本类型
@@ -329,12 +329,12 @@ import { jwt } from '@vafast/jwt'
 const authMiddleware = jwt({ secret: 'your-secret' })
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/admin',
     middleware: [authMiddleware],
-    handler: createHandler(() => 'Admin panel')
-  }
+    handler: () => 'Admin panel'
+  })
 ])
 ```
 
@@ -349,12 +349,12 @@ const rateLimitMiddleware = rateLimit({
 })
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'POST',
     path: '/login',
     middleware: [rateLimitMiddleware],
-    handler: createHandler(() => 'Login')
-  }
+    handler: () => 'Login'
+  })
 ])
 
 ## 工具函数
@@ -440,10 +440,10 @@ return stream(readableStream, 200, { 'Content-Type': 'text/event-stream' })
 
 ### 自动响应转换
 
-在 `createHandler` 中，返回值会自动转换为 Response：
+在 Handler 中，返回值会自动转换为 Response：
 
 ```typescript
-createHandler(() => {
+handler: () => {
   return user          // → 200 + JSON
   return 'Hello'       // → 200 + text/plain
   return 123           // → 200 + text/plain
@@ -521,13 +521,13 @@ throw new VafastError('Internal error', {
 ### 完整示例
 
 ```typescript
-import { defineRoutes, createHandler, json, err, Type } from 'vafast'
+import { defineRoute, defineRoutes, json, err, Type } from 'vafast'
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/users/:id',
-    handler: createHandler(async ({ params }) => {
+    handler: async ({ params }) => {
       const user = await db.findUser(params.id)
       
       if (!user) {
@@ -535,9 +535,9 @@ const routes = defineRoutes([
       }
       
       return user  // 200 + JSON
-    })
-  },
-  {
+    }
+  }),
+  defineRoute({
     method: 'POST',
     path: '/users',
     schema: {
@@ -546,7 +546,7 @@ const routes = defineRoutes([
         email: Type.String({ format: 'email' })
       })
     },
-    handler: createHandler(async ({ body }) => {
+    handler: async ({ body }) => {
       if (await db.emailExists(body.email)) {
         throw err.conflict('邮箱已被注册')
       }
@@ -555,14 +555,14 @@ const routes = defineRoutes([
       return json(user, 201)  // 201 Created
     })
   },
-  {
+  defineRoute({
     method: 'DELETE',
     path: '/users/:id',
-    handler: createHandler(async ({ params }) => {
+    handler: async ({ params }) => {
       await db.deleteUser(params.id)
       return null  // 204 No Content
-    })
-  }
+    }
+  })
 ])
 
 // 错误响应格式：
@@ -600,7 +600,7 @@ const routes = defineRoutes([
 ### 请求体验证
 
 ```typescript
-import { defineRoutes, createHandler, Type } from 'vafast'
+import { defineRoute, defineRoutes, Type } from 'vafast'
 
 const userSchema = Type.Object({
   name: Type.String({ minLength: 2 }),
@@ -609,25 +609,23 @@ const userSchema = Type.Object({
 })
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'POST',
     path: '/users',
-    // 使用 createHandler 自动验证
-    handler: createHandler(
-      { body: userSchema },
-      ({ body }) => {
-        // body 已经通过验证，类型安全
-        return { message: 'User created' }
-      }
-    )
-  }
+    // 使用 defineRoute 自动验证
+    schema: { body: userSchema },
+    handler: ({ body }) => {
+      // body 已经通过验证，类型安全
+      return { message: 'User created' }
+    }
+  })
 ])
 ```
 
 ### 查询参数验证
 
 ```typescript
-import { defineRoutes, createHandler, Type } from 'vafast'
+import { defineRoute, defineRoutes, Type } from 'vafast'
 
 const querySchema = Type.Object({
   page: Type.Optional(Type.Number({ minimum: 1 })),
@@ -640,18 +638,16 @@ const querySchema = Type.Object({
 })
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/users',
-    // 使用 createHandler 自动解析和验证
-    handler: createHandler(
-      { query: querySchema },
-      ({ query }) => {
-        // query 已经通过验证，类型安全
-        return `Page: ${query.page}, Limit: ${query.limit}, Sort: ${query.sort}`
+    // 使用 defineRoute 自动解析和验证
+    schema: { query: querySchema },
+    handler: ({ query }) => {
+      // query 已经通过验证，类型安全
+      return `Page: ${query.page}, Limit: ${query.limit}, Sort: ${query.sort}`
     }
-    )
-  }
+  })
 ])
 ```
 
@@ -731,8 +727,8 @@ const routes = defineRoutes([
         authMiddleware
       )
     ],
-    handler: createHandler(() => 'Admin panel')
-  }
+    handler: () => 'Admin panel'
+  })
 ])
 ```
 
@@ -773,15 +769,15 @@ const config: ServerOptions = {
 
 ```typescript
 import { test, expect } from 'bun:test'
-import { Server, defineRoutes, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 
 test('GET /users returns users list', async () => {
   const routes = defineRoutes([
-    {
+    defineRoute({
       method: 'GET',
       path: '/users',
-      handler: createHandler(() => ['user1', 'user2'])
-    }
+      handler: () => ['user1', 'user2']
+    })
   ])
   
   const server = new Server(routes)
@@ -798,16 +794,14 @@ test('GET /users returns users list', async () => {
 ```typescript
 test('POST /users creates new user', async () => {
   const routes = defineRoutes([
-    {
+    defineRoute({
       method: 'POST',
       path: '/users',
-      handler: createHandler(
-        async ({ body }) => ({
-          data: { id: 1, ...body },
-          status: 201
-        })
-      )
-    }
+      handler: async ({ body }) => ({
+        data: { id: 1, ...body },
+        status: 201
+      })
+    })
   ])
   
   const server = new Server(routes)

@@ -15,19 +15,19 @@ npm install @vafast/logger
 ## 使用
 
 ```typescript
-import { Server, defineRoutes, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { logger } from '@vafast/logger'
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/',
-    handler: createHandler(() => 'Hello World')
-  }
+    handler: () => 'Hello World'
+  })
 ])
 
 const server = new Server(routes)
-server.use(logger())
+server.useGlobalMiddleware(logger())
 
 export default { fetch: server.fetch }
 ```

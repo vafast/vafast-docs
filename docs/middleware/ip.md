@@ -17,48 +17,46 @@ npm install @vafast/ip
 ## 基本用法
 
 ```typescript
-import { Server, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { ip } from '@vafast/ip'
 
 // 创建 IP 中间件
 const ipMiddleware = ip()
 
 // 定义路由
-const routes = [
-  {
+const routes = defineRoutes([
+  defineRoute({
     method: 'GET',
     path: '/',
-    handler: createHandler((request: Request) => {
+    middleware: [ipMiddleware],
+    handler: (request: Request) => {
       // 访问客户端 IP 地址
       const clientIP = (request as any).ip
       return { 
         message: 'Hello World!',
         clientIP: clientIP || 'Unknown'
       }
-    }),
-    middleware: [ipMiddleware],
-  },
-  {
+    }
+  }),
+  defineRoute({
     method: 'GET',
     path: '/api/client-info',
-    handler: createHandler((request: Request) => {
+    middleware: [ipMiddleware],
+    handler: (request: Request) => {
       return {
         ip: (request as any).ip,
         userAgent: request.headers.get('user-agent'),
         timestamp: new Date().toISOString()
       }
-    }),
-    middleware: [ipMiddleware],
-  }
-]
+    }
+  })
+])
 
 // 创建服务器
 const server = new Server(routes)
 
 // 导出 fetch 函数
-export default {
-  fetch: (req: Request) => server.fetch(req),
-}
+export default { fetch: server.fetch }
 ```
 
 ## 配置选项
@@ -132,35 +130,35 @@ type IPHeaders =
 ### 1. 基本 IP 获取
 
 ```typescript
-import { Server, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { ip } from '@vafast/ip'
 
 const ipMiddleware = ip()
 
-const routes = [
-  {
+const routes = defineRoutes([
+  defineRoute({
     method: 'GET',
     path: '/',
-    handler: createHandler((request: Request) => {
+    middleware: [ipMiddleware],
+    handler: (request: Request) => {
       const clientIP = (request as any).ip
       return { 
         message: 'Welcome!',
         yourIP: clientIP || 'Unknown',
         timestamp: new Date().toISOString()
       }
-    }),
-    middleware: [ipMiddleware],
-  }
-]
+    }
+  })
+])
 
 const server = new Server(routes)
-export default { fetch: (req: Request) => server.fetch(req) }
+export default { fetch: server.fetch }
 ```
 
 ### 2. 自定义头部检查
 
 ```typescript
-import { Server, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { ip } from '@vafast/ip'
 
 // 自定义检查的头部，按优先级排序
@@ -173,11 +171,12 @@ const customIpMiddleware = ip({
   ]
 })
 
-const routes = [
-  {
+const routes = defineRoutes([
+  defineRoute({
     method: 'GET',
     path: '/api/ip',
-    handler: createHandler((request: Request) => {
+    middleware: [customIpMiddleware],
+    handler: (request: Request) => {
       return {
         ip: (request as any).ip,
         headers: {
@@ -187,64 +186,64 @@ const routes = [
           'cf-connecting-ip': request.headers.get('cf-connecting-ip')
         }
       }
-    }),
-    middleware: [customIpMiddleware],
-  }
-]
+    }
+  })
+])
 
 const server = new Server(routes)
-export default { fetch: (req: Request) => server.fetch(req) }
+export default { fetch: server.fetch }
 ```
 
 ### 3. 多实例注入
 
 ```typescript
-import { Server, createHandler } from 'vafast'
+import { defineRoute, defineRoutes } from 'vafast'
 import { ip } from '@vafast/ip'
 
 const ipMiddleware = ip()
 
 // 创建多个实例，每个都使用 IP 中间件
-const aInstance = {
-  method: 'GET',
-  path: '/a',
-  handler: createHandler((request: Request) => {
-    return {
-      instance: 'A',
-      clientIP: (request as any).ip,
-      timestamp: new Date().toISOString()
+const routes = defineRoutes([
+  defineRoute({
+    method: 'GET',
+    path: '/a',
+    middleware: [ipMiddleware],
+    handler: (request: Request) => {
+      return {
+        instance: 'A',
+        clientIP: (request as any).ip,
+        timestamp: new Date().toISOString()
+      }
     }
   }),
-  middleware: [ipMiddleware],
-}
-
-const bInstance = {
-  method: 'GET',
-  path: '/b',
-  handler: createHandler((request: Request) => {
-    return {
-      instance: 'B',
-      clientIP: (request as any).ip,
-      timestamp: new Date().toISOString()
+  defineRoute({
+    method: 'GET',
+    path: '/b',
+    middleware: [ipMiddleware],
+    handler: (request: Request) => {
+      return {
+        instance: 'B',
+        clientIP: (request as any).ip,
+        timestamp: new Date().toISOString()
+      }
     }
-  }),
-  middleware: [ipMiddleware],
+  })
 }
 
 const routes = [
   aInstance,
   bInstance,
-  {
+  defineRoute({
     method: 'GET',
     path: '/',
-    handler: createHandler(() => {
+    handler: () => {
       return { 
         message: 'Multi-instance IP tracking',
         endpoints: ['/a', '/b']
       }
-    }),
-  },
-]
+    }
+  })
+])
 
 const server = new Server(routes)
 export default { fetch: (req: Request) => server.fetch(req) }
@@ -253,33 +252,34 @@ export default { fetch: (req: Request) => server.fetch(req) }
 ### 4. 条件 IP 获取
 
 ```typescript
-import { Server, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { ip } from '@vafast/ip'
 
-const routes = [
-  {
+const routes = defineRoutes([
+  defineRoute({
     method: 'GET',
     path: '/public',
-    handler: createHandler(() => {
+    handler: () => {
       return { message: 'Public endpoint - no IP tracking' }
-    })
+    }
     // 不应用 IP 中间件
-  },
-  {
+  }),
+  defineRoute({
     method: 'GET',
     path: '/tracked',
-    handler: createHandler((request: Request) => {
+    middleware: [ip()], // 动态创建中间件
+    handler: (request: Request) => {
       return { 
         message: 'IP tracked endpoint',
         clientIP: (request as any).ip
       }
-    }),
-    middleware: [ip()], // 动态创建中间件
-  },
-  {
+    }
+  }),
+  defineRoute({
     method: 'GET',
     path: '/admin',
-    handler: createHandler((request: Request) => {
+    middleware: [ip()],
+    handler: (request: Request) => {
       const clientIP = (request as any).ip
       
       // 基于 IP 的访问控制
@@ -296,19 +296,18 @@ const routes = [
           requiredIP: '192.168.1.100'
         }
       }
-    }),
-    middleware: [ip()],
-  }
-]
+    }
+  })
+])
 
 const server = new Server(routes)
-export default { fetch: (req: Request) => server.fetch(req) }
+export default { fetch: server.fetch }
 ```
 
 ### 5. 高级配置
 
 ```typescript
-import { Server, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { ip } from '@vafast/ip'
 
 const advancedIpMiddleware = ip({
@@ -325,11 +324,12 @@ const advancedIpMiddleware = ip({
   }
 })
 
-const routes = [
-  {
+const routes = defineRoutes([
+  defineRoute({
     method: 'GET',
     path: '/advanced',
-    handler: createHandler((request: Request) => {
+    middleware: [advancedIpMiddleware],
+    handler: (request: Request) => {
       const clientIP = (request as any).ip
       
       return {
@@ -342,10 +342,9 @@ const routes = [
         },
         timestamp: new Date().toISOString()
       }
-    }),
-    middleware: [advancedIpMiddleware],
-  }
-]
+    }
+  })
+])
 
 const server = new Server(routes)
 export default { fetch: (req: Request) => server.fetch(req) }
@@ -354,7 +353,7 @@ export default { fetch: (req: Request) => server.fetch(req) }
 ## 完整示例
 
 ```typescript
-import { Server, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { ip } from '@vafast/ip'
 
 // 创建不同配置的 IP 中间件
@@ -368,11 +367,11 @@ const strictIpMiddleware = ip({
 })
 
 // 定义路由
-const routes = [
-  {
+const routes = defineRoutes([
+  defineRoute({
     method: 'GET',
     path: '/',
-    handler: createHandler(() => {
+    handler: () => {
       return { 
         message: 'Vafast IP Tracking API',
         endpoints: [
@@ -383,24 +382,25 @@ const routes = [
           '/admin - 基于 IP 的访问控制'
         ]
       }
-    })
-  },
-  {
+    }
+  }),
+  defineRoute({
     method: 'GET',
     path: '/basic',
-    handler: createHandler((request: Request) => {
+    middleware: [basicIpMiddleware],
+    handler: (request: Request) => {
       return { 
         message: 'Basic IP tracking',
         clientIP: (request as any).ip || 'Unknown',
         method: 'Default headers check'
       }
-    }),
-    middleware: [basicIpMiddleware],
-  },
-  {
+    }
+  }),
+  defineRoute({
     method: 'GET',
     path: '/custom',
-    handler: createHandler((request: Request) => {
+    middleware: [customIpMiddleware],
+    handler: (request: Request) => {
       return { 
         message: 'Custom headers IP tracking',
         clientIP: (request as any).ip || 'Unknown',
@@ -411,13 +411,13 @@ const routes = [
           'x-forwarded-for'
         ]
       }
-    }),
-    middleware: [customIpMiddleware],
-  },
-  {
+    }
+  }),
+  defineRoute({
     method: 'GET',
     path: '/strict',
-    handler: createHandler((request: Request) => {
+    middleware: [strictIpMiddleware],
+    handler: (request: Request) => {
       return { 
         message: 'Strict headers IP tracking',
         clientIP: (request as any).ip || 'Unknown',
@@ -427,49 +427,49 @@ const routes = [
           'cf-connecting-ip'
         ]
       }
-    }),
-    middleware: [strictIpMiddleware],
-  },
-  {
+    }
+  }),
+  defineRoute({
     method: 'GET',
     path: '/multi',
-    handler: createHandler((request: Request) => {
+    middleware: [basicIpMiddleware],
+    handler: (request: Request) => {
       return { 
         message: 'Multi-instance IP tracking',
         clientIP: (request as any).ip || 'Unknown',
         instances: ['/multi/a', '/multi/b']
       }
-    }),
-    middleware: [basicIpMiddleware],
-  },
-  {
+    }
+  }),
+  defineRoute({
     method: 'GET',
     path: '/multi/a',
-    handler: createHandler((request: Request) => {
+    middleware: [basicIpMiddleware],
+    handler: (request: Request) => {
       return { 
         instance: 'A',
         clientIP: (request as any).ip || 'Unknown',
         timestamp: new Date().toISOString()
       }
-    }),
-    middleware: [basicIpMiddleware],
-  },
-  {
+    }
+  }),
+  defineRoute({
     method: 'GET',
     path: '/multi/b',
-    handler: createHandler((request: Request) => {
+    middleware: [basicIpMiddleware],
+    handler: (request: Request) => {
       return { 
         instance: 'B',
         clientIP: (request as any).ip || 'Unknown',
         timestamp: new Date().toISOString()
       }
-    }),
-    middleware: [basicIpMiddleware],
-  },
-  {
+    }
+  }),
+  defineRoute({
     method: 'GET',
     path: '/admin',
-    handler: createHandler((request: Request) => {
+    middleware: [basicIpMiddleware],
+    handler: (request: Request) => {
       const clientIP = (request as any).ip
       
       // 简单的 IP 白名单
@@ -491,13 +491,13 @@ const routes = [
           timestamp: new Date().toISOString()
         }
       }
-    }),
-    middleware: [basicIpMiddleware],
-  },
-  {
+    }
+  }),
+  defineRoute({
     method: 'POST',
     path: '/api/log',
-    handler: createHandler(async (request: Request) => {
+    middleware: [basicIpMiddleware],
+    handler: async (request: Request) => {
       const clientIP = (request as any).ip
       const body = await request.json()
       
@@ -510,18 +510,15 @@ const routes = [
         action: body.action,
         timestamp: new Date().toISOString()
       }
-    }),
-    middleware: [basicIpMiddleware],
-  }
-]
+    }
+  })
+])
 
 // 创建服务器
 const server = new Server(routes)
 
 // 导出 fetch 函数
-export default {
-  fetch: (req: Request) => server.fetch(req),
-}
+export default { fetch: server.fetch }
 
 console.log('Vafast IP Tracking API 服务器启动成功！')
 console.log('基本 IP 获取: GET /basic')
@@ -536,23 +533,23 @@ console.log('活动记录: POST /api/log')
 
 ```typescript
 import { describe, expect, it } from 'bun:test'
-import { Server, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { ip } from '@vafast/ip'
 
 describe('Vafast IP Plugin', () => {
   it('should extract IP from X-Real-IP header', async () => {
     const ipMiddleware = ip()
 
-    const app = new Server([
-      {
+    const app = new Server(defineRoutes([
+      defineRoute({
         method: 'GET',
         path: '/',
-        handler: createHandler(({ req }: { req: Request }) => {
-          return { ip: (req as any).ip }
-        }),
         middleware: [ipMiddleware],
-      },
-    ])
+        handler: ({ req }: { req: Request }) => {
+          return { ip: (req as any).ip }
+        }
+      })
+    ]))
 
     const req = new Request('http://localhost/', {
       headers: {
@@ -569,16 +566,16 @@ describe('Vafast IP Plugin', () => {
   it('should extract IP from X-Forwarded-For header', async () => {
     const ipMiddleware = ip()
 
-    const app = new Server([
-      {
+    const app = new Server(defineRoutes([
+      defineRoute({
         method: 'GET',
         path: '/',
-        handler: createHandler(({ req }: { req: Request }) => {
-          return { ip: (req as any).ip }
-        }),
         middleware: [ipMiddleware],
-      },
-    ])
+        handler: ({ req }: { req: Request }) => {
+          return { ip: (req as any).ip }
+        }
+      })
+    ]))
 
     const req = new Request('http://localhost/', {
       headers: {
@@ -596,16 +593,16 @@ describe('Vafast IP Plugin', () => {
   it('should extract IP from Cloudflare header', async () => {
     const ipMiddleware = ip()
 
-    const app = new Server([
-      {
+    const app = new Server(defineRoutes([
+      defineRoute({
         method: 'GET',
         path: '/',
-        handler: createHandler(({ req }: { req: Request }) => {
-          return { ip: (req as any).ip }
-        }),
         middleware: [ipMiddleware],
-      },
-    ])
+        handler: ({ req }: { req: Request }) => {
+          return { ip: (req as any).ip }
+        }
+      })
+    ]))
 
     const req = new Request('http://localhost/', {
       headers: {
@@ -624,16 +621,16 @@ describe('Vafast IP Plugin', () => {
       checkHeaders: ['X-Custom-IP', 'X-Real-IP'],
     })
 
-    const app = new Server([
-      {
+    const app = new Server(defineRoutes([
+      defineRoute({
         method: 'GET',
         path: '/',
-        handler: createHandler(({ req }: { req: Request }) => {
-          return { ip: (req as any).ip }
-        }),
         middleware: [ipMiddleware],
-      },
-    ])
+        handler: ({ req }: { req: Request }) => {
+          return { ip: (req as any).ip }
+        }
+      })
+    ]))
 
     const req = new Request('http://localhost/', {
       headers: {

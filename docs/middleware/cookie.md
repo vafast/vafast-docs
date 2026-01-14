@@ -15,32 +15,32 @@ npm install @vafast/cookie
 ## 使用
 
 ```typescript
-import { Server, defineRoutes, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { cookie } from '@vafast/cookie'
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/profile',
     middleware: [cookie()],
-    handler: createHandler(({ cookies }) => {
+    handler: ({ cookies }) => {
       const sessionId = cookies.get('session')
       return { sessionId }
-    })
-  },
-  {
+    }
+  }),
+  defineRoute({
     method: 'POST',
     path: '/login',
     middleware: [cookie()],
-    handler: createHandler(({ setCookie }) => {
+    handler: ({ setCookie }) => {
       setCookie('session', 'abc123', {
         httpOnly: true,
         secure: true,
         maxAge: 3600
       })
       return { success: true }
-    })
-  }
+    }
+  })
 ])
 
 const server = new Server(routes)

@@ -15,16 +15,16 @@ Bun 包含一个内置的 [测试运行器](https://bun.sh/docs/cli/test)，通�
 ```typescript
 // test/index.test.ts
 import { describe, expect, it } from 'bun:test'
-import { Server, defineRoutes, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 
 describe('Vafast', () => {
     it('returns a response', async () => {
         const routes = defineRoutes([
-          {
+          defineRoute({
             method: 'GET',
             path: '/',
-            handler: createHandler(() => 'hi')
-          }
+            handler: () => 'hi'
+          })
         ])
         
         const server = new Server(routes)
@@ -62,20 +62,20 @@ npm test
 ```typescript
 // test/routes.test.ts
 import { describe, expect, it } from 'bun:test'
-import { Server, defineRoutes, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 
 describe('Vafast Routes', () => {
     const routes = defineRoutes([
-      {
+      defineRoute({
         method: 'GET',
         path: '/users/:id',
-        handler: createHandler(({ params }) => `User ${params.id}`)
-      },
-      {
+        handler: ({ params }) => `User ${params.id}`
+      }),
+      defineRoute({
         method: 'POST',
         path: '/users',
-        handler: createHandler(({ body }) => ({ id: 1, ...body }))
-      }
+        handler: ({ body }) => ({ id: 1, ...body })
+      })
     ])
     
     const server = new Server(routes)
@@ -113,7 +113,7 @@ describe('Vafast Routes', () => {
 ```typescript
 // test/middleware.test.ts
 import { describe, expect, it } from 'bun:test'
-import { Server, defineRoutes, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 
 describe('Vafast Middleware', () => {
     const loggingMiddleware = async (req: Request, next: () => Promise<Response>) => {
@@ -124,15 +124,15 @@ describe('Vafast Middleware', () => {
     }
 
     const routes = defineRoutes([
-      {
+      defineRoute({
         method: 'GET',
         path: '/test',
-        handler: createHandler(() => 'Hello from middleware')
-      }
+        handler: () => 'Hello from middleware'
+      })
     ])
     
     const server = new Server(routes)
-    server.use(loggingMiddleware)
+    server.useGlobalMiddleware(loggingMiddleware)
 
     it('executes middleware correctly', async () => {
         const response = await server
@@ -151,8 +151,7 @@ describe('Vafast Middleware', () => {
 ```typescript
 // test/validation.test.ts
 import { describe, expect, it } from 'bun:test'
-import { Server, defineRoutes, createHandler } from 'vafast'
-import { Type } from 'vafast'
+import { Server, defineRoute, defineRoutes, Type } from 'vafast'
 
 describe('Vafast Validation', () => {
     const userSchema = Type.Object({
@@ -162,12 +161,12 @@ describe('Vafast Validation', () => {
     })
 
     const routes = defineRoutes([
-      {
+      defineRoute({
         method: 'POST',
         path: '/users',
-        handler: createHandler(({ body }) => ({ success: true, user: body })),
-        body: userSchema
-      }
+        schema: { body: userSchema },
+        handler: ({ body }) => ({ success: true, user: body })
+      })
     ])
     
     const server = new Server(routes)
@@ -213,22 +212,22 @@ describe('Vafast Validation', () => {
 ```typescript
 // test/error-handling.test.ts
 import { describe, expect, it } from 'bun:test'
-import { Server, defineRoutes, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 
 describe('Vafast Error Handling', () => {
     const routes = defineRoutes([
-      {
+      defineRoute({
         method: 'GET',
         path: '/error',
-        handler: createHandler(() => {
+        handler: () => {
             throw new Error('Something went wrong')
-        })
-      },
-      {
+        }
+      }),
+      defineRoute({
         method: 'GET',
         path: '/not-found',
-        handler: createHandler(() => 'This should not be reached')
-      }
+        handler: () => 'This should not be reached'
+      })
     ])
     
     const server = new Server(routes)
@@ -265,36 +264,36 @@ describe('Vafast Error Handling', () => {
 ```typescript
 // test/integration.test.ts
 import { describe, expect, it } from 'bun:test'
-import { Server, defineRoutes, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 
 describe('Vafast Integration', () => {
     let server: Server
 
     beforeAll(() => {
         const routes = defineRoutes([
-          {
+          defineRoute({
             method: 'GET',
             path: '/health',
-            handler: createHandler(() => ({ status: 'ok' }))
-          },
-          {
+            handler: () => ({ status: 'ok' })
+          }),
+          defineRoute({
             method: 'GET',
             path: '/users/:id',
-            handler: createHandler(({ params }) => ({
+            handler: ({ params }) => ({
                 id: params.id,
                 name: 'Test User',
                 email: 'test@example.com'
-            }))
-          },
-          {
+            })
+          }),
+          defineRoute({
             method: 'POST',
             path: '/users',
-            handler: createHandler(({ body }) => ({
+            handler: ({ body }) => ({
                 id: Date.now(),
                 ...body,
                 createdAt: new Date().toISOString()
-            }))
-          }
+            })
+          })
         ])
         
         server = new Server(routes)

@@ -51,8 +51,8 @@ type LegacyHandler = (
   user?: Record<string, any>
 ) => ResponseBody | Promise<ResponseBody>
 
-// createHandler 返回的类型（推荐）
-type FactoryHandler = (req: Request) => Promise<Response>
+// Handler 类型（推荐）
+type Handler = (ctx: HandlerContext) => ResponseBody | Promise<ResponseBody>
 ```
 
 ### Middleware 类型
@@ -264,63 +264,63 @@ const routes = defineRoutes([
 ### 全局中间件
 
 ```typescript
-const routes = [
+const routes = defineRoutes([
   {
     path: '/api',
     middleware: [logMiddleware], // 应用到所有子路由
     children: [
-      {
+      defineRoute({
         method: 'GET',
         path: '/users',
-        handler: createHandler(() => ({ message: 'Users' }))
-      }
+        handler: () => ({ message: 'Users' })
+      })
     ]
   }
-]
+])
 ```
 
 ## 路由处理函数
 
-处理函数是路由的核心，负责处理请求并返回响应。**推荐使用 `createHandler` 包装处理函数**，它提供统一的上下文解构和自动响应转换。
+处理函数是路由的核心，负责处理请求并返回响应。**Handler 直接是函数，不再需要 `createHandler` 包装**，框架会自动处理上下文解构和响应转换。
 
 ### 基本处理函数
 
 ```typescript
-{
+defineRoute({
   method: 'GET',
   path: '/hello',
-  handler: createHandler(() => 'Hello World')
-}
+  handler: () => 'Hello World'
+})
 ```
 
 ### 异步处理函数
 
 ```typescript
-{
+defineRoute({
   method: 'POST',
   path: '/users',
-  handler: createHandler(async ({ body }) => {
+  handler: async ({ body }) => {
     // body 已自动解析
     const user = await createUser(body)
     return user
-  })
-}
+  }
+})
 ```
 
 ### 访问请求上下文
 
-`createHandler` 提供了完整的请求上下文：
+Handler 自动提供完整的请求上下文：
 
 ```typescript
-{
+defineRoute({
   method: 'GET',
   path: '/users/:id',
-  handler: createHandler(({ req, params, query, headers, cookies }) => ({
+  handler: ({ req, params, query, headers, cookies }) => ({
     userId: params.id,
     search: query.q,
     userAgent: headers['user-agent']
-  }))
-}
+  })
+})
 ```
 
 ## 响应处理
@@ -331,16 +331,16 @@ Vafast 会**自动转换返回值**为 Response，你可以直接返回数据：
 
 ```typescript
 // 字符串 → text/plain
-handler: createHandler(() => 'Hello World')
+handler: () => 'Hello World'
 
 // 对象/数组 → application/json
-handler: createHandler(() => ({ message: 'Success' }))
+handler: () => ({ message: 'Success' })
 
 // 数字/布尔 → text/plain
-handler: createHandler(() => 42)
+handler: () => 42
 
 // null/undefined → 204 No Content
-handler: createHandler(() => null)
+handler: () => null
 ```
 
 ### 自定义状态码和头部
@@ -348,11 +348,11 @@ handler: createHandler(() => null)
 使用 `{ data, status, headers }` 格式可以控制响应细节：
 
 ```typescript
-handler: createHandler(() => ({
+handler: () => ({
   data: { user: { id: 1, name: 'John' } },
   status: 201,
   headers: { 'X-Custom-Header': 'value' }
-}))
+})
 ```
 
 ### 重定向
@@ -360,7 +360,7 @@ handler: createHandler(() => ({
 ```typescript
 import { redirect } from 'vafast'
 
-handler: createHandler(() => redirect('/new-page'))
+handler: () => redirect('/new-page')
 ```
 
 ### 手动 Response（不推荐）
@@ -368,22 +368,22 @@ handler: createHandler(() => redirect('/new-page'))
 如需完全控制，仍可返回 Response 对象：
 
 ```typescript
-handler: createHandler(() => new Response('Custom', {
+handler: () => new Response('Custom', {
   status: 200,
   headers: { 'Content-Type': 'text/custom' }
-}))
+})
 ```
 
 ## 错误处理
 
-Vafast 内置了自动错误处理，`createHandler` 会捕获错误并返回格式化响应。
+Vafast 内置了自动错误处理，Handler 会自动捕获错误并返回格式化响应。
 
 ### 抛出错误
 
 ```typescript
-handler: createHandler(() => {
+handler: () => {
   throw new Error('Something went wrong')
-})
+}
 // 自动返回 500 错误响应
 ```
 
@@ -392,9 +392,9 @@ handler: createHandler(() => {
 ```typescript
 import { err } from 'vafast'
 
-handler: createHandler(() => {
+handler: () => {
   throw err.notFound('资源不存在')
-})
+}
 ```
 
 ## 最佳实践
@@ -403,26 +403,26 @@ handler: createHandler(() => {
 
 ```typescript
 // 按功能组织路由
-const userRoutes = [
-  {
+const userRoutes = defineRoutes([
+  defineRoute({
     method: 'GET',
     path: '/users',
-    handler: createHandler(() => ({ users: [] }))
-  },
-  {
+    handler: () => ({ users: [] })
+  }),
+  defineRoute({
     method: 'POST',
     path: '/users',
-    handler: createHandler(({ body }) => ({ user: body }))
-  }
-]
+    handler: ({ body }) => ({ user: body })
+  })
+])
 
-const postRoutes = [
-  {
+const postRoutes = defineRoutes([
+  defineRoute({
     method: 'GET',
     path: '/posts',
-    handler: createHandler(() => ({ posts: [] }))
-  }
-]
+    handler: () => ({ posts: [] })
+  })
+])
 
 const routes = [
   {
@@ -451,26 +451,24 @@ const routes = [
 ### 3. 类型安全（使用 Schema）
 
 ```typescript
-import { defineRoutes, createHandler, Type } from 'vafast'
+import { defineRoute, defineRoutes, Type } from 'vafast'
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/posts/:id/:category?',
-    handler: createHandler(
-      {
-        params: Type.Object({
-          id: Type.String(),
-          category: Type.Optional(Type.String())
-        })
-      },
-      ({ params }) => ({
-        // params 自动获得类型推导
-        postId: params.id,
-        category: params.category ?? 'default'
+    schema: {
+      params: Type.Object({
+        id: Type.String(),
+        category: Type.Optional(Type.String())
       })
-    )
-  }
+    },
+    handler: ({ params }) => ({
+      // params 自动获得类型推导
+      postId: params.id,
+      category: params.category ?? 'default'
+    })
+  })
 ])
 ```
 
@@ -479,34 +477,28 @@ const routes = defineRoutes([
 `defineRoutes()` 自动保留字面量类型，配合 `vafast-api-client` 实现端到端类型安全：
 
 ```typescript
-import { defineRoutes, createHandler, Type } from 'vafast'
+import { defineRoute, defineRoutes, Type } from 'vafast'
 import type { InferEden } from 'vafast-api-client'
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/users',
-    handler: createHandler(
-      { query: Type.Object({ page: Type.Number() }) },
-      async ({ query }) => ({ users: [], total: 0 })
-    )
-  },
-  {
+    schema: { query: Type.Object({ page: Type.Number() }) },
+    handler: async ({ query }) => ({ users: [], total: 0 })
+  }),
+  defineRoute({
     method: 'POST',
     path: '/users',
-    handler: createHandler(
-      { body: Type.Object({ name: Type.String() }) },
-      async ({ body }) => ({ id: '1', name: body.name })
-    )
-  },
-  {
+    schema: { body: Type.Object({ name: Type.String() }) },
+    handler: async ({ body }) => ({ id: '1', name: body.name })
+  }),
+  defineRoute({
     method: 'GET',
     path: '/users/:id',
-    handler: createHandler(
-      { params: Type.Object({ id: Type.String() }) },
-      async ({ params }) => ({ id: params.id, name: 'User' })
-    )
-  }
+    schema: { params: Type.Object({ id: Type.String() }) },
+    handler: async ({ params }) => ({ id: params.id, name: 'User' })
+  })
 ])
 
 // ✅ 自动推断字面量类型，无需 as const！
@@ -529,7 +521,7 @@ type Api = InferEden<typeof routes>
 Vafast 的路由系统提供了：
 
 - ✅ **defineRoutes()** - 自动保留字面量类型，支持端到端类型推断
-- ✅ **createHandler** - 推荐的处理器工厂，提供统一上下文
+- ✅ **defineRoute()** - 推荐的处理器定义方式，提供统一上下文和类型安全
 - ✅ **自动响应转换** - 直接返回数据，无需手动创建 Response
 - ✅ **完整的 HTTP 方法支持** - GET, POST, PUT, DELETE, PATCH, OPTIONS, HEAD
 - ✅ **动态路由参数** - `:id` 必选参数，`:id?` 可选参数

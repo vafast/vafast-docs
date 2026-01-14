@@ -34,20 +34,18 @@ TypeBox API 是围绕 TypeScript 类型设计的，并与之类似。
 要创建第一个模式，从 TypeBox 导入 **Type**，并从最基本的类型开始：
 
 ```typescript
-import { Server, defineRoutes, createHandler, Type } from 'vafast'
+import { Server, defineRoute, defineRoutes, Type } from 'vafast'
 
 const BodySchema = Type.String()
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'POST',
     path: '/',
-    // createHandler 会自动验证并返回 400 错误
-    handler: createHandler(
-      { body: BodySchema },
-      ({ body }) => `Hello ${body}`
-    )
-  }
+    // schema 会自动验证并返回 400 错误
+    schema: { body: BodySchema },
+    handler: ({ body }) => `Hello ${body}`
+  })
 ])
 
 const server = new Server(routes)
@@ -368,7 +366,7 @@ Vafast 使用 TypeBox 进行类型验证，提供了完整的类型安全。
 ### 请求体验证
 
 ```typescript
-import { Server, defineRoutes, createHandler, Type } from 'vafast'
+import { Server, defineRoute, defineRoutes, Type } from 'vafast'
 
 const userSchema = Type.Object({
   name: Type.String({ minLength: 1 }),
@@ -377,15 +375,13 @@ const userSchema = Type.Object({
 })
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'POST',
     path: '/users',
-    // createHandler 自动验证 body，验证失败返回 400
-    handler: createHandler(
-      { body: userSchema },
-      ({ body }) => ({ success: true, data: body })
-    )
-  }
+    // schema 自动验证 body，验证失败返回 400
+    schema: { body: userSchema },
+    handler: ({ body }) => ({ success: true, data: body })
+  })
 ])
 
 const server = new Server(routes)
@@ -395,7 +391,7 @@ export default { fetch: server.fetch }
 ### 查询参数验证
 
 ```typescript
-import { Server, defineRoutes, createHandler, Type } from 'vafast'
+import { Server, defineRoute, defineRoutes, Type } from 'vafast'
 
 const querySchema = Type.Object({
   page: Type.Optional(Type.Number({ minimum: 1 })),
@@ -404,19 +400,17 @@ const querySchema = Type.Object({
 })
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/users',
-    // createHandler 自动解析和验证 query 参数
-    handler: createHandler(
-      { query: querySchema },
-      ({ query }) => ({
-        page: query.page ?? 1,
-        limit: query.limit ?? 10,
-        search: query.search ?? ''
-      })
-    )
-  }
+    // schema 自动解析和验证 query 参数
+    schema: { query: querySchema },
+    handler: ({ query }) => ({
+      page: query.page ?? 1,
+      limit: query.limit ?? 10,
+      search: query.search ?? ''
+    })
+  })
 ])
 
 const server = new Server(routes)
@@ -426,22 +420,20 @@ export default { fetch: server.fetch }
 ### 路径参数验证
 
 ```typescript
-import { Server, defineRoutes, createHandler, Type } from 'vafast'
+import { Server, defineRoute, defineRoutes, Type } from 'vafast'
 
 const paramsSchema = Type.Object({
   id: Type.String({ minLength: 1 })
 })
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/users/:id',
-    // createHandler 自动验证 params
-    handler: createHandler(
-      { params: paramsSchema },
-      ({ params }) => ({ userId: params.id })
-    )
-  }
+    // schema 自动验证 params
+    schema: { params: paramsSchema },
+    handler: ({ params }) => ({ userId: params.id })
+  })
 ])
 
 const server = new Server(routes)
@@ -451,25 +443,23 @@ export default { fetch: server.fetch }
 ### 头部验证
 
 ```typescript
-import { Server, defineRoutes, createHandler, Type } from 'vafast'
+import { Server, defineRoute, defineRoutes, Type } from 'vafast'
 
 const headersSchema = Type.Object({
   authorization: Type.String({ pattern: '^Bearer .+' })
 })
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'POST',
     path: '/secure',
-    // createHandler 自动验证 headers
-    handler: createHandler(
-      { headers: headersSchema },
-      ({ headers }) => {
+    // schema 自动验证 headers
+    schema: { headers: headersSchema },
+    handler: ({ headers }) => {
       const token = headers.authorization.replace('Bearer ', '')
       return { token }
     }
-    )
-  }
+  })
 ])
 
 const server = new Server(routes)
@@ -499,10 +489,10 @@ type User = Static<typeof userSchema>
 
 ### 验证错误处理
 
-使用 `createHandler` 时，验证错误会自动返回 400 响应。如果需要自定义错误处理：
+使用 `defineRoute` 时，验证错误会自动返回 400 响应。如果需要自定义错误处理：
 
 ```typescript
-import { Server, defineRoutes, createHandler, Type } from 'vafast'
+import { Server, defineRoute, defineRoutes, Type } from 'vafast'
 
 const userSchema = Type.Object({
   name: Type.String({ minLength: 1 }),
@@ -510,15 +500,13 @@ const userSchema = Type.Object({
 })
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'POST',
     path: '/users',
     // 基本用法：验证失败自动返回 400
-    handler: createHandler(
-      { body: userSchema },
-      ({ body }) => ({ success: true, data: body })
-    )
-  }
+    schema: { body: userSchema },
+    handler: ({ body }) => ({ success: true, data: body })
+  })
 ])
 
 const server = new Server(routes)
@@ -601,7 +589,7 @@ const commentSchema = Type.Recursive(This => Type.Object({
 #### 预编译验证器
 
 ::: tip 推荐
-`createHandler` 内部已自动预编译 Schema，通常无需手动预编译。以下仅用于了解底层原理或脱离 Vafast 单独使用 TypeBox。
+`defineRoute` 内部已自动预编译 Schema，通常无需手动预编译。以下仅用于了解底层原理或脱离 Vafast 单独使用 TypeBox。
 :::
 
 ```typescript
@@ -613,7 +601,7 @@ const userSchema = Type.Object({
   email: Type.String()
 })
 
-// 手动预编译（createHandler 已内置，通常不需要）
+// 手动预编译（defineRoute 已内置，通常不需要）
 const userValidator = TypeCompiler.Compile(userSchema)
 
 // 使用预编译的验证器
@@ -670,7 +658,7 @@ const userQuerySchema = Type.Object({
 ### 3. 类型安全的路由定义
 
 ```typescript
-import { Server, defineRoutes, createHandler, Type } from 'vafast'
+import { Server, defineRoute, defineRoutes, Type } from 'vafast'
 import type { Static } from 'vafast'
 
 // 定义模式
@@ -685,25 +673,21 @@ const paramsSchema = Type.Object({
   id: Type.String()
 })
 
-// 定义路由 - 使用 createHandler 自动获得类型安全
+// 定义路由 - 使用 defineRoute 自动获得类型安全
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/users/:id',
-    handler: createHandler(
-      { params: paramsSchema },
-      ({ params }) => ({ userId: params.id })
-    )
-  },
-  {
+    schema: { params: paramsSchema },
+    handler: ({ params }) => ({ userId: params.id })
+  }),
+  defineRoute({
     method: 'POST',
     path: '/users',
-    handler: createHandler(
-      { body: userSchema },
-      // body 已经是完全类型安全的 User 类型
-      ({ body }) => ({ success: true, user: body })
-    )
-  }
+    schema: { body: userSchema },
+    // body 已经是完全类型安全的 User 类型
+    handler: ({ body }) => ({ success: true, user: body })
+  })
 ])
 
 const server = new Server(routes)
