@@ -106,6 +106,14 @@ const flyIn = useFlyIn(isInView)
 </script>
 
 <style scoped>
+.code-body {
+    max-height: 400px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
 .code-body :deep(*) {
     background: transparent !important;
 }
@@ -114,5 +122,18 @@ const flyIn = useFlyIn(isInView)
     padding: 1rem !important;
     margin: 0;
     font-size: 14px;
+    flex: 1;
+}
+
+.code-body :deep(div[class*='language-']) {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.code-body :deep(div[class*='language-'] > pre) {
+    margin: 0;
+    flex: 1;
 }
 </style>

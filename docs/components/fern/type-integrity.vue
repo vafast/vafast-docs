@@ -6,15 +6,9 @@
     >
         <!-- 标题 -->
         <div class="text-center mb-12">
-            <motion.p
-                class="text-sm font-medium text-cyan-500 mb-2"
-                v-bind="flyIn()"
-            >
-                类型安全
-            </motion.p>
             <motion.h2
                 class="text-4xl md:text-5xl font-bold text-gray-800 dark:text-gray-100"
-                v-bind="flyIn(0.1)"
+                v-bind="flyIn()"
             >
                 从请求到响应，全程有类型
             </motion.h2>
@@ -23,7 +17,7 @@
         <!-- 代码展示窗口 -->
         <motion.div
             layout
-            class="mx-auto w-full max-w-4xl rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden"
+            class="mx-auto w-full rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden"
             v-bind="flyIn(0.2)"
             :transition="{
                 duration: 0.5,

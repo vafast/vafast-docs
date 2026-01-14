@@ -42,7 +42,7 @@ const flyIn = useFlyIn(isInView)
 
             <!-- 代码展示 -->
             <motion.div
-                class="w-full max-w-3xl"
+                class="w-full"
                 v-bind="flyIn(0.4)"
             >
                 <div
