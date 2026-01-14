@@ -460,17 +460,11 @@ async function performRiskyOperation() {
 ## 完整示例
 
 ```typescript
-import { Server, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { opentelemetry, getTracer, startActiveSpan } from '@vafast/opentelemetry'
 
 // 导入预加载配置
 import './preload'
-
-// 创建 OpenTelemetry 中间件
-const telemetryMiddleware = opentelemetry({
-    serviceName: 'ecommerce-api',
-    instrumentations: []
-})
 
 // 模拟数据库操作
 class UserService {
@@ -582,27 +576,27 @@ const userService = new UserService()
 const productService = new ProductService()
 
 // 定义路由
-const routes = [
-    {
-        method: 'GET',
-        path: '/',
-        handler: createHandler(() => {
-            return {
-                message: 'E-commerce API with OpenTelemetry',
-                version: '1.0.0',
-                endpoints: [
-                    'GET /api/users/:id - 获取用户信息',
-                    'POST /api/users - 创建用户',
-                    'GET /api/orders/:id - 获取订单详情',
-                    'POST /api/orders - 创建订单'
-                ]
-            }
-        })
-    },
-    {
-        method: 'GET',
-        path: '/api/users/:id',
-        handler: createHandler(async ({ params }) => {
+const routes = defineRoutes([
+  defineRoute({
+    method: 'GET',
+    path: '/',
+    handler: () => {
+      return {
+        message: 'E-commerce API with OpenTelemetry',
+        version: '1.0.0',
+        endpoints: [
+          'GET /api/users/:id - 获取用户信息',
+          'POST /api/users - 创建用户',
+          'GET /api/orders/:id - 获取订单详情',
+          'POST /api/orders - 创建订单'
+        ]
+      }
+    }
+  }),
+  defineRoute({
+    method: 'GET',
+    path: '/api/users/:id',
+    handler: async ({ params }) => {
             const tracer = getTracer()
             
             return tracer.startActiveSpan('api.get-user', {
@@ -636,12 +630,12 @@ const routes = [
                     span.end()
                 }
             })
-        })
-    },
-    {
-        method: 'POST',
-        path: '/api/users',
-        handler: createHandler(async ({ req }) => {
+    }
+  }),
+  defineRoute({
+    method: 'POST',
+    path: '/api/users',
+    handler: async ({ req }) => {
             const tracer = getTracer()
             
             return tracer.startActiveSpan('api.create-user', {
@@ -683,12 +677,12 @@ const routes = [
                     span.end()
                 }
             })
-        })
-    },
-    {
-        method: 'GET',
-        path: '/api/orders/:id',
-        handler: createHandler(async ({ params }) => {
+    }
+  }),
+  defineRoute({
+    method: 'GET',
+    path: '/api/orders/:id',
+    handler: async ({ params }) => {
             const tracer = getTracer()
             
             return tracer.startActiveSpan('api.get-order', {
@@ -744,82 +738,85 @@ const routes = [
                 }
             })
         })
-    },
-    {
-        method: 'POST',
-        path: '/api/orders',
-        handler: createHandler(async ({ req }) => {
-            const tracer = getTracer()
-            
-            return tracer.startActiveSpan('api.create-order', {
-                attributes: {
-                    'http.method': 'POST',
-                    'http.route': '/api/orders'
-                }
-            }, async (span) => {
-                try {
-                    const body = await req.json()
-                    
-                    span.setAttributes({
-                        'order.user.id': body.userId,
-                        'order.products.count': body.productIds?.length || 0
-                    })
-                    
-                    // 验证用户存在
-                    const user = await userService.getUser(body.userId)
-                    
-                    // 获取产品信息
-                    const products = await productService.getProducts(body.productIds || [])
-                    
-                    // 计算总价
-                    const total = products.reduce((sum, product) => sum + product.price, 0)
-                    
-                    const order = {
-                        id: Math.random().toString(36).substr(2, 9),
-                        userId: body.userId,
-                        productIds: body.productIds || [],
-                        total,
-                        status: 'pending',
-                        createdAt: new Date().toISOString()
-                    }
-                    
-                    span.setAttributes({
-                        'response.status': 201,
-                        'response.type': 'success',
-                        'order.id': order.id,
-                        'order.total': order.total
-                    })
-                    
-                    return {
-                        success: true,
-                        data: order,
-                        message: 'Order created successfully'
-                    }
-                } catch (error) {
-                    span.setAttributes({
-                        'response.status': 500,
-                        'response.type': 'error'
-                    })
-                    
-                    span.recordException(error as Error)
-                    throw error
-                } finally {
-                    span.end()
-                }
-            })
-        })
     }
-]
+  }),
+  defineRoute({
+    method: 'POST',
+    path: '/api/orders',
+    handler: async ({ req }) => {
+      const tracer = getTracer()
+      
+      return tracer.startActiveSpan('api.create-order', {
+        attributes: {
+          'http.method': 'POST',
+          'http.route': '/api/orders'
+        }
+      }, async (span) => {
+        try {
+          const body = await req.json()
+          
+          span.setAttributes({
+            'order.user.id': body.userId,
+            'order.products.count': body.productIds?.length || 0
+          })
+          
+          // 验证用户存在
+          const user = await userService.getUser(body.userId)
+          
+          // 获取产品信息
+          const products = await productService.getProducts(body.productIds || [])
+          
+          // 计算总价
+          const total = products.reduce((sum, product) => sum + product.price, 0)
+          
+          const order = {
+            id: Math.random().toString(36).substr(2, 9),
+            userId: body.userId,
+            productIds: body.productIds || [],
+            total,
+            status: 'pending',
+            createdAt: new Date().toISOString()
+          }
+          
+          span.setAttributes({
+            'response.status': 201,
+            'response.type': 'success',
+            'order.id': order.id,
+            'order.total': order.total
+          })
+          
+          return {
+            success: true,
+            data: order,
+            message: 'Order created successfully'
+          }
+        } catch (error) {
+          span.setAttributes({
+            'response.status': 500,
+            'response.type': 'error'
+          })
+          
+          span.recordException(error as Error)
+          throw error
+        } finally {
+          span.end()
+        }
+      })
+    }
+  })
+])
 
 // 创建服务器
 const server = new Server(routes)
 
-// 导出 fetch 函数，应用中间件
-export default {
-    fetch: (req: Request) => {
-        return telemetryMiddleware(req, () => server.fetch(req))
-    }
-}
+// 应用 OpenTelemetry 中间件
+server.useGlobalMiddleware(opentelemetry({
+  serviceName: 'ecommerce-api',
+  instrumentations: []
+}))
+
+// 导出 fetch 函数
+export default { fetch: server.fetch }
 
 console.log('E-commerce API with OpenTelemetry 服务器启动成功！')
 console.log('所有请求都将被自动追踪和监控')
@@ -830,7 +827,7 @@ console.log('🔍 查看 Jaeger 或其他 OpenTelemetry 后端以获取追踪数
 
 ```typescript
 import { describe, expect, it } from 'bun:test'
-import { Server, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { opentelemetry } from '@vafast/opentelemetry'
 
 describe('Vafast OpenTelemetry Plugin', () => {
@@ -845,27 +842,23 @@ describe('Vafast OpenTelemetry Plugin', () => {
     })
 
     it('should process requests through OpenTelemetry middleware', async () => {
-        const telemetryMiddleware = opentelemetry({
-            serviceName: 'test-app',
-            instrumentations: []
-        })
-
-        const app = new Server([
-            {
-                method: 'GET',
-                path: '/',
-                handler: createHandler(() => {
-                    return 'Hello, OpenTelemetry!'
-                })
+        const app = new Server(defineRoutes([
+          defineRoute({
+            method: 'GET',
+            path: '/',
+            handler: () => {
+              return 'Hello, OpenTelemetry!'
             }
-        ])
+          })
+        ]))
 
         // 应用中间件
-        const wrappedFetch = (req: Request) => {
-            return telemetryMiddleware(req, () => app.fetch(req))
-        }
+        app.useGlobalMiddleware(opentelemetry({
+          serviceName: 'test-app',
+          instrumentations: []
+        }))
 
-        const res = await wrappedFetch(new Request('http://localhost/'))
+        const res = await app.fetch(new Request('http://localhost/'))
         const data = await res.text()
 
         expect(data).toBe('Hello, OpenTelemetry!')
@@ -873,28 +866,24 @@ describe('Vafast OpenTelemetry Plugin', () => {
     })
 
     it('should handle errors in OpenTelemetry middleware', async () => {
-        const telemetryMiddleware = opentelemetry({
-            serviceName: 'test-app',
-            instrumentations: []
-        })
-        
-        const app = new Server([
-            {
-                method: 'GET',
-                path: '/error',
-                handler: createHandler(() => {
-                    throw new Error('Test error')
-                })
+        const app = new Server(defineRoutes([
+          defineRoute({
+            method: 'GET',
+            path: '/error',
+            handler: () => {
+              throw new Error('Test error')
             }
-        ])
+          })
+        ]))
 
         // 应用中间件
-        const wrappedFetch = (req: Request) => {
-            return telemetryMiddleware(req, () => app.fetch(req))
-        }
+        app.useGlobalMiddleware(opentelemetry({
+          serviceName: 'test-app',
+          instrumentations: []
+        }))
 
         // 测试错误处理 - OpenTelemetry 中间件应该能够处理错误
-        const result = await wrappedFetch(new Request('http://localhost/error'))
+        const result = await app.fetch(new Request('http://localhost/error'))
         // 如果中间件正确处理了错误，我们应该得到一个响应而不是抛出异常
         expect(result).toBeDefined()
     })
@@ -923,21 +912,23 @@ describe('Vafast OpenTelemetry Plugin', () => {
             instrumentations: []
         })
 
-        const app = new Server([
-            {
-                method: 'POST',
-                path: '/',
-                handler: createHandler(() => {
-                    return { message: 'POST request' }
-                })
+        const app = new Server(defineRoutes([
+          defineRoute({
+            method: 'POST',
+            path: '/',
+            handler: () => {
+              return { message: 'POST request' }
             }
-        ])
+          })
+        ]))
 
-        const wrappedFetch = (req: Request) => {
-            return telemetryMiddleware(req, () => app.fetch(req))
-        }
+        // 应用中间件
+        app.useGlobalMiddleware(opentelemetry({
+          serviceName: 'test-app',
+          instrumentations: []
+        }))
 
-        const res = await wrappedFetch(new Request('http://localhost/', {
+        const res = await app.fetch(new Request('http://localhost/', {
             method: 'POST'
         }))
         const data = await res.json()

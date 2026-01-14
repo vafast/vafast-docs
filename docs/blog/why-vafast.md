@@ -115,6 +115,7 @@ export const routes = defineRoutes([
 export type AppRoutes = typeof routes
 ```
 
+```typescript
 // 客户端
 import { eden, InferEden } from '@vafast/api-client'
 import type { AppRoutes } from './server'

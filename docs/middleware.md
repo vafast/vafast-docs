@@ -284,7 +284,7 @@ const routes = defineRoutes([
     method: 'GET',
     path: '/admin/users',
     middleware: [adminOnly],
-    handler: createHandler(() => ({ users: [] }))
+    handler: () => ({ users: [] })
   }
 ])
 ```
@@ -302,12 +302,12 @@ const routes = defineRoutes([
       {
         method: 'GET',
         path: '/users',
-        handler: createHandler(() => ({ message: 'Users' }))
+        handler: () => ({ message: 'Users' })
       },
       {
         method: 'GET',
         path: '/posts',
-        handler: createHandler(() => ({ message: 'Posts' }))
+        handler: () => ({ message: 'Posts' })
       }
     ]
   }
@@ -372,7 +372,7 @@ const routes = defineRoutes([
     method: 'GET',
     path: '/api/users',
     middleware: [safeMiddleware(authMiddleware)],
-    handler: createHandler(() => ({ message: 'Users' }))
+    handler: () => ({ message: 'Users' })
   }
 ])
 ```
@@ -391,7 +391,7 @@ const routes = defineRoutes([
       authMiddleware,       // 4. 身份验证
       errorHandler          // 5. 错误处理
     ],
-    handler: createHandler(() => ({ message: 'Users' }))
+    handler: () => ({ message: 'Users' })
   }
 ])
 ```

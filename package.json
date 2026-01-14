@@ -17,6 +17,7 @@
         "@iconify/json": "^2.2.365",
         "@number-flow/vue": "^0.4.8",
         "@tailwindcss/vite": "^4.1.11",
+        "@vafast/api-client": "^0.2.0",
         "@vueuse/core": "^13.6.0",
         "clsx": "^2.1.1",
         "dayjs": "^1.11.13",
@@ -24,8 +25,7 @@
         "motion-v": "^1.6.1",
         "shiki": "^3.9.2",
         "tailwindcss": "^4.1.11",
-        "vafast": "^0.4.23",
-        "@vafast/api-client": "^0.1.5"
+        "vafast": "^0.5.5"
     },
     "devDependencies": {
         "@nolebase/vitepress-plugin-inline-link-preview": "^2.18.1",

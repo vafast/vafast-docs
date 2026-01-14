@@ -69,7 +69,10 @@ export default { fetch: server.fetch }
 {
   method: 'POST',
   path: '/orders',
-  handler: createHandler(...),
+  handler: async ({ body }) => {
+    // 处理订单创建逻辑
+    return { success: true, order: body }
+  },
   webhook: {
     // 事件键（自动从路径派生，或手动指定）
     eventKey: 'order.created',
@@ -104,7 +107,10 @@ export default { fetch: server.fetch }
 {
   method: 'POST',
   path: '/users',
-  handler: createHandler(...),
+  handler: async ({ body }) => {
+    // 处理用户创建逻辑
+    return { success: true, user: body }
+  },
   webhook: true  // 使用默认配置
 }
 ```

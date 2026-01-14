@@ -272,7 +272,7 @@ export default { fetch: server.fetch }
 ### 4. 完整的 API 文档
 
 ```typescript
-import { Server, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { swagger } from '@vafast/swagger'
 
 const swaggerMiddleware = swagger({
@@ -382,37 +382,36 @@ const swaggerMiddleware = swagger({
     }
 })
 
-const routes = [
-    {
-        method: 'GET',
-        path: '/api/users',
-        handler: createHandler(() => {
-            return { users: [] }
-        })
-    },
-    {
-        method: 'POST',
-        path: '/api/users',
-        handler: createHandler(async (req: Request) => {
-            const userData = await req.json()
-            return { ...userData, id: 'generated-id' }
-        })
+const routes = defineRoutes([
+  defineRoute({
+    method: 'GET',
+    path: '/api/users',
+    handler: () => {
+      return { users: [] }
     }
-]
+  }),
+  defineRoute({
+    method: 'POST',
+    path: '/api/users',
+    handler: async (req: Request) => {
+      const userData = await req.json()
+      return { ...userData, id: 'generated-id' }
+    }
+  })
+])
 
 const server = new Server(routes)
 
-export default {
-    fetch: (req: Request) => {
-        return swaggerMiddleware(req, () => server.fetch(req))
-    }
-}
+// 应用 Swagger 中间件
+server.useGlobalMiddleware(swaggerMiddleware)
+
+export default { fetch: server.fetch }
 ```
 
 ### 5. 中间件集成
 
 ```typescript
-import { Server, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { swagger } from '@vafast/swagger'
 
 // 创建 Swagger 中间件
@@ -428,42 +427,36 @@ const swaggerMiddleware = swagger({
 })
 
 // 定义路由
-const routes = [
-    {
-        method: 'GET',
-        path: '/',
-        handler: createHandler(() => {
-            return { message: 'API is running' }
-        })
-    },
-    {
-        method: 'GET',
-        path: '/api/status',
-        handler: createHandler(() => {
-            return { status: 'healthy', timestamp: new Date().toISOString() }
-        })
+const routes = defineRoutes([
+  defineRoute({
+    method: 'GET',
+    path: '/',
+    handler: () => {
+      return { message: 'API is running' }
     }
-]
+  }),
+  defineRoute({
+    method: 'GET',
+    path: '/api/status',
+    handler: () => {
+      return { status: 'healthy', timestamp: new Date().toISOString() }
+    }
+  })
+])
 
 const server = new Server(routes)
 
-// 创建中间件包装器
-const createMiddlewareWrapper = (middleware: any, handler: any) => {
-    return async (req: Request) => {
-        return middleware(req, () => handler(req))
-    }
-}
+// 应用 Swagger 中间件
+server.useGlobalMiddleware(swaggerMiddleware)
 
-// 导出带中间件的 fetch 函数
-export default {
-    fetch: createMiddlewareWrapper(swaggerMiddleware, server.fetch.bind(server))
-}
+// 导出 fetch 函数
+export default { fetch: server.fetch }
 ```
 
 ## 完整示例
 
 ```typescript
-import { Server, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { swagger } from '@vafast/swagger'
 
 // 创建 Swagger 中间件
@@ -608,74 +601,74 @@ const swaggerMiddleware = swagger({
 })
 
 // 定义 API 路由
-const routes = [
-    {
-        method: 'GET',
-        path: '/',
-        handler: createHandler(() => {
-            return {
-                message: 'Vafast Swagger Example API',
-                version: '1.0.0',
-                documentation: '/swagger',
-                openapi: '/swagger/json'
-            }
-        })
-    },
-    {
-        method: 'GET',
-        path: '/api/test',
-        handler: createHandler(() => {
-            return {
-                success: true,
-                message: 'Test endpoint working',
-                data: { timestamp: new Date().toISOString() }
-            }
-        })
-    },
-    {
-        method: 'GET',
-        path: '/api/users',
-        handler: createHandler(() => {
-            return [
-                { username: 'john_doe', email: 'john@example.com', age: 30 },
-                { username: 'jane_smith', email: 'jane@example.com', age: 25 }
-            ]
-        })
-    },
-    {
-        method: 'POST',
-        path: '/api/users',
-        handler: createHandler(async (req: Request) => {
-            const userData = await req.json()
-            return {
-                ...userData,
-                id: `user_${Date.now()}`,
-                createdAt: new Date().toISOString()
-            }
-        })
-    },
-    {
-        method: 'GET',
-        path: '/api/health',
-        handler: createHandler(() => {
-            return {
-                status: 'healthy',
-                uptime: process.uptime(),
-                timestamp: new Date().toISOString()
-            }
-        })
+const routes = defineRoutes([
+  defineRoute({
+    method: 'GET',
+    path: '/',
+    handler: () => {
+      return {
+        message: 'Vafast Swagger Example API',
+        version: '1.0.0',
+        documentation: '/swagger',
+        openapi: '/swagger/json'
+      }
     }
-]
+  }),
+  defineRoute({
+    method: 'GET',
+    path: '/api/test',
+    handler: () => {
+      return {
+        success: true,
+        message: 'Test endpoint working',
+        data: { timestamp: new Date().toISOString() }
+      }
+    }
+  }),
+  defineRoute({
+    method: 'GET',
+    path: '/api/users',
+    handler: () => {
+      return [
+        { username: 'john_doe', email: 'john@example.com', age: 30 },
+        { username: 'jane_smith', email: 'jane@example.com', age: 25 }
+      ]
+    }
+  }),
+  defineRoute({
+    method: 'POST',
+    path: '/api/users',
+    handler: async (req: Request) => {
+      const userData = await req.json()
+      return {
+        ...userData,
+        id: `user_${Date.now()}`,
+        createdAt: new Date().toISOString()
+      }
+    }
+  }),
+  defineRoute({
+    method: 'GET',
+    path: '/api/health',
+    handler: () => {
+      return {
+        status: 'healthy',
+        uptime: process.uptime(),
+        timestamp: new Date().toISOString()
+      }
+    }
+  })
+])
 
 // 创建服务器
 const server = new Server(routes)
 
-// 导出带 Swagger 中间件的 fetch 函数
-export default {
-    fetch: (req: Request) => {
-        return swaggerMiddleware(req, () => server.fetch(req))
-    }
-}
+// 应用 Swagger 中间件
+server.useGlobalMiddleware(swaggerMiddleware)
+
+// 导出 fetch 函数
+export default { fetch: server.fetch }
+```
 
 console.log('Vafast Swagger Example Server 启动成功！')
 console.log('API 文档：/swagger')
@@ -687,7 +680,7 @@ console.log('健康检查：/api/health')
 
 ```typescript
 import { describe, expect, it } from 'bun:test'
-import { Server, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { swagger } from '@vafast/swagger'
 
 describe('Vafast Swagger Plugin', () => {
@@ -712,23 +705,21 @@ describe('Vafast Swagger Plugin', () => {
             path: '/docs'
         })
 
-        const app = new Server([
-            {
-                method: 'GET',
-                path: '/',
-                handler: createHandler(() => {
-                    return 'Hello, API!'
-                })
+        const app = new Server(defineRoutes([
+          defineRoute({
+            method: 'GET',
+            path: '/',
+            handler: () => {
+              return 'Hello, API!'
             }
-        ])
+          })
+        ]))
 
         // 应用中间件
-        const wrappedFetch = (req: Request) => {
-            return swaggerMiddleware(req, () => app.fetch(req))
-        }
+        app.useGlobalMiddleware(swaggerMiddleware)
 
         // 测试访问 Scalar 文档页面
-        const res = await wrappedFetch(new Request('http://localhost/docs'))
+        const res = await app.fetch(new Request('http://localhost/docs'))
         expect(res.status).toBe(200)
         expect(res.headers.get('content-type')).toContain('text/html')
 
@@ -743,17 +734,18 @@ describe('Vafast Swagger Plugin', () => {
             specPath: '/docs/json'
         })
 
-        const app = new Server([
-            {
-                method: 'GET',
-                path: '/',
-                handler: createHandler(() => {
-                    return 'Hello, API!'
-                })
+        const app = new Server(defineRoutes([
+          defineRoute({
+            method: 'GET',
+            path: '/',
+            handler: () => {
+              return 'Hello, API!'
             }
-        ])
+          })
+        ]))
 
         // 应用中间件
+        app.useGlobalMiddleware(swaggerMiddleware)
         const wrappedFetch = (req: Request) => {
             return swaggerMiddleware(req, () => app.fetch(req))
         }
@@ -830,20 +822,19 @@ describe('Vafast Swagger Plugin', () => {
         })
 
         const app = new Server([
-            {
+            defineRoute({
                 method: 'GET',
                 path: '/api/data',
-                handler: createHandler(() => {
+                handler: () => {
                     return { message: 'Data endpoint' }
-                })
-            }
-        ])
+                }
+            })
+        ]))
 
-        const wrappedFetch = (req: Request) => {
-            return swaggerMiddleware(req, () => app.fetch(req))
-        }
+        // 应用中间件
+        app.useGlobalMiddleware(swaggerMiddleware)
 
-        const res = await wrappedFetch(
+        const res = await app.fetch(
             new Request('http://localhost/api/data')
         )
         const data = await res.json()

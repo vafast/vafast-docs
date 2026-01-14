@@ -147,20 +147,14 @@ export default {
 ### 3. 自定义追踪配置
 
 ```typescript
-import { Server, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { serverTiming } from '@vafast/server-timing'
 
-// 只追踪总时间，不追踪处理时间
-const timing = serverTiming({
-  enabled: true,
-  trace: { handle: false, total: true }
-})
-
-const routes = [
-  {
+const routes = defineRoutes([
+  defineRoute({
     method: 'POST',
     path: '/api/process',
-    handler: createHandler(async ({ req }) => {
+    handler: async ({ req }) => {
       const body = await req.json()
       
       // 模拟复杂处理
@@ -170,26 +164,48 @@ const routes = [
         message: 'Data processed successfully',
         result: body
       }
-    })
-  }
-]
+    }
+  })
+])
 
 const server = new Server(routes)
 
-export default {
-  fetch: (req: Request) => {
-    return timing(req, () => server.fetch(req))
-  }
-}
+// 只追踪总时间，不追踪处理时间
+server.useGlobalMiddleware(serverTiming({
+  enabled: true,
+  trace: { handle: false, total: true }
+}))
+
+export default { fetch: server.fetch }
 ```
 
 ### 4. 动态控制
 
 ```typescript
-import { Server, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { serverTiming } from '@vafast/server-timing'
 
-const timing = serverTiming({
+const routes = defineRoutes([
+  defineRoute({
+    method: 'GET',
+    path: '/api/admin/users',
+    handler: () => {
+      return { users: ['Admin1', 'Admin2'] }
+    }
+  }),
+  defineRoute({
+    method: 'GET',
+    path: '/api/public/info',
+    handler: () => {
+      return { info: 'Public information' }
+    }
+  })
+])
+
+const server = new Server(routes)
+
+// 应用 Server Timing 中间件
+server.useGlobalMiddleware(serverTiming({
   enabled: true,
   allow: async (ctx) => {
     const url = new URL(ctx.request.url)
@@ -206,69 +222,43 @@ const timing = serverTiming({
     return enableTiming
   },
   trace: { handle: true, total: true }
-})
+}))
 
-const routes = [
-  {
-    method: 'GET',
-    path: '/api/admin/users',
-    handler: createHandler(() => {
-      return { users: ['Admin1', 'Admin2'] }
-    })
-  },
-  {
-    method: 'GET',
-    path: '/api/public/info',
-    handler: createHandler(() => {
-      return { info: 'Public information' }
-    })
-  }
-]
-
-const server = new Server(routes)
-
-export default {
-  fetch: (req: Request) => {
-    return timing(req, () => server.fetch(req))
-  }
-}
+export default { fetch: server.fetch }
 ```
 
 ### 5. 生产环境配置
 
 ```typescript
-import { Server, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { serverTiming } from '@vafast/server-timing'
 
-const timing = serverTiming({
-  enabled: process.env.NODE_ENV !== 'production',
-  allow: process.env.ENABLE_TIMING === 'true',
-  trace: { handle: true, total: true }
-})
-
-const routes = [
-  {
+const routes = defineRoutes([
+  defineRoute({
     method: 'GET',
     path: '/api/health',
-    handler: createHandler(() => {
+    handler: () => {
       return { status: 'healthy', timestamp: new Date().toISOString() }
-    })
-  }
-]
+    }
+  })
+])
 
 const server = new Server(routes)
 
-export default {
-  fetch: (req: Request) => {
-    return timing(req, () => server.fetch(req))
-  }
-}
+// 应用 Server Timing 中间件
+server.useGlobalMiddleware(serverTiming({
+  enabled: process.env.NODE_ENV !== 'production',
+  allow: process.env.ENABLE_TIMING === 'true',
+  trace: { handle: true, total: true }
+}))
+
+export default { fetch: server.fetch }
 ```
 
 ## 完整示例
 
 ```typescript
-import { Server, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { serverTiming } from '@vafast/server-timing'
 
 // 模拟数据库操作
@@ -301,34 +291,12 @@ class CacheService {
 const db = new DatabaseService()
 const cache = new CacheService()
 
-// 创建不同配置的 Server Timing 中间件
-const developmentTiming = serverTiming({
-  enabled: process.env.NODE_ENV === 'development',
-  allow: true,
-  trace: { handle: true, total: true }
-})
-
-const productionTiming = serverTiming({
-  enabled: false,  // 生产环境禁用
-  allow: false,
-  trace: { handle: false, total: false }
-})
-
-const adminTiming = serverTiming({
-  enabled: true,
-  allow: (ctx) => {
-    // 只对管理员请求启用
-    return ctx.request.headers.get('x-admin-key') === process.env.ADMIN_KEY
-  },
-  trace: { handle: true, total: true }
-})
-
 // 定义路由
-const routes = [
-  {
+const routes = defineRoutes([
+  defineRoute({
     method: 'GET',
     path: '/',
-    handler: createHandler(() => {
+    handler: () => {
       return {
         message: 'Vafast Server Timing API',
         version: '1.0.0',
@@ -340,12 +308,12 @@ const routes = [
           'GET /api/health - 健康检查（无监控）'
         ]
       }
-    })
+    }
   },
   {
     method: 'GET',
     path: '/api/users',
-    handler: createHandler(async () => {
+    handler: async () => {
       // 模拟数据库查询
       const users = await db.query('SELECT * FROM users', 80)
       
@@ -355,12 +323,12 @@ const routes = [
         users: ['Alice', 'Bob', 'Charlie'],
         query: users
       }
-    })
-  },
-  {
+    }
+  }),
+  defineRoute({
     method: 'GET',
     path: '/api/users/:id',
-    handler: createHandler(async ({ params }) => {
+    handler: async ({ params }) => {
       const userId = params.id
       
       // 先尝试从缓存获取
@@ -386,12 +354,12 @@ const routes = [
         source: 'database',
         query: user
       }
-    })
-  },
-  {
+    }
+  }),
+  defineRoute({
     method: 'POST',
     path: '/api/users',
-    handler: createHandler(async ({ req }) => {
+    handler: async ({ req }) => {
       const body = await req.json()
       
       // 模拟用户创建
@@ -402,12 +370,12 @@ const routes = [
         user: newUser,
         timestamp: new Date().toISOString()
       }
-    })
-  },
-  {
+    }
+  }),
+  defineRoute({
     method: 'GET',
     path: '/api/admin/stats',
-    handler: createHandler(async () => {
+    handler: async () => {
       // 模拟管理员统计查询
       const userStats = await db.query('SELECT COUNT(*) as count FROM users', 150)
       const cacheStats = await cache.get('cache:stats', 30)
@@ -421,47 +389,39 @@ const routes = [
           lastUpdated: new Date().toISOString()
         }
       }
-    })
-  },
-  {
+    }
+  }),
+  defineRoute({
     method: 'GET',
     path: '/api/health',
-    handler: createHandler(() => {
+    handler: () => {
       return {
         status: 'healthy',
         timestamp: new Date().toISOString(),
         uptime: process.uptime(),
         version: '1.0.0'
       }
-    })
-  }
-]
+    }
+  })
+])
 
 // 创建服务器
 const server = new Server(routes)
 
-// 导出 fetch 函数，根据环境应用不同的中间件
-export default {
-  fetch: (req: Request) => {
-    const url = new URL(req.url)
-    const path = url.pathname
-    
-    // 根据路径和环境应用不同的 Server Timing 中间件
-    if (path.startsWith('/api/admin/')) {
-      return adminTiming(req, () => server.fetch(req))
-    } else if (path.startsWith('/api/')) {
-      // 根据环境变量决定使用哪个中间件
-      if (process.env.NODE_ENV === 'production') {
-        return productionTiming(req, () => server.fetch(req))
-      } else {
-        return developmentTiming(req, () => server.fetch(req))
-      }
-    } else {
-      // 其他路径不应用 Server Timing
-      return server.fetch(req)
-    }
-  }
+// 根据环境应用不同的 Server Timing 中间件
+if (process.env.NODE_ENV === 'development') {
+  server.useGlobalMiddleware(serverTiming({
+    enabled: true,
+    allow: true,
+    trace: { handle: true, total: true }
+  }))
+} else if (process.env.NODE_ENV === 'production') {
+  // 生产环境：只对管理员端点启用
+  // 这里可以通过路由级中间件实现
 }
+
+// 导出 fetch 函数
+export default { fetch: server.fetch }
 
 console.log('Vafast Server Timing API 服务器启动成功！')
 console.log('开发环境：所有 API 端点都将被监控')
@@ -474,7 +434,7 @@ console.log('健康检查：无性能监控')
 
 ```typescript
 import { describe, expect, it } from 'bun:test'
-import { Server, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { serverTiming } from '@vafast/server-timing'
 
 describe('Vafast Server Timing Plugin', () => {
@@ -489,27 +449,23 @@ describe('Vafast Server Timing Plugin', () => {
   })
 
   it('should add Server-Timing header when enabled', async () => {
-    const timingMiddleware = serverTiming({
-      enabled: true,
-      trace: { handle: true, total: true }
-    })
-
-    const app = new Server([
-      {
+    const app = new Server(defineRoutes([
+      defineRoute({
         method: 'GET',
         path: '/',
-        handler: createHandler(() => {
+        handler: () => {
           return 'Hello, Server Timing!'
-        })
-      }
-    ])
+        }
+      })
+    ]))
 
     // 应用中间件
-    const wrappedFetch = (req: Request) => {
-      return timingMiddleware(req, () => app.fetch(req))
-    }
+    app.useGlobalMiddleware(serverTiming({
+      enabled: true,
+      trace: { handle: true, total: true }
+    }))
 
-    const res = await wrappedFetch(new Request('http://localhost/'))
+    const res = await app.fetch(new Request('http://localhost/'))
     const data = await res.text()
 
     expect(data).toBe('Hello, Server Timing!')
@@ -523,27 +479,23 @@ describe('Vafast Server Timing Plugin', () => {
   })
 
   it('should not add Server-Timing header when disabled', async () => {
-    const timingMiddleware = serverTiming({
-      enabled: false,
-      trace: { handle: true, total: true }
-    })
-
-    const app = new Server([
-      {
+    const app = new Server(defineRoutes([
+      defineRoute({
         method: 'GET',
         path: '/',
-        handler: createHandler(() => {
+        handler: () => {
           return 'Hello, No Timing!'
-        })
-      }
-    ])
+        }
+      })
+    ]))
 
-    // 应用中间件
-    const wrappedFetch = (req: Request) => {
-      return timingMiddleware(req, () => app.fetch(req))
-    }
+    // 应用中间件（禁用状态）
+    app.useGlobalMiddleware(serverTiming({
+      enabled: false,
+      trace: { handle: true, total: true }
+    }))
 
-    const res = await wrappedFetch(new Request('http://localhost/'))
+    const res = await app.fetch(new Request('http://localhost/'))
     const data = await res.text()
 
     expect(data).toBe('Hello, No Timing!')
@@ -555,63 +507,57 @@ describe('Vafast Server Timing Plugin', () => {
   })
 
   it('should respect allow function for adding headers', async () => {
-    const timingMiddleware = serverTiming({
+    const app = new Server(defineRoutes([
+      defineRoute({
+        method: 'GET',
+        path: '/allow',
+        handler: () => {
+          return 'Allowed with timing'
+        }
+      }),
+      defineRoute({
+        method: 'GET',
+        path: '/deny',
+        handler: () => {
+          return 'Denied without timing'
+        }
+      })
+    ]))
+
+    // 应用中间件
+    app.useGlobalMiddleware(serverTiming({
       enabled: true,
       allow: (ctx) => ctx.request.url.includes('/allow'),
       trace: { handle: true, total: true }
-    })
-
-    const app = new Server([
-      {
-        method: 'GET',
-        path: '/allow',
-        handler: createHandler(() => {
-          return 'Allowed with timing'
-        })
-      },
-      {
-        method: 'GET',
-        path: '/deny',
-        handler: createHandler(() => {
-          return 'Denied timing'
-        })
-      }
-    ])
-
-    const wrappedFetch = (req: Request) => {
-      return timingMiddleware(req, () => app.fetch(req))
-    }
+    }))
 
     // 允许的路径应该有 Server-Timing 头部
-    const allowedRes = await wrappedFetch(new Request('http://localhost/allow'))
+    const allowedRes = await app.fetch(new Request('http://localhost/allow'))
     expect(allowedRes.headers.get('Server-Timing')).toBeDefined()
 
     // 拒绝的路径不应该有 Server-Timing 头部
-    const deniedRes = await wrappedFetch(new Request('http://localhost/deny'))
+    const deniedRes = await app.fetch(new Request('http://localhost/deny'))
     expect(deniedRes.headers.get('Server-Timing')).toBeNull()
   })
 
   it('should handle custom trace configuration', async () => {
-    const timingMiddleware = serverTiming({
-      enabled: true,
-      trace: { handle: false, total: true }
-    })
-
-    const app = new Server([
-      {
+    const app = new Server(defineRoutes([
+      defineRoute({
         method: 'GET',
         path: '/',
-        handler: createHandler(() => {
+        handler: () => {
           return 'Custom trace config'
-        })
-      }
-    ])
+        }
+      })
+    ]))
 
-    const wrappedFetch = (req: Request) => {
-      return timingMiddleware(req, () => app.fetch(req))
-    }
+    // 应用中间件
+    app.useGlobalMiddleware(serverTiming({
+      enabled: true,
+      trace: { handle: false, total: true }
+    }))
 
-    const res = await wrappedFetch(new Request('http://localhost/'))
+    const res = await app.fetch(new Request('http://localhost/'))
     const timingHeader = res.headers.get('Server-Timing')
 
     expect(timingHeader).toBeDefined()
@@ -620,28 +566,25 @@ describe('Vafast Server Timing Plugin', () => {
   })
 
   it('should work with async operations', async () => {
-    const timingMiddleware = serverTiming({
-      enabled: true,
-      trace: { handle: true, total: true }
-    })
-
-    const app = new Server([
-      {
+    const app = new Server(defineRoutes([
+      defineRoute({
         method: 'GET',
         path: '/async',
-        handler: createHandler(async () => {
+        handler: async () => {
           // 模拟异步操作
           await new Promise(resolve => setTimeout(resolve, 50))
           return 'Async operation completed'
-        })
-      }
-    ])
+        }
+      })
+    ]))
 
-    const wrappedFetch = (req: Request) => {
-      return timingMiddleware(req, () => app.fetch(req))
-    }
+    // 应用中间件
+    app.useGlobalMiddleware(serverTiming({
+      enabled: true,
+      trace: { handle: true, total: true }
+    }))
 
-    const res = await wrappedFetch(new Request('http://localhost/async'))
+    const res = await app.fetch(new Request('http://localhost/async'))
     const data = await res.text()
 
     expect(data).toBe('Async operation completed')

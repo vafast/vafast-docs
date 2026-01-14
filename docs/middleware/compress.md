@@ -137,14 +137,21 @@ interface CacheOptions {
 ### 1. 基本压缩配置
 
 ```typescript
-import { Server, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { compression } from '@vafast/compress'
 
-const routes = [
-  {
+const routes = defineRoutes([
+  defineRoute({
     method: 'GET',
     path: '/api/data',
-    handler: createHandler(() => {
+    middleware: [
+      compression({
+        encodings: ['br', 'gzip'],
+        threshold: 512, // 降低阈值，更容易触发压缩
+        compressStream: false
+      })
+    ],
+    handler: () => {
       // 返回大量数据，触发压缩
       return {
         data: Array.from({ length: 1000 }, (_, i) => ({
@@ -153,35 +160,25 @@ const routes = [
           description: `This is a description for item ${i}`.repeat(10)
         }))
       }
-    }),
-    middleware: [
-      compression({
-        encodings: ['br', 'gzip'],
-        threshold: 512, // 降低阈值，更容易触发压缩
-        compressStream: false
-      })
-    ]
-  }
-]
+    }
+  })
+])
 
 const server = new Server(routes)
-export default { fetch: (req: Request) => server.fetch(req) }
+export default { fetch: server.fetch }
 ```
 
 ### 2. 自定义压缩选项
 
 ```typescript
-import { Server, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { compression } from '@vafast/compress'
 import { constants } from 'node:zlib'
 
-const routes = [
-  {
+const routes = defineRoutes([
+  defineRoute({
     method: 'GET',
     path: '/optimized',
-    handler: createHandler(() => {
-      return { message: 'Optimized compression response' }
-    }),
     middleware: [
       compression({
         encodings: ['br', 'gzip'],
@@ -204,58 +201,65 @@ const routes = [
 ]
 
 const server = new Server(routes)
-export default { fetch: (req: Request) => server.fetch(req) }
+export default { fetch: server.fetch }
 ```
 
 ### 3. 条件压缩
 
 ```typescript
-import { Server, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { compression } from '@vafast/compress'
 
-const routes = [
-  {
+const routes = defineRoutes([
+  defineRoute({
     method: 'GET',
     path: '/public',
-    handler: createHandler(() => {
+    handler: () => {
       return { message: 'Public endpoint - no compression' }
-    })
+    }
     // 不应用压缩中间件
-  },
-  {
+  }),
+  defineRoute({
     method: 'GET',
     path: '/api/large',
-    handler: createHandler(() => {
-      return { 
-        data: 'Large response data'.repeat(1000),
-        timestamp: Date.now()
-      }
-    }),
     middleware: [
       compression({
         encodings: ['br'],
         threshold: 100,
         compressStream: false
       })
+    ],
+    handler: () => {
+      return { 
+        data: 'Large response data'.repeat(1000),
+        timestamp: Date.now()
+      }
+    }
     ]
   }
 ]
 
 const server = new Server(routes)
-export default { fetch: (req: Request) => server.fetch(req) }
+export default { fetch: server.fetch }
 ```
 
 ### 4. 流数据压缩
 
 ```typescript
-import { Server, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { compression } from '@vafast/compress'
 
-const routes = [
-  {
+const routes = defineRoutes([
+  defineRoute({
     method: 'GET',
     path: '/stream',
-    handler: createHandler(() => {
+    middleware: [
+      compression({
+        encodings: ['br', 'gzip'],
+        compressStream: true
+      })
+    ],
+    handler: () => {
       // 创建 Server-Sent Events 流
       const stream = new ReadableStream({
         start(controller) {
@@ -299,54 +303,49 @@ const routes = [
 ]
 
 const server = new Server(routes)
-export default { fetch: (req: Request) => server.fetch(req) }
+export default { fetch: server.fetch }
 ```
 
 ### 5. 全局压缩配置
 
 ```typescript
-import { Server, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { compression } from '@vafast/compress'
 
+const routes = defineRoutes([
+  defineRoute({
+    method: 'GET',
+    path: '/api/users',
+    handler: () => {
+      return { users: generateLargeUserList() }
+    }
+  }),
+  defineRoute({
+    method: 'GET',
+    path: '/api/products',
+    handler: () => {
+      return { products: generateLargeProductList() }
+    }
+  })
+])
+
+const server = new Server(routes)
+
 // 创建全局压缩中间件
-const globalCompression = compression({
+server.useGlobalMiddleware(compression({
   encodings: ['br', 'gzip'],
   threshold: 1024,
   compressStream: false,
   TTL: 7200 // 2 小时缓存
-})
+}))
 
-const routes = [
-  {
-    method: 'GET',
-    path: '/api/users',
-    handler: createHandler(() => {
-      return { users: generateLargeUserList() }
-    })
-  },
-  {
-    method: 'GET',
-    path: '/api/products',
-    handler: createHandler(() => {
-      return { products: generateLargeProductList() }
-    })
-  }
-]
-
-const server = new Server(routes)
-
-export default {
-  fetch: (req: Request) => {
-    // 为所有请求应用压缩中间件
-    return globalCompression(req, () => server.fetch(req))
-  }
-}
+export default { fetch: server.fetch }
 ```
 
 ## 完整示例
 
 ```typescript
-import { Server, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { compression } from '@vafast/compress'
 import { constants } from 'node:zlib'
 
@@ -382,11 +381,11 @@ ${'这是一个包含大量内容的文档，用于演示压缩效果。'.repeat
 }
 
 // 定义路由
-const routes = [
-  {
+const routes = defineRoutes([
+  defineRoute({
     method: 'GET',
     path: '/',
-    handler: createHandler(() => {
+    handler: () => {
       return { 
         message: 'Vafast Compression API',
         endpoints: [
@@ -396,19 +395,11 @@ const routes = [
           '/api/optimized - 获取优化压缩的数据'
         ]
       }
-    })
-  },
-  {
+    }
+  }),
+  defineRoute({
     method: 'GET',
     path: '/api/data',
-    handler: createHandler(() => {
-      return {
-        message: 'Large dataset retrieved successfully',
-        data: generateLargeDataset(500),
-        totalItems: 500,
-        timestamp: Date.now()
-      }
-    }),
     middleware: [
       compression({
         encodings: ['br', 'gzip'],
@@ -416,31 +407,47 @@ const routes = [
         compressStream: false,
         TTL: 3600 // 1 小时缓存
       })
-    ]
-  },
-  {
-    method: 'GET',
-    path: '/api/markdown',
-    handler: createHandler(() => {
+    ],
+    handler: () => {
       return {
-        content: generateMarkdownContent(),
-        format: 'markdown',
-        size: generateMarkdownContent().length,
+        message: 'Large dataset retrieved successfully',
+        data: generateLargeDataset(500),
+        totalItems: 500,
         timestamp: Date.now()
       }
-    }),
+    }
+  }),
+  defineRoute({
+    method: 'GET',
+    path: '/api/markdown',
     middleware: [
       compression({
         encodings: ['br', 'gzip', 'deflate'],
         threshold: 512,
         compressStream: false
       })
-    ]
-  },
-  {
+    ],
+    handler: () => {
+      return {
+        content: generateMarkdownContent(),
+        format: 'markdown',
+        size: generateMarkdownContent().length,
+        timestamp: Date.now()
+      }
+    }
+  }),
+  defineRoute({
     method: 'GET',
     path: '/api/stream',
-    handler: createHandler(() => {
+    middleware: [
+      compression({
+        encodings: ['gzip'],
+        threshold: 1,
+        compressStream: true,
+        zlibOptions: { level: 6 }
+      })
+    ],
+    handler: () => {
       const stream = new ReadableStream({
         start(controller) {
           let count = 0
@@ -471,30 +478,11 @@ const routes = [
           'Connection': 'keep-alive'
         }
       })
-    }),
-    middleware: [
-      compression({
-        encodings: ['gzip'],
-        threshold: 1,
-        compressStream: true,
-        zlibOptions: { level: 6 }
-      })
-    ]
-  },
-  {
+    }
+  }),
+  defineRoute({
     method: 'GET',
     path: '/api/optimized',
-    handler: createHandler(() => {
-      return {
-        message: 'Optimized compression response',
-        data: generateLargeDataset(200),
-        compression: {
-          algorithm: 'brotli',
-          quality: 'maximum',
-          cache: 'enabled'
-        }
-      }
-    }),
     middleware: [
       compression({
         encodings: ['br'],
@@ -508,17 +496,27 @@ const routes = [
         },
         TTL: 7200 // 2 小时缓存
       })
-    ]
-  }
-]
+    ],
+    handler: () => {
+      return {
+        message: 'Optimized compression response',
+        data: generateLargeDataset(200),
+        compression: {
+          algorithm: 'brotli',
+          quality: 'maximum',
+          cache: 'enabled'
+        }
+      }
+    }
+  })
+])
 
 // 创建服务器
 const server = new Server(routes)
 
 // 导出 fetch 函数
-export default {
-  fetch: (req: Request) => server.fetch(req)
-}
+export default { fetch: server.fetch }
+```
 
 console.log('Vafast Compression API 服务器启动成功！')
 console.log('数据端点: GET /api/data (启用 Brotli/GZIP 压缩)')

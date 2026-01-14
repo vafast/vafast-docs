@@ -197,21 +197,22 @@ export default {
 import { bearer, createTypedHandler } from '@vafast/bearer'
 
 const routes = [
-  {
+  defineRoute({
     method: 'GET',
     path: '/public',
-    handler: createHandler(() => {
+    handler: () => {
       return { message: 'Public endpoint' }
-    })
-  },
-  {
+    }
+  }),
+  defineRoute({
     method: 'GET',
     path: '/private',
-    handler: createTypedHandler({}, ({ bearer }) => {
-      return { message: 'Private endpoint', token: bearer }
-    })
-  }
-]
+    middleware: [bearer()],
+    handler: ({ bearer: bearerToken }) => {
+      return { message: 'Private endpoint', token: bearerToken }
+    }
+  })
+])
 
 const server = new Server(routes)
 
@@ -232,8 +233,8 @@ export default {
 ## 完整示例
 
 ```typescript
-import { Server, createHandler } from 'vafast'
-import { bearer, createTypedHandler } from '@vafast/bearer'
+import { Server, defineRoute, defineRoutes } from 'vafast'
+import { bearer } from '@vafast/bearer'
 
 // 模拟用户验证函数
 const validateToken = (token: string): boolean => {
@@ -245,18 +246,18 @@ const getUserFromToken = (token: string) => {
 }
 
 // 定义路由
-const routes = [
-  {
+const routes = defineRoutes([
+  defineRoute({
     method: 'GET',
     path: '/',
-    handler: createHandler(() => {
+    handler: () => {
       return { message: 'Bearer Token Authentication API' }
-    })
-  },
-  {
+    }
+  }),
+  defineRoute({
     method: 'POST',
     path: '/login',
-    handler: createHandler(async (req: Request) => {
+    handler: async (req: Request) => {
       const body = await req.json()
       const { username, password } = body
       
@@ -272,13 +273,14 @@ const routes = [
         status: 401,
         error: 'Invalid credentials'
       }
-    })
-  },
-  {
+    }
+  }),
+  defineRoute({
     method: 'GET',
     path: '/profile',
-    handler: createTypedHandler({}, ({ bearer }) => {
-      if (!bearer) {
+    middleware: [bearer()],
+    handler: ({ bearer: bearerToken }) => {
+      if (!bearerToken) {
         return {
           status: 401,
           error: 'Unauthorized',
@@ -286,7 +288,7 @@ const routes = [
         }
       }
       
-      if (!validateToken(bearer)) {
+      if (!validateToken(bearerToken)) {
         return {
           status: 401,
           error: 'Unauthorized',
@@ -294,18 +296,19 @@ const routes = [
         }
       }
       
-      const user = getUserFromToken(bearer)
+      const user = getUserFromToken(bearerToken)
       return {
         message: 'Profile retrieved successfully',
         user
       }
-    })
-  },
-  {
+    }
+  }),
+  defineRoute({
     method: 'GET',
     path: '/admin',
-    handler: createTypedHandler({}, ({ bearer }) => {
-      if (!bearer) {
+    middleware: [bearer()],
+    handler: ({ bearer: bearerToken }) => {
+      if (!bearerToken) {
         return {
           status: 401,
           error: 'Unauthorized'
@@ -313,7 +316,7 @@ const routes = [
       }
       
       // 检查管理员权限
-      if (bearer !== 'admin-token-456') {
+      if (bearerToken !== 'admin-token-456') {
         return {
           status: 403,
           error: 'Forbidden',
@@ -325,19 +328,16 @@ const routes = [
         message: 'Admin panel accessed',
         adminData: { users: 100, systemStatus: 'healthy' }
       }
-    })
-  }
-]
+    }
+  })
+])
 
 // 创建服务器
 const server = new Server(routes)
 
-// 导出 fetch 函数，应用 bearer 中间件
-export default {
-  fetch: (req: Request) => {
-    return bearer()(req, () => server.fetch(req))
-  }
-}
+// 导出 fetch 函数
+export default { fetch: server.fetch }
+```
 
 console.log('Bearer Token API 服务器启动成功！')
 console.log('登录端点: POST /login')

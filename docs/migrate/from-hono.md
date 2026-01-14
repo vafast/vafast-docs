@@ -272,13 +272,13 @@ app.get('/api/users', (c) => {
 })
 
 // Vafast 风格
-{
+defineRoute({
   method: 'GET',
   path: '/api/users',
-  handler: createHandler(() => {
+  handler: () => {
     return getUsers()
-  })
-}
+  }
+})
 ```
 
 ### 步骤 3: 更新中间件
@@ -332,14 +332,16 @@ const userSchema = Type.Object({
   email: Type.String({ format: 'email' })
 })
 
-{
+defineRoute({
   method: 'POST',
   path: '/users',
-  handler: createHandler(({ body }) => {
+  schema: {
+    body: userSchema
+  },
+  handler: ({ body }) => {
     return createUser(body)
-  }),
-  body: userSchema
-}
+  }
+})
 ```
 
 ### 步骤 5: 更新错误处理
@@ -445,7 +447,7 @@ const routes = defineRoutes([
 ])
 
 const server = new Server(routes)
-server.use(cors())
+server.useGlobalMiddleware(cors())
 
 export default { fetch: server.fetch }
 ```

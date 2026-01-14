@@ -97,11 +97,11 @@ cookie({
 import { cookie } from '@vafast/cookie'
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'POST',
     path: '/secure',
     middleware: [cookie({ secret: 'my-secret' })],
-    handler: createHandler(({ setSignedCookie, getSignedCookie }) => {
+    handler: ({ setSignedCookie, getSignedCookie }) => {
       // 设置签名 Cookie
       setSignedCookie('user', 'john', { httpOnly: true })
       
@@ -109,8 +109,8 @@ const routes = defineRoutes([
       const user = getSignedCookie('user')
       
       return { user }
-    })
-  }
+    }
+  })
 ])
 ```
 

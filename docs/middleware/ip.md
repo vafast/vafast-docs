@@ -649,16 +649,16 @@ describe('Vafast IP Plugin', () => {
   it('should handle missing IP headers', async () => {
     const ipMiddleware = ip()
 
-    const app = new Server([
-      {
+    const app = new Server(defineRoutes([
+      defineRoute({
         method: 'GET',
         path: '/',
-        handler: createHandler(({ req }: { req: Request }) => {
-          return { ip: (req as any).ip }
-        }),
         middleware: [ipMiddleware],
-      },
-    ])
+        handler: ({ req }: { req: Request }) => {
+          return { ip: (req as any).ip }
+        }
+      })
+    ]))
 
     const req = new Request('http://localhost/')
     const res = await app.fetch(req)
@@ -728,11 +728,12 @@ const secureIpMiddleware = ip({
 })
 
 // 在路由中使用
-const routes = [
-  {
+const routes = defineRoutes([
+  defineRoute({
     method: 'GET',
     path: '/secure',
-    handler: createHandler((request: Request) => {
+    middleware: [secureIpMiddleware],
+    handler: (request: Request) => {
       const clientIP = (request as any).ip
       
       // 验证 IP 地址格式
@@ -745,10 +746,9 @@ const routes = [
         clientIP,
         validated: true
       }
-    }),
-    middleware: [secureIpMiddleware],
-  }
-]
+    }
+  })
+])
 ```
 
 ### 4. 监控和日志
@@ -763,11 +763,12 @@ const monitoredIpMiddleware = ip({
 })
 
 // 在处理器中添加 IP 监控
-const routes = [
-  {
+const routes = defineRoutes([
+  defineRoute({
     method: 'GET',
     path: '/monitored',
-    handler: createHandler((request: Request) => {
+    middleware: [monitoredIpMiddleware],
+    handler: (request: Request) => {
       const clientIP = (request as any).ip
       
       // 记录 IP 访问

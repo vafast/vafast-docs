@@ -129,7 +129,7 @@ run: (store: Cron) => any | Promise<any>
 ### 1. 基本定时任务
 
 ```typescript
-import { Server, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { cron } from '@vafast/cron'
 
 // 创建定时任务
@@ -144,24 +144,24 @@ const cleanupCron = cron({
     }
 })
 
-const routes = [
-    {
-        method: 'GET',
-        path: '/',
-        handler: createHandler(() => {
-            return { message: 'Cleanup cron job is running' }
-        })
+const routes = defineRoutes([
+  defineRoute({
+    method: 'GET',
+    path: '/',
+    handler: () => {
+      return { message: 'Cleanup cron job is running' }
     }
-]
+  })
+])
 
 const server = new Server(routes)
-export default { fetch: (req: Request) => server.fetch(req) }
+export default { fetch: server.fetch }
 ```
 
 ### 2. 任务生命周期管理
 
 ```typescript
-import { Server, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { cron } from '@vafast/cron'
 
 // 创建可控制的 cron 任务
@@ -173,44 +173,44 @@ const loggerCron = cron({
     }
 })
 
-const routes = [
-    {
-        method: 'GET',
-        path: '/',
-        handler: createHandler(() => {
-            // 停止 logger 任务
-            loggerCron.stop()
-            return { message: 'Logger stopped' }
-        })
-    },
-    {
-        method: 'GET',
-        path: '/status',
-        handler: createHandler(() => {
-            return {
-                logger: loggerCron.isRunning(),
-                nextRun: loggerCron.nextRun()
-            }
-        })
-    },
-    {
-        method: 'POST',
-        path: '/start-logger',
-        handler: createHandler(() => {
-            loggerCron.resume()
-            return { message: 'Logger started' }
-        })
+const routes = defineRoutes([
+  defineRoute({
+    method: 'GET',
+    path: '/',
+    handler: () => {
+      // 停止 logger 任务
+      loggerCron.stop()
+      return { message: 'Logger stopped' }
     }
-]
+  }),
+  defineRoute({
+    method: 'GET',
+    path: '/status',
+    handler: () => {
+      return {
+        logger: loggerCron.isRunning(),
+        nextRun: loggerCron.nextRun()
+      }
+    }
+  }),
+  defineRoute({
+    method: 'POST',
+    path: '/start-logger',
+    handler: () => {
+      loggerCron.resume()
+      return { message: 'Logger started' }
+    }
+  })
+])
 
 const server = new Server(routes)
-export default { fetch: (req: Request) => server.fetch(req) }
+export default { fetch: server.fetch }
 ```
 
 ### 3. 多个定时任务
 
 ```typescript
-import { Server, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { cron } from '@vafast/cron'
 
 // 创建多个 cron 任务
@@ -241,37 +241,37 @@ const maintenanceCron = cron({
     }
 })
 
-const routes = [
-    {
-        method: 'GET',
-        path: '/cron/status',
-        handler: createHandler(() => {
-            return {
-                heartbeat: {
-                    running: heartbeatCron.isRunning(),
-                    nextRun: heartbeatCron.nextRun()
-                },
-                backup: {
-                    running: backupCron.isRunning(),
-                    nextRun: backupCron.nextRun()
-                },
-                maintenance: {
-                    running: maintenanceCron.isRunning(),
-                    nextRun: maintenanceCron.nextRun()
-                }
-            }
-        })
+const routes = defineRoutes([
+  defineRoute({
+    method: 'GET',
+    path: '/cron/status',
+    handler: () => {
+      return {
+        heartbeat: {
+          running: heartbeatCron.isRunning(),
+          nextRun: heartbeatCron.nextRun()
+        },
+        backup: {
+          running: backupCron.isRunning(),
+          nextRun: backupCron.nextRun()
+        },
+        maintenance: {
+          running: maintenanceCron.isRunning(),
+          nextRun: maintenanceCron.nextRun()
+        }
+      }
     }
-]
+  })
+])
 
 const server = new Server(routes)
-export default { fetch: (req: Request) => server.fetch(req) }
+export default { fetch: server.fetch }
 ```
 
 ### 4. 条件执行和错误处理
 
 ```typescript
-import { Server, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { cron } from '@vafast/cron'
 
 const dataSyncCron = cron({
@@ -301,22 +301,22 @@ const dataSyncCron = cron({
     }
 })
 
-const routes = [
-    {
-        method: 'GET',
-        path: '/sync/status',
-        handler: createHandler(() => {
-            return {
-                running: dataSyncCron.isRunning(),
-                nextRun: dataSyncCron.nextRun(),
-                lastRun: dataSyncCron.lastRun()
-            }
-        })
+const routes = defineRoutes([
+  defineRoute({
+    method: 'GET',
+    path: '/sync/status',
+    handler: () => {
+      return {
+        running: dataSyncCron.isRunning(),
+        nextRun: dataSyncCron.nextRun(),
+        lastRun: dataSyncCron.lastRun()
+      }
     }
-]
+  })
+])
 
 const server = new Server(routes)
-export default { fetch: (req: Request) => server.fetch(req) }
+export default { fetch: server.fetch }
 ```
 
 ## 预定义模式
@@ -439,7 +439,7 @@ const customJob = cron({
 ## 完整示例
 
 ```typescript
-import { Server, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { cron, Patterns } from '@vafast/cron'
 
 // 模拟业务函数
@@ -524,164 +524,161 @@ const maintenanceCron = cron({
 })
 
 // 定义路由
-const routes = [
-    {
-        method: 'GET',
-        path: '/',
-        handler: createHandler(() => {
-            return { 
-                message: 'Vafast Cron Management API',
-                endpoints: [
-                    '/cron/status - 查看所有任务状态',
-                    '/cron/health - 手动执行健康检查',
-                    '/cron/backup - 手动执行备份',
-                    '/cron/cleanup - 手动执行清理',
-                    '/cron/stop/:name - 停止指定任务',
+const routes = defineRoutes([
+  defineRoute({
+    method: 'GET',
+    path: '/',
+    handler: () => {
+      return { 
+        message: 'Vafast Cron Management API',
+        endpoints: [
+          '/cron/status - 查看所有任务状态',
+          '/cron/health - 手动执行健康检查',
+          '/cron/backup - 手动执行备份',
+          '/cron/cleanup - 手动执行清理',
+          '/cron/stop/:name - 停止指定任务',
                     '/cron/start/:name - 启动指定任务'
                 ]
             }
-        })
-    },
-    {
-        method: 'GET',
-        path: '/cron/status',
-        handler: createHandler(() => {
-            return {
-                healthCheck: {
-                    name: 'healthCheck',
-                    running: healthCheckCron.isRunning(),
-                    nextRun: healthCheckCron.nextRun(),
-                    lastRun: healthCheckCron.lastRun()
-                },
-                backup: {
-                    name: 'backup',
-                    running: backupCron.isRunning(),
-                    nextRun: backupCron.nextRun(),
-                    lastRun: backupCron.lastRun()
-                },
-                cleanup: {
-                    name: 'cleanup',
-                    running: cleanupCron.isRunning(),
-                    nextRun: cleanupCron.nextRun(),
-                    lastRun: cleanupCron.lastRun()
-                },
-                maintenance: {
-                    name: 'maintenance',
-                    running: maintenanceCron.isRunning(),
-                    nextRun: maintenanceCron.nextRun(),
-                    lastRun: maintenanceCron.lastRun()
-                }
-            }
-        })
-    },
-    {
-        method: 'POST',
-        path: '/cron/health',
-        handler: createHandler(() => {
-            const health = checkSystemHealth()
-            return { 
-                message: '手动健康检查完成',
-                result: health
-            }
-        })
-    },
-    {
-        method: 'POST',
-        path: '/cron/backup',
-        handler: createHandler(async () => {
-            const result = await performBackup()
-            return { 
-                message: '手动备份完成',
-                result
-            }
-        })
-    },
-    {
-        method: 'POST',
-        path: '/cron/cleanup',
-        handler: createHandler(() => {
-            const result = cleanupOldFiles()
-            return { 
-                message: '手动清理完成',
-                result
-            }
-        })
-    },
-    {
-        method: 'POST',
-        path: '/cron/stop/:name',
-        handler: createHandler((req: Request) => {
-            const url = new URL(req.url)
-            const name = url.pathname.split('/').pop()
-            
-            let cronJob: any
-            switch (name) {
-                case 'healthCheck':
-                    cronJob = healthCheckCron
-                    break
-                case 'backup':
-                    cronJob = backupCron
-                    break
-                case 'cleanup':
-                    cronJob = cleanupCron
-                    break
-                case 'maintenance':
-                    cronJob = maintenanceCron
-                    break
-                default:
-                    return { error: '未知的任务名称' }
-            }
-            
-            if (cronJob.isRunning()) {
-                cronJob.stop()
-                return { message: `任务 ${name} 已停止` }
-            } else {
-                return { message: `任务 ${name} 已经停止` }
-            }
-        })
-    },
-    {
-        method: 'POST',
-        path: '/cron/start/:name',
-        handler: createHandler((req: Request) => {
-            const url = new URL(req.url)
-            const name = url.pathname.split('/').pop()
-            
-            let cronJob: any
-            switch (name) {
-                case 'healthCheck':
-                    cronJob = healthCheckCron
-                    break
-                case 'backup':
-                    cronJob = backupCron
-                    break
-                case 'cleanup':
-                    cronJob = cleanupCron
-                    break
-                case 'maintenance':
-                    cronJob = maintenanceCron
-                    break
-                default:
-                    return { error: '未知的任务名称' }
-            }
-            
-            if (!cronJob.isRunning()) {
-                cronJob.resume()
-                return { message: `任务 ${name} 已启动` }
-            } else {
-                return { message: `任务 ${name} 已经在运行` }
-            }
-        })
     }
-]
+  }),
+  defineRoute({
+    method: 'GET',
+    path: '/cron/status',
+    handler: () => {
+      return {
+        healthCheck: {
+          name: 'healthCheck',
+          running: healthCheckCron.isRunning(),
+          nextRun: healthCheckCron.nextRun(),
+          lastRun: healthCheckCron.lastRun()
+        },
+        backup: {
+          name: 'backup',
+          running: backupCron.isRunning(),
+          nextRun: backupCron.nextRun(),
+          lastRun: backupCron.lastRun()
+        },
+        cleanup: {
+          name: 'cleanup',
+          running: cleanupCron.isRunning(),
+          nextRun: cleanupCron.nextRun(),
+          lastRun: cleanupCron.lastRun()
+        },
+        maintenance: {
+          name: 'maintenance',
+          running: maintenanceCron.isRunning(),
+          nextRun: maintenanceCron.nextRun(),
+          lastRun: maintenanceCron.lastRun()
+        }
+      }
+    }
+  }),
+  defineRoute({
+    method: 'POST',
+    path: '/cron/health',
+    handler: () => {
+      const health = checkSystemHealth()
+      return { 
+        message: '手动健康检查完成',
+        result: health
+      }
+    }
+  }),
+  defineRoute({
+    method: 'POST',
+    path: '/cron/backup',
+    handler: async () => {
+      const result = await performBackup()
+      return { 
+        message: '手动备份完成',
+        result
+      }
+    }
+  }),
+  defineRoute({
+    method: 'POST',
+    path: '/cron/cleanup',
+    handler: () => {
+      const result = cleanupOldFiles()
+      return { 
+        message: '手动清理完成',
+        result
+      }
+    }
+  }),
+  defineRoute({
+    method: 'POST',
+    path: '/cron/stop/:name',
+    handler: ({ params }) => {
+      const name = params.name
+      
+      let cronJob: any
+      switch (name) {
+        case 'healthCheck':
+          cronJob = healthCheckCron
+          break
+        case 'backup':
+          cronJob = backupCron
+          break
+        case 'cleanup':
+          cronJob = cleanupCron
+          break
+        case 'maintenance':
+          cronJob = maintenanceCron
+          break
+        default:
+          return { error: '未知的任务名称' }
+      }
+      
+      if (cronJob.isRunning()) {
+        cronJob.stop()
+        return { message: `任务 ${name} 已停止` }
+      } else {
+        return { message: `任务 ${name} 已经停止` }
+            }
+    }
+  }),
+  defineRoute({
+    method: 'POST',
+    path: '/cron/start/:name',
+    handler: ({ params }) => {
+      const name = params.name
+      
+      let cronJob: any
+      switch (name) {
+        case 'healthCheck':
+          cronJob = healthCheckCron
+          break
+        case 'backup':
+          cronJob = backupCron
+          break
+        case 'cleanup':
+          cronJob = cleanupCron
+          break
+        case 'maintenance':
+          cronJob = maintenanceCron
+          break
+        default:
+          return { error: '未知的任务名称' }
+      }
+      
+      if (!cronJob.isRunning()) {
+        cronJob.resume()
+        return { message: `任务 ${name} 已启动` }
+      } else {
+        return { message: `任务 ${name} 已经在运行` }
+      }
+    }
+  })
+])
 
 // 创建服务器
 const server = new Server(routes)
 
 // 导出 fetch 函数
-export default {
-    fetch: (req: Request) => server.fetch(req)
-}
+export default { fetch: server.fetch }
+```
 
 console.log('Vafast Cron Management API 服务器启动成功！')
 console.log('健康检查: 每30秒执行一次')

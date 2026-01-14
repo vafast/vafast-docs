@@ -123,7 +123,7 @@ const defaultOptions = {
 ### 1. 基本速率限制
 
 ```typescript
-import { Server, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { rateLimit } from '@vafast/rate-limit'
 
 const rateLimitMiddleware = rateLimit({
@@ -133,37 +133,35 @@ const rateLimitMiddleware = rateLimit({
   headers: true
 })
 
-const routes = [
-  {
+const routes = defineRoutes([
+  defineRoute({
     method: 'GET',
     path: '/api/users',
-    handler: createHandler(() => {
+    middleware: [rateLimitMiddleware],
+    handler: () => {
       return { users: ['Alice', 'Bob', 'Charlie'] }
-    })
-  },
-  {
+    }
+  }),
+  defineRoute({
     method: 'POST',
     path: '/api/users',
-    handler: createHandler(async ({ req }) => {
+    middleware: [rateLimitMiddleware],
+    handler: async ({ req }) => {
       const body = await req.json()
       return { message: 'User created', user: body }
-    })
-  }
-]
+    }
+  })
+])
 
 const server = new Server(routes)
 
-export default {
-  fetch: (req: Request) => {
-    return rateLimitMiddleware(req, () => server.fetch(req))
-  }
-}
+export default { fetch: server.fetch }
 ```
 
 ### 2. 自定义密钥生成器
 
 ```typescript
-import { Server, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { rateLimit } from '@vafast/rate-limit'
 import type { Generator } from '@vafast/rate-limit'
 
@@ -193,29 +191,26 @@ const rateLimitMiddleware = rateLimit({
   headers: true
 })
 
-const routes = [
-  {
+const routes = defineRoutes([
+  defineRoute({
     method: 'GET',
     path: '/api/profile',
-    handler: createHandler(() => {
+    middleware: [rateLimitMiddleware],
+    handler: () => {
       return { message: 'User profile' }
-    })
-  }
-]
+    }
+  })
+])
 
 const server = new Server(routes)
 
-export default {
-  fetch: (req: Request) => {
-    return rateLimitMiddleware(req, () => server.fetch(req))
-  }
-}
+export default { fetch: server.fetch }
 ```
 
 ### 3. 条件跳过
 
 ```typescript
-import { Server, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { rateLimit } from '@vafast/rate-limit'
 
 const rateLimitMiddleware = rateLimit({
@@ -244,36 +239,34 @@ const rateLimitMiddleware = rateLimit({
   }
 })
 
-const routes = [
-  {
+const routes = defineRoutes([
+  defineRoute({
     method: 'GET',
     path: '/health',
-    handler: createHandler(() => {
+    handler: () => {
       return { status: 'OK', timestamp: new Date().toISOString() }
-    })
-  },
-  {
+    }
+  }),
+  defineRoute({
     method: 'GET',
     path: '/api/data',
-    handler: createHandler(() => {
+    middleware: [rateLimitMiddleware],
+    handler: () => {
       return { data: 'Protected data' }
-    })
-  }
-]
+    }
+  })
+])
 
 const server = new Server(routes)
 
-export default {
-  fetch: (req: Request) => {
-    return rateLimitMiddleware(req, () => server.fetch(req))
-  }
-}
+export default { fetch: server.fetch }
+```
 ```
 
 ### 4. 多实例速率限制
 
 ```typescript
-import { Server, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { rateLimit } from '@vafast/rate-limit'
 import type { Generator } from '@vafast/rate-limit'
 
@@ -307,78 +300,55 @@ const bInstanceRateLimit = rateLimit({
   headers: true
 })
 
-// 定义第一个实例的路由
-const aInstanceRoutes = [
-  {
+// 定义路由
+const routes = defineRoutes([
+  defineRoute({
     method: 'GET',
     path: '/a',
-    handler: createHandler(() => {
+    middleware: [aInstanceRateLimit],
+    handler: () => {
       return 'Instance A - Rate limited to 10 requests per 200 seconds'
-    })
-  }
-]
-
-// 定义第二个实例的路由
-const bInstanceRoutes = [
-  {
+    }
+  }),
+  defineRoute({
     method: 'GET',
     path: '/b',
-    handler: createHandler(() => {
+    middleware: [bInstanceRateLimit],
+    handler: () => {
       return 'Instance B - Rate limited to 5 requests per 100 seconds'
-    })
-  }
-]
-
-// 定义主应用路由
-const mainRoutes = [
-  {
+    }
+  }),
+  defineRoute({
     method: 'GET',
     path: '/',
-    handler: createHandler(() => {
+    handler: () => {
       return 'Main application - No rate limiting'
-    })
-  },
-  {
+    }
+  }),
+  defineRoute({
     method: 'GET',
     path: '/status',
-    handler: createHandler(() => {
+    handler: () => {
       return { 
         message: 'Application status',
         instances: ['A', 'B'],
         timestamp: new Date().toISOString()
       }
-    })
-  }
-]
-
-// 创建实例服务器
-const aInstance = new Server(aInstanceRoutes)
-const bInstance = new Server(bInstanceRoutes)
-const mainServer = new Server(mainRoutes)
-
-// 导出 fetch 函数，应用不同的速率限制中间件
-export default {
-  fetch: (req: Request) => {
-    const url = new URL(req.url)
-    const path = url.pathname
-
-    // 根据路径应用不同的速率限制中间件
-    if (path.startsWith('/a')) {
-      return aInstanceRateLimit(req, () => aInstance.fetch(req))
-    } else if (path.startsWith('/b')) {
-      return bInstanceRateLimit(req, () => bInstance.fetch(req))
-    } else {
-      // 主应用不应用速率限制
-      return mainServer.fetch(req)
     }
-  }
-}
+  })
+])
+
+// 创建服务器
+const server = new Server(routes)
+
+// 导出 fetch 函数
+export default { fetch: server.fetch }
 ```
 
 ### 5. 自定义错误响应
 
 ```typescript
-import { Server, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { rateLimit } from '@vafast/rate-limit'
 
 // 自定义错误响应
@@ -405,29 +375,26 @@ const rateLimitMiddleware = rateLimit({
   headers: true
 })
 
-const routes = [
-  {
+const routes = defineRoutes([
+  defineRoute({
     method: 'GET',
     path: '/api/sensitive',
-    handler: createHandler(() => {
+    middleware: [rateLimitMiddleware],
+    handler: () => {
       return { message: 'Sensitive data' }
-    })
-  }
-]
+    }
+  })
+])
 
 const server = new Server(routes)
 
-export default {
-  fetch: (req: Request) => {
-    return rateLimitMiddleware(req, () => server.fetch(req))
-  }
-}
+export default { fetch: server.fetch }
 ```
 
 ## 完整示例
 
 ```typescript
-import { Server, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { rateLimit } from '@vafast/rate-limit'
 import type { Generator } from '@vafast/rate-limit'
 
@@ -508,7 +475,7 @@ const routes = [
   {
     method: 'GET',
     path: '/',
-    handler: createHandler(() => {
+    handler: () => {
       return {
         message: 'Vafast Rate Limiting API',
         version: '1.0.0',
@@ -521,45 +488,47 @@ const routes = [
           'GET /static/* - 静态资源（无限制）'
         ]
       }
-    })
-  },
-  {
+    }
+  }),
+  defineRoute({
     method: 'GET',
     path: '/health',
-    handler: createHandler(() => {
+    handler: () => {
       return {
         status: 'healthy',
         timestamp: new Date().toISOString(),
         uptime: process.uptime()
       }
-    })
-  },
-  {
+    }
+  }),
+  defineRoute({
     method: 'GET',
     path: '/status',
-    handler: createHandler(() => {
+    handler: () => {
       return {
         message: 'System status',
         timestamp: new Date().toISOString(),
         version: '1.0.0'
       }
-    })
-  },
-  {
+    }
+  }),
+  defineRoute({
     method: 'GET',
     path: '/api/public',
-    handler: createHandler(() => {
+    middleware: [lenientRateLimit],
+    handler: () => {
       return {
         message: 'Public API endpoint',
         data: 'This endpoint has lenient rate limiting (1000 requests per hour)',
         timestamp: new Date().toISOString()
       }
-    })
-  },
-  {
+    }
+  }),
+  defineRoute({
     method: 'GET',
     path: '/api/user',
-    handler: createHandler(() => {
+    middleware: [moderateRateLimit],
+    handler: () => {
       return {
         message: 'User API endpoint',
         data: 'This endpoint has moderate rate limiting (50 requests per 5 minutes)',
@@ -570,12 +539,13 @@ const routes = [
         },
         timestamp: new Date().toISOString()
       }
-    })
-  },
-  {
+    }
+  }),
+  defineRoute({
     method: 'POST',
     path: '/api/admin',
-    handler: createHandler(async ({ req }) => {
+    middleware: [strictRateLimit],
+    handler: async ({ req }) => {
       const body = await req.json()
       
       return {
@@ -584,44 +554,28 @@ const routes = [
         received: body,
         timestamp: new Date().toISOString()
       }
-    })
-  },
-  {
+    }
+  }),
+  defineRoute({
     method: 'GET',
     path: '/static/:file',
-    handler: createHandler(({ params }) => {
+    handler: ({ params }) => {
       return {
         message: 'Static file endpoint',
         file: params.file,
         data: 'This endpoint has no rate limiting',
         timestamp: new Date().toISOString()
       }
-    })
-  }
-]
+    }
+  })
+])
 
 // 创建服务器
 const server = new Server(routes)
 
-// 导出 fetch 函数，应用速率限制中间件
-export default {
-  fetch: (req: Request) => {
-    const url = new URL(req.url)
-    const path = url.pathname
-
-    // 根据路径应用不同的速率限制
-    if (path.startsWith('/api/admin')) {
-      return strictRateLimit(req, () => server.fetch(req))
-    } else if (path.startsWith('/api/user')) {
-      return moderateRateLimit(req, () => server.fetch(req))
-    } else if (path.startsWith('/api/public')) {
-      return lenientRateLimit(req, () => server.fetch(req))
-    } else {
-      // 其他端点不应用速率限制
-      return server.fetch(req)
-    }
-  }
-}
+// 导出 fetch 函数
+export default { fetch: server.fetch }
+```
 
 console.log('Vafast Rate Limiting API 服务器启动成功！')
 console.log('不同端点应用了不同级别的速率限制')
@@ -635,7 +589,7 @@ console.log('✅ 健康检查和状态端点无限制')
 
 ```typescript
 import { describe, expect, it } from 'bun:test'
-import { Server, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { rateLimit } from '@vafast/rate-limit'
 
 describe('Vafast Rate Limit Plugin', () => {
@@ -652,30 +606,24 @@ describe('Vafast Rate Limit Plugin', () => {
   })
 
   it('should allow requests within rate limit', async () => {
-    const rateLimitMiddleware = rateLimit({
-      duration: 60000,
-      max: 3,
-      headers: true
-    })
-    
-    const app = new Server([
-      {
+    const app = new Server(defineRoutes([
+      defineRoute({
         method: 'GET',
         path: '/',
-        handler: createHandler(() => {
+        middleware: [rateLimit({
+          duration: 60000,
+          max: 3,
+          headers: true
+        })],
+        handler: () => {
           return 'Hello, Rate Limited!'
-        })
-      }
-    ])
-
-    // 应用中间件
-    const wrappedFetch = (req: Request) => {
-      return rateLimitMiddleware(req, () => app.fetch(req))
-    }
+        }
+      })
+    ]))
 
     // 前3个请求应该成功
     for (let i = 0; i < 3; i++) {
-      const res = await wrappedFetch(new Request('http://localhost/'))
+      const res = await app.fetch(new Request('http://localhost/'))
       expect(res.status).toBe(200)
       const data = await res.text()
       expect(data).toBe('Hello, Rate Limited!')
@@ -688,36 +636,30 @@ describe('Vafast Rate Limit Plugin', () => {
   })
 
   it('should block requests when rate limit exceeded', async () => {
-    const rateLimitMiddleware = rateLimit({
-      duration: 60000,
-      max: 2,
-      errorResponse: 'Too many requests',
-      headers: true
-    })
-    
-    const app = new Server([
-      {
+    const app = new Server(defineRoutes([
+      defineRoute({
         method: 'GET',
         path: '/',
-        handler: createHandler(() => {
+        middleware: [rateLimit({
+          duration: 60000,
+          max: 2,
+          errorResponse: 'Too many requests',
+          headers: true
+        })],
+        handler: () => {
           return 'Hello, Rate Limited!'
-        })
-      }
-    ])
-
-    // 应用中间件
-    const wrappedFetch = (req: Request) => {
-      return rateLimitMiddleware(req, () => app.fetch(req))
-    }
+        }
+      })
+    ]))
 
     // 前2个请求应该成功
     for (let i = 0; i < 2; i++) {
-      const res = await wrappedFetch(new Request('http://localhost/'))
+      const res = await app.fetch(new Request('http://localhost/'))
       expect(res.status).toBe(200)
     }
 
     // 第3个请求应该被阻止
-    const blockedRes = await wrappedFetch(new Request('http://localhost/'))
+    const blockedRes = await app.fetch(new Request('http://localhost/'))
     expect(blockedRes.status).toBe(429)
     const errorData = await blockedRes.text()
     expect(errorData).toBe('Too many requests')
@@ -729,29 +671,24 @@ describe('Vafast Rate Limit Plugin', () => {
   })
 
   it('should skip rate limiting when skip function returns true', async () => {
-    const rateLimitMiddleware = rateLimit({
-      duration: 60000,
-      max: 1,
-      headers: true,
-      skip: (req) => req.url.includes('/health')
-    })
-    
-    const app = new Server([
-      {
+    const app = new Server(defineRoutes([
+      defineRoute({
         method: 'GET',
         path: '/health',
-        handler: createHandler(() => {
+        middleware: [rateLimit({
+          duration: 60000,
+          max: 1,
+          headers: true,
+          skip: (req) => req.url.includes('/health')
+        })],
+        handler: () => {
           return 'Health check'
-        })
-      }
-    ])
-
-    const wrappedFetch = (req: Request) => {
-      return rateLimitMiddleware(req, () => app.fetch(req))
-    }
+        }
+      })
+    ]))
 
     // 健康检查请求应该被跳过，不应用速率限制
-    const res = await wrappedFetch(new Request('http://localhost/health'))
+    const res = await app.fetch(new Request('http://localhost/health'))
     expect(res.status).toBe(200)
     
     // 不应该有速率限制头部
@@ -762,33 +699,28 @@ describe('Vafast Rate Limit Plugin', () => {
   it('should handle custom error responses', async () => {
     const customError = new Response('Custom error message', { status: 429 })
     
-    const rateLimitMiddleware = rateLimit({
-      duration: 60000,
-      max: 1,
-      errorResponse: customError,
-      headers: true
-    })
-    
-    const app = new Server([
-      {
+    const app = new Server(defineRoutes([
+      defineRoute({
         method: 'GET',
         path: '/',
-        handler: createHandler(() => {
+        middleware: [rateLimit({
+          duration: 60000,
+          max: 1,
+          errorResponse: customError,
+          headers: true
+        })],
+        handler: () => {
           return 'Hello'
-        })
-      }
-    ])
-
-    const wrappedFetch = (req: Request) => {
-      return rateLimitMiddleware(req, () => app.fetch(req))
-    }
+        }
+      })
+    ]))
 
     // 第一个请求应该成功
-    const res1 = await wrappedFetch(new Request('http://localhost/'))
+    const res1 = await app.fetch(new Request('http://localhost/'))
     expect(res1.status).toBe(200)
 
     // 第二个请求应该被阻止，返回自定义错误
-    const res2 = await wrappedFetch(new Request('http://localhost/'))
+    const res2 = await app.fetch(new Request('http://localhost/'))
     expect(res2.status).toBe(429)
     const errorData = await res2.text()
     expect(errorData).toBe('Custom error message')
@@ -805,11 +737,11 @@ describe('Vafast Rate Limit Plugin', () => {
       {
         method: 'POST',
         path: '/',
-        handler: createHandler(() => {
+        handler: () => {
           return { message: 'POST request' }
-        })
-      }
-    ])
+        }
+      })
+    ]))
 
     const wrappedFetch = (req: Request) => {
       return rateLimitMiddleware(req, () => app.fetch(req))

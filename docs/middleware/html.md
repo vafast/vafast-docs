@@ -64,25 +64,36 @@ export default { fetch: server.fetch }
 ### 基础 HTML 响应
 
 ```typescript
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { html } from '@vafast/html'
 
-// 使用 HTML 中间件
-app.use(html())
+const routes = defineRoutes([
+  defineRoute({
+    method: 'GET',
+    path: '/page',
+    handler: () => {
+      return `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>My Page</title>
+          </head>
+          <body>
+            <h1>Welcome!</h1>
+            <p>This is a simple HTML page.</p>
+          </body>
+        </html>
+      `
+    }
+  })
+])
 
-app.get('/page', (req) => {
-  return req.html.html(`
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <title>My Page</title>
-      </head>
-      <body>
-        <h1>Welcome!</h1>
-        <p>This is a simple HTML page.</p>
-      </body>
-    </html>
-  `)
-})
+const server = new Server(routes)
+
+// 使用 HTML 中间件
+server.useGlobalMiddleware(html())
+
+export default { fetch: server.fetch }
 ```
 
 ### JSX 支持
@@ -110,14 +121,14 @@ Vafast HTML 基于 [@kitajs/html](https://github.com/kitajs/html)，允许我们
 使用 JSX 的示例：
 
 ```tsx
-import { Server, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { html, Html } from '@vafast/html'
 
-const routes = [
-  {
+const routes = defineRoutes([
+  defineRoute({
     method: 'GET',
     path: '/',
-    handler: createHandler(() => (
+    handler: () => (
       <html lang="en">
         <head>
           <title>Hello World</title>
@@ -126,17 +137,14 @@ const routes = [
           <h1>Hello World</h1>
         </body>
       </html>
-    ))
-  }
-]
+    )
+  })
+])
 
 const server = new Server(routes)
+server.useGlobalMiddleware(html())
 
-export default {
-  fetch: (req: Request) => {
-    return html()(req, () => server.fetch(req))
-  }
-}
+export default { fetch: server.fetch }
 ```
 
 ### 流式响应
@@ -237,14 +245,14 @@ Vafast HTML 基于 Kita HTML 中间件，在编译时检测可能的 XSS 攻击�
 您可以使用专用的 `safe` 属性来清理用户值，以防止 XSS 漏洞：
 
 ```tsx
-import { Server, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { html, Html } from '@vafast/html'
 
-const routes = [
-  {
+const routes = defineRoutes([
+  defineRoute({
     method: 'POST',
     path: '/',
-    handler: createHandler(({ body }) => (
+    handler: ({ body }) => (
       <html lang="en">
         <head>
           <title>Hello World</title>
@@ -253,17 +261,14 @@ const routes = [
           <h1 safe>{body}</h1>
         </body>
       </html>
-    ))
-  }
-]
+    )
+  })
+])
 
 const server = new Server(routes)
+server.useGlobalMiddleware(html())
 
-export default {
-  fetch: (req: Request) => {
-    return html()(req, () => server.fetch(req))
-  }
-}
+export default { fetch: server.fetch }
 ```
 
 ### 类型安全提醒
@@ -299,15 +304,15 @@ npm install @kitajs/ts-html-plugin
 ## 完整示例
 
 ```typescript
-import { Server, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { html, Html } from '@vafast/html'
 
 // 定义路由
-const routes = [
-  {
+const routes = defineRoutes([
+  defineRoute({
     method: 'GET',
     path: '/',
-    handler: createHandler(() => (
+    handler: () => (
       <html lang="en">
         <head>
           <title>Vafast HTML Plugin</title>
@@ -325,12 +330,12 @@ const routes = [
           </ul>
         </body>
       </html>
-    ))
-  },
-  {
+    )
+  }),
+  defineRoute({
     method: 'GET',
     path: '/dynamic/:name',
-    handler: createHandler(({ params }) => (
+    handler: ({ params }) => (
       <html lang="en">
         <head>
           <title>Hello {params.name}</title>
@@ -340,19 +345,19 @@ const routes = [
           <p>Welcome to your personalized page.</p>
         </body>
       </html>
-    ))
-  }
-]
+    )
+  })
+])
 
 // 创建服务器
 const server = new Server(routes)
 
-// 导出 fetch 函数，应用 HTML 中间件
-export default {
-  fetch: (req: Request) => {
-    return html()(req, () => server.fetch(req))
-  }
-}
+// 应用 HTML 中间件
+server.useGlobalMiddleware(html())
+
+// 导出 fetch 函数
+export default { fetch: server.fetch }
+```
 ```
 
 ## 测试

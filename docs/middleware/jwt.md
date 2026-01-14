@@ -152,7 +152,7 @@ interface JWTOption<Name extends string | undefined = 'jwt', Schema extends TSch
 ### 1. 基本 JWT 认证
 
 ```typescript
-import { Server, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { jwt } from '@vafast/jwt'
 
 const jwtMiddleware = jwt({
@@ -162,78 +162,76 @@ const jwtMiddleware = jwt({
     iss: 'your-app.com'
 })
 
-const routes = [
-    {
-        method: 'POST',
-        path: '/login',
-        handler: createHandler(async ({ req }: { req: Request }) => {
-            jwtMiddleware(req, () => Promise.resolve(new Response()))
-            
-            const body = await req.json()
-            const { username, password } = body
-            
-            // 验证用户凭据
-            if (username === 'admin' && password === 'password') {
-                const token = await (req as any).jwt.sign({
-                    username,
-                    role: 'admin',
-                    id: 1
-                })
-                
-                return {
-                    message: 'Login successful',
-                    token,
-                    user: { username, role: 'admin' }
-                }
-            } else {
-                return {
-                    status: 401,
-                    message: 'Invalid credentials'
-                }
-            }
+const routes = defineRoutes([
+  defineRoute({
+    method: 'POST',
+    path: '/login',
+    middleware: [jwtMiddleware],
+    handler: async ({ req }: { req: Request }) => {
+      const body = await req.json()
+      const { username, password } = body
+      
+      // 验证用户凭据
+      if (username === 'admin' && password === 'password') {
+        const token = await (req as any).jwt.sign({
+          username,
+          role: 'admin',
+          id: 1
         })
-    },
-    {
-        method: 'GET',
-        path: '/protected',
-        handler: createHandler(async ({ req }: { req: Request }) => {
-            jwtMiddleware(req, () => Promise.resolve(new Response()))
-            
-            const authHeader = req.headers.get('authorization')
-            const token = authHeader?.replace('Bearer ', '')
-            
-            if (!token) {
-                return {
-                    status: 401,
-                    message: 'No token provided'
-                }
-            }
-            
-            const payload = await (req as any).jwt.verify(token)
-            
-            if (!payload) {
-                return {
-                    status: 401,
-                    message: 'Invalid token'
-                }
-            }
-            
-            return {
-                message: 'Access granted',
-                user: payload
-            }
-        })
+        
+        return {
+          message: 'Login successful',
+          token,
+          user: { username, role: 'admin' }
+        }
+      } else {
+        return {
+          status: 401,
+          message: 'Invalid credentials'
+        }
+      }
     }
-]
+  }),
+  defineRoute({
+    method: 'GET',
+    path: '/protected',
+    middleware: [jwtMiddleware],
+    handler: async ({ req }: { req: Request }) => {
+      const authHeader = req.headers.get('authorization')
+      const token = authHeader?.replace('Bearer ', '')
+      
+      if (!token) {
+        return {
+          status: 401,
+          message: 'No token provided'
+        }
+      }
+      
+      const payload = await (req as any).jwt.verify(token)
+      
+      if (!payload) {
+        return {
+          status: 401,
+          message: 'Invalid token'
+        }
+      }
+      
+      return {
+        message: 'Access granted',
+        user: payload
+      }
+    }
+  })
+])
 
 const server = new Server(routes)
-export default { fetch: (req: Request) => server.fetch(req) }
+export default { fetch: server.fetch }
 ```
 
 ### 2. 带类型验证的 JWT
 
 ```typescript
-import { Server, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { jwt } from '@vafast/jwt'
 import { Type as t } from 'vafast'
 
@@ -252,45 +250,44 @@ const jwtMiddleware = jwt({
     schema: UserSchema
 })
 
-const routes = [
-    {
-        method: 'POST',
-        path: '/register',
-        handler: createHandler(async ({ req }: { req: Request }) => {
-            jwtMiddleware(req, () => Promise.resolve(new Response()))
-            
-            const body = await req.json()
-            
-            // 创建用户令牌
-            const token = await (req as any).jwt.sign({
-                id: 1,
-                username: body.username,
-                email: body.email,
-                role: 'user'
-            })
-            
-            return {
-                message: 'User registered successfully',
-                token,
-                user: {
-                    id: 1,
-                    username: body.username,
-                    email: body.email,
-                    role: 'user'
-                }
-            }
-        })
+const routes = defineRoutes([
+  defineRoute({
+    method: 'POST',
+    path: '/register',
+    middleware: [jwtMiddleware],
+    handler: async ({ req }: { req: Request }) => {
+      const body = await req.json()
+      
+      // 创建用户令牌
+      const token = await (req as any).jwt.sign({
+        id: 1,
+        username: body.username,
+        email: body.email,
+        role: 'user'
+      })
+      
+      return {
+        message: 'User registered successfully',
+        token,
+        user: {
+          id: 1,
+          username: body.username,
+          email: body.email,
+          role: 'user'
+        }
+      }
     }
-]
+  })
+])
 
 const server = new Server(routes)
-export default { fetch: (req: Request) => server.fetch(req) }
+export default { fetch: server.fetch }
 ```
 
 ### 3. 多 JWT 实例
 
 ```typescript
-import { Server, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { jwt } from '@vafast/jwt'
 
 // 创建不同配置的 JWT 中间件
@@ -308,87 +305,82 @@ const refreshTokenMiddleware = jwt({
     iss: 'your-app.com'
 })
 
-const routes = [
-    {
-        method: 'POST',
-        path: '/auth/login',
-        handler: createHandler(async ({ req }: { req: Request }) => {
-            // 应用两个 JWT 中间件
-            accessTokenMiddleware(req, () => Promise.resolve(new Response()))
-            refreshTokenMiddleware(req, () => Promise.resolve(new Response()))
-            
-            const body = await req.json()
-            const { username, password } = body
-            
-            if (username === 'admin' && password === 'password') {
-                const accessToken = await (req as any).accessToken.sign({
-                    username,
-                    role: 'admin',
-                    type: 'access'
-                })
-                
-                const refreshToken = await (req as any).refreshToken.sign({
-                    username,
-                    type: 'refresh'
-                })
-                
-                return {
-                    message: 'Login successful',
-                    accessToken,
-                    refreshToken,
-                    expiresIn: '15m'
-                }
-            } else {
-                return {
-                    status: 401,
-                    message: 'Invalid credentials'
-                }
-            }
+const routes = defineRoutes([
+  defineRoute({
+    method: 'POST',
+    path: '/auth/login',
+    middleware: [accessTokenMiddleware, refreshTokenMiddleware],
+    handler: async ({ req }: { req: Request }) => {
+      const body = await req.json()
+      const { username, password } = body
+      
+      if (username === 'admin' && password === 'password') {
+        const accessToken = await (req as any).accessToken.sign({
+          username,
+          role: 'admin',
+          type: 'access'
         })
-    },
-    {
-        method: 'POST',
-        path: '/auth/refresh',
-        handler: createHandler(async ({ req }: { req: Request }) => {
-            accessTokenMiddleware(req, () => Promise.resolve(new Response()))
-            refreshTokenMiddleware(req, () => Promise.resolve(new Response()))
-            
-            const body = await req.json()
-            const { refreshToken } = body
-            
-            const payload = await (req as any).refreshToken.verify(refreshToken)
-            
-            if (!payload || payload.type !== 'refresh') {
-                return {
-                    status: 401,
-                    message: 'Invalid refresh token'
-                }
-            }
-            
-            // 生成新的访问令牌
-            const newAccessToken = await (req as any).accessToken.sign({
-                username: payload.username,
-                role: 'admin',
-                type: 'access'
-            })
-            
-            return {
-                message: 'Token refreshed',
-                accessToken: newAccessToken,
-                expiresIn: '15m'
-            }
+        
+        const refreshToken = await (req as any).refreshToken.sign({
+          username,
+          type: 'refresh'
         })
+        
+        return {
+          message: 'Login successful',
+          accessToken,
+          refreshToken,
+          expiresIn: '15m'
+        }
+      } else {
+        return {
+          status: 401,
+          message: 'Invalid credentials'
+        }
+      }
     }
-]
+  }),
+  defineRoute({
+    method: 'POST',
+    path: '/auth/refresh',
+    middleware: [accessTokenMiddleware, refreshTokenMiddleware],
+    handler: async ({ req }: { req: Request }) => {
+      const body = await req.json()
+      const { refreshToken } = body
+      
+      const payload = await (req as any).refreshToken.verify(refreshToken)
+      
+      if (!payload || payload.type !== 'refresh') {
+        return {
+          status: 401,
+          message: 'Invalid refresh token'
+        }
+      }
+      
+      // 生成新的访问令牌
+      const newAccessToken = await (req as any).accessToken.sign({
+        username: payload.username,
+        role: 'admin',
+        type: 'access'
+      })
+      
+      return {
+        message: 'Token refreshed',
+        accessToken: newAccessToken,
+        expiresIn: '15m'
+      }
+    }
+  })
+])
 
 const server = new Server(routes)
-export default { fetch: (req: Request) => server.fetch(req) }
+export default { fetch: server.fetch }
 ```
 
 ### 4. 高级 JWT 配置
 
 ```typescript
-import { Server, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { jwt } from '@vafast/jwt'
 
 const advancedJwtMiddleware = jwt({
@@ -408,41 +400,40 @@ const advancedJwtMiddleware = jwt({
     crit: ['b64']           // 关键参数
 })
 
-const routes = [
-    {
-        method: 'POST',
-        path: '/auth/advanced',
-        handler: createHandler(async ({ req }: { req: Request }) => {
-            advancedJwtMiddleware(req, () => Promise.resolve(new Response()))
-            
-            const token = await (req as any).jwt.sign({
-                username: 'admin',
-                role: 'admin',
-                permissions: ['read', 'write', 'delete']
-            })
-            
-            return {
-                message: 'Advanced JWT created',
-                token,
-                config: {
-                    algorithm: 'HS512',
-                    issuer: 'your-app.com',
-                    audience: ['web', 'mobile'],
-                    expiresIn: '1h'
-                }
-            }
-        })
+const routes = defineRoutes([
+  defineRoute({
+    method: 'POST',
+    path: '/auth/advanced',
+    middleware: [advancedJwtMiddleware],
+    handler: async ({ req }: { req: Request }) => {
+      const token = await (req as any).jwt.sign({
+        username: 'admin',
+        role: 'admin',
+        permissions: ['read', 'write', 'delete']
+      })
+      
+      return {
+        message: 'Advanced JWT created',
+        token,
+        config: {
+          algorithm: 'HS512',
+          issuer: 'your-app.com',
+          audience: ['web', 'mobile'],
+          expiresIn: '1h'
+        }
+      }
     }
-]
+  })
+])
 
 const server = new Server(routes)
-export default { fetch: (req: Request) => server.fetch(req) }
+export default { fetch: server.fetch }
 ```
 
 ## 完整示例
 
 ```typescript
-import { Server, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { jwt } from '@vafast/jwt'
 import { Type as t } from 'vafast'
 
@@ -485,265 +476,258 @@ const extractToken = (req: Request) => {
 }
 
 // 定义路由
-const routes = [
-    {
-        method: 'GET',
-        path: '/',
-        handler: createHandler(() => {
-            return { 
-                message: 'Vafast JWT Authentication API',
-                endpoints: [
-                    'POST /auth/register - 用户注册',
-                    'POST /auth/login - 用户登录',
-                    'GET /profile - 获取用户资料',
-                    'PUT /profile - 更新用户资料',
-                    'POST /auth/logout - 用户登出',
-                    'GET /admin - 管理员专用端点'
-                ]
-            }
-        })
-    },
-    {
-        method: 'POST',
-        path: '/auth/register',
-        handler: createHandler(async ({ req }: { req: Request }) => {
-            jwtMiddleware(req, () => Promise.resolve(new Response()))
-            
-            const body = await req.json()
-            const { username, email, password } = body
-            
-            // 检查用户是否已存在
-            if (users.find(user => user.username === username)) {
-                return {
-                    status: 400,
-                    message: 'Username already exists'
-                }
-            }
-            
-            // 创建新用户
-            const newUser = {
-                id: users.length + 1,
-                username,
-                email,
-                password,
-                role: 'user' as const
-            }
-            
-            users.push(newUser)
-            
-            // 生成 JWT 令牌
-            const token = await (req as any).jwt.sign({
-                id: newUser.id,
-                username: newUser.username,
-                email: newUser.email,
-                role: newUser.role
-            })
-            
-            return {
-                message: 'User registered successfully',
-                token,
-                user: {
-                    id: newUser.id,
-                    username: newUser.username,
-                    email: newUser.email,
-                    role: newUser.role
-                }
-            }
-        })
-    },
-    {
-        method: 'POST',
-        path: '/auth/login',
-        handler: createHandler(async ({ req }: { req: Request }) => {
-            jwtMiddleware(req, () => Promise.resolve(new Response()))
-            
-            const body = await req.json()
-            const { username, password } = body
-            
-            const user = validateUser(username, password)
-            
-            if (!user) {
-                return {
-                    status: 401,
-                    message: 'Invalid credentials'
-                }
-            }
-            
-            // 生成 JWT 令牌
-            const token = await (req as any).jwt.sign({
-                id: user.id,
-                username: user.username,
-                email: user.email,
-                role: user.role
-            })
-            
-            return {
-                message: 'Login successful',
-                token,
-                user: {
-                    id: user.id,
-                    username: user.username,
-                    email: user.email,
-                    role: user.role
-                }
-            }
-        })
-    },
-    {
-        method: 'GET',
-        path: '/profile',
-        handler: createHandler(async ({ req }: { req: Request }) => {
-            jwtMiddleware(req, () => Promise.resolve(new Response()))
-            
-            const token = extractToken(req)
-            
-            if (!token) {
-                return {
-                    status: 401,
-                    message: 'No token provided'
-                }
-            }
-            
-            const payload = await (req as any).jwt.verify(token)
-            
-            if (!payload) {
-                return {
-                    status: 401,
-                    message: 'Invalid token'
-                }
-            }
-            
-            const user = users.find(u => u.id === payload.id)
-            
-            if (!user) {
-                return {
-                    status: 404,
-                    message: 'User not found'
-                }
-            }
-            
-            return {
-                message: 'Profile retrieved successfully',
-                user: {
-                    id: user.id,
-                    username: user.username,
-                    email: user.email,
-                    role: user.role
-                }
-            }
-        })
-    },
-    {
-        method: 'PUT',
-        path: '/profile',
-        handler: createHandler(async ({ req }: { req: Request }) => {
-            jwtMiddleware(req, () => Promise.resolve(new Response()))
-            
-            const token = extractToken(req)
-            
-            if (!token) {
-                return {
-                    status: 401,
-                    message: 'No token provided'
-                }
-            }
-            
-            const payload = await (req as any).jwt.verify(token)
-            
-            if (!payload) {
-                return {
-                    status: 401,
-                    message: 'Invalid token'
-                }
-            }
-            
-            const body = await req.json()
-            const { email } = body
-            
-            const user = users.find(u => u.id === payload.id)
-            
-            if (!user) {
-                return {
-                    status: 404,
-                    message: 'User not found'
-                }
-            }
-            
-            // 更新用户信息
-            user.email = email
-            
-            return {
-                message: 'Profile updated successfully',
-                user: {
-                    id: user.id,
-                    username: user.username,
-                    email: user.email,
-                    role: user.role
-                }
-            }
-        })
-    },
-    {
-        method: 'GET',
-        path: '/admin',
-        handler: createHandler(async ({ req }: { req: Request }) => {
-            jwtMiddleware(req, () => Promise.resolve(new Response()))
-            
-            const token = extractToken(req)
-            
-            if (!token) {
-                return {
-                    status: 401,
-                    message: 'No token provided'
-                }
-            }
-            
-            const payload = await (req as any).jwt.verify(token)
-            
-            if (!payload) {
-                return {
-                    status: 401,
-                    message: 'Invalid token'
-                }
-            }
-            
-            if (payload.role !== 'admin') {
-                return {
-                    status: 403,
-                    message: 'Access denied. Admin role required.'
-                }
-            }
-            
-            return {
-                message: 'Admin access granted',
-                adminData: {
-                    totalUsers: users.length,
-                    systemStatus: 'healthy',
-                    lastMaintenance: new Date().toISOString()
-                }
-            }
-        })
-    },
-    {
-        method: 'POST',
-        path: '/auth/logout',
-        handler: createHandler(async ({ req }: { req: Request }) => {
-            // 在实际应用中，你可能需要将令牌加入黑名单
-            return {
-                message: 'Logout successful',
-                note: 'Token has been invalidated'
-            }
-        })
+const routes = defineRoutes([
+  defineRoute({
+    method: 'GET',
+    path: '/',
+    handler: () => {
+      return { 
+        message: 'Vafast JWT Authentication API',
+        endpoints: [
+          'POST /auth/register - 用户注册',
+          'POST /auth/login - 用户登录',
+          'GET /profile - 获取用户资料',
+          'PUT /profile - 更新用户资料',
+          'POST /auth/logout - 用户登出',
+          'GET /admin - 管理员专用端点'
+        ]
+      }
     }
-]
+  }),
+  defineRoute({
+    method: 'POST',
+    path: '/auth/register',
+    middleware: [jwtMiddleware],
+    handler: async ({ req }: { req: Request }) => {
+      const body = await req.json()
+      const { username, email, password } = body
+      
+      // 检查用户是否已存在
+      if (users.find(user => user.username === username)) {
+        return {
+          status: 400,
+          message: 'Username already exists'
+        }
+      }
+      
+      // 创建新用户
+      const newUser = {
+        id: users.length + 1,
+        username,
+        email,
+        password,
+        role: 'user' as const
+      }
+      
+      users.push(newUser)
+      
+      // 生成 JWT 令牌
+      const token = await (req as any).jwt.sign({
+        id: newUser.id,
+        username: newUser.username,
+        email: newUser.email,
+        role: newUser.role
+      })
+      
+      return {
+        message: 'User registered successfully',
+        token,
+        user: {
+          id: newUser.id,
+          username: newUser.username,
+          email: newUser.email,
+          role: newUser.role
+        }
+      }
+    }
+  }),
+  defineRoute({
+    method: 'POST',
+    path: '/auth/login',
+    middleware: [jwtMiddleware],
+    handler: async ({ req }: { req: Request }) => {
+      const body = await req.json()
+      const { username, password } = body
+      
+      const user = validateUser(username, password)
+      
+      if (!user) {
+        return {
+          status: 401,
+          message: 'Invalid credentials'
+        }
+      }
+      
+      // 生成 JWT 令牌
+      const token = await (req as any).jwt.sign({
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        role: user.role
+      })
+      
+      return {
+        message: 'Login successful',
+        token,
+        user: {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          role: user.role
+                }
+            }
+    }
+  }),
+  defineRoute({
+    method: 'GET',
+    path: '/profile',
+    middleware: [jwtMiddleware],
+    handler: async ({ req }: { req: Request }) => {
+      const token = extractToken(req)
+      
+      if (!token) {
+        return {
+          status: 401,
+          message: 'No token provided'
+        }
+      }
+      
+      const payload = await (req as any).jwt.verify(token)
+      
+      if (!payload) {
+        return {
+          status: 401,
+          message: 'Invalid token'
+        }
+      }
+      
+      const user = users.find(u => u.id === payload.id)
+      
+      if (!user) {
+        return {
+          status: 404,
+          message: 'User not found'
+        }
+      }
+      
+      return {
+        message: 'Profile retrieved successfully',
+        user: {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          role: user.role
+        }
+      }
+    }
+  }),
+  defineRoute({
+    method: 'PUT',
+    path: '/profile',
+    middleware: [jwtMiddleware],
+    handler: async ({ req }: { req: Request }) => {
+      const token = extractToken(req)
+      
+      if (!token) {
+        return {
+          status: 401,
+          message: 'No token provided'
+        }
+      }
+      
+      const payload = await (req as any).jwt.verify(token)
+      
+      if (!payload) {
+        return {
+          status: 401,
+          message: 'Invalid token'
+        }
+      }
+      
+      const body = await req.json()
+      const { email } = body
+      
+      const user = users.find(u => u.id === payload.id)
+      
+      if (!user) {
+        return {
+          status: 404,
+          message: 'User not found'
+        }
+      }
+      
+      // 更新用户信息
+      user.email = email
+      
+      return {
+        message: 'Profile updated successfully',
+        user: {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          role: user.role
+        }
+      }
+    }
+  }),
+  defineRoute({
+    method: 'GET',
+    path: '/admin',
+    middleware: [jwtMiddleware],
+    handler: async ({ req }: { req: Request }) => {
+      const token = extractToken(req)
+      
+      if (!token) {
+        return {
+          status: 401,
+          message: 'No token provided'
+        }
+      }
+      
+      const payload = await (req as any).jwt.verify(token)
+      
+      if (!payload) {
+        return {
+          status: 401,
+          message: 'Invalid token'
+        }
+      }
+      
+      if (payload.role !== 'admin') {
+        return {
+          status: 403,
+          message: 'Access denied. Admin role required.'
+        }
+      }
+      
+      return {
+        message: 'Admin access granted',
+        adminData: {
+          totalUsers: users.length,
+          systemStatus: 'healthy',
+          lastMaintenance: new Date().toISOString()
+        }
+      }
+    }
+  }),
+  defineRoute({
+    method: 'POST',
+    path: '/auth/logout',
+    handler: async ({ req }: { req: Request }) => {
+      // 在实际应用中，你可能需要将令牌加入黑名单
+      return {
+        message: 'Logout successful',
+        note: 'Token has been invalidated'
+      }
+    }
+  })
+])
 
 // 创建服务器
 const server = new Server(routes)
 
 // 导出 fetch 函数
-export default {
-    fetch: (req: Request) => server.fetch(req)
-}
+export default { fetch: server.fetch }
 
 console.log('Vafast JWT Authentication API 服务器启动成功！')
 console.log('用户注册: POST /auth/register')
@@ -758,7 +742,7 @@ console.log('🚪 用户登出: POST /auth/logout')
 
 ```typescript
 import { describe, expect, it } from 'bun:test'
-import { Server, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { jwt } from '@vafast/jwt'
 
 describe('Vafast JWT Plugin', () => {
@@ -771,18 +755,17 @@ describe('Vafast JWT Plugin', () => {
             exp: '1h'
         })
 
-        const app = new Server([
-            {
-                method: 'GET',
-                path: '/sign',
-                handler: createHandler(async ({ req }: { req: Request }) => {
-                    jwtMiddleware(req, () => Promise.resolve(new Response()))
-                    
-                    const token = await (req as any).jwt.sign({
-                        name: 'testuser'
-                    })
-                    return { token }
-                })
+        const app = new Server(defineRoutes([
+          defineRoute({
+            method: 'GET',
+            path: '/sign',
+            middleware: [jwtMiddleware],
+            handler: async ({ req }: { req: Request }) => {
+              const token = await (req as any).jwt.sign({
+                name: 'testuser'
+              })
+              return { token }
+            }
             }
         ])
 
@@ -803,26 +786,25 @@ describe('Vafast JWT Plugin', () => {
             exp: '1h'
         })
 
-        const app = new Server([
-            {
-                method: 'GET',
-                path: '/verify',
-                handler: createHandler(async ({ req }: { req: Request }) => {
-                    jwtMiddleware(req, () => Promise.resolve(new Response()))
-                    
-                    // 首先签名一个令牌
-                    const token = await (req as any).jwt.sign({
-                        name: 'testuser',
-                        id: 123
-                    })
+        const app = new Server(defineRoutes([
+          defineRoute({
+            method: 'GET',
+            path: '/verify',
+            middleware: [jwtMiddleware],
+            handler: async ({ req }: { req: Request }) => {
+              // 首先签名一个令牌
+              const token = await (req as any).jwt.sign({
+                name: 'testuser',
+                id: 123
+              })
 
-                    // 然后验证它
-                    const payload = await (req as any).jwt.verify(token)
+              // 然后验证它
+              const payload = await (req as any).jwt.verify(token)
 
-                    return { payload }
-                })
+              return { payload }
             }
-        ])
+          })
+        ]))
 
         const res = await app.fetch(new Request('http://localhost/verify'))
         const data = await res.json()
@@ -841,20 +823,19 @@ describe('Vafast JWT Plugin', () => {
             exp: '1h'
         })
 
-        const app = new Server([
-            {
-                method: 'GET',
-                path: '/verify-invalid',
-                handler: createHandler(async ({ req }: { req: Request }) => {
-                    jwtMiddleware(req, () => Promise.resolve(new Response()))
-                    
-                    // 尝试验证无效令牌
-                    const payload = await (req as any).jwt.verify('invalid.token.here')
+        const app = new Server(defineRoutes([
+          defineRoute({
+            method: 'GET',
+            path: '/verify-invalid',
+            middleware: [jwtMiddleware],
+            handler: async ({ req }: { req: Request }) => {
+              // 尝试验证无效令牌
+              const payload = await (req as any).jwt.verify('invalid.token.here')
 
-                    return { payload }
-                })
+              return { payload }
             }
-        ])
+          })
+        ]))
 
         const res = await app.fetch(new Request('http://localhost/verify-invalid'))
         const data = await res.json()
@@ -871,15 +852,14 @@ describe('Vafast JWT Plugin', () => {
             exp: '1h'
         })
 
-        const app = new Server([
-            {
-                method: 'GET',
-                path: '/verify-missing',
-                handler: createHandler(async ({ req }: { req: Request }) => {
-                    jwtMiddleware(req, () => Promise.resolve(new Response()))
-                    
-                    // 尝试验证缺失的令牌
-                    const payload = await (req as any).jwt.verify()
+        const app = new Server(defineRoutes([
+          defineRoute({
+            method: 'GET',
+            path: '/verify-missing',
+            middleware: [jwtMiddleware],
+            handler: async ({ req }: { req: Request }) => {
+              // 尝试验证缺失的令牌
+              const payload = await (req as any).jwt.verify()
 
                     return { payload }
                 })

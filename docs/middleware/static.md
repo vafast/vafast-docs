@@ -117,7 +117,7 @@ const defaultOptions = {
 ### 1. 基本静态文件服务
 
 ```typescript
-import { Server, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { staticPlugin } from '@vafast/static'
 
 const staticRoutes = await staticPlugin({
@@ -125,27 +125,25 @@ const staticRoutes = await staticPlugin({
     prefix: '/static'
 })
 
-const routes = [
-    {
-        method: 'GET',
-        path: '/',
-        handler: createHandler(() => {
-            return { message: 'Welcome to Static File Server' }
-        })
+const routes = defineRoutes([
+  defineRoute({
+    method: 'GET',
+    path: '/',
+    handler: () => {
+      return { message: 'Welcome to Static File Server' }
     }
-]
+  })
+])
 
 const server = new Server([...routes, ...staticRoutes])
 
-export default {
-    fetch: (req: Request) => server.fetch(req)
-}
+export default { fetch: server.fetch }
 ```
 
 ### 2. 生产环境优化
 
 ```typescript
-import { Server, createHandler } from 'vafast'
+import { Server } from 'vafast'
 import { staticPlugin } from '@vafast/static'
 
 const staticRoutes = await staticPlugin({
@@ -159,15 +157,13 @@ const staticRoutes = await staticPlugin({
 
 const server = new Server(staticRoutes)
 
-export default {
-    fetch: (req: Request) => server.fetch(req)
-}
+export default { fetch: server.fetch }
 ```
 
 ### 3. 自定义头部和缓存控制
 
 ```typescript
-import { Server, createHandler } from 'vafast'
+import { Server } from 'vafast'
 import { staticPlugin } from '@vafast/static'
 
 const staticRoutes = await staticPlugin({
@@ -185,14 +181,14 @@ const staticRoutes = await staticPlugin({
 const server = new Server(staticRoutes)
 
 export default {
-    fetch: (req: Request) => server.fetch(req)
+    fetch: server.fetch
 }
 ```
 
 ### 4. 忽略特定文件
 
 ```typescript
-import { Server, createHandler } from 'vafast'
+import { Server } from 'vafast'
 import { staticPlugin } from '@vafast/static'
 
 const staticRoutes = await staticPlugin({
@@ -210,15 +206,13 @@ const staticRoutes = await staticPlugin({
 
 const server = new Server(staticRoutes)
 
-export default {
-    fetch: (req: Request) => server.fetch(req)
-}
+export default { fetch: server.fetch }
 ```
 
 ### 5. 无扩展名支持
 
 ```typescript
-import { Server, createHandler } from 'vafast'
+import { Server } from 'vafast'
 import { staticPlugin } from '@vafast/static'
 
 const staticRoutes = await staticPlugin({
@@ -230,15 +224,13 @@ const staticRoutes = await staticPlugin({
 
 const server = new Server(staticRoutes)
 
-export default {
-    fetch: (req: Request) => server.fetch(req)
-}
+export default { fetch: server.fetch }
 ```
 
 ### 6. 混合路由配置
 
 ```typescript
-import { Server, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { staticPlugin } from '@vafast/static'
 
 // 创建静态文件路由
@@ -250,34 +242,32 @@ const staticRoutes = await staticPlugin({
 })
 
 // 添加自定义路由
-const customRoutes = [
-    {
-        method: 'GET',
-        path: '/',
-        handler: createHandler(() => {
-            return { message: 'Mixed routes server' }
-        })
-    },
-    {
-        method: 'GET',
-        path: '/api/status',
-        handler: createHandler(() => {
-            return { status: 'running', staticRoutes: staticRoutes.length }
-        })
+const customRoutes = defineRoutes([
+  defineRoute({
+    method: 'GET',
+    path: '/',
+    handler: () => {
+      return { message: 'Mixed routes server' }
     }
-]
+  }),
+  defineRoute({
+    method: 'GET',
+    path: '/api/status',
+    handler: () => {
+      return { status: 'running', staticRoutes: staticRoutes.length }
+    }
+  })
+])
 
 const server = new Server([...customRoutes, ...staticRoutes])
 
-export default {
-    fetch: (req: Request) => server.fetch(req)
-}
+export default { fetch: server.fetch }
 ```
 
 ## 完整示例
 
 ```typescript
-import { Server, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { staticPlugin } from '@vafast/static'
 import { join } from 'path'
 
@@ -323,56 +313,56 @@ const docsStaticRoutes = await staticPlugin({
 })
 
 // 定义自定义路由
-const routes = [
-    {
-        method: 'GET',
-        path: '/',
-        handler: createHandler(() => {
-            return {
-                message: 'Vafast Static File Server',
-                version: '1.0.0',
-                endpoints: [
-                    'GET /public/* - 公共静态文件（24小时缓存）',
-                    'GET /assets/* - 构建资源（1年缓存）',
-                    'GET /docs/* - 文档文件（无缓存）',
-                    'GET /api/status - 服务器状态',
-                    'GET /api/files - 文件统计'
-                ]
-            }
-        })
-    },
-    {
-        method: 'GET',
-        path: '/api/status',
-        handler: createHandler(() => {
-            return {
-                status: 'running',
-                timestamp: new Date().toISOString(),
-                staticRoutes: {
-                    public: publicStaticRoutes.length,
-                    assets: assetsStaticRoutes.length,
-                    docs: docsStaticRoutes.length
-                }
-            }
-        })
-    },
-    {
-        method: 'GET',
-        path: '/api/files',
-        handler: createHandler(async () => {
-            // 这里可以添加文件统计逻辑
-            return {
-                message: 'File statistics',
-                totalRoutes: publicStaticRoutes.length + assetsStaticRoutes.length + docsStaticRoutes.length,
-                categories: {
-                    public: publicStaticRoutes.length,
-                    assets: assetsStaticRoutes.length,
-                    docs: docsStaticRoutes.length
-                }
-            }
-        })
+const routes = defineRoutes([
+  defineRoute({
+    method: 'GET',
+    path: '/',
+    handler: () => {
+      return {
+        message: 'Vafast Static File Server',
+        version: '1.0.0',
+        endpoints: [
+          'GET /public/* - 公共静态文件（24小时缓存）',
+          'GET /assets/* - 构建资源（1年缓存）',
+          'GET /docs/* - 文档文件（无缓存）',
+          'GET /api/status - 服务器状态',
+          'GET /api/files - 文件统计'
+        ]
+      }
     }
-]
+  }),
+  defineRoute({
+    method: 'GET',
+    path: '/api/status',
+    handler: () => {
+      return {
+        status: 'running',
+        timestamp: new Date().toISOString(),
+        staticRoutes: {
+          public: publicStaticRoutes.length,
+          assets: assetsStaticRoutes.length,
+          docs: docsStaticRoutes.length
+        }
+      }
+    }
+  }),
+  defineRoute({
+    method: 'GET',
+    path: '/api/files',
+    handler: async () => {
+      // 这里可以添加文件统计逻辑
+      return {
+        message: 'File statistics',
+        totalRoutes: publicStaticRoutes.length + assetsStaticRoutes.length + docsStaticRoutes.length,
+        categories: {
+          public: publicStaticRoutes.length,
+          assets: assetsStaticRoutes.length,
+          docs: docsStaticRoutes.length
+        }
+      }
+    }
+  })
+])
 
 // 合并所有路由
 const allRoutes = [
@@ -386,9 +376,8 @@ const allRoutes = [
 const server = new Server(allRoutes)
 
 // 导出 fetch 函数
-export default {
-    fetch: (req: Request) => server.fetch(req)
-}
+export default { fetch: server.fetch }
+```
 
 console.log('Vafast Static File Server 启动成功！')
 console.log('📁 公共文件：/public/* (24小时缓存)')
@@ -401,7 +390,7 @@ console.log('总路由数：', allRoutes.length)
 
 ```typescript
 import { describe, expect, it, beforeAll, afterAll } from 'bun:test'
-import { Server, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { staticPlugin } from '@vafast/static'
 import { writeFile, mkdir, rm } from 'fs/promises'
 import { join } from 'path'
@@ -638,14 +627,14 @@ describe('Vafast Static Plugin', () => {
 
         // 添加自定义路由
         const customRoutes = [
-            {
+            defineRoute({
                 method: 'GET',
                 path: '/',
-                handler: createHandler(() => {
+                handler: () => {
                     return { message: 'Static server is running' }
-                })
-            }
-        ]
+                }
+            })
+        ])
 
         const allRoutes = [...customRoutes, ...staticRoutes]
         const app = new Server(allRoutes)
@@ -770,7 +759,7 @@ const monitorRoutes = [
     {
         method: 'GET',
         path: '/admin/static-stats',
-        handler: createHandler(() => {
+        handler: () => {
             return {
                 totalRoutes: staticRoutes.length,
                 mode: 'static',
@@ -781,7 +770,7 @@ const monitorRoutes = [
                     htmlCache: htmlCache.keys().length
                 }
             }
-        })
+        }
     }
 ]
 ```
@@ -789,7 +778,8 @@ const monitorRoutes = [
 ### 6. 错误处理和日志
 
 ```typescript
-import { createHandler } from 'vafast'
+import { defineRoute, defineRoutes } from 'vafast'
+import { staticPlugin } from '@vafast/static'
 
 const staticRoutes = await staticPlugin({
     assets: 'public',
@@ -799,27 +789,27 @@ const staticRoutes = await staticPlugin({
 })
 
 // 添加错误处理中间件
-const errorHandlingRoutes = [
-    {
-        method: 'GET',
-        path: '/static/*',
-        handler: createHandler(async (req: Request) => {
-            try {
-                // 这里可以添加自定义的错误处理逻辑
-                const response = await handleStaticRequest(req)
-                return response
-            } catch (error) {
-                console.error('Static file error:', error)
-                
-                if (error instanceof NotFoundError) {
-                    return new Response('File not found', { status: 404 })
-                }
-                
-                return new Response('Internal server error', { status: 500 })
-            }
-        })
+const errorHandlingRoutes = defineRoutes([
+  defineRoute({
+    method: 'GET',
+    path: '/static/*',
+    handler: async (req: Request) => {
+      try {
+        // 这里可以添加自定义的错误处理逻辑
+        const response = await handleStaticRequest(req)
+        return response
+      } catch (error) {
+        console.error('Static file error:', error)
+        
+        if (error instanceof NotFoundError) {
+          return new Response('File not found', { status: 404 })
+        }
+        
+        return new Response('Internal server error', { status: 500 })
+      }
     }
-]
+  })
+])
 ```
 
 ## 高级特性

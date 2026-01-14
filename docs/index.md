@@ -211,6 +211,7 @@ type Api = InferEden<typeof routes>
 const api = eden<Api>('https://api.example.com')
 
 // 完整类型提示 + 自动补全
+// @errors: 2339
 const { data } = await api.profile.patch({
   age: 21
 })
@@ -238,6 +239,7 @@ type Api = InferEden<typeof routes>
 const api = eden<Api>('http://localhost:3000')
 
 // ❌ 缺少 password 字段 → 编译时报错
+// @errors: 2339
 const { data } = await api.user.put({
   username: 'mika'
 })

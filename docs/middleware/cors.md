@@ -151,20 +151,20 @@ Access-Control-Allow-Credentials 响应头告诉浏览器在请求的凭证模�
 ### 按顶级域名允许 CORS
 
 ```typescript
-import { Server, defineRoutes, createHandler, serve } from 'vafast'
+import { Server, defineRoute, defineRoutes, serve } from 'vafast'
 import { cors } from '@vafast/cors'
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/',
-    handler: createHandler(() => '你好')
-  }
+    handler: () => '你好'
+  })
 ])
 
 const server = new Server(routes)
-server.use(cors({
-			origin: /.*\.example\.com$/
+server.useGlobalMiddleware(cors({
+  origin: /.*\.example\.com$/
 }))
 
 serve({ fetch: server.fetch, port: 3000 })
