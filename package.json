@@ -14,7 +14,7 @@
     },
     "homepage": "https://vafast.huyooo.com",
     "dependencies": {
-        "@iconify/json": "^2.2.365",
+        "@iconify/json": "^2.2.428",
         "@number-flow/vue": "^0.4.8",
         "@tailwindcss/vite": "^4.1.11",
         "@vafast/api-client": "^0.2.2",
