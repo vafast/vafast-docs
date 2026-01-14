@@ -6,21 +6,15 @@
     >
         <!-- 标题 -->
         <div class="text-center mb-12">
-            <motion.p
-                class="text-sm font-medium text-emerald-500 mb-2"
-                v-bind="flyIn()"
-            >
-                前后端协作
-            </motion.p>
             <motion.h2
                 class="text-4xl md:text-5xl font-bold text-gray-800 dark:text-gray-100"
-                v-bind="flyIn(0.1)"
+                v-bind="flyIn()"
             >
                 类型自动同步
             </motion.h2>
             <motion.p
                 class="mt-4 text-gray-500 dark:text-gray-400 max-w-2xl mx-auto"
-                v-bind="flyIn(0.15)"
+                v-bind="flyIn(0.1)"
             >
                 服务端定义好接口，客户端自动获得完整类型提示，不用手动写类型、不用生成代码。
             </motion.p>

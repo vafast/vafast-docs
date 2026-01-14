@@ -59,19 +59,13 @@
 
         <!-- 右侧文案 -->
         <div class="text-xl max-w-md">
-            <motion.p
-                class="text-sm font-medium text-violet-500 mb-2"
-                v-bind="flyIn()"
-            >
-                跨平台部署
-            </motion.p>
             <motion.h2
                 class="text-4xl md:text-5xl font-bold mb-6 text-gray-800 dark:text-gray-100"
-                v-bind="flyIn(0.1)"
+                v-bind="flyIn()"
             >
                 一套代码，到处运行
             </motion.h2>
-            <motion.p class="text-gray-500 dark:text-gray-400 text-base leading-relaxed" v-bind="flyIn(0.2)">
+            <motion.p class="text-gray-500 dark:text-gray-400 text-base leading-relaxed" v-bind="flyIn(0.1)">
                 基于 Web 标准 Fetch API 构建，不绑定任何运行时。同一份代码可以部署到 Node.js、Bun、Cloudflare Workers 等任意平台。
             </motion.p>
             <motion.div class="flex flex-wrap gap-2 mt-8" v-bind="flyIn(0.3)">

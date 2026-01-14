@@ -43,21 +43,15 @@ const principles = [
         <div class="flex flex-col gap-10 items-center">
             <!-- 顶部文案 -->
             <div class="text-center max-w-2xl">
-                <motion.p
-                    class="text-sm font-medium text-violet-500 mb-2"
-                    v-bind="flyIn()"
-                >
-                    简单直观
-                </motion.p>
                 <motion.h2
                     class="text-4xl md:text-5xl font-bold mb-6 text-gray-800 dark:text-gray-100"
-                    v-bind="flyIn(0.1)"
+                    v-bind="flyIn()"
                 >
                     为开发者而生
                 </motion.h2>
                 <motion.p
                     class="text-gray-500 dark:text-gray-400 leading-relaxed"
-                    v-bind="flyIn(0.2)"
+                    v-bind="flyIn(0.1)"
                 >
                     API 设计符合直觉，几乎没有学习成本。不搞复杂抽象，你写的代码就是最终运行的样子。
                 </motion.p>
