@@ -439,6 +439,20 @@ export default defineConfig({
                 ]
             },
             {
+                text: '工具',
+                collapsed: true,
+                items: [
+                    {
+                        text: 'CLI 工具',
+                        link: '/tools/cli'
+                    },
+                    {
+                        text: 'Claude Skill',
+                        link: '/tools/skill'
+                    }
+                ]
+            },
+            {
                 text: '工具集成',
                 collapsed: true,
                 items: [
