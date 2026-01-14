@@ -102,7 +102,8 @@ const createUser = defineRoute({
 // 服务端
 import { defineRoute, defineRoutes, Type } from 'vafast'
 
-export const routes = defineRoutes([
+// 定义路由（使用 as const 保留字面量类型）
+export const routeDefinitions = [
   defineRoute({
     method: 'POST',
     path: '/login',
@@ -111,8 +112,11 @@ export const routes = defineRoutes([
     },
     handler: ({ body }) => ({ token: 'xxx', user: { id: '1', email: body.email } })
   })
-])
-export type AppRoutes = typeof routes
+] as const
+
+// 创建服务器
+export const routes = defineRoutes(routeDefinitions)
+export type AppRoutes = typeof routeDefinitions
 ```
 
 ```typescript
@@ -120,6 +124,7 @@ export type AppRoutes = typeof routes
 import { eden, InferEden } from '@vafast/api-client'
 import type { AppRoutes } from './server'
 
+// 自动推断类型
 type Api = InferEden<AppRoutes>
 const api = eden<Api>('http://localhost:3000')
 

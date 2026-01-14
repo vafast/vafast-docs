@@ -101,7 +101,7 @@ const flyIn = useFlyIn(isInView)
 
 <style scoped>
 .code-body {
-    max-height: 400px;
+    height: 700px;
     overflow-y: auto;
     overflow-x: hidden;
     display: flex;
@@ -112,22 +112,47 @@ const flyIn = useFlyIn(isInView)
     background: transparent !important;
 }
 
-.code-body :deep(pre) {
+/* 确保所有代码容器填充高度 */
+.code-body :deep(div[class*='language-']),
+.code-body :deep([class*='shiki']),
+.code-body :deep([class*='github-light']),
+.code-body :deep([class*='github-dark']),
+.code-body :deep(.twoslash) {
+    margin: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100% !important;
+    min-height: 100% !important;
+}
+
+/* Pre 元素填充高度 */
+.code-body :deep(div[class*='language-'] > pre),
+.code-body :deep([class*='shiki'] > pre),
+.code-body :deep(.twoslash > pre),
+.code-body :deep(pre[class*='language-']) {
+    margin: 0 !important;
     padding: 1rem !important;
-    margin: 0;
-    font-size: 14px;
-    flex: 1;
+    font-size: 14px !important;
+    flex: 1 !important;
+    min-height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: visible !important;
 }
 
-.code-body :deep(div[class*='language-']) {
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    height: 100%;
+/* Code 元素 */
+.code-body :deep(div[class*='language-'] > pre > code),
+.code-body :deep(pre > code),
+.code-body :deep(code[class*='language-']) {
+    display: block !important;
+    width: 100% !important;
+    flex: 1 !important;
 }
 
-.code-body :deep(div[class*='language-'] > pre) {
-    margin: 0;
-    flex: 1;
+/* Twoslash 特定元素 */
+.code-body :deep(.twoslash-popup),
+.code-body :deep(.twoslash-query),
+.code-body :deep(.twoslash-error) {
+    position: relative;
 }
 </style>
