@@ -71,22 +71,22 @@ export default app
 ::: code-group
 
 ```ts [Vafast]
-import { Server, defineRoutes, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/',
-    handler: createHandler(() => 'Hello World')
-  },
-  {
+    handler: () => 'Hello World'
+  }),
+  defineRoute({
     method: 'POST',
     path: '/user/:id',
-    handler: createHandler(async ({ params, req }) => {
+    handler: async ({ params, req }) => {
       const body = await req.json()
       return { id: params.id, name: body.name }
-    })
-  }
+    }
+  })
 ])
 
 const server = new Server(routes)
@@ -117,16 +117,16 @@ app.post('/users', (c) => { ... })
 **Vafast** 使用配置对象数组：
 ```typescript
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/users',
-    handler: createHandler(() => { ... })
-  },
-  {
+    handler: () => { ... }
+  }),
+  defineRoute({
     method: 'POST',
     path: '/users',
-    handler: createHandler(() => { ... })
-  }
+    handler: () => { ... }
+  })
 ])
 ```
 
@@ -143,10 +143,10 @@ app.get('/user/:id', (c) => {
 
 **Vafast** 使用解构参数：
 ```typescript
-{
+defineRoute({
   method: 'GET',
   path: '/user/:id',
-  handler: createHandler(({ params, query }) => {
+  handler: ({ params, query }) => {
     return { id: params.id, query }
   })
 }
@@ -168,22 +168,24 @@ app.get('/admin', authMiddleware, (c) => {
 
 **Vafast** 支持全局和路由级中间件：
 ```typescript
-const loggingMiddleware = async (req: Request, next: () => Promise<Response>) => {
+import { defineMiddleware } from 'vafast'
+
+const loggingMiddleware = defineMiddleware(async (req, next) => {
   console.log(`${req.method} ${req.url}`)
   return await next()
-}
-
-const server = new Server(routes)
-server.use(loggingMiddleware)
+})
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/admin',
-    handler: createHandler(() => 'Admin Panel'),
+    handler: () => 'Admin Panel',
     middleware: [authMiddleware]
-  }
+  })
 ])
+
+const server = new Server(routes)
+server.useGlobalMiddleware(loggingMiddleware)
 ```
 
 ### 4. 验证系统
@@ -206,22 +208,26 @@ app.post('/users', zValidator('json', userSchema), (c) => {
 
 **Vafast** 使用 TypeBox 进行验证：
 ```typescript
-import { Type } from 'vafast'
+import { defineRoute, Type } from 'vafast'
 
 const userSchema = Type.Object({
   name: Type.String({ minLength: 1 }),
   email: Type.String({ format: 'email' })
 })
 
-{
+defineRoute({
   method: 'POST',
   path: '/users',
-  handler: createHandler(({ body }) => {
+  schema: { body: userSchema },
+  handler: ({ body }) => {
     return createUser(body)
-  }),
-  body: userSchema
-}
+  }
+})
 ```
+
+> **新框架用法说明**：
+> - Schema 验证在路由配置的 `schema` 字段中定义
+> - Handler 直接接收验证后的数据，自动获得类型推断
 
 ### 5. 错误处理
 
@@ -235,9 +241,9 @@ app.onError((err, c) => {
 
 **Vafast** 支持中间件链中的错误处理：
 ```typescript
-import { json } from 'vafast'
+import { defineMiddleware, json } from 'vafast'
 
-const errorHandler = async (req: Request, next: () => Promise<Response>) => {
+const errorHandler = defineMiddleware(async (req, next) => {
   try {
     return await next()
   } catch (error) {
@@ -405,7 +411,7 @@ export default app
 ### Vafast 应用
 
 ```typescript
-import { Server, defineRoutes, createHandler, Type, json, err } from 'vafast'
+import { Server, defineRoute, defineRoutes, Type, json, err } from 'vafast'
 import { cors } from '@vafast/cors'
 
 const userSchema = Type.Object({
@@ -414,30 +420,28 @@ const userSchema = Type.Object({
 })
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/users',
-    handler: createHandler(() => getUsers())
-  },
-  {
+    handler: () => getUsers()
+  }),
+  defineRoute({
     method: 'POST',
     path: '/users',
-    handler: createHandler(
-      { body: userSchema },
-      ({ body }) => json(createUser(body), 201)
-    )
-  },
-  {
+    schema: { body: userSchema },
+    handler: ({ body }) => json(createUser(body), 201)
+  }),
+  defineRoute({
     method: 'GET',
     path: '/users/:id',
-    handler: createHandler(({ params }) => {
+    handler: ({ params }) => {
       const user = getUserById(params.id)
       if (!user) {
         throw err.notFound('User not found')
       }
       return user
-    })
-  }
+    }
+  })
 ])
 
 const server = new Server(routes)

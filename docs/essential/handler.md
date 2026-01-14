@@ -15,16 +15,20 @@ import Tab from '../components/fern/tab.vue'
 在其他框架中，处理程序也被称为 **控制器**。
 
 ```typescript
-import { Server, defineRoutes, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/',
-    handler: createHandler(() => 'hello world')
-  }
+    handler: () => 'hello world'
+  })
 ])
 ```
+
+> **新框架用法说明**：
+> - Handler 不再需要 `createHandler` 包装，直接是函数
+> - 所有路由必须使用 `defineRoute` 包装
 
 ## 基本用法
 
@@ -34,23 +38,28 @@ const routes = defineRoutes([
 
 ```typescript
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/',
-    handler: createHandler(() => 'Hello World')
-  },
-  {
+    handler: () => 'Hello World'
+  }),
+  defineRoute({
     method: 'GET',
     path: '/json',
-    handler: createHandler(() => ({ message: 'Hello World' }))
-  },
-  {
+    handler: () => ({ message: 'Hello World' })
+  }),
+  defineRoute({
     method: 'GET',
     path: '/html',
-    handler: createHandler(() => '<h1>Hello World</h1>')
-  }
+    handler: () => '<h1>Hello World</h1>'
+  })
 ])
 ```
+
+> **新框架用法说明**：
+> - 返回字符串自动转换为 `text/plain`
+> - 返回对象自动转换为 `application/json`
+> - 返回 HTML 字符串自动识别为 `text/html`
 
 ### 访问请求信息
 
@@ -58,18 +67,18 @@ const routes = defineRoutes([
 
 ```typescript
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/info',
-    handler: createHandler(({ req, headers, query }) => {
+    handler: ({ req, headers, query }) => {
       return {
         url: req.url,
         method: req.method,
         userAgent: headers['user-agent'],
         query: query.search || 'default'
       }
-    })
-  }
+    }
+  })
 ])
 ```
 
@@ -79,15 +88,15 @@ const routes = defineRoutes([
 
 ```typescript
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'POST',
     path: '/users',
-    handler: createHandler(async ({ body }) => {
+    handler: async ({ body }) => {
       // 模拟数据库操作
       const user = await createUser(body)
       return user
-    })
-  }
+    }
+  })
 ])
 ```
 
@@ -99,17 +108,17 @@ Vafast 使用参数解构来提供类型安全的访问：
 
 ```typescript
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/user/:id',
-    handler: createHandler(({ params, query, headers }) => {
+    handler: ({ params, query, headers }) => {
       const userId = params.id
       const page = query.page || '1'
       const auth = headers.authorization
       
       return `User ${userId}, Page ${page}, Auth: ${auth}`
-    })
-  }
+    }
+  })
 ])
 ```
 
@@ -120,38 +129,41 @@ const routes = defineRoutes([
 :::
 
 ```typescript
-import { Type } from 'vafast'
+import { defineRoute, defineRoutes, Type } from 'vafast'
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'POST',
     path: '/users',
-    handler: createHandler(
-      {
-        body: Type.Object({
-          name: Type.String({ minLength: 1 }),
-          email: Type.String({ format: 'email' }),
-          age: Type.Optional(Type.Number())
-        })
-      },
-      ({ body }) => ({
-        name: body.name,
-        email: body.email,
-        age: body.age || 18
+    schema: {
+      body: Type.Object({
+        name: Type.String({ minLength: 1 }),
+        email: Type.String({ format: 'email' }),
+        age: Type.Optional(Type.Number())
       })
-    )
-  }
+    },
+    handler: ({ body }) => ({
+      name: body.name,
+      email: body.email,
+      age: body.age || 18
+    })
+  })
 ])
 ```
+
+> **新框架用法说明**：
+> - Schema 验证现在在路由配置的 `schema` 字段中定义
+> - Handler 函数直接接收验证后的数据，自动获得类型推断
+> - 不再需要 `createHandler` 包装
 
 ### 查询参数
 
 ```typescript
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/search',
-    handler: createHandler(({ query }) => {
+    handler: ({ query }) => {
       const { q, page = '1', limit = '10', sort = 'name' } = query
       
       return {
@@ -161,8 +173,8 @@ const routes = defineRoutes([
         sort,
         results: []
       }
-    })
-  }
+    }
+  })
 ])
 ```
 
@@ -174,26 +186,26 @@ Vafast 会自动处理不同类型的返回值：
 
 ```typescript
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/string',
-    handler: createHandler(() => 'Plain text') // 返回 text/plain
-  },
-  {
+    handler: () => 'Plain text' // 返回 text/plain
+  }),
+  defineRoute({
     method: 'GET',
     path: '/json',
-    handler: createHandler(() => ({ data: 'JSON' })) // 返回 application/json
-  },
-  {
+    handler: () => ({ data: 'JSON' }) // 返回 application/json
+  }),
+  defineRoute({
     method: 'GET',
     path: '/html',
-    handler: createHandler(() => '<h1>HTML</h1>') // 返回 text/html
-  },
-  {
+    handler: () => '<h1>HTML</h1>' // 返回 text/html
+  }),
+  defineRoute({
     method: 'GET',
     path: '/number',
-    handler: createHandler(() => 42) // 返回 text/plain
-  }
+    handler: () => 42 // 返回 text/plain
+  })
 ])
 ```
 
@@ -202,23 +214,23 @@ const routes = defineRoutes([
 使用 `{ data, status, headers }` 格式可以控制响应细节：
 
 ```typescript
-import { redirect } from 'vafast'
+import { defineRoute, defineRoutes, redirect } from 'vafast'
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/custom',
-    handler: createHandler(() => ({
+    handler: () => ({
       data: 'Custom response',
-        status: 200,
+      status: 200,
       headers: { 'X-Custom-Header': 'value' }
-    }))
-  },
-  {
+    })
+  }),
+  defineRoute({
     method: 'GET',
     path: '/redirect',
-    handler: createHandler(() => redirect('/new-page'))
-  }
+    handler: () => redirect('/new-page')
+  })
 ])
 ```
 
@@ -227,13 +239,13 @@ const routes = defineRoutes([
 使用 `err()` 函数抛出语义化的错误：
 
 ```typescript
-import { defineRoutes, createHandler, err } from 'vafast'
+import { defineRoute, defineRoutes, err } from 'vafast'
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/user/:id',
-    handler: createHandler(({ params }) => {
+    handler: ({ params }) => {
       const userId = params.id
       
       if (!userId || isNaN(Number(userId))) {
@@ -245,8 +257,8 @@ const routes = defineRoutes([
       }
       
       return { id: userId, name: 'John Doe' }
-    })
-  }
+    }
+  })
 ])
 
 // 错误响应格式: { "error": "NOT_FOUND", "message": "User not found" }
@@ -268,32 +280,36 @@ const routes = defineRoutes([
 处理程序可以与中间件配合使用：
 
 ```typescript
-import { json } from 'vafast'
+import { defineRoute, defineRoutes, defineMiddleware, json } from 'vafast'
 
-const authMiddleware = async (req: Request, next: () => Promise<Response>) => {
+const authMiddleware = defineMiddleware(async (req, next) => {
   const token = req.headers.get('authorization')
   if (!token) {
     return json({ error: 'Unauthorized' }, 401)
   }
   return await next()
-}
+})
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/protected',
-    handler: createHandler(() => 'Protected content'),
+    handler: () => 'Protected content',
     middleware: [authMiddleware]
-  }
+  })
 ])
 ```
+
+> **新框架用法说明**：
+> - 中间件使用 `defineMiddleware` 定义，支持类型注入
+> - Handler 不再需要 `createHandler` 包装
 
 ## Schema 验证
 
 处理程序可以与 TypeBox 验证集成，使用两参数形式：
 
 ```typescript
-import { Type } from 'vafast'
+import { defineRoute, defineRoutes, Type } from 'vafast'
 
 const userSchema = Type.Object({
   name: Type.String({ minLength: 1 }),
@@ -302,20 +318,23 @@ const userSchema = Type.Object({
 })
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'POST',
     path: '/users',
-    handler: createHandler(
-      { body: userSchema },
-      ({ body }) => {
-        // body 已经通过验证，类型安全
-        const { name, email, age } = body
-        return { name, email, age: age || 18 }
-      }
-    )
-  }
+    schema: { body: userSchema },
+    handler: ({ body }) => {
+      // body 已经通过验证，类型安全
+      const { name, email, age } = body
+      return { name, email, age: age || 18 }
+    }
+  })
 ])
 ```
+
+> **新框架用法说明**：
+> - Schema 验证在路由配置的 `schema` 字段中定义
+> - Handler 直接接收验证后的数据，自动获得类型推断
+> - 不再使用 `createHandler` 的两参数形式
 
 ## 最佳实践
 
@@ -324,22 +343,22 @@ const routes = defineRoutes([
 ```typescript
 // ✅ 好的做法
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'POST',
     path: '/users',
-    handler: createHandler(async ({ body }) => {
+    handler: async ({ body }) => {
       const user = await createUser(body)
       return user
-    })
-  }
+    }
+  })
 ])
 
 // ❌ 避免的做法
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'POST',
     path: '/users',
-    handler: createHandler(async ({ body }) => {
+    handler: async ({ body }) => {
       // 不要在这里放太多业务逻辑
       const { name, email, age, address, phone, preferences, ... } = body
       // 复杂的验证逻辑
@@ -347,29 +366,29 @@ const routes = defineRoutes([
       // 邮件发送
       // 日志记录
       // 等等...
-    })
-  }
+    }
+  })
 ])
 ```
 
 ### 2. 使用适当的错误处理
 
 ```typescript
-import { defineRoutes, createHandler, err } from 'vafast'
+import { defineRoute, defineRoutes, err } from 'vafast'
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/user/:id',
-    handler: createHandler(async ({ params }) => {
-        const user = await getUserById(params.id)
-        if (!user) {
-          throw err.notFound('User not found')
-        }
-        return user
-      // 注意：未捕获的错误由 createHandler 内置错误处理自动返回 500
-    })
-  }
+    handler: async ({ params }) => {
+      const user = await getUserById(params.id)
+      if (!user) {
+        throw err.notFound('User not found')
+      }
+      return user
+      // 注意：未捕获的错误由框架内置错误处理自动返回 500
+    }
+  })
 ])
 ```
 
@@ -383,14 +402,14 @@ interface User {
 }
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'POST',
     path: '/users',
-    handler: createHandler(async ({ body }): Promise<User> => {
+    handler: async ({ body }): Promise<User> => {
       const user = await createUser(body)
       return user
-    })
-  }
+    }
+  })
 ])
 ```
 

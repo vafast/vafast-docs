@@ -73,24 +73,28 @@ type Middleware = (
 使用 `defineRoutes()` 定义路由数组，支持完整的类型推断：
 
 ```typescript
-import { Server, defineRoutes, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/',
-    handler: createHandler(() => 'Hello Vafast!')
-  },
-  {
+    handler: () => 'Hello Vafast!'
+  }),
+  defineRoute({
     method: 'POST',
     path: '/users',
-    handler: createHandler(({ body }) => ({ user: body }))
-  }
+    handler: ({ body }) => ({ user: body })
+  })
 ])
 
 const server = new Server(routes)
 export default { fetch: server.fetch }
 ```
+
+> **新框架用法说明**：
+> - 所有路由必须使用 `defineRoute` 包装
+> - Handler 直接是函数，不再需要 `createHandler` 包装
 
 ::: tip 类型推断
 `defineRoutes()` 使用 `const T` 泛型，自动保留 `'GET'`、`'/users'` 等字面量类型，支持端到端类型推断。
@@ -110,11 +114,11 @@ export default { fetch: server.fetch }
 
 ```typescript
 const routes = defineRoutes([
-  { method: 'GET', path: '/users', handler: createHandler(() => ({ users: [] })) },
-  { method: 'POST', path: '/users', handler: createHandler(({ body }) => body) },
-  { method: 'PUT', path: '/users/:id', handler: createHandler(({ params }) => params) },
-  { method: 'DELETE', path: '/users/:id', handler: createHandler(() => null) },  // 返回 204
-  { method: 'PATCH', path: '/users/:id', handler: createHandler(({ params, body }) => ({ ...body })) }
+  defineRoute({ method: 'GET', path: '/users', handler: () => ({ users: [] }) }),
+  defineRoute({ method: 'POST', path: '/users', handler: ({ body }) => body }),
+  defineRoute({ method: 'PUT', path: '/users/:id', handler: ({ params }) => params }),
+  defineRoute({ method: 'DELETE', path: '/users/:id', handler: () => null }),  // 返回 204
+  defineRoute({ method: 'PATCH', path: '/users/:id', handler: ({ params, body }) => ({ ...body }) })
 ])
 ```
 
@@ -125,41 +129,41 @@ Vafast 支持动态路由参数，允许您捕获 URL 中的变量值。
 ### 基本参数
 
 ```typescript
-{
+defineRoute({
   method: 'GET',
   path: '/users/:id',
-  handler: createHandler(({ params }) => ({
+  handler: ({ params }) => ({
     userId: params.id
-  }))
-}
+  })
+})
 ```
 
 ### 多个参数
 
 ```typescript
-{
+defineRoute({
   method: 'GET',
   path: '/users/:userId/posts/:postId',
-  handler: createHandler(({ params }) => ({
+  handler: ({ params }) => ({
     userId: params.userId,
     postId: params.postId
-  }))
-}
+  })
+})
 ```
 
 ### 可选参数
 
 ```typescript
-{
+defineRoute({
   method: 'GET',
   path: '/users/:id?',
-  handler: createHandler(({ params }) => {
+  handler: ({ params }) => {
     if (params.id) {
       return { userId: params.id }
     }
     return { users: [] }
-  })
-}
+  }
+})
 ```
 
 ## 嵌套路由
@@ -169,55 +173,55 @@ Vafast 支持嵌套路由结构，允许您组织复杂的路由层次。
 ### 基本嵌套
 
 ```typescript
-const routes = [
-  {
+const routes = defineRoutes([
+  defineRoute({
     path: '/api',
     children: [
-      {
+      defineRoute({
         method: 'GET',
         path: '/users',
-        handler: createHandler(() => ({ message: 'Users API' }))
-      },
-      {
+        handler: () => ({ message: 'Users API' })
+      }),
+      defineRoute({
         method: 'GET',
         path: '/posts',
-        handler: createHandler(() => ({ message: 'Posts API' }))
-      }
+        handler: () => ({ message: 'Posts API' })
+      })
     ]
-  }
-]
+  })
+])
 ```
 
 ### 深层嵌套
 
 ```typescript
-const routes = [
-  {
+const routes = defineRoutes([
+  defineRoute({
     path: '/api',
     children: [
-      {
+      defineRoute({
         path: '/v1',
         children: [
-          {
+          defineRoute({
             path: '/users',
             children: [
-              {
+              defineRoute({
                 method: 'GET',
                 path: '/',
-                handler: createHandler(() => ({ message: 'Users v1' }))
-              },
-              {
+                handler: () => ({ message: 'Users v1' })
+              }),
+              defineRoute({
                 method: 'POST',
                 path: '/',
-                handler: createHandler(({ body }) => ({ message: 'Create user v1', data: body }))
-              }
+                handler: ({ body }) => ({ message: 'Create user v1', data: body })
+              })
             ]
-          }
+          })
         ]
-      }
+      })
     ]
-  }
-]
+  })
+])
 ```
 
 ## 中间件
@@ -247,14 +251,14 @@ const logMiddleware = async (req: Request, next: () => Promise<Response>) => {
 ### 应用中间件
 
 ```typescript
-const routes = [
-  {
+const routes = defineRoutes([
+  defineRoute({
     method: 'GET',
     path: '/admin',
     middleware: [authMiddleware, logMiddleware],
-    handler: createHandler(() => ({ message: 'Admin panel' }))
-  }
-]
+    handler: () => ({ message: 'Admin panel' })
+  })
+])
 ```
 
 ### 全局中间件

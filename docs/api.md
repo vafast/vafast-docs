@@ -145,26 +145,22 @@ function defineRoutes<const T extends readonly Route[]>(routes: T): T
 **示例：**
 
 ```typescript
-import { defineRoutes, createHandler, Type } from 'vafast'
+import { defineRoute, defineRoutes, Type } from 'vafast'
 import type { InferEden } from 'vafast-api-client'
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/users',
-    handler: createHandler(
-      { query: Type.Object({ page: Type.Number() }) },
-      async ({ query }) => ({ users: [], page: query.page })
-    )
-  },
-  {
+    schema: { query: Type.Object({ page: Type.Number() }) },
+    handler: async ({ query }) => ({ users: [], page: query.page })
+  }),
+  defineRoute({
     method: 'POST',
     path: '/users',
-    handler: createHandler(
-      { body: Type.Object({ name: Type.String() }) },
-      async ({ body }) => ({ id: '1', name: body.name })
-    )
-  }
+    schema: { body: Type.Object({ name: Type.String() }) },
+    handler: async ({ body }) => ({ id: '1', name: body.name })
+  })
 ])
 
 // ✅ 自动推断字面量类型，支持端到端类型推断
@@ -200,19 +196,25 @@ type Middleware = (
 // 基本类型
 type RouteHandler = Handler | ((req: Request) => unknown)
 
-// 推荐使用 createHandler
-import { createHandler } from 'vafast'
+// 推荐使用 defineRoute
+import { defineRoute, Type } from 'vafast'
 
 // 无 schema
-const handler = createHandler(({ req, params, query }) => {
-  return { message: 'Hello' }
+const route = defineRoute({
+  method: 'GET',
+  path: '/hello',
+  handler: ({ req, params, query }) => {
+    return { message: 'Hello' }
+  }
 })
 
 // 有 schema 验证
-const handler = createHandler(
-  { body: Type.Object({ name: Type.String() }) },
-  ({ body }) => ({ success: true, name: body.name })
-)
+const route = defineRoute({
+  method: 'POST',
+  path: '/users',
+  schema: { body: Type.Object({ name: Type.String() }) },
+  handler: ({ body }) => ({ success: true, name: body.name })
+})
 ```
 
 **返回值：** 任意值（自动转换为 Response）

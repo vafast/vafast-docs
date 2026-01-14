@@ -17,24 +17,24 @@ npm install @vafast/opentelemetry
 ## 基本用法
 
 ```typescript
-import { defineRoutes, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { opentelemetry } from '@vafast/opentelemetry'
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/users',
-    handler: createHandler(() => {
+    handler: () => {
       return { users: [] }
-    })
-  }
+    }
+  })
 ])
 
-const app = createHandler(routes)
-  .use(opentelemetry({
-    serviceName: 'my-vafast-app',
-    serviceVersion: '1.0.0'
-  }))
+const server = new Server(routes)
+server.useGlobalMiddleware(opentelemetry({
+  serviceName: 'my-vafast-app',
+  serviceVersion: '1.0.0'
+}))
 ```
 
 ## 配置选项
@@ -88,30 +88,32 @@ app.use(opentelemetry({
 OpenTelemetry 中间件自动为所有请求创建追踪：
 
 ```typescript
-import { defineRoutes, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes, Type } from 'vafast'
 import { opentelemetry } from '@vafast/opentelemetry'
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/users/:id',
-    handler: createHandler(async ({ params }) => {
+    schema: {
+      params: Type.Object({
+        id: Type.String()
+      })
+    },
+    handler: async ({ params }) => {
       // 这个请求会自动创建追踪
       const user = await fetchUser(params.id)
       return user
-    }),
-    params: Type.Object({
-      id: Type.String()
-    })
-  }
+    }
+  })
 ])
 
-const app = createHandler(routes)
-  .use(opentelemetry({
-    serviceName: 'user-service',
-    tracing: {
-      enabled: true,
-      exporter: {
+const server = new Server(routes)
+server.useGlobalMiddleware(opentelemetry({
+  serviceName: 'user-service',
+  tracing: {
+    enabled: true,
+    exporter: {
         type: 'otlp',
         endpoint: 'http://jaeger:4317'
       }
@@ -124,14 +126,20 @@ const app = createHandler(routes)
 您可以在处理程序中添加自定义追踪：
 
 ```typescript
-import { defineRoutes, createHandler } from 'vafast'
+import { defineRoute, defineRoutes, Type } from 'vafast'
 import { trace } from '@opentelemetry/api'
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'POST',
     path: '/users',
-    handler: createHandler(async ({ body }) => {
+    schema: {
+      body: Type.Object({
+        name: Type.String(),
+        email: Type.String({ format: 'email' })
+      })
+    },
+    handler: async ({ body }) => {
       const tracer = trace.getTracer('user-service')
       
       return await tracer.startActiveSpan('create-user', async (span) => {
@@ -152,12 +160,8 @@ const routes = defineRoutes([
           span.end()
         }
       })
-    }),
-    body: Type.Object({
-      name: Type.String(),
-      email: Type.String({ format: 'email' })
-    })
-  }
+    }
+  })
 ])
 ```
 

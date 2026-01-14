@@ -68,22 +68,22 @@ export default app
 ::: code-group
 
 ```ts [Vafast]
-import { Server, defineRoutes, createHandler, serve } from 'vafast'
+import { Server, defineRoute, defineRoutes, serve } from 'vafast'
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/',
-    handler: createHandler(() => 'Hello World')
-  },
-  {
+    handler: () => 'Hello World'
+  }),
+  defineRoute({
     method: 'POST',
     path: '/user/:id',
-    handler: createHandler(({ params, body }) => ({
+    handler: ({ params, body }) => ({
       id: params.id,
       name: body.name
-    }))
-  }
+    })
+  })
 ])
 
 const server = new Server(routes)
@@ -116,21 +116,21 @@ const app = new Elysia()
 **Vafast** 使用配置对象数组：
 ```typescript
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/users',
-    handler: createHandler(() => getUsers())
-  },
-  {
+    handler: () => getUsers()
+  }),
+  defineRoute({
     method: 'POST',
     path: '/users',
-    handler: createHandler(({ body }) => createUser(body))
-  },
-  {
+    handler: ({ body }) => createUser(body)
+  }),
+  defineRoute({
     method: 'GET',
     path: '/users/:id',
-    handler: createHandler(({ params }) => getUserById(params.id))
-  }
+    handler: ({ params }) => getUserById(params.id)
+  })
 ])
 ```
 
@@ -145,13 +145,13 @@ app.get('/user/:id', ({ params, query, body, headers }) => {
 
 **Vafast** 同样使用解构：
 ```typescript
-{
+defineRoute({
   method: 'GET',
   path: '/user/:id',
-  handler: createHandler(({ params, query, body, req }) => {
+  handler: ({ params, query, body, req }) => {
     return { id: params.id, query, body }
-  })
-}
+  }
+})
 ```
 
 ### 3. Schema 验证
@@ -171,7 +171,7 @@ const app = new Elysia()
 
 **Vafast** 使用 TypeBox（从 vafast 导入 Type）：
 ```typescript
-import { Server, defineRoutes, createHandler, Type } from 'vafast'
+import { Server, defineRoute, defineRoutes, Type } from 'vafast'
 
 const UserSchema = Type.Object({
   name: Type.String({ minLength: 1 }),
@@ -179,16 +179,18 @@ const UserSchema = Type.Object({
 })
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'POST',
     path: '/users',
-    handler: createHandler(
-      { body: UserSchema },
-      ({ body }) => createUser(body)
-    )
-  }
+    schema: { body: UserSchema },
+    handler: ({ body }) => createUser(body)
+  })
 ])
 ```
+
+> **新框架用法说明**：
+> - Schema 验证在路由配置的 `schema` 字段中定义
+> - Handler 直接接收验证后的数据，自动获得类型推断
 
 ### 4. 中间件/插件
 
@@ -204,23 +206,28 @@ const app = new Elysia()
 
 **Vafast** 使用中间件函数：
 ```typescript
-const authMiddleware = async (req: Request, next: () => Promise<Response>) => {
+import { defineRoute, defineRoutes, defineMiddleware } from 'vafast'
+
+const authMiddleware = defineMiddleware(async (req, next) => {
   const token = req.headers.get('authorization')
   const user = await verifyToken(token)
-  // 通过 req 扩展传递用户信息
-  ;(req as any).user = user
-  return await next()
-}
+  // 通过 next 传递用户信息
+  return await next({ user })
+})
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/profile',
     middleware: [authMiddleware],
-    handler: createHandler(({ req }) => (req as any).user)
-  }
+    handler: ({ user }) => user  // user 自动有类型
+  })
 ])
 ```
+
+> **新框架用法说明**：
+> - 中间件使用 `defineMiddleware` 定义，支持类型注入
+> - 通过 `next({ user })` 传递上下文，handler 自动获得类型
 
 ### 5. 响应处理
 
@@ -232,16 +239,16 @@ app.get('/text', () => 'Hello')                  // 自动 text
 
 **Vafast** 同样自动转换：
 ```typescript
-{
+defineRoute({
   method: 'GET',
   path: '/json',
-  handler: createHandler(() => ({ message: 'Hello' }))  // 自动 JSON
-},
-{
+  handler: () => ({ message: 'Hello' })  // 自动 JSON
+}),
+defineRoute({
   method: 'GET',
   path: '/text',
-  handler: createHandler(() => 'Hello')  // 自动 text
-}
+  handler: () => 'Hello'  // 自动 text
+})
 ```
 
 ### 6. 错误处理
@@ -256,9 +263,9 @@ const app = new Elysia()
 
 **Vafast** 使用中间件：
 ```typescript
-import { json } from 'vafast'
+import { defineMiddleware, json } from 'vafast'
 
-const errorHandler = async (req: Request, next: () => Promise<Response>) => {
+const errorHandler = defineMiddleware(async (req, next) => {
   try {
     return await next()
   } catch (error) {
@@ -266,7 +273,7 @@ const errorHandler = async (req: Request, next: () => Promise<Response>) => {
       error: error instanceof Error ? error.message : 'Unknown error' 
     }, 500)
   }
-}
+})
 
 const server = new Server(routes)
 server.use(errorHandler)
@@ -292,16 +299,16 @@ const app = new Elysia()
 
 // Vafast
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/api/users',
-    handler: createHandler(() => getUsers())
-  },
-  {
+    handler: () => getUsers()
+  }),
+  defineRoute({
     method: 'POST',
     path: '/api/users',
-    handler: createHandler(({ body }) => createUser(body))
-  }
+    handler: ({ body }) => createUser(body)
+  })
 ])
 ```
 
@@ -326,14 +333,12 @@ const UserSchema = Type.Object({
   email: Type.String({ format: 'email' })
 })
 
-{
+defineRoute({
   method: 'POST',
   path: '/users',
-  handler: createHandler(
-    { body: UserSchema },
-    ({ body }) => createUser(body)
-  )
-}
+  schema: { body: UserSchema },
+  handler: ({ body }) => createUser(body)
+})
 ```
 
 ### 步骤 4: 更新中间件
@@ -345,11 +350,13 @@ app.derive(({ headers }) => ({
 }))
 
 // Vafast
-const authMiddleware = async (req: Request, next: () => Promise<Response>) => {
+import { defineMiddleware } from 'vafast'
+
+const authMiddleware = defineMiddleware(async (req, next) => {
   const token = req.headers.get('authorization')
-  ;(req as any).user = await verifyToken(token)
-  return await next()
-}
+  const user = await verifyToken(token)
+  return await next({ user })  // 通过 next 传递上下文
+})
 ```
 
 ## 完整迁移示例
@@ -387,7 +394,7 @@ export default app
 ### Vafast 应用
 
 ```typescript
-import { Server, defineRoutes, createHandler, serve, Type, json, err } from 'vafast'
+import { Server, defineRoute, defineRoutes, defineMiddleware, serve, Type, json, err } from 'vafast'
 import { cors } from '@vafast/cors'
 
 const UserSchema = Type.Object({
@@ -395,54 +402,58 @@ const UserSchema = Type.Object({
   email: Type.String({ format: 'email' })
 })
 
-const authMiddleware = async (req: Request, next: () => Promise<Response>) => {
+const authMiddleware = defineMiddleware(async (req, next) => {
   const token = req.headers.get('authorization')
-  ;(req as any).user = await verifyToken(token)
-  return await next()
-}
+  const user = await verifyToken(token)
+  return await next({ user })
+})
 
-const errorHandler = async (req: Request, next: () => Promise<Response>) => {
+const errorHandler = defineMiddleware(async (req, next) => {
   try {
     return await next()
   } catch (error) {
     return json({ error: error instanceof Error ? error.message : 'Unknown error' }, 500)
   }
-}
+})
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/users',
-    handler: createHandler(() => getUsers())
-  },
-  {
+    handler: () => getUsers()
+  }),
+  defineRoute({
     method: 'POST',
     path: '/users',
-    handler: createHandler(
-      { body: UserSchema },
-      ({ body }) => json(createUser(body), 201)
-    )
-  },
-  {
+    schema: { body: UserSchema },
+    handler: ({ body }) => json(createUser(body), 201)
+  }),
+  defineRoute({
     method: 'GET',
     path: '/users/:id',
-    handler: createHandler(({ params }) => {
+    handler: ({ params }) => {
       const user = getUserById(params.id)
       if (!user) {
         throw err.notFound('User not found')
       }
       return user
-    })
-  }
+    }
+  })
 ])
 
 const server = new Server(routes)
-server.use(cors())
-server.use(authMiddleware)
-server.use(errorHandler)
+server.useGlobalMiddleware(cors())
+server.useGlobalMiddleware(authMiddleware)
+server.useGlobalMiddleware(errorHandler)
 
 serve({ fetch: server.fetch, port: 3000 })
 ```
+
+> **新框架用法说明**：
+> - 所有路由使用 `defineRoute` 包装
+> - Schema 验证在 `schema` 字段中定义
+> - 中间件使用 `defineMiddleware` 定义
+> - 全局中间件使用 `server.useGlobalMiddleware()`
 
 ## 优势对比
 

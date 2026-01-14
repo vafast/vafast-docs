@@ -71,23 +71,23 @@ await fastify.listen({ port: 3000 })
 ::: code-group
 
 ```ts [Vafast]
-import { Server, defineRoutes, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/',
-    handler: createHandler(() => {
+    handler: () => {
       return { hello: 'world' }
-    })
-  },
-  {
+    }
+  }),
+  defineRoute({
     method: 'POST',
     path: '/user/:id',
-    handler: createHandler(({ params, body }) => {
+    handler: ({ params, body }) => {
       return { id: params.id, name: body.name }
-    })
-  }
+    }
+  })
 ])
 
 const server = new Server(routes)
@@ -118,16 +118,16 @@ fastify.post('/users', async (request, reply) => { ... })
 **Vafast** 使用配置对象数组：
 ```typescript
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/users',
-    handler: createHandler(() => { ... })
-  },
-  {
+    handler: () => { ... }
+  }),
+  defineRoute({
     method: 'POST',
     path: '/users',
-    handler: createHandler(() => { ... })
-  }
+    handler: () => { ... }
+  })
 ])
 ```
 
@@ -144,13 +144,13 @@ fastify.get('/user/:id', async (request, reply) => {
 
 **Vafast** 使用解构参数：
 ```typescript
-{
+defineRoute({
   method: 'GET',
   path: '/user/:id',
-  handler: createHandler(({ params, query }) => {
+  handler: ({ params, query }) => {
     return { id: params.id, query }
-  })
-}
+  }
+})
 ```
 
 ### 3. Schema 验证
@@ -184,14 +184,14 @@ const userSchema = Type.Object({
   age: Type.Optional(Type.Number())
 })
 
-{
+defineRoute({
   method: 'POST',
   path: '/users',
-  handler: createHandler(({ body }) => {
+  schema: { body: userSchema },
+  handler: ({ body }) => {
     return createUser(body)
-  }),
-  body: userSchema
-}
+  }
+})
 ```
 
 ### 4. 中间件系统
@@ -211,22 +211,24 @@ fastify.register(async function (fastify) {
 
 **Vafast** 支持全局和路由级中间件：
 ```typescript
-const loggingMiddleware = async (req: Request, next: () => Promise<Response>) => {
+import { defineMiddleware } from 'vafast'
+
+const loggingMiddleware = defineMiddleware(async (req, next) => {
   console.log(`${req.method} ${req.url}`)
   return await next()
-}
-
-const server = new Server(routes)
-server.use(loggingMiddleware)
+})
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/admin',
-    handler: createHandler(() => 'Admin Panel'),
+    handler: () => 'Admin Panel',
     middleware: [authMiddleware]
-  }
+  })
 ])
+
+const server = new Server(routes)
+server.useGlobalMiddleware(loggingMiddleware)
 ```
 
 ### 5. 错误处理
@@ -240,15 +242,15 @@ fastify.setErrorHandler((error, request, reply) => {
 
 **Vafast** 支持中间件链中的错误处理：
 ```typescript
-import { json } from 'vafast'
+import { defineMiddleware, json } from 'vafast'
 
-const errorHandler = async (req: Request, next: () => Promise<Response>) => {
+const errorHandler = defineMiddleware(async (req, next) => {
   try {
     return await next()
   } catch (error) {
     return json({ error: error instanceof Error ? error.message : 'Unknown error' }, 500)
   }
-}
+})
 ```
 
 ## 迁移步骤
@@ -271,12 +273,13 @@ fastify.get('/api/users', async (request, reply) => {
 })
 
 // Vafast 风格
-{
+defineRoute({
   method: 'GET',
   path: '/api/users',
-  handler: createHandler(() => {
+  handler: () => {
     return getUsers()
-  })
+  }
+})
 }
 ```
 
@@ -398,7 +401,7 @@ await fastify.listen({ port: 3000 })
 ### Vafast 应用
 
 ```typescript
-import { Server, defineRoutes, createHandler, Type, json, err } from 'vafast'
+import { Server, defineRoute, defineRoutes, Type, json, err } from 'vafast'
 import { cors } from '@vafast/cors'
 
 const userSchema = Type.Object({
@@ -407,37 +410,40 @@ const userSchema = Type.Object({
 })
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/users',
-    handler: createHandler(() => getUsers())
-  },
-  {
+    handler: () => getUsers()
+  }),
+  defineRoute({
     method: 'POST',
     path: '/users',
-    handler: createHandler(
-      { body: userSchema },
-      ({ body }) => json(createUser(body), 201)
-    )
-  },
-  {
+    schema: { body: userSchema },
+    handler: ({ body }) => json(createUser(body), 201)
+  }),
+  defineRoute({
     method: 'GET',
     path: '/users/:id',
-    handler: createHandler(({ params }) => {
+    handler: ({ params }) => {
       const user = getUserById(params.id)
       if (!user) {
         throw err.notFound('User not found')
       }
       return user
-    })
-  }
+    }
+  })
 ])
 
 const server = new Server(routes)
-server.use(cors())
+server.useGlobalMiddleware(cors())
 
 export default { fetch: server.fetch }
 ```
+
+> **新框架用法说明**：
+> - 所有路由使用 `defineRoute` 包装
+> - Schema 验证在 `schema` 字段中定义
+> - 全局中间件使用 `server.useGlobalMiddleware()`
 
 ## 优势对比
 

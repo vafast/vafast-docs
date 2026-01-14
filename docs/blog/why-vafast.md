@@ -67,24 +67,30 @@ const routes = defineRoutes([
 Vafast 基于 TypeBox 实现 Schema 验证，定义一次，类型自动推断：
 
 ```typescript
-import { createHandler, Type } from 'vafast'
+import { defineRoute, Type } from 'vafast'
 
-const createUser = createHandler(
-  { 
+const createUser = defineRoute({
+  method: 'POST',
+  path: '/users',
+  schema: {
     body: Type.Object({ 
       name: Type.String(), 
       email: Type.String({ format: 'email' }),
       age: Type.Number({ minimum: 0 })
-    }) 
+    })
   },
-  ({ body }) => {
+  handler: ({ body }) => {
     // body.name 是 string ✅
     // body.email 是 string ✅
     // body.age 是 number ✅
     return { success: true, user: body }
   }
-)
+})
 ```
+
+> **新框架用法说明**：
+> - Schema 验证在路由配置的 `schema` 字段中定义
+> - Handler 直接接收验证后的数据，自动获得类型推断
 
 **运行时验证 + 编译时类型推断，一举两得。**
 
@@ -94,17 +100,20 @@ const createUser = createHandler(
 
 ```typescript
 // 服务端
+import { defineRoute, defineRoutes, Type } from 'vafast'
+
 export const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'POST',
     path: '/login',
-    handler: createHandler(
-      { body: Type.Object({ email: Type.String(), password: Type.String() }) },
-      ({ body }) => ({ token: 'xxx', user: { id: '1', email: body.email } })
-    )
-  }
+    schema: {
+      body: Type.Object({ email: Type.String(), password: Type.String() })
+    },
+    handler: ({ body }) => ({ token: 'xxx', user: { id: '1', email: body.email } })
+  })
 ])
 export type AppRoutes = typeof routes
+```
 
 // 客户端
 import { eden, InferEden } from '@vafast/api-client'
@@ -166,14 +175,14 @@ npm install vafast
 ### 最小示例
 
 ```typescript
-import { Server, defineRoutes, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/',
-    handler: createHandler(() => ({ message: 'Hello Vafast!' }))
-  }
+    handler: () => ({ message: 'Hello Vafast!' })
+  })
 ])
 
 const server = new Server(routes)

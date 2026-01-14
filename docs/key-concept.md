@@ -30,19 +30,23 @@ Vafast 采用模块化架构设计，主要包含以下核心组件：
 ### 基本用法
 
 ```typescript
-import { Server, defineRoutes, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/',
-    handler: createHandler(() => 'Hello World')
-  }
+    handler: () => 'Hello World'
+  })
 ])
 
 const server = new Server(routes)
 export default { fetch: server.fetch }
 ```
+
+> **新框架用法说明**：
+> - 所有路由必须使用 `defineRoute` 包装
+> - Handler 直接是函数，不再需要 `createHandler` 包装
 
 ## 路由系统
 
@@ -51,18 +55,27 @@ Vafast 的路由系统基于配置对象，支持静态路径、动态参数和�
 ### 路由配置
 
 ```typescript
-interface Route {
-  method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'OPTIONS' | 'HEAD'
-  path: string
-  handler: Handler
-  middleware?: Middleware[]
-  body?: any
-  query?: any
-  params?: any
-  headers?: any
-  cookies?: any
-}
+// 使用 defineRoute 定义路由
+defineRoute({
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'OPTIONS' | 'HEAD',
+  path: string,
+  handler: (ctx: HandlerContext) => Response | Promise<Response>,
+  middleware?: Middleware[],
+  schema?: {
+    body?: TSchema,
+    query?: TSchema,
+    params?: TSchema,
+    headers?: TSchema,
+    cookies?: TSchema
+  },
+  name?: string,
+  description?: string
+})
 ```
+
+> **新框架用法说明**：
+> - Schema 验证统一在 `schema` 字段中定义，不再使用独立的 `body`、`query` 等字段
+> - 支持路由元信息：`name`、`description` 等
 
 ### 路径匹配
 
@@ -102,37 +115,42 @@ type Middleware = (
 ### 中间件示例
 
 ```typescript
-import { Server, defineRoutes, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes, defineMiddleware, json } from 'vafast'
 
 // 日志中间件
-const loggingMiddleware = async (req: Request, next: () => Promise<Response>) => {
+const loggingMiddleware = defineMiddleware(async (req, next) => {
   console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`)
   const response = await next()
   console.log(`Response: ${response.status}`)
   return response
-}
+})
 
 // 认证中间件
-const authMiddleware = async (req: Request, next: () => Promise<Response>) => {
+const authMiddleware = defineMiddleware(async (req, next) => {
   const token = req.headers.get('authorization')
   if (!token) {
     return json({ error: 'Unauthorized' }, 401)
   }
   return await next()
-}
+})
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/protected',
-    handler: createHandler(() => 'Protected content'),
+    handler: () => 'Protected content',
     middleware: [authMiddleware]
-  }
+  })
 ])
 
 const server = new Server(routes)
-server.use(loggingMiddleware) // 全局中间件
+server.useGlobalMiddleware(loggingMiddleware) // 全局中间件
 ```
+
+> **新框架用法说明**：
+> - 中间件使用 `defineMiddleware` 定义，支持类型注入
+> - 全局中间件使用 `server.useGlobalMiddleware()` 方法
+> - Handler 不再需要 `createHandler` 包装
 
 ## 类型系统
 
@@ -158,7 +176,7 @@ interface HandlerContext {
 Vafast 集成了 TypeBox 进行运行时类型验证：
 
 ```typescript
-import { Type } from 'vafast'
+import { defineRoute, defineRoutes, Type } from 'vafast'
 
 const userSchema = Type.Object({
   name: Type.String({ minLength: 1 }),
@@ -167,58 +185,88 @@ const userSchema = Type.Object({
 })
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'POST',
     path: '/users',
-    handler: createHandler(({ body }) => {
+    schema: { body: userSchema },
+    handler: ({ body }) => {
       // body 已经通过验证，类型安全
       return { success: true, user: body }
-    }),
-    body: userSchema
-  }
+    }
+  })
 ])
 ```
 
-## 路由处理器工厂
+> **新框架用法说明**：
+> - Schema 验证在路由配置的 `schema` 字段中定义
+> - Handler 直接接收验证后的数据，自动获得类型推断
 
-`createHandler` 函数用于创建类型安全的路由处理器，自动处理参数解构和类型推断。
+## 路由定义系统
+
+`defineRoute` 函数用于定义类型安全的路由，自动处理参数解构和类型推断。
 
 ### 基本用法
 
 ```typescript
-// 简单处理器
-const simpleHandler = createHandler(() => 'Hello')
+import { defineRoute } from 'vafast'
 
-// 带参数的处理器
-const paramHandler = createHandler(({ params }) => `ID: ${params.id}`)
+// 简单路由
+const simpleRoute = defineRoute({
+  method: 'GET',
+  path: '/',
+  handler: () => 'Hello'
+})
 
-// 带请求体的处理器
-const bodyHandler = createHandler(async ({ req, body }) => {
-  const data = await req.json()
-  return { received: data, validated: body }
+// 带路径参数的路由
+const paramRoute = defineRoute({
+  method: 'GET',
+  path: '/users/:id',
+  handler: ({ params }) => `ID: ${params.id}`
+})
+
+// 带 Schema 验证的路由
+const validatedRoute = defineRoute({
+  method: 'POST',
+  path: '/users',
+  schema: { body: Type.Object({ name: Type.String() }) },
+  handler: ({ body }) => {
+    // body 已通过验证，类型安全
+    return { received: body }
+  }
 })
 ```
+
+> **新框架用法说明**：
+> - 不再使用 `createHandler` 函数
+> - Handler 直接是函数，在路由配置中定义
+> - Schema 验证在 `schema` 字段中定义
 
 ### 高级用法
 
 ```typescript
-// 带多个验证的处理器
-const fullHandler = createHandler(
-  ({ params, body, query, headers }) => {
+// 带多个验证的路由
+const fullRoute = defineRoute({
+  method: 'POST',
+  path: '/users/:id',
+  schema: {
+    body: userSchema,
+    query: querySchema,
+    params: paramsSchema
+  },
+  handler: ({ params, body, query, headers }) => {
     return {
       params,
       body,
       query,
       headers
     }
-  },
-  {
-    body: userSchema,
-    query: querySchema,
-    params: paramsSchema
   }
-)
+})
 ```
+
+> **新框架用法说明**：
+> - Schema 验证统一在 `schema` 字段中定义
+> - Handler 直接接收所有验证后的数据
 
 ## 请求处理流程
 

@@ -92,13 +92,28 @@ export function setupRoutes(app: Hono) {
 
 ```typescript
 // handlers/profile.ts
-export const getProfile = createHandlerWithExtra<AuthContext>(
-  (ctx) => {
-    const user = ctx.user  // ✅ 类型完整
+import { defineRoute, defineMiddleware } from 'vafast'
+
+const authMiddleware = defineMiddleware<AuthContext>(async (req, next) => {
+  const user = await verifyToken(req.headers.get('Authorization'))
+  return await next({ user })
+})
+
+export const getProfileRoute = defineRoute({
+  method: 'GET',
+  path: '/profile',
+  middleware: [authMiddleware],
+  handler: ({ user }) => {
+    // ✅ user 类型完整
     return { profile: user }
   }
-)
+})
 ```
+
+> **新框架用法说明**：
+> - 使用 `defineMiddleware` 定义带类型的中间件
+> - 通过 `next({ user })` 传递上下文
+> - Handler 自动获得类型推断
 
 **类型跟着 Handler 走，不跟着 App 实例走。**
 
@@ -132,9 +147,13 @@ app.post('/users', (req, res) => {
 ### Vafast 的写法
 
 ```typescript
-const createUser = createHandler(
-  { body: Type.Object({ name: Type.String() }) },
-  ({ body }) => {
+import { defineRoute, Type } from 'vafast'
+
+const createUserRoute = defineRoute({
+  method: 'POST',
+  path: '/users',
+  schema: { body: Type.Object({ name: Type.String() }) },
+  handler: ({ body }) => {
     // 自动验证 + 自动推断类型
     return { id: crypto.randomUUID(), ...body }
   }

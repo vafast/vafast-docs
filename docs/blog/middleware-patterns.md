@@ -118,19 +118,17 @@ const requireRole = (...roles: Role[]) => {
 
 // 使用示例
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'DELETE',
     path: '/users/:id',
     middleware: [authMiddleware, requireRole('admin')],
-    handler: createHandler(
-      { params: Type.Object({ id: Type.String() }) },
-      async ({ params }) => {
-        // 只有管理员可以删除用户
-        await deleteUser(params.id)
-        return { success: true }
-      }
-    )
-  }
+    schema: { params: Type.Object({ id: Type.String() }) },
+    handler: async ({ params }) => {
+      // 只有管理员可以删除用户
+      await deleteUser(params.id)
+      return { success: true }
+    }
+  })
 ])
 ```
 
@@ -403,18 +401,18 @@ const server = new Server(routes, {
 
 // 路由级别中间件
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/public/data',
     middleware: [cacheMiddleware],  // 只有这个路由使用缓存
-    handler: createHandler(() => getData())
-  },
-  {
+    handler: () => getData()
+  }),
+  defineRoute({
     method: 'POST',
     path: '/admin/action',
     middleware: [authMiddleware, requireRole('admin'), rateLimiter],
-    handler: createHandler(({ body }) => doAction(body))
-  }
+    handler: ({ body }) => doAction(body)
+  })
 ])
 ```
 

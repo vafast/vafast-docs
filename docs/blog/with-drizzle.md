@@ -115,7 +115,7 @@ npx drizzle-kit push
 现在让我们用 Vafast 创建 CRUD API：
 
 ```ts
-import { Server, defineRoutes, createHandler, serve, Type, err } from 'vafast'
+import { Server, defineRoute, defineRoutes, serve, Type, err } from 'vafast'
 import { db } from './db'
 import { users, posts } from './db/schema'
 import { eq } from 'drizzle-orm'
@@ -134,78 +134,70 @@ const CreatePostBody = Type.Object({
 
 const routes = defineRoutes([
   // 用户相关
-  {
+  defineRoute({
     method: 'GET',
     path: '/users',
-    handler: createHandler(async () => {
+    handler: async () => {
       return await db.select().from(users)
-    })
-  },
-  {
+    }
+  }),
+  defineRoute({
     method: 'GET',
     path: '/users/:id',
-    handler: createHandler(
-      { params: Type.Object({ id: Type.String() }) },
-      async ({ params }) => {
-        const user = await db
-          .select()
-          .from(users)
-          .where(eq(users.id, Number(params.id)))
-          .get()
-        
-        if (!user) {
-          throw err.notFound('用户不存在')
-        }
-        return user
+    schema: { params: Type.Object({ id: Type.String() }) },
+    handler: async ({ params }) => {
+      const user = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, Number(params.id)))
+        .get()
+      
+      if (!user) {
+        throw err.notFound('用户不存在')
       }
-    )
-  },
-  {
+      return user
+    }
+  }),
+  defineRoute({
     method: 'POST',
     path: '/users',
-    handler: createHandler(
-      { body: CreateUserBody },
-      async ({ body }) => {
-        const result = await db.insert(users).values(body).returning()
-        return result[0]
-      }
-    )
-  },
+    schema: { body: CreateUserBody },
+    handler: async ({ body }) => {
+      const result = await db.insert(users).values(body).returning()
+      return result[0]
+    }
+  }),
   
   // 文章相关
-  {
+  defineRoute({
     method: 'GET',
     path: '/posts',
-    handler: createHandler(async () => {
+    handler: async () => {
       return await db.select().from(posts)
-    })
-  },
-  {
+    }
+  }),
+  defineRoute({
     method: 'POST',
     path: '/posts',
-    handler: createHandler(
-      { body: CreatePostBody },
-      async ({ body }) => {
-        const result = await db.insert(posts).values(body).returning()
-        return result[0]
-      }
-    )
-  },
+    schema: { body: CreatePostBody },
+    handler: async ({ body }) => {
+      const result = await db.insert(posts).values(body).returning()
+      return result[0]
+    }
+  }),
   
   // 获取用户的所有文章
-  {
+  defineRoute({
     method: 'GET',
     path: '/users/:id/posts',
-    handler: createHandler(
-      { params: Type.Object({ id: Type.String() }) },
-      async ({ params }) => {
-        return await db
-          .select()
-          .from(posts)
-          .where(eq(posts.authorId, Number(params.id)))
-      }
-    )
-  }
+    schema: { params: Type.Object({ id: Type.String() }) },
+    handler: async ({ params }) => {
+      return await db
+        .select()
+        .from(posts)
+        .where(eq(posts.authorId, Number(params.id)))
+    }
+  })
 ])
 
 const server = new Server(routes)
@@ -225,12 +217,11 @@ import { users, posts } from './db/schema'
 import { eq } from 'drizzle-orm'
 
 // 获取文章及作者信息
-{
+defineRoute({
   method: 'GET',
   path: '/posts/:id/detail',
-  handler: createHandler(
-    { params: Type.Object({ id: Type.String() }) },
-    async ({ params }) => {
+  schema: { params: Type.Object({ id: Type.String() }) },
+  handler: async ({ params }) => {
       const result = await db
         .select({
           post: posts,
@@ -253,8 +244,7 @@ import { eq } from 'drizzle-orm'
         author: result.author
       }
     }
-  )
-}
+  })
 ```
 
 ## 事务处理
@@ -268,12 +258,11 @@ const TransferBody = Type.Object({
   postId: Type.Number()
 })
 
-{
+defineRoute({
   method: 'POST',
   path: '/posts/transfer',
-  handler: createHandler(
-    { body: TransferBody },
-    async ({ body }) => {
+  schema: { body: TransferBody },
+  handler: async ({ body }) => {
       return await db.transaction(async (tx) => {
         // 检查文章是否属于原作者
         const post = await tx
@@ -296,8 +285,7 @@ const TransferBody = Type.Object({
         return result[0]
       })
     }
-  )
-}
+  })
 ```
 
 ## 边缘部署

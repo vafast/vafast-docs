@@ -44,13 +44,15 @@ type Middleware = (req: Request, next: () => Promise<Response>) => Promise<Respo
 中间件按照数组中的顺序执行，形成一个执行链：
 
 ```typescript
+import { defineRoute, defineRoutes } from 'vafast'
+
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/admin',
     middleware: [authMiddleware, logMiddleware, rateLimitMiddleware],
-    handler: createHandler(() => 'Admin panel')
-  }
+    handler: () => 'Admin panel'
+  })
 ])
 ```
 

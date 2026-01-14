@@ -14,23 +14,25 @@ import Deck from '../components/nearl/card-deck.vue'
 JavaScript 允许任何数据成为任何类型。Vafast 提供了一个工具，可以对数据进行验证，以确保数据的格式正确。
 
 ```typescript
-import { Server, defineRoutes, createHandler } from 'vafast'
-import { Type } from 'vafast'
+import { Server, defineRoute, defineRoutes, Type } from 'vafast'
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/id/:id',
-    handler: createHandler(
-      { params: Type.Object({ id: Type.String() }) },
-      ({ params }) => params.id
-    )
-  }
+    schema: { params: Type.Object({ id: Type.String() }) },
+    handler: ({ params }) => params.id
+  })
 ])
 
 const server = new Server(routes)
 export default { fetch: server.fetch }
 ```
+
+> **新框架用法说明**：
+> - Schema 验证在路由配置的 `schema` 字段中定义
+> - Handler 直接是函数，不再需要 `createHandler` 包装
+> - 所有路由必须使用 `defineRoute` 包装
 
 ### TypeBox
 
@@ -105,7 +107,7 @@ const isEmail = Patterns.EMAIL.test('test@example.com')
 ### 请求体验证
 
 ```typescript
-import { Type } from 'vafast'
+import { defineRoute, defineRoutes, Type } from 'vafast'
 
 const userSchema = Type.Object({
   name: Type.String({ minLength: 1, maxLength: 100 }),
@@ -114,18 +116,22 @@ const userSchema = Type.Object({
 })
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'POST',
     path: '/users',
-    handler: createHandler(({ body }) => {
+    schema: { body: userSchema },
+    handler: ({ body }) => {
       // body 已经通过验证，类型安全
       const { name, email, age } = body
       return { name, email, age: age || 18 }
-    }),
-    body: userSchema
-  }
+    }
+  })
 ])
 ```
+
+> **新框架用法说明**：
+> - Schema 验证通过 `schema` 字段定义，不再使用 `body`、`query` 等独立字段
+> - Handler 直接接收验证后的数据，自动获得类型推断
 
 ### 查询参数验证
 
@@ -142,10 +148,11 @@ const searchSchema = Type.Object({
 })
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/search',
-    handler: createHandler(({ query }) => {
+    schema: { query: searchSchema },
+    handler: ({ query }) => {
       const { q, page = 1, limit = 10, sort = 'name' } = query
       return { query: q, page, limit, sort, results: [] }
     }),
@@ -167,15 +174,15 @@ const userParamsSchema = Type.Object({
 })
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/users/:id/:action?',
-    handler: createHandler(({ params }) => {
+    schema: { params: userParamsSchema },
+    handler: ({ params }) => {
       const { id, action = 'profile' } = params
       return `User ${id} ${action}`
-    }),
-    params: userParamsSchema
-  }
+    }
+  })
 ])
 ```
 
@@ -199,14 +206,14 @@ const userSchema = Type.Object({
 })
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'POST',
     path: '/users',
-    handler: createHandler(({ body }) => {
+    schema: { body: userSchema },
+    handler: ({ body }) => {
       return createUser(body)
-    }),
-    body: userSchema
-  }
+    }
+  })
 ])
 ```
 
@@ -232,18 +239,18 @@ const userInputSchema = Type.Union([
 ])
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'POST',
     path: '/users',
-    handler: createHandler(({ body }) => {
+    schema: { body: userInputSchema },
+    handler: ({ body }) => {
       if (body.type === 'create') {
         return createUser(body.data)
       } else {
         return updateUser(body.id, body.data)
       }
-    }),
-    body: userInputSchema
-  }
+    }
+  })
 ])
 ```
 
@@ -272,14 +279,14 @@ const conditionalSchema = Type.Object({
 })
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'POST',
     path: '/accounts',
-    handler: createHandler(({ body }) => {
+    schema: { body: conditionalSchema },
+    handler: ({ body }) => {
       return createAccount(body)
-    }),
-    body: conditionalSchema
-  }
+    }
+  })
 ])
 ```
 
@@ -303,24 +310,26 @@ const customNumberSchema = Type.Number({
 })
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'POST',
     path: '/scores',
-    handler: createHandler(({ body }) => {
+    schema: {
+      body: Type.Object({
+        username: customStringSchema,
+        score: customNumberSchema
+      })
+    },
+    handler: ({ body }) => {
       return saveScore(body)
-    }),
-    body: Type.Object({
-      username: customStringSchema,
-      score: customNumberSchema
-    })
-  }
+    }
+  })
 ])
 ```
 
 ### 异步验证
 
 ```typescript
-import { defineRoutes, createHandler, err, Type } from 'vafast'
+import { defineRoute, defineRoutes, err, Type } from 'vafast'
 
 const asyncValidationSchema = Type.Object({
   email: Type.String({ format: 'email' }),
@@ -328,29 +337,32 @@ const asyncValidationSchema = Type.Object({
 })
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'POST',
     path: '/users',
-    handler: createHandler(
-      { body: asyncValidationSchema },
-      async ({ body }) => {
+    schema: { body: asyncValidationSchema },
+    handler: async ({ body }) => {
       // 异步验证
       const emailExists = await checkEmailExists(body.email)
       if (emailExists) {
-          throw err.conflict('Email already exists')
+        throw err.conflict('Email already exists')
       }
       
       const usernameExists = await checkUsernameExists(body.username)
       if (usernameExists) {
-          throw err.conflict('Username already exists')
+        throw err.conflict('Username already exists')
       }
       
       return createUser(body)
-      }
-    )
-  }
+    }
+  })
 ])
 ```
+
+> **新框架用法说明**：
+> - Schema 验证在 `schema` 字段中定义
+> - Handler 可以是异步函数，直接处理业务逻辑
+> - 不再使用 `createHandler` 的两参数形式
 
 ## 错误处理
 
@@ -360,31 +372,33 @@ const routes = defineRoutes([
 
 ```typescript
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'POST',
     path: '/users',
-    handler: createHandler(({ body }) => {
-      // 如果验证失败，这里不会执行
-      return createUser(body)
-    }),
-    body: Type.Object({
-      name: Type.String({ minLength: 1 }),
+    schema: {
+      body: Type.Object({
+        name: Type.String({ minLength: 1 }),
       email: Type.String({ format: 'email' })
     })
-  }
+    },
+    handler: ({ body }) => {
+      // 如果验证失败，这里不会执行
+      return createUser(body)
+    }
+  })
 ])
 ```
 
 ### 自定义错误处理
 
 ::: tip
-`createHandler` 内置了验证错误处理，通常无需手动编写错误处理中间件。
+框架内置了验证错误处理，通常无需手动编写错误处理中间件。
 :::
 
 ```typescript
-import { json } from 'vafast'
+import { defineRoute, defineRoutes, defineMiddleware, json } from 'vafast'
 
-const errorHandler = async (req: Request, next: () => Promise<Response>) => {
+const errorHandler = defineMiddleware(async (req, next) => {
   try {
     return await next()
   } catch (error) {
@@ -393,18 +407,16 @@ const errorHandler = async (req: Request, next: () => Promise<Response>) => {
     }
     return json({ error: 'Internal server error' }, 500)
   }
-}
+})
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'POST',
     path: '/users',
-    handler: createHandler(
-      { body: userSchema },
-      ({ body }) => createUser(body)
-    ),
+    schema: { body: userSchema },
+    handler: ({ body }) => createUser(body),
     middleware: [errorHandler]
-  }
+  })
 ])
 ```
 
@@ -413,39 +425,40 @@ const routes = defineRoutes([
 ### 预编译验证器
 
 ::: tip 推荐
-`createHandler` 内部已自动预编译 Schema，无需手动预编译。
+框架内部已自动预编译 Schema，无需手动预编译。
 :::
 
 ```typescript
-// createHandler 内部会自动预编译 schema
+// 框架内部会自动预编译 schema
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'POST',
     path: '/users',
-    handler: createHandler(
-      { body: userSchema },
-      ({ body }) => createUser(body)
-    )
-  }
+    schema: { body: userSchema },
+    handler: ({ body }) => createUser(body)
+  })
 ])
 ```
 
-### 使用 createHandler 内置验证（推荐）
+### 使用 defineRoute 内置验证（推荐）
 
-`createHandler` 已内置高性能验证，通常无需额外缓存：
+框架已内置高性能验证，自动缓存编译后的验证器：
 
 ```typescript
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'POST',
     path: '/users',
-    handler: createHandler(
-      { body: userSchema },
-      ({ body }) => createUser(body)
-    )
-  }
+    schema: { body: userSchema },
+    handler: ({ body }) => createUser(body)
+  })
 ])
 ```
+
+> **新框架用法说明**：
+> - Schema 验证在路由配置的 `schema` 字段中定义
+> - 框架自动预编译和缓存验证器，无需手动处理
+> - Handler 直接接收验证后的数据，自动获得类型推断
 
 ## 最佳实践
 
@@ -492,24 +505,27 @@ const userQuerySchema = Type.Object({
 })
 ```
 
-### 3. 使用 createHandler 内置验证（推荐）
+### 3. 使用 defineRoute 内置验证（推荐）
 
 ::: tip
-不推荐手动编写验证中间件，使用 `createHandler` 内置验证更简洁、类型安全。
+不推荐手动编写验证中间件，使用 `defineRoute` 的 `schema` 字段更简洁、类型安全。
 :::
 
 ```typescript
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'POST',
     path: '/users',
-    handler: createHandler(
-      { body: userSchema },
-      ({ body }) => createUser(body)  // body 已验证且类型安全
-    )
-  }
+    schema: { body: userSchema },
+    handler: ({ body }) => createUser(body)  // body 已验证且类型安全
+  })
 ])
 ```
+
+> **新框架用法说明**：
+> - Schema 验证在路由配置的 `schema` 字段中定义
+> - Handler 直接接收验证后的数据，自动获得类型推断
+> - 不再使用 `createHandler` 的两参数形式
 
 ## 总结
 

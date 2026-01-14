@@ -92,29 +92,29 @@ export default { port: 3000, fetch: server.fetch }
 以下是在 Vafast 中的简单 hello world 示例。
 
 ```typescript
-import { Server, defineRoutes, createHandler, serve, err } from 'vafast'
+import { Server, defineRoute, defineRoutes, serve } from 'vafast'
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/',
-    handler: createHandler(() => 'Hello Vafast')
-  },
-  {
+    handler: () => 'Hello Vafast'
+  }),
+  defineRoute({
     method: 'GET',
     path: '/user/:id',
-    handler: createHandler(({ params }) => ({
+    handler: ({ params }) => ({
       userId: params.id
-    }))
-  },
-  {
+    })
+  }),
+  defineRoute({
     method: 'POST',
     path: '/form',
-    handler: createHandler(({ body }) => ({
+    handler: ({ body }) => ({
       success: true,
       data: body
-    }))
-  }
+    })
+  })
 ])
 
 const server = new Server(routes)
@@ -125,6 +125,11 @@ serve({ fetch: server.fetch, port: 3000 })
 // 或者导出给 Bun/Workers 使用
 // export default { fetch: server.fetch }
 ```
+
+> **新框架用法说明**：
+> - 所有路由必须使用 `defineRoute` 包装
+> - Handler 直接是函数，不再需要 `createHandler` 包装
+> - 代码更简洁，类型推断更完整
 
 打开 [localhost:3000](http://localhost:3000/)，结果应该显示 'Hello Vafast'。
 

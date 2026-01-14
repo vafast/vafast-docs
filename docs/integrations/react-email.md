@@ -581,17 +581,24 @@ export const emailService = new EmailService({
 
 ```typescript
 // src/routes.ts
-import { defineRoutes, createHandler, err, Type } from 'vafast'
+import { defineRoute, defineRoutes, err, Type } from 'vafast'
 import { emailService } from './services/emailService'
 import { userService } from './services/userService'
 import { authMiddleware } from './middleware/auth'
 
 export const routes = defineRoutes([
   // 用户注册
-  {
+  defineRoute({
     method: 'POST',
     path: '/api/auth/register',
-    handler: createHandler(async ({ body }) => {
+    schema: {
+      body: Type.Object({
+        email: Type.String({ format: 'email' }),
+        name: Type.String({ minLength: 1 }),
+        password: Type.String({ minLength: 6 })
+      })
+    },
+    handler: async ({ body }) => {
       const { email, name, password } = body
       
       // 检查用户是否已存在
@@ -631,19 +638,19 @@ export const routes = defineRoutes([
         },
         message: '注册成功，请检查您的邮箱进行验证'
       }
-    }),
-    body: Type.Object({
-      email: Type.String({ format: 'email' }),
-      name: Type.String({ minLength: 1 }),
-      password: Type.String({ minLength: 6 })
-    })
-  },
+    }
+  }),
   
   // 密码重置请求
-  {
+  defineRoute({
     method: 'POST',
     path: '/api/auth/forgot-password',
-    handler: createHandler(async ({ body }) => {
+    schema: {
+      body: Type.Object({
+        email: Type.String({ format: 'email' })
+      })
+    },
+    handler: async ({ body }) => {
       const { email } = body
       
       // 查找用户
@@ -672,17 +679,23 @@ export const routes = defineRoutes([
         console.error('Failed to send password reset email:', error)
         throw err.internal('邮件发送失败，请稍后重试')
       }
-    }),
-    body: Type.Object({
-      email: Type.String({ format: 'email' })
-    })
-  },
+    }
+  }),
   
   // 发送通知邮件
-  {
+  defineRoute({
     method: 'POST',
     path: '/api/notifications/send-email',
-    handler: createHandler(async ({ body, request }) => {
+    schema: {
+      body: Type.Object({
+        userId: Type.String(),
+        notificationTitle: Type.String({ minLength: 1 }),
+        notificationMessage: Type.String({ minLength: 1 }),
+        actionUrl: Type.Optional(Type.String({ format: 'uri' })),
+        actionText: Type.Optional(Type.String())
+      })
+    },
+    handler: async ({ body, request }) => {
       // 这里应该验证用户身份和权限
       const { userId, notificationTitle, notificationMessage, actionUrl, actionText } = body
       
@@ -708,22 +721,24 @@ export const routes = defineRoutes([
         console.error('Failed to send notification email:', error)
         throw err.internal('邮件发送失败')
       }
-    }),
-    body: Type.Object({
-      userId: Type.String(),
-      notificationTitle: Type.String({ minLength: 1 }),
-      notificationMessage: Type.String({ minLength: 1 }),
-      actionUrl: Type.Optional(Type.String({ format: 'uri' })),
-      actionText: Type.Optional(Type.String())
-    }),
+    },
     middleware: [authMiddleware]
-  },
+  }),
   
   // 批量发送邮件
-  {
+  defineRoute({
     method: 'POST',
     path: '/api/notifications/send-bulk-email',
-    handler: createHandler(async ({ body }) => {
+    schema: {
+      body: Type.Object({
+        userIds: Type.Array(Type.String()),
+        notificationTitle: Type.String({ minLength: 1 }),
+        notificationMessage: Type.String({ minLength: 1 }),
+        actionUrl: Type.Optional(Type.String({ format: 'uri' })),
+        actionText: Type.Optional(Type.String())
+      })
+    },
+    handler: async ({ body }) => {
       const { userIds, notificationTitle, notificationMessage, actionUrl, actionText } = body
       
       // 获取所有用户信息
@@ -756,16 +771,9 @@ export const routes = defineRoutes([
         successful,
         failed
       }
-    }),
-    body: Type.Object({
-      userIds: Type.Array(Type.String()),
-      notificationTitle: Type.String({ minLength: 1 }),
-      notificationMessage: Type.String({ minLength: 1 }),
-      actionUrl: Type.Optional(Type.String({ format: 'uri' })),
-      actionText: Type.Optional(Type.String())
-    }),
+    },
     middleware: [authMiddleware]
-  }
+  })
 ])
 ```
 

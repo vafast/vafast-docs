@@ -11,42 +11,44 @@ title: 集成速查表 - Vafast
 ### Prisma
 
 ```typescript
-import { defineRoutes, createHandler, Type } from 'vafast'
+import { defineRoute, defineRoutes, Type } from 'vafast'
 import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/users',
-    handler: createHandler(async () => {
+    handler: async () => {
       const users = await prisma.user.findMany()
       return { users }
-    })
-  },
+    }
+  }),
   
-  {
+  defineRoute({
     method: 'POST',
     path: '/users',
-    handler: createHandler(async ({ body }) => {
+    schema: {
+      body: Type.Object({
+        name: Type.String(),
+        email: Type.String({ format: 'email' })
+      })
+    },
+    handler: async ({ body }) => {
       const user = await prisma.user.create({
         data: body
       })
       return { user }
-    }),
-    body: Type.Object({
-      name: Type.String(),
-      email: Type.String({ format: 'email' })
-    })
-  }
+    }
+  })
 ])
 ```
 
 ### Drizzle
 
 ```typescript
-import { defineRoutes, createHandler } from 'vafast'
+import { defineRoute, defineRoutes } from 'vafast'
 import { drizzle } from 'drizzle-orm/better-sqlite3'
 import Database from 'better-sqlite3'
 import { users } from './schema'
@@ -54,35 +56,35 @@ import { users } from './schema'
 const db = drizzle(new Database('sqlite.db'))
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/users',
-    handler: createHandler(async () => {
+    handler: async () => {
       const allUsers = await db.select().from(users)
       return { users: allUsers }
-    })
-  }
+    }
+  })
 ])
 ```
 
 ### MongoDB
 
 ```typescript
-import { defineRoutes, createHandler } from 'vafast'
+import { defineRoute, defineRoutes } from 'vafast'
 import { MongoClient } from 'mongodb'
 
 const client = new MongoClient('mongodb://localhost:27017')
 const db = client.db('myapp')
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/users',
-    handler: createHandler(async () => {
+    handler: async () => {
       const users = await db.collection('users').find({}).toArray()
       return { users }
-    })
-  }
+    }
+  })
 ])
 ```
 
@@ -91,34 +93,36 @@ const routes = defineRoutes([
 ### JWT
 
 ```typescript
-import { defineRoutes, createHandler, Type } from 'vafast'
+import { Server, defineRoute, defineRoutes, Type } from 'vafast'
 import { jwt } from '@vafast/jwt'
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'POST',
     path: '/login',
-    handler: createHandler(async ({ body }) => {
+    schema: {
+      body: Type.Object({
+        username: Type.String(),
+        password: Type.String()
+      })
+    },
+    handler: async ({ body }) => {
       const token = await jwt.sign(body, { expiresIn: '1h' })
       return { token }
-    }),
-    body: Type.Object({
-      username: Type.String(),
-      password: Type.String()
-    })
-  }
+    }
+  })
 ])
 
-const app = createHandler(routes)
-  .use(jwt({
-    secret: process.env.JWT_SECRET
-  }))
+const server = new Server(routes)
+server.useGlobalMiddleware(jwt({
+  secret: process.env.JWT_SECRET
+}))
 ```
 
 ### Better Auth
 
 ```typescript
-import { defineRoutes, createHandler } from 'vafast'
+import { defineRoute, defineRoutes } from 'vafast'
 import { BetterAuth } from 'better-auth'
 import { VafastAdapter } from 'better-auth/adapters/vafast'
 
@@ -129,14 +133,14 @@ const auth = new BetterAuth({
 })
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/profile',
-    handler: createHandler(async ({ request }) => {
+    handler: async ({ request }) => {
       const session = await auth.api.getSession(request)
       return { user: session?.user }
-    })
-  }
+    }
+  })
 ])
 ```
 
@@ -145,48 +149,48 @@ const routes = defineRoutes([
 ### CORS
 
 ```typescript
-import { defineRoutes, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { cors } from '@vafast/cors'
 
 const routes = defineRoutes([
   // 路由定义
 ])
 
-const app = createHandler(routes)
-  .use(cors({
-    origin: ['http://localhost:3000'],
-    credentials: true
-  }))
+const server = new Server(routes)
+server.useGlobalMiddleware(cors({
+  origin: ['http://localhost:3000'],
+  credentials: true
+}))
 ```
 
 ### Helmet
 
 ```typescript
-import { defineRoutes, createHandler } from 'vafast'
+import { Server } from 'vafast'
 import { helmet } from '@vafast/helmet'
 
-const app = createHandler(routes)
-  .use(helmet({
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-        styleSrc: ["'self'", "'unsafe-inline'"]
-      }
+const server = new Server(routes)
+server.useGlobalMiddleware(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"]
     }
-  }))
+  }
+}))
 ```
 
 ### Rate Limiting
 
 ```typescript
-import { defineRoutes, createHandler } from 'vafast'
+import { Server } from 'vafast'
 import { rateLimit } from '@vafast/rate-limit'
 
-const app = createHandler(routes)
-  .use(rateLimit({
-    windowMs: 15 * 60 * 1000, // 15分钟
-    max: 100 // 限制每个IP 15分钟内最多100个请求
-  }))
+const server = new Server(routes)
+server.useGlobalMiddleware(rateLimit({
+  windowMs: 15 * 60 * 1000, // 15分钟
+  max: 100 // 限制每个IP 15分钟内最多100个请求
+}))
 ```
 
 ## 监控和日志
@@ -194,30 +198,30 @@ const app = createHandler(routes)
 ### OpenTelemetry
 
 ```typescript
-import { defineRoutes, createHandler } from 'vafast'
+import { Server } from 'vafast'
 import { opentelemetry } from '@vafast/opentelemetry'
 
-const app = createHandler(routes)
-  .use(opentelemetry({
-    serviceName: 'my-vafast-app',
-    tracing: {
-      enabled: true,
-      exporter: {
-        type: 'otlp',
-        endpoint: 'http://localhost:4317'
-      }
+const server = new Server(routes)
+server.useGlobalMiddleware(opentelemetry({
+  serviceName: 'my-vafast-app',
+  tracing: {
+    enabled: true,
+    exporter: {
+      type: 'otlp',
+      endpoint: 'http://localhost:4317'
     }
-  }))
+  }
+}))
 ```
 
 ### Server Timing
 
 ```typescript
-import { defineRoutes, createHandler } from 'vafast'
+import { Server } from 'vafast'
 import { serverTiming } from '@vafast/server-timing'
 
-const app = createHandler(routes)
-  .use(serverTiming())
+const server = new Server(routes)
+server.useGlobalMiddleware(serverTiming())
 ```
 
 ## 文件处理
@@ -225,14 +229,14 @@ const app = createHandler(routes)
 ### 文件上传
 
 ```typescript
-import { defineRoutes, createHandler } from 'vafast'
+import { defineRoute, defineRoutes } from 'vafast'
 import { writeFile } from 'node:fs/promises'
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'POST',
     path: '/upload',
-    handler: createHandler(async ({ request }) => {
+    handler: async ({ request }) => {
       const formData = await request.formData()
       const file = formData.get('file') as File
       
@@ -250,22 +254,22 @@ const routes = defineRoutes([
         status: 400,
         headers: { 'Content-Type': 'application/json' }
       })
-    })
-  }
+    }
+  })
 ])
 ```
 
 ### 静态文件服务
 
 ```typescript
-import { defineRoutes, createHandler } from 'vafast'
+import { Server } from 'vafast'
 import { staticFiles } from '@vafast/static'
 
-const app = createHandler(routes)
-  .use(staticFiles({
-    root: './public',
-    prefix: '/static'
-  }))
+const server = new Server(routes)
+server.useGlobalMiddleware(staticFiles({
+  root: './public',
+  prefix: '/static'
+}))
 ```
 
 ## 缓存
@@ -273,16 +277,16 @@ const app = createHandler(routes)
 ### Redis
 
 ```typescript
-import { defineRoutes, createHandler } from 'vafast'
+import { defineRoute, defineRoutes } from 'vafast'
 import { Redis } from 'ioredis'
 
 const redis = new Redis()
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/users/:id',
-    handler: createHandler(async ({ params }) => {
+    handler: async ({ params }) => {
       // 尝试从缓存获取
       const cached = await redis.get(`user:${params.id}`)
       if (cached) {
@@ -296,23 +300,23 @@ const routes = defineRoutes([
       await redis.setex(`user:${params.id}`, 3600, JSON.stringify(user))
       
       return { user }
-    })
-  }
+    }
+  })
 ])
 ```
 
 ### 内存缓存
 
 ```typescript
-import { defineRoutes, createHandler } from 'vafast'
+import { defineRoute, defineRoutes } from 'vafast'
 
 const cache = new Map()
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/data/:key',
-    handler: createHandler(async ({ params }) => {
+    handler: async ({ params }) => {
       if (cache.has(params.key)) {
         return { data: cache.get(params.key), cached: true }
       }
@@ -321,8 +325,8 @@ const routes = defineRoutes([
       cache.set(params.key, data)
       
       return { data, cached: false }
-    })
-  }
+    }
+  })
 ])
 ```
 
@@ -331,22 +335,22 @@ const routes = defineRoutes([
 ### Cron Jobs
 
 ```typescript
-import { defineRoutes, createHandler } from 'vafast'
+import { Server } from 'vafast'
 import { cron } from '@vafast/cron'
 
-const app = createHandler(routes)
-  .use(cron({
-    jobs: [
-      {
-        name: 'cleanup',
-        schedule: '0 2 * * *', // 每天凌晨2点
-        task: async () => {
-          console.log('Running cleanup task...')
-          // 执行清理任务
-        }
+const server = new Server(routes)
+server.useGlobalMiddleware(cron({
+  jobs: [
+    {
+      name: 'cleanup',
+      schedule: '0 2 * * *', // 每天凌晨2点
+      task: async () => {
+        console.log('Running cleanup task...')
+        // 执行清理任务
       }
-    ]
-  }))
+    }
+  ]
+}))
 ```
 
 ## 压缩
@@ -354,14 +358,14 @@ const app = createHandler(routes)
 ### Gzip/Brotli
 
 ```typescript
-import { defineRoutes, createHandler } from 'vafast'
+import { Server } from 'vafast'
 import { compress } from '@vafast/compress'
 
-const app = createHandler(routes)
-  .use(compress({
-    algorithms: ['gzip', 'brotli'],
-    threshold: 1024
-  }))
+const server = new Server(routes)
+server.useGlobalMiddleware(compress({
+  algorithms: ['gzip', 'brotli'],
+  threshold: 1024
+}))
 ```
 
 ## 模板引擎
@@ -369,14 +373,14 @@ const app = createHandler(routes)
 ### HTML 渲染
 
 ```typescript
-import { defineRoutes, createHandler } from 'vafast'
+import { defineRoute, defineRoutes } from 'vafast'
 import { html } from '@vafast/html'
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/',
-    handler: createHandler(() => {
+    handler: () => {
       return html`
         <!DOCTYPE html>
         <html>
@@ -388,8 +392,8 @@ const routes = defineRoutes([
           </body>
         </html>
       `
-    })
-  }
+    }
+  })
 ])
 ```
 
@@ -399,13 +403,21 @@ const routes = defineRoutes([
 
 ```typescript
 import { describe, expect, it } from 'vitest'
-import { createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 
 describe('User Routes', () => {
   it('should create a user', async () => {
-    const handler = createHandler(({ body }) => {
-      return { id: '123', ...body }
-    })
+    const routes = defineRoutes([
+      defineRoute({
+        method: 'POST',
+        path: '/users',
+        handler: ({ body }) => {
+          return { id: '123', ...body }
+        }
+      })
+    ])
+    
+    const server = new Server(routes)
     
     const request = new Request('http://localhost/users', {
       method: 'POST',
@@ -413,7 +425,7 @@ describe('User Routes', () => {
       body: JSON.stringify({ name: 'John', email: 'john@example.com' })
     })
     
-    const response = await handler(request)
+    const response = await server.fetch(request)
     const data = await response.json()
     
     expect(data.id).toBe('123')

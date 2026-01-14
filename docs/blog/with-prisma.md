@@ -126,24 +126,25 @@ npx prisma migrate dev --name init
 在我们的 **src/index.ts** 中，更新 Vafast 服务器以创建一个简单的用户注册接口。
 
 ```ts
-import { Server, defineRoutes, createHandler, serve } from 'vafast'
+import { Server, defineRoute, defineRoutes, serve } from 'vafast'
 import { PrismaClient } from '@prisma/client'
 
 const db = new PrismaClient()
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'POST',
     path: '/sign-up',
-    handler: createHandler(async ({ body }) => {
+    handler: async ({ body }) => {
       return await db.user.create({
         data: body as { username: string; password: string }
       })
-    })
-  }
+    }
+  })
 ])
 
 const server = new Server(routes)
+```
 
 serve({ fetch: server.fetch, port: 3000 }, () => {
   console.log('Vafast 正在运行于 http://localhost:3000')
@@ -156,7 +157,7 @@ serve({ fetch: server.fetch, port: 3000 }, () => {
 
 我们可以通过使用 Vafast 的类型系统来改进这一点。
 ```ts
-import { Server, defineRoutes, createHandler, serve, Type } from 'vafast'
+import { Server, defineRoute, defineRoutes, serve, Type } from 'vafast'
 import { PrismaClient } from '@prisma/client'
 
 const db = new PrismaClient()
@@ -168,19 +169,18 @@ const SignUpBody = Type.Object({
 })
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'POST',
     path: '/sign-up',
-    handler: createHandler(
-      { body: SignUpBody },
-      async ({ body }) => {
-        return await db.user.create({ data: body })
-      }
-    )
-  }
+    schema: { body: SignUpBody },
+    handler: async ({ body }) => {
+      return await db.user.create({ data: body })
+    }
+  })
 ])
 
 const server = new Server(routes)
+```
 
 serve({ fetch: server.fetch, port: 3000 }, () => {
   console.log('Vafast 正在运行于 http://localhost:3000')
@@ -210,7 +210,7 @@ Unique constraint failed on the fields: (`username`)
 
 我们可以使用中间件来处理 Prisma 错误：
 ```ts
-import { Server, defineRoutes, createHandler, serve, Type, json } from 'vafast'
+import { Server, defineRoute, defineRoutes, defineMiddleware, serve, Type, json } from 'vafast'
 import { PrismaClient, Prisma } from '@prisma/client'
 
 const db = new PrismaClient()
@@ -221,7 +221,7 @@ const SignUpBody = Type.Object({
 })
 
 // Prisma 错误处理中间件
-const prismaErrorHandler = async (req: Request, next: () => Promise<Response>) => {
+const prismaErrorHandler = defineMiddleware(async (req, next) => {
   try {
     return await next()
   } catch (error) {
@@ -236,20 +236,18 @@ const prismaErrorHandler = async (req: Request, next: () => Promise<Response>) =
     }
     throw error
   }
-}
+})
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'POST',
     path: '/sign-up',
     middleware: [prismaErrorHandler],
-    handler: createHandler(
-      { body: SignUpBody },
-      async ({ body }) => {
-        return await db.user.create({ data: body })
-      }
-    )
-        }
+    schema: { body: SignUpBody },
+    handler: async ({ body }) => {
+      return await db.user.create({ data: body })
+    }
+  })
 ])
 
 const server = new Server(routes)
@@ -288,7 +286,7 @@ export const UserModel = {
 
 ```ts
 // routes/user.ts
-import { defineRoutes, createHandler } from 'vafast'
+import { defineRoute, defineRoutes } from 'vafast'
 import { PrismaClient } from '@prisma/client'
 import { UserModel } from '../models/user'
 import { prismaErrorHandler } from '../middleware/prisma'
@@ -296,21 +294,19 @@ import { prismaErrorHandler } from '../middleware/prisma'
 const db = new PrismaClient()
 
 export const userRoutes = defineRoutes([
-  {
+  defineRoute({
     method: 'POST',
     path: '/sign-up',
     middleware: [prismaErrorHandler],
-    handler: createHandler(
-      { body: UserModel.signUp },
-      async ({ body }) => {
-        const user = await db.user.create({
-          data: body,
-          select: { id: true, username: true }
-        })
-        return user
-      }
-    )
-  }
+    schema: { body: UserModel.signUp },
+    handler: async ({ body }) => {
+      const user = await db.user.create({
+        data: body,
+        select: { id: true, username: true }
+      })
+      return user
+    }
+  })
 ])
 ```
 

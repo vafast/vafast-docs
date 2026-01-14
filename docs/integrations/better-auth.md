@@ -53,28 +53,34 @@ export const auth = new BetterAuth({
 
 ```typescript
 // src/index.ts
-import { defineRoutes, createHandler, err, Type } from 'vafast'
+import { Server, defineRoute, defineRoutes, err, Type } from 'vafast'
 import { auth } from './auth/config'
 import { authMiddleware } from './auth/middleware'
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/api/user',
-    handler: createHandler(async ({ request }) => {
+    handler: async ({ request }) => {
       const session = await auth.api.getSession(request)
       if (!session) {
         throw err.unauthorized('Unauthorized')
       }
       return { user: session.user }
-    }),
+    },
     middleware: [authMiddleware]
-  },
+  }),
   
-  {
+  defineRoute({
     method: 'POST',
     path: '/api/auth/signin',
-    handler: createHandler(async ({ body, request }) => {
+    schema: {
+      body: Type.Object({
+        email: Type.String({ format: 'email' }),
+        password: Type.String({ minLength: 6 })
+      })
+    },
+    handler: async ({ body, request }) => {
       const result = await auth.api.signIn('credentials', {
         email: body.email,
         password: body.password,
@@ -86,16 +92,12 @@ const routes = defineRoutes([
       }
       
       return { success: true, user: result.user }
-    }),
-    body: Type.Object({
-      email: Type.String({ format: 'email' }),
-      password: Type.String({ minLength: 6 })
-    })
-  }
+    }
+  })
 ])
 
-const app = createHandler(routes)
-  .use(authMiddleware)
+const server = new Server(routes)
+server.useGlobalMiddleware(authMiddleware)
 ```
 
 ## 认证中间件
@@ -107,18 +109,18 @@ const app = createHandler(routes)
 import { err } from 'vafast'
 import { auth } from './config'
 
-export const authMiddleware = async (request: Request, next: () => Promise<Response>) => {
+import { defineMiddleware } from 'vafast'
+
+export const authMiddleware = defineMiddleware(async (request, next) => {
   const session = await auth.api.getSession(request)
   
   if (!session) {
     return new Response('Unauthorized', { status: 401 })
   }
   
-  // 将用户信息添加到请求上下文
-  request.user = session.user
-  
-  return next()
-}
+  // 通过 next 传递用户信息
+  return await next({ user: session.user })
+})
 
 export const requireAuth = (handler: Function) => {
   return async (request: Request) => {
@@ -141,33 +143,41 @@ export const requireAuth = (handler: Function) => {
 使用中间件保护需要认证的路由：
 
 ```typescript
-import { defineRoutes, createHandler } from 'vafast'
-import { requireAuth } from './auth/middleware'
+import { defineRoute, defineRoutes, Type } from 'vafast'
+import { authMiddleware } from './auth/middleware'
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/api/profile',
-    handler: requireAuth(createHandler(({ request }) => {
-      // request.user 现在可用
-      return { profile: request.user }
-    }))
-  },
+    middleware: [authMiddleware],
+    handler: ({ user }) => {
+      // user 现在可用，自动有类型
+      return { profile: user }
+    }
+  }),
   
-  {
+  defineRoute({
     method: 'PUT',
     path: '/api/profile',
-    handler: requireAuth(createHandler(async ({ body, request }) => {
-      const updatedProfile = await updateProfile(request.user.id, body)
+    schema: {
+      body: Type.Object({
+        name: Type.Optional(Type.String()),
+        bio: Type.Optional(Type.String())
+      })
+    },
+    middleware: [authMiddleware],
+    handler: async ({ body, user }) => {
+      const updatedProfile = await updateProfile(user.id, body)
       return { profile: updatedProfile }
-    })),
-    body: Type.Object({
-      name: Type.Optional(Type.String()),
-      bio: Type.Optional(Type.String())
-    })
-  }
+    }
+  })
 ])
 ```
+
+> **新框架用法说明**：
+> - 使用 `defineMiddleware` 定义中间件，通过 `next({ user })` 传递上下文
+> - Handler 自动获得类型推断，无需手动类型断言
 
 ## OAuth 集成
 
@@ -202,27 +212,27 @@ export const auth = new BetterAuth({
 ## 会话管理
 
 ```typescript
-import { defineRoutes, createHandler } from 'vafast'
+import { defineRoute, defineRoutes } from 'vafast'
 import { auth } from './auth/config'
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'POST',
     path: '/api/auth/signout',
-    handler: createHandler(async ({ request }) => {
+    handler: async ({ request }) => {
       await auth.api.signOut(request)
       return { success: true }
-    })
-  },
+    }
+  }),
   
-  {
+  defineRoute({
     method: 'GET',
     path: '/api/auth/session',
-    handler: createHandler(async ({ request }) => {
+    handler: async ({ request }) => {
       const session = await auth.api.getSession(request)
       return { session }
-    })
-  }
+    }
+  })
 ])
 ```
 
@@ -252,62 +262,64 @@ export const auth = new BetterAuth({
 使用角色保护路由：
 
 ```typescript
-import { defineRoutes, createHandler, err } from 'vafast'
+import { defineRoute, defineRoutes, defineMiddleware, err } from 'vafast'
 
 const requireRole = (role: string) => {
-  return async (request: Request) => {
+  return defineMiddleware(async (request, next) => {
     const session = await auth.api.getSession(request)
     
     if (!session || session.user.role !== role) {
       throw err.forbidden('Insufficient permissions')
     }
     
-    request.user = session.user
-  }
+    return await next({ user: session.user })
+  })
 }
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/api/admin/users',
-    handler: createHandler(async ({ request }) => {
-      await requireRole('admin')(request)
-      
+    middleware: [requireRole('admin')],
+    handler: async ({ user }) => {
+      // user 自动有类型
       const users = await getAllUsers()
       return { users }
-    })
-  }
+    }
+  })
 ])
 ```
 
 ## 错误处理
 
 ```typescript
-import { defineRoutes, createHandler, err, Type } from 'vafast'
+import { defineRoute, defineRoutes, err, Type } from 'vafast'
 import { auth } from './auth/config'
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'POST',
     path: '/api/auth/signin',
-    handler: createHandler(async ({ body, request }) => {
-        const result = await auth.api.signIn('credentials', {
-          email: body.email,
-          password: body.password,
-          request
-        })
-        
-        if (result.error) {
+    schema: {
+      body: Type.Object({
+        email: Type.String({ format: 'email' }),
+        password: Type.String({ minLength: 6 })
+      })
+    },
+    handler: async ({ body, request }) => {
+      const result = await auth.api.signIn('credentials', {
+        email: body.email,
+        password: body.password,
+        request
+      })
+      
+      if (result.error) {
         throw err.badRequest(result.error)
-        }
-        
-        return { success: true, user: result.user }
-    }),
-    body: Type.Object({
-      email: Type.String({ format: 'email' }),
-      password: Type.String({ minLength: 6 })
-    })
-  }
+      }
+      
+      return { success: true, user: result.user }
+    }
+  })
 ])
 ```
 
@@ -316,7 +328,7 @@ const routes = defineRoutes([
 要配置 CORS，您可以使用 `@vafast/cors` 中的 `cors` 中间件。
 
 ```typescript
-import { defineRoutes, createHandler } from 'vafast'
+import { Server } from 'vafast'
 import { cors } from '@vafast/cors'
 import { auth } from './auth/config'
 
@@ -324,12 +336,12 @@ const routes = defineRoutes([
   // 你的路由定义
 ])
 
-const app = createHandler(routes)
-  .use(cors({
-    origin: ['http://localhost:3000', 'https://yourdomain.com'],
-    credentials: true
-  }))
-  .use(auth.middleware)
+const server = new Server(routes)
+server.useGlobalMiddleware(cors({
+  origin: ['http://localhost:3000', 'https://yourdomain.com'],
+  credentials: true
+}))
+server.useGlobalMiddleware(auth.middleware)
 ```
 
 ## 环境变量

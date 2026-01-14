@@ -15,16 +15,18 @@ sidebar: false
 <template v-slot:type-1>
 
 ```typescript twoslash
-import { createHandler, Type } from 'vafast'
+import { defineRoute, Type } from 'vafast'
 
-// 使用 createHandler 创建类型安全的处理器
-const getUser = createHandler(
-  { params: Type.Object({ id: Type.String() }) },
-  ({ params }) => {
+// 使用 defineRoute 创建类型安全的路由
+const getUser = defineRoute({
+  method: 'GET',
+  path: '/users/:id',
+  schema: { params: Type.Object({ id: Type.String() }) },
+  handler: ({ params }) => {
     const id = params.id
     return `User ID: ${id}`
   }
-)
+})
 ```
 
 </template>
@@ -32,16 +34,18 @@ const getUser = createHandler(
 <template v-slot:type-2>
 
 ```typescript twoslash
-import { createHandler, Type } from 'vafast'
+import { defineRoute, Type } from 'vafast'
 
 // Schema 验证 + 类型推断
-const createProfile = createHandler(
-  { body: Type.Object({ name: Type.String(), age: Type.Number() }) },
-  ({ body }) => {
+const createProfile = defineRoute({
+  method: 'POST',
+  path: '/profile',
+  schema: { body: Type.Object({ name: Type.String(), age: Type.Number() }) },
+  handler: ({ body }) => {
     const name = body.name
     return { success: true, data: body }
   }
-)
+})
 ```
 
 </template>
@@ -49,15 +53,18 @@ const createProfile = createHandler(
 <template v-slot:type-3>
 
 ```typescript twoslash
-import { createHandler, err } from 'vafast'
+import { defineRoute, err } from 'vafast'
 
 // 自动响应转换：对象 -> JSON，字符串 -> text/plain
-const getProfile = createHandler((ctx) => {
-  const req = ctx.req
-  if(Math.random() > .5) {
-    throw err.unauthorized('Unauthorized')
+const getProfile = defineRoute({
+  method: 'GET',
+  path: '/profile',
+  handler: ({ req }) => {
+    if(Math.random() > .5) {
+      throw err.unauthorized('Unauthorized')
+    }
+    return { message: 'OK' }
   }
-  return { message: 'OK' }
 })
 ```
 
@@ -66,18 +73,26 @@ const getProfile = createHandler((ctx) => {
 <template v-slot:type-4>
 
 ```typescript twoslash
-import { createHandlerWithExtra, Type } from 'vafast'
+import { defineRoute, defineMiddleware, Type } from 'vafast'
 
 // 带中间件注入的额外上下文
 type AuthContext = { user: { id: string; role: string } }
 
-const adminHandler = createHandlerWithExtra<AuthContext>(
-  { body: Type.Object({ action: Type.String() }) },
-  ({ body, user }) => {
+const authMiddleware = defineMiddleware<AuthContext>(async (req, next) => {
+  const user = { id: '123', role: 'admin' } // 实际从 token 获取
+  return next({ user })
+})
+
+const adminHandler = defineRoute({
+  method: 'POST',
+  path: '/admin/action',
+  schema: { body: Type.Object({ action: Type.String() }) },
+  middleware: [authMiddleware],
+  handler: ({ body, user }) => {
     const role = user.role
     return { success: true, userId: user.id }
   }
-)
+})
 ```
 
 </template>
@@ -85,19 +100,19 @@ const adminHandler = createHandlerWithExtra<AuthContext>(
 <template v-slot:easy>
 
 ```typescript twoslash
-import { Server, defineRoutes, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/',
-    handler: createHandler(() => 'Hello World')
-  },
-  {
+    handler: () => 'Hello World'
+  }),
+  defineRoute({
     method: 'GET',
     path: '/json',
-    handler: createHandler(() => ({ message: 'Hello World' }))
-  }
+    handler: () => ({ message: 'Hello World' })
+  })
 ])
 
 const server = new Server(routes)
@@ -109,14 +124,14 @@ export default { fetch: server.fetch }
 <template v-slot:doc>
 
 ```typescript twoslash
-import { Server, defineRoutes, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/',
-    handler: createHandler(() => 'Hello Vafast')
-  }
+    handler: () => 'Hello Vafast'
+  })
 ])
 
 const server = new Server(routes)
@@ -128,23 +143,21 @@ export default { fetch: server.fetch }
 <template v-slot:e2e-type-safety>
 
 ```typescript twoslash
-import { Server, defineRoutes, createHandler, Type, err } from 'vafast'
+import { Server, defineRoute, defineRoutes, Type, err } from 'vafast'
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'POST',
     path: '/profile',
-    handler: createHandler(
-      { body: Type.Object({ age: Type.Number() }) },
-      ({ body }) => {
-        // body.age 自动类型推断为 number
-        if(body.age < 18) {
-          throw err.badRequest('年龄不足')
-        }
-        return { success: true, data: body }
+    schema: { body: Type.Object({ age: Type.Number() }) },
+    handler: ({ body }) => {
+      // body.age 自动类型推断为 number
+      if(body.age < 18) {
+        throw err.badRequest('年龄不足')
       }
-    )
-  }
+      return { success: true, data: body }
+    }
+  })
 ])
 
 const server = new Server(routes)
@@ -156,21 +169,19 @@ export default { fetch: server.fetch }
 <template v-slot:e2e-server>
 
 ```typescript twoslash
-import { Server, defineRoutes, createHandler, Type, err } from 'vafast'
+import { Server, defineRoute, defineRoutes, Type, err } from 'vafast'
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'PATCH',
     path: '/profile',
-    handler: createHandler(
-      { body: Type.Object({ age: Type.Number() }) },
-      ({ body }) => {
-        if (body.age < 18)
-          throw err.badRequest('年龄不足')
-        return { success: true, data: body }
-      }
-    )
-  }
+    schema: { body: Type.Object({ age: Type.Number() }) },
+    handler: ({ body }) => {
+      if (body.age < 18)
+        throw err.badRequest('年龄不足')
+      return { success: true, data: body }
+    }
+  })
 ])
 
 const server = new Server(routes)
@@ -184,18 +195,16 @@ export type AppRoutes = typeof routes
 
 ```typescript twoslash
 import { eden, type InferEden } from '@vafast/api-client'
-import { defineRoutes, createHandler, Type } from 'vafast'
+import { defineRoute, defineRoutes, Type } from 'vafast'
 
 // 从服务端路由推断类型（实际项目中 import type { AppRoutes } from './server'）
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'PATCH',
     path: '/profile',
-    handler: createHandler(
-      { body: Type.Object({ age: Type.Number() }) },
-      ({ body }) => ({ success: true, data: body })
-    )
-  }
+    schema: { body: Type.Object({ age: Type.Number() }) },
+    handler: ({ body }) => ({ success: true, data: body })
+  })
 ])
 
 type Api = InferEden<typeof routes>

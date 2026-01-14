@@ -15,16 +15,20 @@ npm install @vafast/swagger
 
 并将中间件注册到服务器：
 ```typescript
-import { defineRoutes, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { swagger } from '@vafast/swagger'
 
 const routes = defineRoutes([
   // 你的路由定义
 ])
 
-const app = createHandler(routes)
-  .use(swagger())
+const server = new Server(routes)
+server.useGlobalMiddleware(swagger())
 ```
+
+> **新框架用法说明**：
+> - 使用 `Server` 类创建服务器实例
+> - 全局中间件使用 `server.useGlobalMiddleware()` 方法
 
 默认情况下，Vafast 使用 OpenAPI V3 模式和 [Scalar UI](http://scalar.com)。
 
@@ -37,37 +41,40 @@ const app = createHandler(routes)
 然而，有时候仅定义类型并不能清楚表达路由的功能。您可以使用 `detail` 字段明确地定义路由的目的。
 
 ```typescript
-import { defineRoutes, createHandler } from 'vafast'
-import { Type } from 'vafast'
+import { defineRoute, defineRoutes, Type } from 'vafast'
 import { swagger } from '@vafast/swagger'
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'POST',
     path: '/sign-in',
-    handler: createHandler(({ body }) => body),
-    body: Type.Object(
-      {
-        username: Type.String(),
-        password: Type.String({
-          minLength: 8,
-          description: '用户密码（至少 8 个字符）'
-        })
-      },
-      {
-        description: '期望的用户名和密码'
-      }
-    ),
-    detail: {
-      summary: '用户登录',
-      tags: ['身份验证']
-    }
-  }
+    schema: {
+      body: Type.Object(
+        {
+          username: Type.String(),
+          password: Type.String({
+            minLength: 8,
+            description: '用户密码（至少 8 个字符）'
+          })
+        },
+        {
+          description: '期望的用户名和密码'
+        }
+      )
+    },
+    handler: ({ body }) => body,
+    name: '用户登录',
+    description: '用户通过用户名和密码登录'
+  })
 ])
 
-const app = createHandler(routes)
-  .use(swagger())
+const server = new Server(routes)
+server.useGlobalMiddleware(swagger())
 ```
+
+> **新框架用法说明**：
+> - Schema 验证在 `schema` 字段中定义
+> - 路由元信息使用 `name` 和 `description` 字段
 
 详细字段遵循 OpenAPI V3 定义，并默认具有自动补全和类型安全。
 
@@ -114,29 +121,27 @@ const app = createHandler(routes)
 Vafast 的 OpenAPI 集成提供了完整的类型安全：
 
 ```typescript
-import { defineRoutes, createHandler } from 'vafast'
-import { Type } from 'vafast'
+import { defineRoute, defineRoutes, Type } from 'vafast'
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/users/:id',
-    handler: createHandler(({ params, query }) => {
+    schema: {
+      params: Type.Object({
+        id: Type.String({ description: '用户ID' })
+      }),
+      query: Type.Object({
+        page: Type.Optional(Type.Number({ minimum: 1, description: '页码' }))
+      })
+    },
+    handler: ({ params, query }) => {
       // params.id 和 query.page 都是类型安全的
       return { userId: params.id, page: query.page }
-    }),
-    params: Type.Object({
-      id: Type.String({ description: '用户ID' })
-    }),
-    query: Type.Object({
-      page: Type.Optional(Type.Number({ minimum: 1, description: '页码' }))
-    }),
-    detail: {
-      summary: '获取用户信息',
-      tags: ['用户管理'],
-      description: '根据用户ID获取用户详细信息'
-    }
-  }
+    },
+    name: '获取用户信息',
+    description: '根据用户ID获取用户详细信息'
+  })
 ])
 ```
 
@@ -145,28 +150,24 @@ const routes = defineRoutes([
 您还可以定义响应模式：
 
 ```typescript
-import { defineRoutes, createHandler } from 'vafast'
-import { Type } from 'vafast'
+import { defineRoute, defineRoutes, Type } from 'vafast'
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'POST',
     path: '/users',
-    handler: createHandler(({ body }) => {
+    schema: {
+      body: Type.Object({
+        name: Type.String({ minLength: 1 }),
+        email: Type.String({ format: 'email' })
+      })
+    },
+    handler: ({ body }) => {
       return { id: '123', ...body, createdAt: new Date() }
-    }),
-    body: Type.Object({
-      name: Type.String({ minLength: 1 }),
-      email: Type.String({ format: 'email' })
-    }),
-    response: Type.Object({
-      id: Type.String(),
-      name: Type.String(),
-      email: Type.String(),
-      createdAt: Type.String({ format: 'date-time' })
-    }),
-    detail: {
-      summary: '创建用户',
+    },
+    name: '创建用户',
+    description: '创建新用户',
+    docs: {
       tags: ['用户管理'],
       responses: {
         201: {
@@ -195,16 +196,20 @@ const routes = defineRoutes([
         }
       }
     }
-  }
+  })
 ])
 ```
+
+> **新框架用法说明**：
+> - Schema 验证在 `schema` 字段中定义
+> - API 文档信息在 `docs` 字段中定义（不再使用 `detail`）
 
 ## 中间件集成
 
 Vafast 的 Swagger 中间件可以与其他中间件无缝集成：
 
 ```typescript
-import { defineRoutes, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { swagger } from '@vafast/swagger'
 import { cors } from '@vafast/cors'
 import { helmet } from '@vafast/helmet'
@@ -213,10 +218,10 @@ const routes = defineRoutes([
   // 你的路由定义
 ])
 
-const app = createHandler(routes)
-  .use(cors())
-  .use(helmet())
-  .use(swagger({
+const server = new Server(routes)
+server.useGlobalMiddleware(cors())
+server.useGlobalMiddleware(helmet())
+server.useGlobalMiddleware(swagger({
     documentation: {
       info: {
         title: 'Vafast API',

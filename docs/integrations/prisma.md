@@ -418,16 +418,23 @@ export const tagService = new TagService()
 
 ```typescript
 // src/routes.ts
-import { defineRoutes, createHandler, err, Type } from 'vafast'
+import { defineRoute, defineRoutes, err, Type } from 'vafast'
 import { userService, postService, tagService } from './services'
 import { authMiddleware } from './middleware/auth'
 
 export const routes = defineRoutes([
   // 用户认证路由
-  {
+  defineRoute({
     method: 'POST',
     path: '/api/auth/register',
-    handler: createHandler(async ({ body }) => {
+    schema: {
+      body: Type.Object({
+        email: Type.String({ format: 'email' }),
+        name: Type.String({ minLength: 1 }),
+        password: Type.String({ minLength: 6 })
+      })
+    },
+    handler: async ({ body }) => {
       const { email, name, password } = body
       
       // 检查用户是否已存在
@@ -453,18 +460,19 @@ export const routes = defineRoutes([
         },
         message: '注册成功'
       }
-    }),
-    body: Type.Object({
-      email: Type.String({ format: 'email' }),
-      name: Type.String({ minLength: 1 }),
-      password: Type.String({ minLength: 6 })
-    })
-  },
+    }
+  }),
   
-  {
+  defineRoute({
     method: 'POST',
     path: '/api/auth/login',
-    handler: createHandler(async ({ body }) => {
+    schema: {
+      body: Type.Object({
+        email: Type.String({ format: 'email' }),
+        password: Type.String({ minLength: 1 })
+      })
+    },
+    handler: async ({ body }) => {
       const { email, password } = body
       
       // 查找用户
@@ -488,34 +496,37 @@ export const routes = defineRoutes([
         },
         message: '登录成功'
       }
-    }),
-    body: Type.Object({
-      email: Type.String({ format: 'email' }),
-      password: Type.String({ minLength: 1 })
-    })
-  },
+    }
+  }),
   
   // 文章路由
-  {
+  defineRoute({
     method: 'GET',
     path: '/api/posts',
-    handler: createHandler(async ({ query }) => {
+    schema: {
+      query: Type.Object({
+        page: Type.Optional(Type.String({ pattern: '^\\d+$' })),
+        limit: Type.Optional(Type.String({ pattern: '^\\d+$' }))
+      })
+    },
+    handler: async ({ query }) => {
       const page = parseInt(query.page || '1')
       const limit = parseInt(query.limit || '10')
       
       const result = await postService.findPublished(page, limit)
       return result
-    }),
-    query: Type.Object({
-      page: Type.Optional(Type.String({ pattern: '^\\d+$' })),
-      limit: Type.Optional(Type.String({ pattern: '^\\d+$' }))
-    })
-  },
+    }
+  }),
   
-  {
+  defineRoute({
     method: 'GET',
     path: '/api/posts/:id',
-    handler: createHandler(async ({ params }) => {
+    schema: {
+      params: Type.Object({
+        id: Type.String()
+      })
+    },
+    handler: async ({ params }) => {
       const post = await postService.findById(params.id)
       
       if (!post) {
@@ -523,16 +534,13 @@ export const routes = defineRoutes([
       }
       
       return { post }
-    }),
-    params: Type.Object({
-      id: Type.String()
-    })
-  },
+    }
+  }),
   
-  {
+  defineRoute({
     method: 'POST',
     path: '/api/posts',
-    handler: createHandler(async ({ body, request }) => {
+    handler: async ({ body, request }) => {
       // 这里应该验证用户身份
       const authorId = 'user-id-from-auth' // 从认证中间件获取
       
@@ -542,79 +550,75 @@ export const routes = defineRoutes([
       })
       
       return { post: newPost }
-    }),
-    body: Type.Object({
-      title: Type.String({ minLength: 1 }),
-      content: Type.String({ minLength: 1 }),
-      published: Type.Optional(Type.Boolean()),
-      tagIds: Type.Optional(Type.Array(Type.String()))
-    }),
+    },
+    schema: {
+      body: Type.Object({
+        title: Type.String({ minLength: 1 }),
+        content: Type.String({ minLength: 1 }),
+        published: Type.Optional(Type.Boolean()),
+        tagIds: Type.Optional(Type.Array(Type.String()))
+      })
+    },
     middleware: [authMiddleware]
-  },
+  }),
   
-  {
+  defineRoute({
     method: 'PUT',
     path: '/api/posts/:id',
-    handler: createHandler(async ({ params, body }) => {
-      // 这里应该验证用户身份和权限
-      
-      const updatedPost = await postService.update(params.id, body)
-      
-      if (!updatedPost) {
-        throw err.notFound('文章不存在')
-      }
-      
-      return { post: updatedPost }
-    }),
-    params: Type.Object({
-      id: Type.String()
-    }),
-    body: Type.Object({
-      title: Type.Optional(Type.String({ minLength: 1 })),
-      content: Type.Optional(Type.String({ minLength: 1 })),
-      published: Type.Optional(Type.Boolean()),
-      tagIds: Type.Optional(Type.Array(Type.String()))
+    schema: {
+      params: Type.Object({
+        id: Type.String()
+      }),
+      body: Type.Object({
+        title: Type.Optional(Type.String({ minLength: 1 })),
+        content: Type.Optional(Type.String({ minLength: 1 })),
+        published: Type.Optional(Type.Boolean()),
+        tagIds: Type.Optional(Type.Array(Type.String()))
     }),
     middleware: [authMiddleware]
   },
   
-  {
+  defineRoute({
     method: 'DELETE',
     path: '/api/posts/:id',
-    handler: createHandler(async ({ params }) => {
+    schema: {
+      params: Type.Object({
+        id: Type.String()
+      })
+    },
+    handler: async ({ params }) => {
       // 这里应该验证用户身份和权限
       
       await postService.delete(params.id)
       return { message: '文章删除成功' }
-    }),
-    params: Type.Object({
-      id: Type.String()
-    }),
+    },
     middleware: [authMiddleware]
-  },
+  }),
   
   // 标签路由
-  {
+  defineRoute({
     method: 'GET',
     path: '/api/tags',
-    handler: createHandler(async () => {
+    handler: async () => {
       const tags = await tagService.findAll()
       return { tags }
-    })
-  },
+    }
+  }),
   
-  {
+  defineRoute({
     method: 'POST',
     path: '/api/tags',
-    handler: createHandler(async ({ body }) => {
+    schema: {
+      body: Type.Object({
+        name: Type.String({ minLength: 1 })
+      })
+    },
+    handler: async ({ body }) => {
       const newTag = await tagService.create(body)
       return { tag: newTag }
-    }),
-    body: Type.Object({
-      name: Type.String({ minLength: 1 })
-    }),
+    },
     middleware: [authMiddleware]
-  }
+  })
 ])
 ```
 

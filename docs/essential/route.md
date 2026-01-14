@@ -14,14 +14,14 @@ Web 服务器使用请求的 **路径和 HTTP 方法** 来查找正确的资源�
 ### 定义路由（对象字面量方式）
 
 ```typescript
-import { Server, defineRoutes, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/',
-    handler: createHandler(() => 'Hello World')
-  }
+    handler: () => 'Hello World'
+  })
 ])
 
 const server = new Server(routes)
@@ -33,14 +33,14 @@ export default { fetch: server.fetch }
 Vafast 支持所有标准的 HTTP 方法：
 
 ```typescript
-import { defineRoutes, createHandler } from 'vafast'
+import { defineRoute, defineRoutes } from 'vafast'
 
 const routes = defineRoutes([
-  { method: 'GET', path: '/users', handler: createHandler(() => 'Get users') },
-  { method: 'POST', path: '/users', handler: createHandler(() => 'Create user') },
-  { method: 'PUT', path: '/users/:id', handler: createHandler(() => 'Update user') },
-  { method: 'DELETE', path: '/users/:id', handler: createHandler(() => 'Delete user') },
-  { method: 'PATCH', path: '/users/:id', handler: createHandler(() => 'Patch user') }
+  defineRoute({ method: 'GET', path: '/users', handler: () => 'Get users' }),
+  defineRoute({ method: 'POST', path: '/users', handler: () => 'Create user' }),
+  defineRoute({ method: 'PUT', path: '/users/:id', handler: () => 'Update user' }),
+  defineRoute({ method: 'DELETE', path: '/users/:id', handler: () => 'Delete user' }),
+  defineRoute({ method: 'PATCH', path: '/users/:id', handler: () => 'Patch user' })
 ])
 ```
 
@@ -50,20 +50,20 @@ const routes = defineRoutes([
 
 ```typescript
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/users/:id',
-    handler: createHandler(({ params }) => {
+    handler: ({ params }) => {
       return `User ID: ${params.id}`
-    })
-  },
-  {
+    }
+  }),
+  defineRoute({
     method: 'GET',
     path: '/posts/:postId/comments/:commentId',
-    handler: createHandler(({ params }) => {
+    handler: ({ params }) => {
       return `Post: ${params.postId}, Comment: ${params.commentId}`
-    })
-  }
+    }
+  })
 ])
 ```
 
@@ -72,13 +72,17 @@ const routes = defineRoutes([
 查询参数通过 `query` 对象访问：
 
 ```typescript
-import { defineRoutes, createHandler } from 'vafast'
+import { defineRoute, defineRoutes } from 'vafast'
 
 const routes = defineRoutes([
-  get('/search', createHandler(({ query }) => {
-    const { q, page = '1', limit = '10' } = query
-    return `Search: ${q}, Page: ${page}, Limit: ${limit}`
-  }))
+  defineRoute({
+    method: 'GET',
+    path: '/search',
+    handler: ({ query }) => {
+      const { q, page = '1', limit = '10' } = query
+      return `Search: ${q}, Page: ${page}, Limit: ${limit}`
+    }
+  })
 ])
 ```
 
@@ -88,13 +92,13 @@ POST、PUT、PATCH 请求的请求体通过 `body` 对象访问：
 
 ```typescript
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'POST',
     path: '/users',
-    handler: createHandler(async ({ body }) => {
+    handler: async ({ body }) => {
       return `Created user: ${body.name}`
-    })
-  }
+    }
+  })
 ])
 ```
 
@@ -104,16 +108,16 @@ Vafast 使用智能路由匹配算法，静态路径优先于动态路径：
 
 ```typescript
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/users/123',        // 静态路径 - 优先级高
-    handler: createHandler(() => 'Specific user')
-  },
-  {
+    handler: () => 'Specific user'
+  }),
+  defineRoute({
     method: 'GET',
     path: '/users/:id',        // 动态路径 - 优先级低
-    handler: createHandler(({ params }) => `User ${params.id}`)
-  }
+    handler: ({ params }) => `User ${params.id}`
+  })
 ])
 ```
 
@@ -123,31 +127,31 @@ Vafast 支持嵌套路由结构，使用 `children` 属性：
 
 ```typescript
 const routes = defineRoutes([
-  {
+  defineRoute({
     path: '/api',
     children: [
-      {
+      defineRoute({
         path: '/v1',
         children: [
-          {
+          defineRoute({
             method: 'GET',
             path: '/users',
-            handler: createHandler(() => 'API v1 users')
-          }
+            handler: () => 'API v1 users'
+          })
         ]
-      },
-      {
+      }),
+      defineRoute({
         path: '/v2',
         children: [
-          {
+          defineRoute({
             method: 'GET',
             path: '/users',
-            handler: createHandler(() => 'API v2 users')
-          }
+            handler: () => 'API v2 users'
+          })
         ]
-      }
+      })
     ]
-  }
+  })
 ])
 ```
 
@@ -156,36 +160,37 @@ const routes = defineRoutes([
 每个路由可以配置以下选项：
 
 ```typescript
-import { defineRoutes, createHandler, Type } from 'vafast'
+import { defineRoute, defineRoutes, Type } from 'vafast'
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/protected/:id',
     middleware: [authMiddleware],  // 路由级中间件
-    handler: createHandler(
-      {
-        params: Type.Object({ id: Type.String() }),    // 路径参数验证
-        query: Type.Object({ page: Type.Number() })    // 查询参数验证
-      },
-      ({ params, query }) => ({ id: params.id, page: query.page })
-    )
-  },
-  {
+    schema: {
+      params: Type.Object({ id: Type.String() }),    // 路径参数验证
+      query: Type.Object({ page: Type.Number() })     // 查询参数验证
+    },
+    handler: ({ params, query }) => ({ id: params.id, page: query.page })
+  }),
+  defineRoute({
     method: 'POST',
     path: '/users',
-    handler: createHandler(
-      {
-        body: Type.Object({                            // 请求体验证
-          name: Type.String(),
-          email: Type.String({ format: 'email' })
-        })
-      },
-      ({ body }) => ({ user: body })
-    )
-  }
+    schema: {
+      body: Type.Object({                            // 请求体验证
+        name: Type.String(),
+        email: Type.String({ format: 'email' })
+      })
+    },
+    handler: ({ body }) => ({ user: body })
+  })
 ])
 ```
+
+> **新框架用法说明**：
+> - Schema 验证现在在路由级别通过 `schema` 字段定义，而不是在 `createHandler` 中
+> - `handler` 直接是函数，不再需要 `createHandler` 包装
+> - 所有路由必须使用 `defineRoute` 包装
 
 ## 最佳实践
 
@@ -206,41 +211,45 @@ path: '/p/:p/c'
 使用嵌套路由组织 API：
 
 ```typescript
-import { defineRoutes, createHandler } from 'vafast'
+import { defineRoute, defineRoutes } from 'vafast'
 
 const routes = defineRoutes([
   // 用户相关路由
-  {
+  defineRoute({
     path: '/users',
     children: [
-      { method: 'GET', path: '/', handler: createHandler(() => 'List users') },
-      { method: 'POST', path: '/', handler: createHandler(() => 'Create user') },
-      { method: 'GET', path: '/:id', handler: createHandler(({ params }) => `User ${params.id}`) }
+      defineRoute({ method: 'GET', path: '/', handler: () => 'List users' }),
+      defineRoute({ method: 'POST', path: '/', handler: () => 'Create user' }),
+      defineRoute({ method: 'GET', path: '/:id', handler: ({ params }) => `User ${params.id}` })
     ]
-  },
+  }),
   
   // 文章相关路由
-  {
+  defineRoute({
     path: '/posts',
     children: [
-      { method: 'GET', path: '/', handler: createHandler(() => 'List posts') },
-      { method: 'POST', path: '/', handler: createHandler(() => 'Create post') }
+      defineRoute({ method: 'GET', path: '/', handler: () => 'List posts' }),
+      defineRoute({ method: 'POST', path: '/', handler: () => 'Create post' })
     ]
-  }
+  })
 ])
 ```
+
+> **新框架用法说明**：
+> - 嵌套路由中，所有子路由也必须使用 `defineRoute` 包装
+> - 不再支持直接使用对象字面量，必须使用 `defineRoute` 函数
 
 ### 3. 使用适当的 HTTP 方法
 
 ```typescript
-import { defineRoutes, createHandler } from 'vafast'
+import { defineRoute, defineRoutes } from 'vafast'
 
 const routes = defineRoutes([
-  { method: 'GET', path: '/users', handler: createHandler(() => 'Get users') },      // 获取数据
-  { method: 'POST', path: '/users', handler: createHandler(() => 'Create user') },   // 创建数据
-  { method: 'PUT', path: '/users/:id', handler: createHandler(() => 'Update user') }, // 完全更新
-  { method: 'PATCH', path: '/users/:id', handler: createHandler(() => 'Patch user') }, // 部分更新
-  { method: 'DELETE', path: '/users/:id', handler: createHandler(() => null) }        // 删除（返回 204）
+  defineRoute({ method: 'GET', path: '/users', handler: () => 'Get users' }),      // 获取数据
+  defineRoute({ method: 'POST', path: '/users', handler: () => 'Create user' }),   // 创建数据
+  defineRoute({ method: 'PUT', path: '/users/:id', handler: () => 'Update user' }), // 完全更新
+  defineRoute({ method: 'PATCH', path: '/users/:id', handler: () => 'Patch user' }), // 部分更新
+  defineRoute({ method: 'DELETE', path: '/users/:id', handler: () => null })        // 删除（返回 204）
 ])
 ```
 
@@ -249,29 +258,30 @@ const routes = defineRoutes([
 `defineRoutes()` 自动保留字面量类型，支持端到端类型推断：
 
 ```typescript
-import { defineRoutes, createHandler, Type } from 'vafast'
+import { defineRoute, defineRoutes, Type } from 'vafast'
 import type { InferEden } from 'vafast-api-client'
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/users/:id',
-    handler: createHandler(
-      { params: Type.Object({ id: Type.String() }) },
-      ({ params }) => ({ userId: params.id })
-    )
-  },
-  {
+    schema: { params: Type.Object({ id: Type.String() }) },
+    handler: ({ params }) => ({ userId: params.id })
+  }),
+  defineRoute({
     method: 'POST',
     path: '/users',
-    handler: createHandler(
-      { body: Type.Object({ name: Type.String() }) },
-      ({ body }) => ({ name: body.name })
-    )
-  }
+    schema: { body: Type.Object({ name: Type.String() }) },
+    handler: ({ body }) => ({ name: body.name })
+  })
 ])
 
 // ✅ 自动推断字面量类型
 type Api = InferEden<typeof routes>
 ```
+
+> **新框架用法说明**：
+> - Schema 验证移到路由配置的 `schema` 字段
+> - Handler 函数直接定义，自动获得类型推断
+> - 类型安全完全保留，支持端到端类型推断
 

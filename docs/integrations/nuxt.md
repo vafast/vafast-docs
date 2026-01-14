@@ -39,34 +39,39 @@ npm install -D @types/node
 
 ```typescript
 // server/api/server.ts
-import { defineRoutes, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 import { cors } from '@vafast/cors'
 import { helmet } from '@vafast/helmet'
 import { routes } from './routes'
 
-export const app = createHandler(routes)
-  .use(cors({
-    origin: process.env.NODE_ENV === 'development' 
-      ? ['http://localhost:3000'] 
-      : [process.env.NUXT_PUBLIC_APP_URL],
-    credentials: true
-  }))
-  .use(helmet())
+const server = new Server(routes)
+server.useGlobalMiddleware(cors({
+  origin: process.env.NODE_ENV === 'development' 
+    ? ['http://localhost:3000'] 
+    : [process.env.NUXT_PUBLIC_APP_URL],
+  credentials: true
+}))
+server.useGlobalMiddleware(helmet())
 
-export const handler = app.handler
+export const handler = server.fetch
 ```
+
+> **新框架用法说明**：
+> - 不再使用 `createHandler` 函数
+> - 使用 `Server` 类创建服务器实例
+> - 全局中间件使用 `server.useGlobalMiddleware()` 方法
 
 ## 定义 API 路由
 
 ```typescript
 // server/api/routes.ts
-import { defineRoutes, createHandler, err, Type } from 'vafast'
+import { defineRoute, defineRoutes, err, Type } from 'vafast'
 
 export const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/api/products',
-    handler: createHandler(async () => {
+    handler: async () => {
       // 模拟数据库查询
       const products = [
         { id: 1, name: 'Product 1', price: 99.99, description: 'Amazing product' },
@@ -74,13 +79,20 @@ export const routes = defineRoutes([
       ]
       
       return { products }
-    })
-  },
+    }
+  }),
   
-  {
+  defineRoute({
     method: 'POST',
     path: '/api/products',
-    handler: createHandler(async ({ body }) => {
+    schema: {
+      body: Type.Object({
+        name: Type.String({ minLength: 1 }),
+        price: Type.Number({ minimum: 0 }),
+        description: Type.Optional(Type.String())
+      })
+    },
+    handler: async ({ body }) => {
       // 创建新产品
       const newProduct = {
         id: Date.now(),
@@ -89,18 +101,18 @@ export const routes = defineRoutes([
       }
       
       return { product: newProduct }
-    }),
-    body: Type.Object({
-      name: Type.String({ minLength: 1 }),
-      price: Type.Number({ minimum: 0 }),
-      description: Type.Optional(Type.String())
-    })
-  },
+    }
+  }),
   
-  {
+  defineRoute({
     method: 'GET',
     path: '/api/products/:id',
-    handler: createHandler(async ({ params }) => {
+    schema: {
+      params: Type.Object({
+        id: Type.String({ pattern: '^\\d+$' })
+      })
+    },
+    handler: async ({ params }) => {
       const productId = parseInt(params.id)
       
       // 模拟数据库查询
@@ -116,16 +128,13 @@ export const routes = defineRoutes([
       }
       
       return { product }
-    }),
-    params: Type.Object({
-      id: Type.String({ pattern: '^\\d+$' })
-    })
-  },
+    }
+  }),
   
-  {
+  defineRoute({
     method: 'PUT',
     path: '/api/products/:id',
-    handler: createHandler(async ({ params, body }) => {
+    handler: async ({ params, body }) => {
       const productId = parseInt(params.id)
       
       // 模拟数据库更新
@@ -136,32 +145,36 @@ export const routes = defineRoutes([
       }
       
       return { product: updatedProduct }
-    }),
-    params: Type.Object({
-      id: Type.String({ pattern: '^\\d+$' })
-    }),
-    body: Type.Object({
-      name: Type.Optional(Type.String({ minLength: 1 })),
-      price: Type.Optional(Type.Number({ minimum: 0 })),
-      description: Type.Optional(Type.String())
-    })
-  },
+    },
+    schema: {
+      params: Type.Object({
+        id: Type.String({ pattern: '^\\d+$' })
+      }),
+      body: Type.Object({
+        name: Type.Optional(Type.String({ minLength: 1 })),
+        price: Type.Optional(Type.Number({ minimum: 0 })),
+        description: Type.Optional(Type.String())
+      })
+    }
+  }),
   
-  {
+  defineRoute({
     method: 'DELETE',
     path: '/api/products/:id',
-    handler: createHandler(async ({ params }) => {
+    handler: async ({ params }) => {
       const productId = parseInt(params.id)
       
       // 模拟数据库删除
       console.log(`Deleting product ${productId}`)
       
       return { success: true }
-    }),
-    params: Type.Object({
-      id: Type.String({ pattern: '^\\d+$' })
-    })
-  }
+    },
+    schema: {
+      params: Type.Object({
+        id: Type.String({ pattern: '^\\d+$' })
+      })
+    }
+  })
 ])
 ```
 
@@ -839,17 +852,17 @@ async function verifyToken(token: string) {
 
 ```typescript
 // server/api/routes.ts
-import { defineRoutes, createHandler } from 'vafast'
+import { defineRoute, defineRoutes } from 'vafast'
 import { authMiddleware } from './middleware/auth'
 
 export const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/api/profile',
-    handler: createHandler(async ({ request }) => {
+    handler: async ({ request }) => {
       const user = (request as AuthenticatedRequest).user
       return { user }
-    }),
+    },
     middleware: [authMiddleware]
   }
 ])

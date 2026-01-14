@@ -170,7 +170,7 @@ const notes: Note[] = []
 现在让我们创建我们的 API 路由：
 
 ```typescript
-import { Server, defineRoutes, createHandler, serve, Type, json, err } from 'vafast'
+import { Server, defineRoute, defineRoutes, serve, Type, json, err } from 'vafast'
 
 interface Note {
   id: string
@@ -190,17 +190,17 @@ const NoteSchema = Type.Object({
 
 const routes = defineRoutes([
   // 获取所有笔记
-  {
+  defineRoute({
     method: 'GET',
     path: '/notes',
-    handler: createHandler(() => notes)
-  },
+    handler: () => notes
+  }),
   
   // 获取单个笔记
-  {
+  defineRoute({
     method: 'GET',
     path: '/notes/:id',
-    handler: createHandler(({ params }) => {
+    handler: ({ params }) => {
       const note = notes.find(n => n.id === params.id)
       
       if (!note) {
@@ -208,60 +208,56 @@ const routes = defineRoutes([
       }
       
       return note
-    })
-  },
+    }
+  }),
   
   // 创建笔记
-  {
+  defineRoute({
     method: 'POST',
     path: '/notes',
-    handler: createHandler(
-      { body: NoteSchema },
-      ({ body }) => {
-        const note: Note = {
-          id: Date.now().toString(),
-          title: body.title,
-          content: body.content,
-          createdAt: new Date(),
-          updatedAt: new Date()
-        }
-        
-        notes.push(note)
-        return json(note, 201)  // 201 Created
+    schema: { body: NoteSchema },
+    handler: ({ body }) => {
+      const note: Note = {
+        id: Date.now().toString(),
+        title: body.title,
+        content: body.content,
+        createdAt: new Date(),
+        updatedAt: new Date()
       }
-    )
-  },
+      
+      notes.push(note)
+      return json(note, 201)  // 201 Created
+    }
+  }),
   
   // 更新笔记
-  {
+  defineRoute({
     method: 'PUT',
     path: '/notes/:id',
-    handler: createHandler(
-      { body: NoteSchema },
-      ({ params, body }) => {
-        const noteIndex = notes.findIndex(n => n.id === params.id)
-        
-        if (noteIndex === -1) {
-          throw err.notFound('Note not found')
-        }
-        
-        notes[noteIndex] = {
-          ...notes[noteIndex],
-          title: body.title,
-          content: body.content,
-          updatedAt: new Date()
-        }
-        
-        return notes[noteIndex]
+    schema: { body: NoteSchema },
+    handler: ({ params, body }) => {
+      const noteIndex = notes.findIndex(n => n.id === params.id)
+      
+      if (noteIndex === -1) {
+        throw err.notFound('Note not found')
       }
-    )
-  },
+      
+      notes[noteIndex] = {
+        ...notes[noteIndex],
+        title: body.title,
+        content: body.content,
+        updatedAt: new Date()
+      }
+      
+      return notes[noteIndex]
+    }
+  }),
   
   // 删除笔记
-  {
+  defineRoute({
     method: 'DELETE',
     path: '/notes/:id',
-    handler: createHandler(({ params }) => {
+    handler: ({ params }) => {
       const noteIndex = notes.findIndex(n => n.id === params.id)
       
       if (noteIndex === -1) {
@@ -270,8 +266,8 @@ const routes = defineRoutes([
       
       notes.splice(noteIndex, 1)
       return null  // 204 No Content
-    })
-  }
+    }
+  })
 ])
 
 const server = new Server(routes)
@@ -330,7 +326,9 @@ curl -X DELETE http://localhost:3000/notes/<id>
 ### 1. 日志中间件
 
 ```typescript
-const logMiddleware = async (req: Request, next: () => Promise<Response>) => {
+import { defineMiddleware } from 'vafast'
+
+const logMiddleware = defineMiddleware(async (req, next) => {
   const start = Date.now()
   console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`)
   
@@ -340,15 +338,19 @@ const logMiddleware = async (req: Request, next: () => Promise<Response>) => {
   console.log(`Response: ${response.status} (${duration}ms)`)
   
   return response
-}
+})
 ```
+
+> **新框架用法说明**：
+> - 中间件使用 `defineMiddleware` 定义，支持类型注入
+> - 中间件签名：`(req: Request, next: () => Promise<Response>) => Promise<Response>`
 
 ### 2. 错误处理中间件
 
 ```typescript
-import { json } from 'vafast'
+import { defineMiddleware, json } from 'vafast'
 
-const errorHandler = async (req: Request, next: () => Promise<Response>) => {
+const errorHandler = defineMiddleware(async (req, next) => {
   try {
     return await next()
   } catch (error) {
@@ -358,19 +360,19 @@ const errorHandler = async (req: Request, next: () => Promise<Response>) => {
       message: error instanceof Error ? error.message : 'Unknown error'
     }, 500)
   }
-}
+})
 ```
 
 ### 3. 使用中间件
 
 ```typescript
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/notes',
     middleware: [logMiddleware, errorHandler],
-    handler: createHandler(() => notes)
-  }
+    handler: () => notes
+  })
   // ... 其他路由
 ])
 ```
@@ -388,7 +390,7 @@ server.use(errorHandler)
 Vafast 内置 TypeBox 进行 Schema 验证，直接从 `vafast` 导入 `Type`：
 
 ```typescript
-import { Server, defineRoutes, createHandler, serve, Type } from 'vafast'
+import { Server, defineRoute, defineRoutes, serve, Type } from 'vafast'
 
 const NoteSchema = Type.Object({
   title: Type.String({ minLength: 1, maxLength: 100 }),
@@ -396,26 +398,24 @@ const NoteSchema = Type.Object({
 })
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'POST',
     path: '/notes',
-    handler: createHandler(
-      { body: NoteSchema },
-      ({ body }) => {
-        // body 已经通过验证，类型安全
-        const note: Note = {
-          id: Date.now().toString(),
-          title: body.title,
-          content: body.content,
-          createdAt: new Date(),
-          updatedAt: new Date()
-        }
-        
-        notes.push(note)
-        return note
+    schema: { body: NoteSchema },
+    handler: ({ body }) => {
+      // body 已经通过验证，类型安全
+      const note: Note = {
+        id: Date.now().toString(),
+        title: body.title,
+        content: body.content,
+        createdAt: new Date(),
+        updatedAt: new Date()
       }
-    )
-  }
+      
+      notes.push(note)
+      return note
+    }
+  })
 ])
 ```
 

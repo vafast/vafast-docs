@@ -125,19 +125,19 @@ my-vafast-app/
 `defineRoutes` 提供更好的类型推断，适合复杂项目：
 
 ```typescript
-import { Server, defineRoutes, createHandler, serve } from 'vafast'
+import { Server, defineRoute, defineRoutes, serve } from 'vafast'
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/',
-    handler: createHandler(() => 'Hello Vafast!')
-  },
-  {
+    handler: () => 'Hello Vafast!'
+  }),
+  defineRoute({
     method: 'GET',
     path: '/health',
-    handler: createHandler(() => ({ status: 'ok', timestamp: Date.now() }))
-  }
+    handler: () => ({ status: 'ok', timestamp: Date.now() })
+  })
 ])
 
 const server = new Server(routes)
@@ -152,16 +152,17 @@ serve({ fetch: server.fetch, port: 3000 }, () => {
 适合快速原型或简单项目：
 
 ```typescript
-import { Server, createHandler, serve } from 'vafast'
+import { Server, defineRoute, defineRoutes, serve } from 'vafast'
 
-const server = new Server([
-  {
+const routes = defineRoutes([
+  defineRoute({
     method: 'GET',
     path: '/',
-    handler: createHandler(() => 'Hello Vafast!')
-  }
+    handler: () => 'Hello Vafast!'
+  })
 ])
 
+const server = new Server(routes)
 serve({ fetch: server.fetch, port: 3000 })
 ```
 
@@ -178,19 +179,19 @@ npm run dev
 ### 简单路由
 
 ```typescript
-import { Server, defineRoutes, createHandler, serve } from 'vafast'
+import { Server, defineRoute, defineRoutes, serve } from 'vafast'
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/',
-    handler: createHandler(() => 'Hello Vafast!')
-  },
-  {
+    handler: () => 'Hello Vafast!'
+  }),
+  defineRoute({
     method: 'GET',
     path: '/users',
-    handler: createHandler(() => ['user1', 'user2', 'user3'])
-  }
+    handler: () => ['user1', 'user2', 'user3']
+  })
 ])
 
 const server = new Server(routes)

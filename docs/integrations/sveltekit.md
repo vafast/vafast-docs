@@ -35,35 +35,34 @@ npm install -D @types/node
 
 ```typescript
 // src/api/server.ts
-import { defineRoutes, createHandler } from 'vafast'
+import { Server } from 'vafast'
 import { cors } from '@vafast/cors'
 import { helmet } from '@vafast/helmet'
 import { routes } from './routes'
 
-export const app = createHandler(routes)
-  .use(cors({
-    origin: process.env.NODE_ENV === 'development' 
-      ? ['http://localhost:5173'] 
-      : [process.env.PUBLIC_APP_URL],
-    credentials: true
-  }))
-  .use(helmet())
+const server = new Server(routes)
+server.useGlobalMiddleware(cors({
+  origin: process.env.NODE_ENV === 'development' 
+    ? ['http://localhost:5173'] 
+    : [process.env.PUBLIC_APP_URL],
+  credentials: true
+}))
+server.useGlobalMiddleware(helmet())
 
-export const handler = app.handler
+export const handler = server.fetch
 ```
 
 ## 定义 API 路由
 
 ```typescript
 // src/api/routes.ts
-import { defineRoutes, createHandler } from 'vafast'
-import { Type } from 'vafast'
+import { defineRoute, defineRoutes, Type } from 'vafast'
 
 export const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/api/todos',
-    handler: createHandler(async () => {
+    handler: async () => {
       // 模拟数据库查询
       const todos = [
         { id: 1, title: 'Learn Vafast', completed: false },
@@ -71,13 +70,19 @@ export const routes = defineRoutes([
       ]
       
       return { todos }
-    })
-  },
+    }
+  }),
   
-  {
+  defineRoute({
     method: 'POST',
     path: '/api/todos',
-    handler: createHandler(async ({ body }) => {
+    schema: {
+      body: Type.Object({
+        title: Type.String({ minLength: 1 }),
+        description: Type.Optional(Type.String())
+      })
+    },
+    handler: async ({ body }) => {
       // 创建新待办事项
       const newTodo = {
         id: Date.now(),
@@ -87,17 +92,23 @@ export const routes = defineRoutes([
       }
       
       return { todo: newTodo }
-    }),
-    body: Type.Object({
-      title: Type.String({ minLength: 1 }),
-      description: Type.Optional(Type.String())
-    })
-  },
+    }
+  }),
   
-  {
+  defineRoute({
     method: 'PUT',
     path: '/api/todos/:id',
-    handler: createHandler(async ({ params, body }) => {
+    schema: {
+      params: Type.Object({
+        id: Type.String({ pattern: '^\\d+$' })
+      }),
+      body: Type.Object({
+        title: Type.Optional(Type.String({ minLength: 1 })),
+        description: Type.Optional(Type.String()),
+        completed: Type.Optional(Type.Boolean())
+      })
+    },
+    handler: async ({ params, body }) => {
       const todoId = parseInt(params.id)
       
       // 模拟数据库更新
@@ -108,30 +119,15 @@ export const routes = defineRoutes([
       }
       
       return { todo: updatedTodo }
-    }),
-    params: Type.Object({
-      id: Type.String({ pattern: '^\\d+$' })
-    }),
-    body: Type.Object({
-      title: Type.Optional(Type.String({ minLength: 1 })),
-      description: Type.Optional(Type.String()),
-      completed: Type.Optional(Type.Boolean())
-    })
-  },
+    }
+  }),
   
-  {
+  defineRoute({
     method: 'DELETE',
     path: '/api/todos/:id',
-    handler: createHandler(async ({ params }) => {
-      const todoId = parseInt(params.id)
-      
-      // 模拟数据库删除
-      console.log(`Deleting todo ${todoId}`)
-      
-      return { success: true }
-    }),
-    params: Type.Object({
-      id: Type.String({ pattern: '^\\d+$' })
+    schema: {
+      params: Type.Object({
+        id: Type.String({ pattern: '^\\d+$' })
     })
   }
 ])
@@ -642,17 +638,18 @@ async function verifyToken(token: string) {
 
 ```typescript
 // src/api/routes.ts
-import { defineRoutes, createHandler } from 'vafast'
+import { defineRoute, defineRoutes } from 'vafast'
 import { authMiddleware } from './middleware/auth'
 
 export const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/api/profile',
-    handler: createHandler(async ({ request }) => {
+    middleware: [authMiddleware],
+    handler: async ({ request }) => {
       const user = (request as AuthenticatedRequest).user
       return { user }
-    }),
+    },
     middleware: [authMiddleware]
   }
 ])

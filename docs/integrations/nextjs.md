@@ -37,34 +37,34 @@ npm install -D @types/node
 
 ```typescript
 // src/api/server.ts
-import { defineRoutes, createHandler } from 'vafast'
+import { Server } from 'vafast'
 import { cors } from '@vafast/cors'
 import { helmet } from '@vafast/helmet'
 import { routes } from './routes'
 
-export const app = createHandler(routes)
-  .use(cors({
-    origin: process.env.NODE_ENV === 'development' 
-      ? ['http://localhost:3000'] 
-      : [process.env.NEXT_PUBLIC_APP_URL],
-    credentials: true
-  }))
-  .use(helmet())
+const server = new Server(routes)
+server.useGlobalMiddleware(cors({
+  origin: process.env.NODE_ENV === 'development' 
+    ? ['http://localhost:3000'] 
+    : [process.env.NEXT_PUBLIC_APP_URL],
+  credentials: true
+}))
+server.useGlobalMiddleware(helmet())
 
-export const handler = app.handler
+export const handler = server.fetch
 ```
 
 ## 定义 API 路由
 
 ```typescript
 // src/api/routes.ts
-import { defineRoutes, createHandler, err, Type } from 'vafast'
+import { defineRoute, defineRoutes, err, Type } from 'vafast'
 
 export const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/api/users',
-    handler: createHandler(async () => {
+    handler: async () => {
       // 模拟数据库查询
       const users = [
         { id: 1, name: 'John Doe', email: 'john@example.com' },
@@ -72,13 +72,19 @@ export const routes = defineRoutes([
       ]
       
       return { users }
-    })
-  },
+    }
+  }),
   
-  {
+  defineRoute({
     method: 'POST',
     path: '/api/users',
-    handler: createHandler(async ({ body }) => {
+    schema: {
+      body: Type.Object({
+        name: Type.String({ minLength: 1 }),
+        email: Type.String({ format: 'email' })
+      })
+    },
+    handler: async ({ body }) => {
       // 创建新用户
       const newUser = {
         id: Date.now(),
@@ -87,17 +93,13 @@ export const routes = defineRoutes([
       }
       
       return { user: newUser }
-    }),
-    body: Type.Object({
-      name: Type.String({ minLength: 1 }),
-      email: Type.String({ format: 'email' })
-    })
-  },
+    }
+  }),
   
-  {
+  defineRoute({
     method: 'GET',
     path: '/api/users/:id',
-    handler: createHandler(async ({ params }) => {
+    handler: async ({ params }) => {
       const userId = parseInt(params.id)
       
       // 模拟数据库查询
@@ -108,11 +110,13 @@ export const routes = defineRoutes([
       }
       
       return { user }
-    }),
-    params: Type.Object({
-      id: Type.String({ pattern: '^\\d+$' })
-    })
-  }
+    },
+    schema: {
+      params: Type.Object({
+        id: Type.String({ pattern: '^\\d+$' })
+      })
+    }
+  })
 ])
 ```
 
@@ -331,19 +335,19 @@ async function verifyToken(token: string) {
 
 ```typescript
 // src/api/routes.ts
-import { defineRoutes, createHandler } from 'vafast'
+import { defineRoute, defineRoutes } from 'vafast'
 import { authMiddleware } from './middleware/auth'
 
 export const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/api/profile',
-    handler: createHandler(async ({ request }) => {
+    handler: async ({ request }) => {
       const user = (request as AuthenticatedRequest).user
       return { user }
-    }),
+    },
     middleware: [authMiddleware]
-  }
+  })
 ])
 ```
 

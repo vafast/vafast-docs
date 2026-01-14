@@ -69,21 +69,21 @@ app.listen(3000)
 ::: code-group
 
 ```ts [Vafast]
-import { Server, defineRoutes, createHandler } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/',
-    handler: createHandler(() => 'Hello World')
-  },
-  {
+    handler: () => 'Hello World'
+  }),
+  defineRoute({
     method: 'POST',
     path: '/id/:id',
-    handler: createHandler(({ params }) => {
+    handler: ({ params }) => {
       return { id: params.id }
-    })
-  }
+    }
+  })
 ])
 
 const server = new Server(routes)
@@ -114,18 +114,22 @@ app.post('/users', (req, res) => { ... })
 **Vafast** 使用配置对象数组：
 ```typescript
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/users',
-    handler: createHandler(() => { ... })
-  },
-  {
+    handler: () => { ... }
+  }),
+  defineRoute({
     method: 'POST',
     path: '/users',
-    handler: createHandler(() => { ... })
-  }
+    handler: () => { ... }
+  })
 ])
 ```
+
+> **新框架用法说明**：
+> - 所有路由必须使用 `defineRoute` 包装
+> - Handler 直接是函数，不再需要 `createHandler` 包装
 
 ### 2. 请求处理
 
@@ -140,13 +144,13 @@ app.get('/user/:id', (req, res) => {
 
 **Vafast** 使用解构参数：
 ```typescript
-{
+defineRoute({
   method: 'GET',
   path: '/user/:id',
-  handler: createHandler(({ params, query }) => {
+  handler: ({ params, query }) => {
     return { id: params.id, query }
-  })
-}
+  }
+})
 ```
 
 ### 3. 中间件系统
@@ -161,14 +165,18 @@ app.get('/admin', authMiddleware, (req, res) => {
 
 **Vafast** 支持全局和路由级中间件：
 ```typescript
-const server = new Server(routes)
-server.use(loggingMiddleware)
+import { defineRoute, defineRoutes, defineMiddleware } from 'vafast'
+
+const loggingMiddleware = defineMiddleware(async (req, next) => {
+  console.log(`${req.method} ${req.url}`)
+  return await next()
+})
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/admin',
-    handler: createHandler(() => 'Admin Panel'),
+    handler: () => 'Admin Panel',
     middleware: [authMiddleware]
   }
 ])
@@ -186,16 +194,19 @@ app.use((err, req, res, next) => {
 
 **Vafast** 支持中间件链中的错误处理：
 ```typescript
-import { json } from 'vafast'
+import { defineMiddleware, json } from 'vafast'
 
-const errorHandler = async (req: Request, next: () => Promise<Response>) => {
+const errorHandler = defineMiddleware(async (req, next) => {
   try {
     return await next()
   } catch (error) {
     return json({ error: error.message }, 500)
   }
-}
+})
 ```
+
+> **新框架用法说明**：
+> - 中间件使用 `defineMiddleware` 定义，支持类型注入
 
 ## 迁移步骤
 
@@ -217,13 +228,13 @@ app.get('/api/users', (req, res) => {
 })
 
 // Vafast 风格
-{
+defineRoute({
   method: 'GET',
   path: '/api/users',
-  handler: createHandler(() => {
+  handler: () => {
     return getUsers()
-  })
-}
+  }
+})
 ```
 
 ### 步骤 3: 更新中间件
@@ -241,15 +252,15 @@ const authMiddleware = (req, res, next) => {
 }
 
 // Vafast 中间件
-import { json } from 'vafast'
+import { defineMiddleware, json } from 'vafast'
 
-const authMiddleware = async (req: Request, next: () => Promise<Response>) => {
+const authMiddleware = defineMiddleware(async (req, next) => {
   const token = req.headers.get('authorization')
   if (!token) {
     return json({ error: 'Unauthorized' }, 401)
   }
   return await next()
-}
+})
 ```
 
 ### 步骤 4: 更新错误处理
@@ -311,38 +322,43 @@ app.listen(3000)
 ### Vafast 应用
 
 ```typescript
-import { Server, defineRoutes, createHandler, json, err } from 'vafast'
+import { Server, defineRoute, defineRoutes, json, err } from 'vafast'
 import { cors } from '@vafast/cors'
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/users',
-    handler: createHandler(() => getUsers())
-  },
-  {
+    handler: () => getUsers()
+  }),
+  defineRoute({
     method: 'POST',
     path: '/users',
-    handler: createHandler(({ body }) => json(createUser(body), 201))
-  },
-  {
+    handler: ({ body }) => json(createUser(body), 201)
+  }),
+  defineRoute({
     method: 'GET',
     path: '/users/:id',
-    handler: createHandler(({ params }) => {
+    handler: ({ params }) => {
       const user = getUserById(params.id)
       if (!user) {
         throw err.notFound('User not found')
       }
       return user
-    })
-  }
+    }
+  })
 ])
 
 const server = new Server(routes)
-server.use(cors())
+server.useGlobalMiddleware(cors())
 
 export default { fetch: server.fetch }
 ```
+
+> **新框架用法说明**：
+> - 所有路由使用 `defineRoute` 包装
+> - Handler 直接是函数，不再需要 `createHandler`
+> - 全局中间件使用 `server.useGlobalMiddleware()`
 
 ## 优势对比
 
