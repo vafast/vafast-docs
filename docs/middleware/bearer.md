@@ -99,40 +99,36 @@ interface BearerOptions {
 ### 1. 基本认证检查
 
 ```typescript
-import { bearer, createTypedHandler } from '@vafast/bearer'
+import { defineRoute, defineRoutes } from 'vafast'
+import { bearer } from '@vafast/bearer'
+import { err } from 'vafast'
 
-const routes = [
-  {
+const routes = defineRoutes([
+  defineRoute({
     method: 'GET',
     path: '/protected',
-    handler: createTypedHandler({}, ({ bearer }) => {
-      if (!bearer) {
-        return {
-          status: 401,
-          error: 'Unauthorized',
-          message: 'Bearer token required'
-        }
+    middleware: [bearer()],
+    handler: ({ bearer: bearerToken }) => {
+      if (!bearerToken) {
+        throw err.unauthorized('Bearer token required')
       }
       
       // 验证令牌逻辑
-      if (!isValidToken(bearer)) {
-        return {
-          status: 401,
-          error: 'Unauthorized',
-          message: 'Invalid token'
-        }
+      if (!isValidToken(bearerToken)) {
+        throw err.unauthorized('Invalid token')
       }
       
-      return { message: 'Access granted', user: getUserFromToken(bearer) }
-    })
-  }
-]
+      return { message: 'Access granted', user: getUserFromToken(bearerToken) }
+    }
+  })
+])
 ```
 
 ### 2. 自定义令牌提取
 
 ```typescript
-import { bearer, createTypedHandler } from '@vafast/bearer'
+import { defineRoute, defineRoutes } from 'vafast'
+import { bearer } from '@vafast/bearer'
 
 // 自定义令牌提取配置
 const customBearer = bearer({
@@ -143,51 +139,51 @@ const customBearer = bearer({
   }
 })
 
-const routes = [
-  {
+const routes = defineRoutes([
+  defineRoute({
     method: 'POST',
     path: '/login',
-    handler: createTypedHandler({}, ({ bearer }) => {
+    middleware: [customBearer],
+    handler: ({ bearer: bearerToken }) => {
       // 现在可以从自定义字段中获取令牌
-      return { receivedToken: bearer }
-    })
-  }
-]
+      return { receivedToken: bearerToken }
+    }
+  })
+])
 
 const server = new Server(routes)
 
 export default {
-  fetch: (req: Request) => {
-    return customBearer(req, () => server.fetch(req))
-  }
+  fetch: server.fetch
 }
 ```
 
 ### 3. 中间件链式应用
 
 ```typescript
-import { bearer, createTypedHandler } from '@vafast/bearer'
+import { defineRoute, defineRoutes } from 'vafast'
+import { bearer } from '@vafast/bearer'
 import { cors } from '@vafast/cors'
 
-const routes = [
-  {
+const routes = defineRoutes([
+  defineRoute({
     method: 'GET',
     path: '/api/user',
-    handler: createTypedHandler({}, ({ bearer }) => {
-      return { user: getUserProfile(bearer) }
-    })
-  }
-]
+    middleware: [bearer()],
+    handler: ({ bearer: bearerToken }) => {
+      return { user: getUserProfile(bearerToken) }
+    }
+  })
+])
 
 const server = new Server(routes)
 
+// 使用 server.useGlobalMiddleware() 应用全局中间件（推荐）
+server.useGlobalMiddleware(cors())
+server.useGlobalMiddleware(bearer())
+
 export default {
-  fetch: (req: Request) => {
-    // 应用多个中间件
-    return cors()(req, () => {
-      return bearer()(req, () => server.fetch(req))
-    })
-  }
+  fetch: server.fetch
 }
 ```
 
@@ -216,18 +212,26 @@ const routes = [
 
 const server = new Server(routes)
 
+// 方式一：使用 server.useGlobalMiddleware()（推荐，适用于所有路由）
+server.useGlobalMiddleware(bearer())
+
 export default {
-  fetch: (req: Request) => {
-    const url = new URL(req.url)
-    
-    // 只为私有端点应用 bearer 中间件
-    if (url.pathname.startsWith('/private')) {
-      return bearer()(req, () => server.fetch(req))
-    }
-    
-    return server.fetch(req)
-  }
+  fetch: server.fetch
 }
+
+// 方式二：条件应用（高级用法，仅在特殊场景下使用）
+// export default {
+//   fetch: (req: Request) => {
+//     const url = new URL(req.url)
+//     
+//     // 只为私有端点应用 bearer 中间件
+//     if (url.pathname.startsWith('/private')) {
+//       return bearer()(req, () => server.fetch(req))
+//     }
+//     
+//     return server.fetch(req)
+//   }
+// }
 ```
 
 ## 完整示例

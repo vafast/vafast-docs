@@ -85,7 +85,7 @@ const pinoLogger = pino({
   }
 })
 
-server.use(requestLogger({
+server.useGlobalMiddleware(requestLogger({
   logger: pinoLogger
 }))
 ```

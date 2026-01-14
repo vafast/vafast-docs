@@ -800,8 +800,8 @@ describe('Vafast Helmet Security Headers', () => {
       },
     })
 
-    const app = new Server([
-      {
+    const app = new Server(defineRoutes([
+      defineRoute({
         method: 'GET',
         path: '/',
         middleware: [helmet],

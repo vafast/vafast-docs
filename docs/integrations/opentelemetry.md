@@ -42,9 +42,12 @@ server.useGlobalMiddleware(opentelemetry({
 OpenTelemetry 中间件支持丰富的配置选项：
 
 ```typescript
+import { Server } from 'vafast'
 import { opentelemetry } from '@vafast/opentelemetry'
 
-app.use(opentelemetry({
+const server = new Server(routes)
+
+server.useGlobalMiddleware(opentelemetry({
   // 服务信息
   serviceName: 'my-vafast-app',
   serviceVersion: '1.0.0',
@@ -170,9 +173,12 @@ const routes = defineRoutes([
 中间件自动收集关键指标：
 
 ```typescript
+import { Server } from 'vafast'
 import { opentelemetry } from '@vafast/opentelemetry'
 
-app.use(opentelemetry({
+const server = new Server(routes)
+
+server.useGlobalMiddleware(opentelemetry({
   metrics: {
     enabled: true,
     exporter: {
@@ -196,9 +202,12 @@ app.use(opentelemetry({
 OpenTelemetry 中间件提供结构化日志：
 
 ```typescript
+import { Server } from 'vafast'
 import { opentelemetry } from '@vafast/opentelemetry'
 
-app.use(opentelemetry({
+const server = new Server(routes)
+
+server.useGlobalMiddleware(opentelemetry({
   logging: {
     enabled: true,
     level: 'info',
@@ -215,11 +224,13 @@ app.use(opentelemetry({
 根据环境配置 OpenTelemetry：
 
 ```typescript
+import { Server } from 'vafast'
 import { opentelemetry } from '@vafast/opentelemetry'
 
+const server = new Server(routes)
 const isDevelopment = process.env.NODE_ENV === 'development'
 
-app.use(opentelemetry({
+server.useGlobalMiddleware(opentelemetry({
   serviceName: 'my-vafast-app',
   serviceVersion: process.env.APP_VERSION || '1.0.0',
   
@@ -255,7 +266,12 @@ app.use(opentelemetry({
 ### Jaeger 追踪
 
 ```typescript
-app.use(opentelemetry({
+import { Server } from 'vafast'
+import { opentelemetry } from '@vafast/opentelemetry'
+
+const server = new Server(routes)
+
+server.useGlobalMiddleware(opentelemetry({
   tracing: {
     exporter: {
       type: 'otlp',
@@ -268,7 +284,12 @@ app.use(opentelemetry({
 ### Prometheus 指标
 
 ```typescript
-app.use(opentelemetry({
+import { Server } from 'vafast'
+import { opentelemetry } from '@vafast/opentelemetry'
+
+const server = new Server(routes)
+
+server.useGlobalMiddleware(opentelemetry({
   metrics: {
     exporter: {
       type: 'prometheus',
@@ -282,7 +303,12 @@ app.use(opentelemetry({
 ### Grafana Loki 日志
 
 ```typescript
-app.use(opentelemetry({
+import { Server } from 'vafast'
+import { opentelemetry } from '@vafast/opentelemetry'
+
+const server = new Server(routes)
+
+server.useGlobalMiddleware(opentelemetry({
   logging: {
     exporter: {
       type: 'otlp',
@@ -297,7 +323,12 @@ app.use(opentelemetry({
 OpenTelemetry 中间件经过优化，对性能影响最小：
 
 ```typescript
-app.use(opentelemetry({
+import { Server } from 'vafast'
+import { opentelemetry } from '@vafast/opentelemetry'
+
+const server = new Server(routes)
+
+server.useGlobalMiddleware(opentelemetry({
   tracing: {
     sampler: {
       type: 'traceidratio',

@@ -84,11 +84,14 @@ requestId({
 结合 Logger 使用，实现完整的请求追踪：
 
 ```typescript
+import { Server } from 'vafast'
 import { requestId } from '@vafast/request-id'
 import { logger } from '@vafast/logger'
 
-server.use(requestId())
-server.use(logger({
+const server = new Server(routes)
+
+server.useGlobalMiddleware(requestId())
+server.useGlobalMiddleware(logger({
   format: ({ method, path, status, duration, requestId }) => {
     return `[${requestId}] ${method} ${path} ${status} ${duration}ms`
   }

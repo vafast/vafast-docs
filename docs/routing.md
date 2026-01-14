@@ -265,7 +265,7 @@ const routes = defineRoutes([
 
 ```typescript
 const routes = defineRoutes([
-  {
+  defineRoute({
     path: '/api',
     middleware: [logMiddleware], // 应用到所有子路由
     children: [
@@ -275,7 +275,7 @@ const routes = defineRoutes([
         handler: () => ({ message: 'Users' })
       })
     ]
-  }
+  })
 ])
 ```
 
@@ -583,6 +583,20 @@ export const defineRouteWithAppId = withContext<AppContext>()
 export const defineOptionalAuthRoute = withContext<{ userInfo?: UserInfo }>()
 ```
 
+#### 为什么需要多个路由定义器？
+
+在实际项目中，不同的路由需要不同的上下文组合：
+
+- **`defineAuthRoute`**：只需要用户信息（如个人资料、设置）
+- **`defineAuthRouteWithAppId`**：需要用户信息 + 应用ID（如应用管理、应用内操作）
+- **`defineRouteWithAppId`**：只需要应用ID（如公开的应用信息查询）
+- **`defineOptionalAuthRoute`**：可能有/没有用户信息（如内容列表，登录用户看到更多）
+
+通过创建多个路由定义器，你可以：
+1. **按需组合上下文**：根据路由的实际需求选择合适的路由定义器
+2. **类型精确匹配**：每个路由定义器只包含需要的上下文类型，避免类型冗余
+3. **代码可读性**：通过命名就能知道路由需要什么上下文，无需查看实现细节
+
 #### 使用示例
 
 ```typescript
@@ -636,14 +650,49 @@ export const appsRoutes = defineRoutes([
 ])
 ```
 
+#### 为什么需要多个路由定义器？
+
+在实际项目中，不同的路由需要不同的上下文组合：
+
+- **`defineAuthRoute`**：只需要用户信息（如个人资料、设置）
+- **`defineAuthRouteWithAppId`**：需要用户信息 + 应用ID（如应用管理、应用内操作）
+- **`defineRouteWithAppId`**：只需要应用ID（如公开的应用信息查询）
+- **`defineOptionalAuthRoute`**：可能有/没有用户信息（如内容列表，登录用户看到更多）
+
+通过创建多个路由定义器，你可以：
+1. **按需组合上下文**：根据路由的实际需求选择合适的路由定义器
+2. **类型精确匹配**：每个路由定义器只包含需要的上下文类型，避免类型冗余
+3. **代码可读性**：通过命名就能知道路由需要什么上下文，无需查看实现细节
+
+#### 特性
+
+`withContext` 具有以下特性：
+
+1. **零运行时开销**：`withContext` 只是类型层面的包装，编译后和普通 `defineRoute` 完全相同，不会影响运行时性能
+2. **类型自动合并**：如果路由同时使用多个中间件，上下文类型会自动合并
+3. **支持嵌套使用**：可以在不同的路由层级使用不同的 `withContext`，类型会正确传递
+4. **TypeScript 原生支持**：完全基于 TypeScript 的类型系统，无需额外的运行时类型检查
+
+#### 为什么不能自动推断？
+
+这是 TypeScript 的限制。TypeScript 只能在**同一个函数调用**中推断泛型类型，无法跨函数调用传递类型信息。
+
+在嵌套路由中：
+- `defineRoute({ path: '/api', middleware: [authMiddleware], children: [...] })` 是一个函数调用
+- `children` 中的 `defineRoute({ ... })` 是另一个独立的函数调用
+- TypeScript 无法在第二个函数调用中感知第一个函数调用中的 `middleware` 类型
+
+`withContext` 通过预设上下文类型解决了这个问题，让子路由能够"记住"父级中间件注入的类型。
+
 #### 优势
 
 1. **类型安全**：子路由自动获得父级中间件注入的上下文类型
 2. **代码复用**：封装一次，多处使用
 3. **清晰明确**：通过命名就能知道路由需要什么上下文
 4. **易于维护**：上下文类型集中管理，修改时只需更新一处
+5. **零运行时开销**：纯类型层面的实现，不影响性能
 
-> 📖 更多详情请查看 [withContext 使用指南](/essential/with-context)（如果存在）或参考框架源码。
+> 📖 更多详情请查看 [中间件指南 - 父级中间件类型注入](/middleware#父级中间件类型注入withcontext)
 
 ## 路由类型总结
 

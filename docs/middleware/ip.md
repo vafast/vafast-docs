@@ -246,7 +246,7 @@ const routes = [
 ])
 
 const server = new Server(routes)
-export default { fetch: (req: Request) => server.fetch(req) }
+export default { fetch: server.fetch }
 ```
 
 ### 4. 条件 IP 获取
@@ -347,7 +347,7 @@ const routes = defineRoutes([
 ])
 
 const server = new Server(routes)
-export default { fetch: (req: Request) => server.fetch(req) }
+export default { fetch: server.fetch }
 ```
 
 ## 完整示例

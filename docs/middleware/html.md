@@ -231,7 +231,11 @@ interface HtmlOptions {
 ### 自定义选项
 
 ```typescript
-app.use(html({
+import { Server } from 'vafast'
+import { html } from '@vafast/html'
+
+const server = new Server(routes)
+server.useGlobalMiddleware(html({
   contentType: "text/html; charset=UTF-8",
   autoDetect: true,
   autoDoctype: false
@@ -298,7 +302,7 @@ npm install @kitajs/ts-html-plugin
 如果您正在从 `@vafastjs/html` 迁移，主要变化是：
 
 1. **导入**: 从 `import { html } from '@vafastjs/html'` 改为 `import { html } from '@vafast/html'`
-2. **用法**: 使用 `app.use(html())` 而不是 `app.use(html())`
+2. **用法**: 使用 `server.useGlobalMiddleware(html())` 应用全局中间件
 3. **API**: API 保持不变：`req.html.html()` 和 `req.html.stream()`
 
 ## 完整示例

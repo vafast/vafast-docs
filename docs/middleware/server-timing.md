@@ -137,10 +137,11 @@ const routes = defineRoutes([
 
 const server = new Server(routes)
 
+// 使用 server.useGlobalMiddleware() 应用全局中间件（推荐）
+server.useGlobalMiddleware(timing)
+
 export default {
-  fetch: (req: Request) => {
-    return timing(req, () => server.fetch(req))
-  }
+  fetch: server.fetch
 }
 ```
 
@@ -309,8 +310,8 @@ const routes = defineRoutes([
         ]
       }
     }
-  },
-  {
+  }),
+  defineRoute({
     method: 'GET',
     path: '/api/users',
     handler: async () => {

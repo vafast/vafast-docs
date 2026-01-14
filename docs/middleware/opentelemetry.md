@@ -210,10 +210,11 @@ const routes = defineRoutes([
 
 const server = new Server(routes)
 
+// 使用 server.useGlobalMiddleware() 应用全局中间件（推荐）
+server.useGlobalMiddleware(telemetryMiddleware)
+
 export default {
-    fetch: (req: Request) => {
-        return telemetryMiddleware(req, () => server.fetch(req))
-    }
+    fetch: server.fetch
 }
 
 async function fetchDataFromDatabase() {
@@ -353,10 +354,11 @@ const routes = defineRoutes([
 
 const server = new Server(routes)
 
+// 使用 server.useGlobalMiddleware() 应用全局中间件（推荐）
+server.useGlobalMiddleware(telemetryMiddleware)
+
 export default {
-    fetch: (req: Request) => {
-        return telemetryMiddleware(req, () => server.fetch(req))
-    }
+    fetch: server.fetch
 }
 
 async function getOrder(orderId: string) {

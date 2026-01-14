@@ -381,8 +381,8 @@ const routes = defineRoutes([
 
 ```typescript
 const server = new Server(routes)
-server.use(logMiddleware)
-server.use(errorHandler)
+server.useGlobalMiddleware(logMiddleware)
+server.useGlobalMiddleware(errorHandler)
 ```
 
 ## 添加验证

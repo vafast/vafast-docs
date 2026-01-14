@@ -84,7 +84,7 @@ import { logger } from '@vafast/logger'
 
 const pinoLogger = pino()
 
-server.use(logger({
+server.useGlobalMiddleware(logger({
   output: (message) => pinoLogger.info(message)
 }))
 ```

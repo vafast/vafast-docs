@@ -241,9 +241,12 @@ server.useGlobalMiddleware(swagger({
 Swagger 中间件支持丰富的配置选项：
 
 ```typescript
+import { Server } from 'vafast'
 import { swagger } from '@vafast/swagger'
 
-app.use(swagger({
+const server = new Server(routes)
+
+server.useGlobalMiddleware(swagger({
   documentation: {
     info: {
       title: '我的 API',

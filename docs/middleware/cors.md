@@ -175,7 +175,7 @@ serve({ fetch: server.fetch, port: 3000 })
 ### 指定允许的源
 
 ```typescript
-server.use(cors({
+server.useGlobalMiddleware(cors({
   origin: ['https://example.com', 'https://app.example.com']
 }))
 ```
@@ -183,7 +183,7 @@ server.use(cors({
 ### 使用函数动态判断
 
 ```typescript
-server.use(cors({
+server.useGlobalMiddleware(cors({
   origin: (request) => {
     const origin = request.headers.get('origin')
     return origin?.endsWith('.example.com') ?? false
@@ -194,7 +194,7 @@ server.use(cors({
 ### 限制允许的方法和头
 
 ```typescript
-server.use(cors({
+server.useGlobalMiddleware(cors({
   methods: ['GET', 'POST'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true

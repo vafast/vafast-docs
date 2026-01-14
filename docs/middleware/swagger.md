@@ -393,9 +393,8 @@ const routes = defineRoutes([
   defineRoute({
     method: 'POST',
     path: '/api/users',
-    handler: async (req: Request) => {
-      const userData = await req.json()
-      return { ...userData, id: 'generated-id' }
+    handler: async ({ body }) => {
+      return { ...body, id: 'generated-id' }
     }
   })
 ])
@@ -638,10 +637,9 @@ const routes = defineRoutes([
   defineRoute({
     method: 'POST',
     path: '/api/users',
-    handler: async (req: Request) => {
-      const userData = await req.json()
+    handler: async ({ body }) => {
       return {
-        ...userData,
+        ...body,
         id: `user_${Date.now()}`,
         createdAt: new Date().toISOString()
       }
@@ -821,7 +819,7 @@ describe('Vafast Swagger Plugin', () => {
             provider: 'scalar'
         })
 
-        const app = new Server([
+        const app = new Server(defineRoutes([
             defineRoute({
                 method: 'GET',
                 path: '/api/data',

@@ -733,8 +733,8 @@ describe('Vafast Rate Limit Plugin', () => {
       headers: true
     })
     
-    const app = new Server([
-      {
+    const app = new Server(defineRoutes([
+      defineRoute({
         method: 'POST',
         path: '/',
         handler: () => {

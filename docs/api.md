@@ -313,9 +313,12 @@ Vafast 提供独立的中间件包，功能更丰富：
 #### 示例：CORS
 
 ```typescript
+import { Server } from 'vafast'
 import { cors } from '@vafast/cors'
 
-server.use(cors({
+const server = new Server(routes)
+
+server.useGlobalMiddleware(cors({
   origin: ['https://example.com'],
   credentials: true
 }))
