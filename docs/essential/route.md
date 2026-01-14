@@ -261,6 +261,7 @@ const routes = defineRoutes([
 import { defineRoute, defineRoutes, Type } from 'vafast'
 import type { InferEden } from 'vafast-api-client'
 
+// 定义并处理路由
 const routes = defineRoutes([
   defineRoute({
     method: 'GET',
@@ -276,14 +277,14 @@ const routes = defineRoutes([
   })
 ])
 
-// ✅ 自动推断字面量类型
+// ✅ 类型推断自动工作，无需 as const！
 type Api = InferEden<typeof routes>
 ```
 
 > **新框架用法说明**：
 > - Schema 验证移到路由配置的 `schema` 字段
 > - Handler 函数直接定义，自动获得类型推断
-> - 类型安全完全保留，支持端到端类型推断
+> - `defineRoutes()` 使用 `const T` 泛型，自动保留字面量类型
 
 ### 5. 使用扩展字段
 

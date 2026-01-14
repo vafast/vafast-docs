@@ -148,6 +148,7 @@ function defineRoutes<const T extends readonly Route[]>(routes: T): T
 import { defineRoute, defineRoutes, Type } from 'vafast'
 import type { InferEden } from 'vafast-api-client'
 
+// 定义并处理路由
 const routes = defineRoutes([
   defineRoute({
     method: 'GET',
@@ -163,12 +164,12 @@ const routes = defineRoutes([
   })
 ])
 
-// ✅ 自动推断字面量类型，支持端到端类型推断
+// ✅ 类型推断自动工作，无需 as const！
 type Api = InferEden<typeof routes>
 ```
 
 ::: tip
-`defineRoutes()` 使用 `const T` 泛型，自动将 `'GET'`、`'/users'` 推断为字面量类型，无需 `as const`。
+`defineRoutes()` 使用 `const T` 泛型自动保留字面量类型，直接从其返回值推断类型即可。
 :::
 
 ### Middleware

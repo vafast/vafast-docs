@@ -480,6 +480,7 @@ const routes = defineRoutes([
 import { defineRoute, defineRoutes, Type } from 'vafast'
 import type { InferEden } from 'vafast-api-client'
 
+// 定义并处理路由
 const routes = defineRoutes([
   defineRoute({
     method: 'GET',
@@ -501,7 +502,7 @@ const routes = defineRoutes([
   })
 ])
 
-// ✅ 自动推断字面量类型，无需 as const！
+// ✅ 类型推断自动工作，无需 as const！
 type Api = InferEden<typeof routes>
 ```
 

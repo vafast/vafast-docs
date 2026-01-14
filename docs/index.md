@@ -197,21 +197,18 @@ export type AppRoutes = typeof routes
 import { eden, type InferEden } from '@vafast/api-client'
 import { defineRoute, defineRoutes, Type } from 'vafast'
 
-// 从服务端路由推断类型（使用 as const 保留字面量类型）
-const routeDefinitions = [
+// 定义并处理路由
+const routes = defineRoutes([
   defineRoute({
     method: 'PATCH',
     path: '/profile',
     schema: { body: Type.Object({ age: Type.Number() }) },
     handler: ({ body }) => ({ success: true, data: body })
   })
-] as const
+])
 
-// 服务端使用
-const routes = defineRoutes(routeDefinitions)
-
-// 客户端类型推断
-type Api = InferEden<typeof routeDefinitions>
+// ✅ 类型推断自动工作，无需 as const！
+type Api = InferEden<typeof routes>
 const api = eden<Api>('https://api.example.com')
 
 // 完整类型提示 + 自动补全
@@ -229,21 +226,18 @@ const { data } = await api.profile.patch({
 import { eden, type InferEden } from '@vafast/api-client'
 import { defineRoute, defineRoutes, Type } from 'vafast'
 
-// 定义路由（使用 as const 保留字面量类型）
-const routeDefinitions = [
+// 定义并处理路由
+const routes = defineRoutes([
   defineRoute({
     method: 'PUT',
     path: '/user',
     schema: { body: Type.Object({ username: Type.String(), password: Type.String() }) },
     handler: ({ body }) => ({ success: true, message: '用户创建成功' })
   })
-] as const
+])
 
-// 服务端使用
-const routes = defineRoutes(routeDefinitions)
-
-// 客户端类型推断
-type Api = InferEden<typeof routeDefinitions>
+// ✅ 类型推断自动工作
+type Api = InferEden<typeof routes>
 const api = eden<Api>('http://localhost:3000')
 
 // ❌ 缺少 password 字段 → 编译时报错
