@@ -4,164 +4,206 @@ title: API 客户端概述 - Vafast
 
 # API 客户端概述
 
-Vafast API 客户端是一个专门为 Vafast 框架打造的现代化、类型安全的 API 客户端中间件。它提供了完整的 HTTP 和 WebSocket 支持，让您能够轻松地与各种 API 服务进行交互。
+`@vafast/api-client` 是专为 Vafast 框架设计的类型安全 API 客户端，基于中间件架构，支持 Eden 风格链式调用。
 
 ## 核心特性
 
-### 专为 Vafast 设计
-- 完全兼容 Vafast 框架架构
-- 与 Vafast 的类型系统无缝集成
-- 支持 Vafast 的中间件和验证系统
+- 🎯 **类型安全** - 从 vafast 路由自动推断，或使用 CLI 同步类型
+- 🧅 **中间件架构** - Koa 风格洋葱模型，灵活组合
+- 🔄 **内置重试** - 支持指数退避、条件重试
+- ⏱️ **超时控制** - 请求级别和全局超时
+- 📡 **SSE 支持** - 流式响应、自动重连
+- 🎨 **Go 风格错误** - `{ data, error }` 统一处理
 
-### 类型安全
-- 完整的 TypeScript 类型支持
-- 自动类型推断和检查
-- 编译时错误检测
-
-### 智能路由
-- 自动推断路由类型和方法
-- 支持动态路径参数
-- 智能的查询参数处理
-
-### 自动重试
-- 内置指数退避重试机制
-- 可配置的重试策略
-- 智能的错误处理
-
-### 📡 WebSocket 支持
-- 完整的 WebSocket 客户端
-- 自动重连机制
-- 事件驱动的消息处理
-
-### 🧩 中间件系统
-- 灵活的请求/响应处理
-- 可组合的中间件链
-- 支持异步中间件
-
-### 拦截器
-- 强大的请求/响应拦截能力
-- 支持请求和响应转换
-- 错误处理和日志记录
-
-## 架构设计
-
-Vafast API 客户端采用模块化设计，主要包含以下核心组件：
-
-```
-VafastApiClient
-├── HTTP 客户端
-│   ├── 请求处理器
-│   ├── 响应处理器
-│   ├── 错误处理器
-│   └── 重试机制
-├── WebSocket 客户端
-│   ├── 连接管理
-│   ├── 消息处理
-│   └── 重连机制
-├── 中间件系统
-│   ├── 请求中间件
-│   ├── 响应中间件
-│   └── 错误中间件
-└── 类型系统
-    ├── 类型推断
-    ├── 验证器
-    └── 类型检查
-```
-
-## 核心概念
-
-### 客户端实例
-每个 `VafastApiClient` 实例代表一个独立的 API 客户端，可以配置不同的基础 URL、超时时间、重试策略等。
-
-### 中间件
-中间件是处理请求和响应的函数，可以用于添加认证头、记录日志、处理错误等。中间件按照添加顺序依次执行。
-
-### 拦截器
-拦截器允许您在请求发送前和响应接收后执行自定义逻辑，比如添加认证信息、转换数据格式等。
-
-### 类型安全
-通过 TypeScript 和 Vafast 的类型系统，API 客户端提供完整的类型检查，确保请求和响应的类型安全。
-
-## 使用场景
-
-### 前端应用
-- 与后端 API 交互
-- 处理用户认证
-- 管理应用状态
-
-### 后端服务
-- 微服务间通信
-- 第三方 API 集成
-- 数据同步
-
-### 移动应用
-- 与服务器通信
-- 实时数据更新
-- 离线数据同步
-
-### 桌面应用
-- 本地服务调用
-- 远程 API 访问
-- 数据备份和同步
-
-## 快速开始
-
-### 安装
+## 安装
 
 ```bash
 npm install @vafast/api-client
 ```
 
-### 基础用法
+## 快速开始
 
 ```typescript
-import { VafastApiClient } from '@vafast/api-client'
+import { createClient, eden } from '@vafast/api-client'
 
-// 创建客户端
-const client = new VafastApiClient({
-  baseURL: 'https://api.example.com',
-  timeout: 10000,
-  retries: 3
-})
+// 1. 创建客户端（支持配置对象）
+const client = createClient({
+  baseURL: 'http://localhost:3000',
+  timeout: 30000,
+  headers: { 'X-App-Id': 'my-app' }
+}).use(authMiddleware)
 
-// 发送请求
-const response = await client.get('/users', { page: 1, limit: 10 })
-if (response.error) {
-  console.error('Error:', response.error)
-} else {
-  console.log('Users:', response.data)
+// 2. Eden 类型包装
+const api = eden<Api>(client)
+
+// 3. 发起请求（Go 风格错误处理）
+const { data, error } = await api.users.get({ page: 1 })
+
+if (error) {
+  console.error(`错误 ${error.code}: ${error.message}`)
+  return
+}
+
+console.log(data.users)
+```
+
+## 核心 API
+
+### createClient(config)
+
+创建 HTTP 客户端，支持两种方式：
+
+```typescript
+// 方式 1：只传 baseURL
+const client = createClient('http://localhost:3000')
+  .timeout(30000)
+  .use(authMiddleware)
+
+// 方式 2：传配置对象（推荐）
+const client = createClient({
+  baseURL: 'http://localhost:3000',
+  timeout: 30000,
+  headers: { 'X-App-Id': 'my-app' }
+}).use(authMiddleware)
+```
+
+**配置对象：**
+
+```typescript
+interface ClientConfig {
+  baseURL: string
+  timeout?: number        // 默认 30000ms
+  headers?: Record<string, string>
 }
 ```
 
-### 类型安全客户端
+**链式方法：**
+
+- `.use(middleware)` - 添加中间件
+- `.headers(headers)` - 追加默认请求头
+- `.timeout(ms)` - 设置默认超时
+
+### eden<T>(client)
+
+将 Client 包装为类型安全的 API 调用：
 
 ```typescript
-import { createTypedClient } from '@vafast/api-client'
-import type { Server } from 'vafast'
+import { createApiClient } from './api.generated'  // CLI 生成
 
-// 从 Vafast 服务器创建类型安全客户端
-const typedClient = createTypedClient<Server>(server, {
-  baseURL: 'https://api.example.com'
+const api = createApiClient(client)
+
+// 类型安全调用
+const { data, error } = await api.users.find.post({ current: 1, pageSize: 10 })
+```
+
+## 中间件
+
+中间件采用洋葱模型，`next()` 之前处理请求，之后处理响应：
+
+```typescript
+import { defineMiddleware } from '@vafast/api-client'
+
+const authMiddleware = defineMiddleware(async (ctx, next) => {
+  // ========== 请求拦截 ==========
+  const token = localStorage.getItem('token')
+  if (token) {
+    ctx.headers.set('Authorization', `Bearer ${token}`)
+  }
+  
+  const response = await next()  // 执行请求
+  
+  // ========== 响应拦截 ==========
+  if (response.status === 401) {
+    // Token 过期处理
+    await refreshToken()
+  }
+  
+  return response
 })
+```
 
-// 现在有完整的类型检查
-const users = await typedClient.get('/users', { page: 1, limit: 10 })
-const user = await typedClient.post('/users', { name: 'John', email: 'john@example.com' })
+### 内置中间件
+
+```typescript
+import { retryMiddleware, timeoutMiddleware, loggerMiddleware } from '@vafast/api-client'
+
+const client = createClient({ baseURL: '/api', timeout: 30000 })
+  .use(retryMiddleware({ count: 3, delay: 1000 }))
+  .use(loggerMiddleware({ prefix: '[API]' }))
+```
+
+## 多服务配置
+
+```typescript
+// 公共配置
+const AUTH_API = { baseURL: '/authRestfulApi', timeout: 30000 }
+const ONES_API = { baseURL: '/restfulApi', timeout: 30000 }
+
+// 创建客户端
+const authClient = createClient(AUTH_API)
+const onesClient = createClient(ONES_API).use(appIdMiddleware)
+
+// 使用 CLI 生成的类型安全客户端
+import { createApiClient as createAuthClient } from './types/auth.generated'
+import { createApiClient as createOnesClient } from './types/ones.generated'
+
+export const auth = createAuthClient(authClient)
+export const ones = createOnesClient(onesClient)
+
+// 使用
+const { data, error } = await ones.users.find.post({ current: 1, pageSize: 10 })
+```
+
+## Go 风格错误处理
+
+所有请求返回 `{ data, error }` 格式：
+
+```typescript
+const { data, error } = await api.users.get()
+
+if (error) {
+  // error: { code: number; message: string }
+  switch (error.code) {
+    case 401: redirectToLogin(); break
+    case 403: showPermissionDenied(); break
+    default: showError(error.message)
+  }
+  return
+}
+
+// data 在这里保证非 null
+console.log(data.users)
+```
+
+## SSE 流式响应
+
+```typescript
+const subscription = api.chat.stream.subscribe(
+  { prompt: 'Hello' },
+  {
+    onMessage: (data) => console.log('收到:', data.text),
+    onError: (error) => console.error('错误:', error),
+    onOpen: () => console.log('连接建立'),
+    onClose: () => console.log('连接关闭'),
+  }
+)
+
+// 取消订阅
+subscription.unsubscribe()
+```
+
+## 请求取消
+
+```typescript
+const controller = new AbortController()
+
+const promise = api.users.get({ page: 1 }, { signal: controller.signal })
+
+// 取消请求
+controller.abort()
 ```
 
 ## 相关链接
 
-- [安装指南](/api-client/installation) - 了解如何安装和配置
-- [基础用法](/api-client/fetch) - 学习基本的 HTTP 请求
-- [测试指南](/api-client/test) - 学习如何测试
-
-## 下一步
-
-现在您已经了解了 Vafast API 客户端的基本概念和特性，接下来可以：
-
-1. **安装和配置** - 按照安装指南设置您的项目
-2. **学习基础用法** - 掌握基本的 HTTP 请求方法
-3. **探索高级特性** - 了解中间件、拦截器等高级功能
-4. **构建类型安全应用** - 利用 TypeScript 和 Vafast 的类型系统
-
-如果您有任何问题或需要帮助，请查看我们的 [GitHub 仓库](https://github.com/vafast/vafast) 或 [社区页面](/community)。
+- [CLI 工具](/tools/cli) - 从服务端同步类型
+- [GitHub 仓库](https://github.com/vafast/vafast) - 源码和问题反馈

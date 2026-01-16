@@ -27,8 +27,14 @@ npx vafast sync --url http://localhost:3000
 # 指定输出文件
 npx vafast sync --url http://localhost:3000 --out src/types/api.ts
 
-# 指定契约端点（默认 /__contract__）
-npx vafast sync --url http://localhost:3000 --endpoint /api/contract
+# 指定契约端点
+npx vafast sync --url http://localhost:3000 --endpoint /api-spec
+
+# 去掉路径前缀
+npx vafast sync --url http://localhost:9002 \
+  --endpoint /restfulApi/api-spec \
+  --out src/types/api/ones.generated.ts \
+  --strip-prefix /restfulApi
 ```
 
 #### 选项
@@ -38,6 +44,7 @@ npx vafast sync --url http://localhost:3000 --endpoint /api/contract
 | `--url <url>` | 服务端地址（必填） | - |
 | `--out <path>` | 输出文件路径 | `src/api.generated.ts` |
 | `--endpoint <path>` | 契约接口路径 | `/__contract__` |
+| `--strip-prefix <prefix>` | 去掉路径前缀 | - |
 
 ## 工作流程
 
@@ -49,7 +56,6 @@ npx vafast sync --url http://localhost:3000 --endpoint /api/contract
 import { Server, defineRoute, defineRoutes, getApiSpec } from 'vafast'
 
 const routes = defineRoutes([
-  // 你的路由定义...
   defineRoute({
     method: 'GET',
     path: '/users',
@@ -62,23 +68,13 @@ const routes = defineRoutes([
   }),
 ])
 
-// 添加契约接口（方式一：直接使用 getApiSpec）
+// 添加契约接口
 const allRoutes = [
   ...routes,
   defineRoute({
     method: 'GET',
-    path: '/__contract__',
+    path: '/api-spec',
     handler: getApiSpec  // 直接作为 handler
-  })
-]
-
-// 或方式二：只暴露公开 API
-const allRoutes = [
-  ...routes,
-  defineRoute({
-    method: 'GET',
-    path: '/__contract__',
-    handler: () => getApiSpec(publicRoutes)  // 只暴露公开路由
   })
 ]
 
@@ -89,164 +85,113 @@ export default { fetch: server.fetch }
 ### 2. 客户端同步
 
 ```bash
-npx vafast sync --url http://localhost:3000
+npx vafast sync --url http://localhost:3000 --endpoint /api-spec
 ```
 
 ### 3. 使用生成的类型
 
 ```typescript
-import { eden } from '@vafast/api-client'
-import type { Api } from './api.generated'
+import { createClient } from '@vafast/api-client'
+import { createApiClient } from './api.generated'
 
-const api = eden<Api>('http://localhost:3000')
+// 创建底层客户端
+const client = createClient({
+  baseURL: 'http://localhost:3000',
+  timeout: 30000
+})
 
-// 类型安全的调用
+// 创建类型安全的 API 客户端
+const api = createApiClient(client)
+
+// 类型安全的调用（错误路径会被 TypeScript 检测）
 const { data, error } = await api.users.get({ page: 1 })
+
+// ❌ TypeScript 会报错
+// api.nonExistent.get()  // Error: Property 'nonExistent' does not exist
 ```
 
-## 自动化
+## 生成的类型示例
+
+CLI 生成的文件包含：
+
+```typescript
+import type { ApiResponse, RequestConfig, Client, EdenClient } from '@vafast/api-client'
+import { eden } from '@vafast/api-client'
+
+/** API 契约类型 */
+export type Api = {
+  users: {
+    get: {
+      query: { page?: number }
+      return: any
+    }
+    post: {
+      body: { name?: string }
+      return: any
+    }
+  }
+}
+
+/** API 客户端类型别名 */
+export type ApiClientType = EdenClient<Api>
+
+/**
+ * 创建类型安全的 API 客户端
+ */
+export function createApiClient(client: Client): EdenClient<Api> {
+  return eden<Api>(client)
+}
+```
+
+## 自动化配置
 
 在 `package.json` 中配置脚本：
 
 ```json
 {
   "scripts": {
-    "sync": "vafast sync --url $API_URL",
-    "dev": "npm run sync && vite",
-    "build": "npm run sync && vite build"
+    "sync:auth": "vafast sync --url http://localhost:9003 --endpoint /authRestfulApi/api-spec --out src/types/api/auth.generated.ts --strip-prefix /authRestfulApi",
+    "sync:ones": "vafast sync --url http://localhost:9002 --endpoint /restfulApi/api-spec --out src/types/api/ones.generated.ts --strip-prefix /restfulApi",
+    "sync:types": "npm run sync:auth && npm run sync:ones",
+    "dev": "vite",
+    "build": "npm run sync:types && vite build"
   }
 }
 ```
 
-## 生成的类型示例
-
-### 输入契约
-
-服务端返回的契约格式：
-
-```json
-{
-  "version": "1.0.0",
-  "generatedAt": "2024-01-01T00:00:00.000Z",
-  "routes": [
-    {
-      "method": "GET",
-      "path": "/users",
-      "schema": {
-        "query": {
-          "type": "object",
-          "properties": {
-            "page": { "type": "number" }
-          }
-        }
-      }
-    },
-    {
-      "method": "POST",
-      "path": "/users",
-      "schema": {
-        "body": {
-          "type": "object",
-          "properties": {
-            "name": { "type": "string" }
-          }
-        }
-      }
-    }
-  ]
-}
-```
-
-### 生成的类型
+## 多服务配置示例
 
 ```typescript
-// src/api.generated.ts
-export type Api = {
-  users: {
-    get: {
-      query: { page?: number }
-      return: unknown
-    }
-    post: {
-      body: { name?: string }
-      return: unknown
-    }
-  }
-}
-```
+// src/utils/apiClients.ts
+import { createClient } from '@vafast/api-client'
+import { createApiClient as createAuthClient } from '~/types/api/auth.generated'
+import { createApiClient as createOnesClient } from '~/types/api/ones.generated'
 
-## 使用场景
+// 公共配置
+const AUTH_API = { baseURL: '/authRestfulApi', timeout: 30000 }
+const ONES_API = { baseURL: '/restfulApi', timeout: 30000 }
 
-### 多仓库项目
+// 创建客户端
+const authClient = createClient(AUTH_API)
+const onesClient = createClient(ONES_API).use(appIdMiddleware)
 
-当服务端和客户端代码不在同一个仓库时，使用 CLI 工具同步类型：
+// 导出类型安全的 API
+export const auth = createAuthClient(authClient)
+export const ones = createOnesClient(onesClient)
 
-```
-monorepo/
-├── packages/
-│   ├── api-server/     # 服务端代码
-│   └── web-client/     # 客户端代码
-```
-
-**服务端（api-server）：**
-
-```typescript
-// src/routes.ts
-export const routes = defineRoutes([...])
-
-// src/index.ts
-const allRoutes = [
-  ...routes,
-  defineRoute({
-    method: 'GET',
-    path: '/__contract__',
-    handler: getApiSpec
-  })
-]
-```
-
-**客户端（web-client）：**
-
-```bash
-# 在构建前同步类型
-npm run sync  # 调用 vafast sync --url http://api.example.com
-```
-
-### CI/CD 集成
-
-在 CI/CD 流程中自动同步类型：
-
-```yaml
-# .github/workflows/build.yml
-- name: Sync API types
-  run: |
-    npm run sync --url ${{ secrets.API_URL }}
-  
-- name: Build
-  run: npm run build
+// 使用
+const { data, error } = await ones.users.find.post({ current: 1, pageSize: 10 })
 ```
 
 ## 注意事项
 
-1. **返回类型**：当前契约不包含返回类型信息，生成的类型中返回值为 `unknown`。如需完整类型推断，建议使用 monorepo 共享路由定义。
+1. **返回类型**：如果后端未定义 `response` schema，生成的返回类型为 `any`（渐进式类型安全）。建议后端添加 `response` schema 获得完整类型检查。
 
 2. **服务器必须运行**：执行 `sync` 命令时，服务端必须在运行并暴露契约接口。
 
 3. **不要手动修改**：生成的文件会被覆盖，请勿手动修改。
 
-4. **环境变量**：建议使用环境变量管理 API URL：
-
-```bash
-# .env
-API_URL=http://localhost:3000
-
-# package.json
-{
-  "scripts": {
-    "sync": "vafast sync --url $API_URL"
-  }
-}
-```
+4. **类型安全**：生成的 `createApiClient` 返回 `EdenClient<Api>`，TypeScript 会检测错误的 API 路径。
 
 ## 相关链接
 
