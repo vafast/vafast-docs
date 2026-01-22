@@ -69,16 +69,16 @@ export default defineConfig({
             tailwindcss(),
             process.env.NODE_ENV === 'production'
                 ? llmstxt({
-                      description: '高性能 TypeScript Web 框架',
-                      details:
-                          'Vafast 是一个高性能、类型安全的 TypeScript Web 框架，专为现代 Web 应用设计。提供优秀的开发者体验、灵活的中间件系统、组件路由支持和完整的类型安全。',
-                      ignoreFiles: [
-                          'index.md',
-                          'blog/*',
-                          'public/*'
-                      ],
-                      domain: 'https://vafast.dev'
-                  })
+                    description: '高性能 TypeScript Web 框架',
+                    details:
+                        'Vafast 是一个高性能、类型安全的 TypeScript Web 框架，专为现代 Web 应用设计。提供优秀的开发者体验、灵活的中间件系统、组件路由支持和完整的类型安全。',
+                    ignoreFiles: [
+                        'index.md',
+                        'blog/*',
+                        'public/*'
+                    ],
+                    domain: 'https://vafast.dev'
+                })
                 : undefined,
             process.env.ANALYZE === 'true' ? analyzer() : undefined
         ],
@@ -239,6 +239,10 @@ export default defineConfig({
                     {
                         text: '中间件系统',
                         link: '/middleware'
+                    },
+                    {
+                        text: 'SSE 流式响应',
+                        link: '/essential/sse'
                     },
                     {
                         text: '组件路由',

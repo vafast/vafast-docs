@@ -470,6 +470,91 @@ REDIS_URL="redis://localhost:6379"
 OTEL_EXPORTER_OTLP_ENDPOINT="http://localhost:4317"
 ```
 
+## SSE 流式响应
+
+### AI 聊天流式响应
+
+```typescript
+import { createSSEHandler, defineRoute, defineRoutes, Type } from 'vafast'
+import OpenAI from 'openai'
+
+const openai = new OpenAI()
+
+const chatStreamHandler = createSSEHandler(
+  { 
+    query: Type.Object({ 
+      message: Type.String(),
+    }) 
+  },
+  async function* ({ query }) {
+    const stream = await openai.chat.completions.create({
+      model: 'gpt-4',
+      messages: [{ role: 'user', content: query.message }],
+      stream: true,
+    })
+    
+    for await (const chunk of stream) {
+      const content = chunk.choices[0]?.delta?.content
+      if (content) {
+        yield { data: { token: content } }
+      }
+    }
+    
+    yield { event: 'done', data: { message: 'Stream completed' } }
+  }
+)
+
+const routes = defineRoutes([
+  defineRoute({
+    method: 'GET',
+    path: '/chat/stream',
+    schema: {
+      query: Type.Object({ message: Type.String() })
+    },
+    handler: chatStreamHandler
+  })
+])
+```
+
+### 进度更新
+
+```typescript
+import { createSSEHandler, defineRoute, defineRoutes, Type } from 'vafast'
+
+const progressHandler = createSSEHandler(
+  { params: Type.Object({ taskId: Type.String() }) },
+  async function* ({ params }) {
+    const { taskId } = params
+    
+    while (true) {
+      const task = await getTaskStatus(taskId) // 你的业务逻辑
+      
+      yield { data: { 
+        status: task.status,
+        progress: task.progress,
+      }}
+      
+      if (task.status === 'completed' || task.status === 'failed') {
+        return
+      }
+      
+      await new Promise(r => setTimeout(r, 2000))
+    }
+  }
+)
+
+const routes = defineRoutes([
+  defineRoute({
+    method: 'GET',
+    path: '/tasks/:taskId/progress',
+    schema: { params: Type.Object({ taskId: Type.String() }) },
+    handler: progressHandler
+  })
+])
+```
+
+> 📖 详细文档见 [SSE 流式响应](/essential/sse)
+
 ## 最佳实践
 
 1. **错误处理**：始终使用 try-catch 包装异步操作
@@ -483,5 +568,6 @@ OTEL_EXPORTER_OTLP_ENDPOINT="http://localhost:4317"
 
 - [中间件系统](/middleware) - 探索可用的中间件
 - [路由指南](/routing) - 学习如何定义路由
+- [SSE 流式响应](/essential/sse) - Server-Sent Events 详细文档
 - [类型验证](/patterns/type) - 了解类型验证系统
 - [部署指南](/patterns/deploy) - 生产环境部署建议

@@ -75,6 +75,7 @@ export default { port: 3000, fetch: server.fetch }
 - ✅ **可组合的中间件** — 显式组合，无装饰器，无全局污染
 - ✅ **结构化响应** — `{ data, status }` 统一格式，错误也是数据
 - ✅ **内置响应工具** — `json()`、`html()`、`text()` 等，简洁统一
+- ✅ **SSE 流式响应** — 内置 `createSSEHandler`，适用于 AI 聊天、进度更新等场景
 - ✅ **多运行时** — 支持 Node.js、Bun、Deno、Workers 等
 - ✅ **零样板代码** — 一个文件即可运行，可选 `npx create-vafast-app` 快速开始
 - ✅ **类型安全** — 路由、处理器、响应，全部 TypeScript 类型推断

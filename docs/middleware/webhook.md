@@ -77,26 +77,11 @@ export default { fetch: server.fetch }
     // 事件键（自动从路径派生，或手动指定）
     eventKey: 'order.created',
     
-    // 事件名称
-    name: '订单创建',
-    
-    // 事件描述
-    description: '当新订单创建时触发',
-    
     // 排除敏感字段
     exclude: ['password', 'token'],
     
     // 仅包含特定字段
-    include: ['id', 'email', 'name'],
-    
-    // 自定义数据转换
-    transform: (data) => ({
-      ...data,
-      timestamp: Date.now()
-    }),
-    
-    // 触发条件
-    condition: (data) => data.status === 'success'
+    include: ['id', 'email', 'name']
   }
 }
 ```
@@ -112,6 +97,62 @@ export default { fetch: server.fetch }
     return { success: true, user: body }
   },
   webhook: true  // 使用默认配置
+}
+```
+
+## 与 @vafast/auth-middleware 配合使用
+
+`@vafast/auth-middleware` 已内置 webhook 类型支持，无需额外配置即可获得完整类型提示：
+
+```typescript
+import { defineAuthRouteWithApp } from '@vafast/auth-middleware'
+
+// webhook 字段有精确类型提示
+defineAuthRouteWithApp({
+  method: 'POST',
+  path: '/create',
+  webhook: true,  // ✅ boolean
+  middleware: [auth, appValidator],
+  handler: ({ userInfo, app }) => { ... }
+})
+
+// 详细配置也有类型提示
+defineAuthRouteWithApp({
+  method: 'POST',
+  path: '/update',
+  webhook: {
+    eventKey: 'user.updated',
+    exclude: ['password']  // ✅ string[]
+  },
+  middleware: [auth, appValidator],
+  handler: ({ userInfo, app }) => { ... }
+})
+
+// 同时支持自定义扩展字段
+defineAuthRouteWithApp({
+  method: 'POST',
+  path: '/admin',
+  webhook: true,
+  permission: 'admin',    // ✅ 索引签名允许
+  rateLimit: 100,         // ✅ 任意扩展
+  handler: ({ userInfo, app }) => { ... }
+})
+```
+
+### RouteExtensions 类型
+
+`@vafast/auth-middleware` 导出了 `RouteExtensions` 类型，包含：
+
+```typescript
+export interface RouteExtensions {
+  /** Webhook 配置 */
+  readonly webhook?: boolean | {
+    eventKey?: string
+    include?: string[]
+    exclude?: string[]
+  }
+  /** 允许其他自定义扩展 */
+  readonly [key: string]: unknown
 }
 ```
 
