@@ -142,7 +142,12 @@ const routes = defineRoutes([
 
 const server = new Server(routes)
 
-serve({ fetch: server.fetch, port: 3000 }, () => {
+serve({
+  fetch: server.fetch,
+  port: 3000,
+  // 生产环境推荐启用优雅关闭
+  gracefulShutdown: true
+}, () => {
   console.log('Server running on http://localhost:3000')
 })
 ```

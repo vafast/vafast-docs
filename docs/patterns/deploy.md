@@ -229,27 +229,127 @@ export const config = {
 }
 ```
 
+### 优雅关闭（Graceful Shutdown）
+
+在 Kubernetes 等容器环境中，正确处理 SIGTERM 信号非常重要。Vafast 内置优雅关闭支持：
+
+```typescript
+import { Server, serve } from 'vafast'
+
+const server = new Server(routes)
+
+serve({
+  fetch: server.fetch,
+  port: 3000,
+  // 启用优雅关闭
+  gracefulShutdown: {
+    timeout: 30000,  // 最多等待 30 秒
+    onShutdown: () => {
+      console.log('🔄 收到关闭信号，等待现有请求完成...')
+    },
+    onShutdownComplete: () => {
+      console.log('👋 服务器已优雅关闭')
+    }
+  }
+})
+```
+
+::: tip K8s 配置建议
+- 设置 `terminationGracePeriodSeconds` 大于 `gracefulShutdown.timeout`
+- 使用 `preStop` hook 添加短暂延迟，确保服务从负载均衡器移除后再关闭
+:::
+
+### 请求超时配置
+
+防止慢速请求占用资源，推荐在生产环境配置请求超时：
+
+```typescript
+serve({
+  fetch: server.fetch,
+  port: 3000,
+  // 请求超时配置
+  timeout: {
+    requestTimeout: 30000,  // 单个请求最长 30 秒
+    // headersTimeout 和 keepAliveTimeout 使用 Node.js 默认值即可
+  },
+  gracefulShutdown: true
+})
+```
+
+**超时配置说明：**
+
+| 配置 | 默认值 | 说明 |
+|------|--------|------|
+| `requestTimeout` | `0`（无限制） | 单个请求最大处理时间 |
+| `headersTimeout` | Node 默认 60s | 接收请求头超时 |
+| `keepAliveTimeout` | Node 默认 5s | Keep-Alive 空闲超时 |
+
+::: warning 何时需要设置 requestTimeout
+- **有反向代理（Nginx/K8s Ingress）**：代理通常已配置超时，可以不设置
+- **无反向代理**：必须设置（建议 30-120s），防止慢速 DoS 攻击
+:::
+
 ### 健康检查端点
+
+Kubernetes 需要区分 Liveness 和 Readiness 探针：
 
 ```typescript
 import { Server, defineRoute, defineRoutes, serve } from 'vafast'
 
 const routes = defineRoutes([
+  // Liveness: 检查进程是否存活
   defineRoute({
     method: 'GET',
-    path: '/health',
-    handler: () => ({
-      status: 'ok',
-      timestamp: new Date().toISOString(),
-      uptime: process.uptime(),
-      memory: process.memoryUsage()
-    })
+    path: '/health/live',
+    handler: () => ({ status: 'ok' })
+  }),
+  
+  // Readiness: 检查服务是否准备好接收流量
+  defineRoute({
+    method: 'GET',
+    path: '/health/ready',
+    handler: async () => {
+      // 检查依赖服务健康状态
+      const dbHealthy = await checkDatabaseConnection()
+      
+      if (!dbHealthy) {
+        return new Response(
+          JSON.stringify({ status: 'unhealthy', db: 'disconnected' }),
+          { status: 503, headers: { 'Content-Type': 'application/json' } }
+        )
+      }
+      
+      return {
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        memory: process.memoryUsage()
+      }
+    }
   })
 ])
 
 const server = new Server(routes)
 
 serve({ fetch: server.fetch, port: 3000 })
+```
+
+**K8s 探针配置示例：**
+
+```yaml
+livenessProbe:
+  httpGet:
+    path: /health/live
+    port: 3000
+  initialDelaySeconds: 5
+  periodSeconds: 10
+
+readinessProbe:
+  httpGet:
+    path: /health/ready
+    port: 3000
+  initialDelaySeconds: 5
+  periodSeconds: 5
 ```
 
 ### 结构化日志

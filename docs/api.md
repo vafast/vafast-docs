@@ -256,6 +256,272 @@ interface RouteDocs {
 
 ## 服务器配置
 
+### serve()
+
+启动 HTTP 服务器，支持优雅关闭和请求超时配置。
+
+```typescript
+import { Server, serve } from 'vafast'
+
+const server = new Server(routes)
+
+serve({
+  fetch: server.fetch,
+  port: 3000,
+  hostname: '0.0.0.0',
+  gracefulShutdown: true,
+  timeout: { requestTimeout: 30000 }
+}, () => {
+  console.log('Server running on http://localhost:3000')
+})
+```
+
+### ServeOptions
+
+`serve()` 函数的配置选项。
+
+```typescript
+interface ServeOptions {
+  /** fetch 处理函数 */
+  fetch: FetchHandler
+  /** 端口号，默认 3000 */
+  port?: number
+  /** 主机名，默认 0.0.0.0 */
+  hostname?: string
+  /** 错误处理函数 */
+  onError?: (error: Error) => Response | Promise<Response>
+  /** 优雅关闭配置 */
+  gracefulShutdown?: boolean | GracefulShutdownOptions
+  /** 请求超时配置 */
+  timeout?: RequestTimeoutOptions
+  /** 请求体大小限制（字节），默认 1MB，设为 0 不限制 */
+  bodyLimit?: number
+}
+```
+
+**属性：**
+- `fetch`: 请求处理函数（通常是 `server.fetch`）
+- `port`: 服务器端口，默认 3000
+- `hostname`: 服务器主机，默认 `0.0.0.0`
+- `onError`: 全局错误处理函数
+- `gracefulShutdown`: 优雅关闭配置
+- `timeout`: 请求超时配置
+- `bodyLimit`: 请求体大小限制（字节），默认 1MB
+
+### GracefulShutdownOptions
+
+优雅关闭配置，用于在 K8s 等环境中平滑关闭服务。
+
+```typescript
+interface GracefulShutdownOptions {
+  /** 关闭超时时间（毫秒），默认 30000 */
+  timeout?: number
+  /** 关闭前回调 */
+  onShutdown?: () => void | Promise<void>
+  /** 关闭完成回调 */
+  onShutdownComplete?: () => void
+  /** 监听的信号，默认 ['SIGINT', 'SIGTERM'] */
+  signals?: NodeJS.Signals[]
+}
+```
+
+**示例：**
+
+```typescript
+serve({
+  fetch: server.fetch,
+  port: 3000,
+  gracefulShutdown: {
+    timeout: 30000,
+    onShutdown: () => console.log('收到关闭信号，等待请求完成...'),
+    onShutdownComplete: () => console.log('服务器已关闭')
+  }
+})
+```
+
+### RequestTimeoutOptions
+
+请求超时配置，用于防止 DoS 攻击和资源泄漏。
+
+默认行为与 Fastify 和 Node.js 一致：
+- `requestTimeout`: 0（无限制）
+- `headersTimeout`: 使用 Node.js 默认值 60000ms
+- `keepAliveTimeout`: 使用 Node.js 默认值 5000ms
+
+```typescript
+interface RequestTimeoutOptions {
+  /**
+   * 单个请求的最大处理时间（毫秒）
+   * - 默认: 0（无限制）
+   * - 建议: 如果没有反向代理，设置为 30000-120000 以防 DoS
+   */
+  requestTimeout?: number
+  /**
+   * 接收完整请求头的超时时间（毫秒）
+   * - 不设置则使用 Node.js 默认值（60000ms）
+   */
+  headersTimeout?: number
+  /**
+   * Keep-Alive 连接空闲超时时间（毫秒）
+   * - 不设置则使用 Node.js 默认值（5000ms）
+   */
+  keepAliveTimeout?: number
+  /**
+   * 超时时返回的 JSON 响应
+   * - 默认: { code: 504, message: "Request timeout" }
+   */
+  timeoutResponse?: { code: number; message: string }
+}
+```
+
+**示例：**
+
+```typescript
+// 基础配置：只设置请求超时
+serve({
+  fetch: server.fetch,
+  port: 3000,
+  timeout: {
+    requestTimeout: 30000  // 30 秒超时
+  }
+})
+
+// 完整配置
+serve({
+  fetch: server.fetch,
+  port: 3000,
+  timeout: {
+    requestTimeout: 30000,
+    headersTimeout: 60000,
+    keepAliveTimeout: 5000,
+    timeoutResponse: {
+      code: 504,
+      message: '请求超时，请稍后重试'
+    }
+  }
+})
+```
+
+::: tip 何时需要设置 requestTimeout
+- **有反向代理（Nginx/K8s Ingress）**：通常不需要设置，代理会处理超时
+- **无反向代理**：建议设置 30-120 秒，防止慢速 DoS 攻击
+:::
+
+### bodyLimit
+
+请求体大小限制，防止大请求 DoS 攻击。
+
+```typescript
+serve({
+  fetch: server.fetch,
+  port: 3000,
+  bodyLimit: 1048576,  // 1MB（默认值）
+})
+```
+
+**配置说明：**
+
+| 值 | 说明 |
+|------|------|
+| `undefined` | 使用默认值 1MB |
+| `0` | 不限制请求体大小 |
+| `n` | 限制为 n 字节 |
+
+**超过限制时返回：**
+
+```json
+{
+  "code": 413,
+  "message": "Payload Too Large",
+  "limit": 1048576
+}
+```
+
+**常用大小参考：**
+
+```typescript
+bodyLimit: 1024 * 1024,      // 1MB（默认）
+bodyLimit: 10 * 1024 * 1024, // 10MB（文件上传）
+bodyLimit: 100 * 1024,       // 100KB（纯 JSON API）
+bodyLimit: 0,                // 不限制
+```
+
+### trustProxy
+
+信任代理配置，用于在反向代理（Nginx、K8s Ingress、Cloudflare）后获取真实客户端 IP。
+
+```typescript
+serve({
+  fetch: server.fetch,
+  port: 3000,
+  trustProxy: true,  // 信任所有代理
+})
+```
+
+**配置选项：**
+
+| 值 | 说明 |
+|------|------|
+| `true` | 信任所有代理，从 X-Forwarded-For 等头获取 IP |
+| `false` | 不信任代理，使用 socket IP（默认） |
+| `string` | 信任特定 IP 或 CIDR，如 `"127.0.0.1"` 或 `"10.0.0.0/8"` |
+| `string[]` | 信任多个 IP 或 CIDR |
+
+**支持的代理头（按优先级）：**
+
+1. `X-Forwarded-For` - 标准代理头
+2. `X-Real-IP` - Nginx
+3. `X-Client-IP` - Apache
+4. `CF-Connecting-IP` - Cloudflare
+5. `Fastly-Client-IP` - Fastly
+6. `X-Cluster-Client-IP` - GCP
+7. `True-Client-IP` - Akamai & Cloudflare
+8. `Fly-Client-IP` - Fly.io
+9. `X-Forwarded` / `Forwarded-For` / `Forwarded` - RFC 7239
+10. `AppEngine-User-IP` - GCP AppEngine
+11. `CF-Pseudo-IPv4` - Cloudflare IPv6 兼容
+
+**使用方式：**
+
+```typescript
+import type { VafastRequest } from 'vafast'
+
+serve({
+  fetch: (req: VafastRequest) => {
+    // 启用 trustProxy 后，request 对象会附加 ip 和 ips 属性
+    const ip = req.ip;       // 客户端真实 IP（类型安全）
+    const ips = req.ips;     // 代理链中的所有 IP
+    return new Response(`Your IP: ${ip}`);
+  },
+  port: 3000,
+  trustProxy: true,
+})
+```
+
+::: warning 安全提示
+只有当应用部署在可信的反向代理后面时才启用 trustProxy。
+直接暴露到公网时启用会导致 IP 伪造风险。
+:::
+
+### ServeResult
+
+`serve()` 函数的返回值。
+
+```typescript
+interface ServeResult {
+  /** Node.js HTTP Server 实例 */
+  server: HttpServer
+  /** 服务器端口 */
+  port: number
+  /** 服务器主机名 */
+  hostname: string
+  /** 立即关闭服务器 */
+  stop: () => Promise<void>
+  /** 优雅关闭（等待现有请求完成） */
+  shutdown: () => Promise<void>
+}
+```
+
 ### ServerOptions
 
 服务器配置选项。
