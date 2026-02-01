@@ -83,7 +83,7 @@ interface ClientConfig {
 - `.headers(headers)` - 追加默认请求头
 - `.timeout(ms)` - 设置默认超时
 
-### eden<T>(client)
+### eden\<T\>(client)
 
 将 Client 包装为类型安全的 API 调用：
 

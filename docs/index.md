@@ -194,7 +194,7 @@ export type AppRoutes = typeof routes
 <template v-slot:e2e-client>
 
 ```typescript twoslash
-import { eden, type InferEden } from '@vafast/api-client'
+import { eden, createClient, type InferEden } from '@vafast/api-client'
 import { defineRoute, defineRoutes, Type } from 'vafast'
 
 // 定义并处理路由
@@ -209,7 +209,7 @@ const routes = defineRoutes([
 
 // ✅ 类型推断自动工作，无需 as const！
 type Api = InferEden<typeof routes>
-const api = eden<Api>('https://api.example.com')
+const api = eden<Api>(createClient('https://api.example.com'))
 
 // 完整类型提示 + 自动补全
 const { data } = await api.profile.patch({
@@ -223,7 +223,7 @@ const { data } = await api.profile.patch({
 
 ```typescript twoslash
 // @errors: 2345
-import { eden, type InferEden } from '@vafast/api-client'
+import { eden, createClient, type InferEden } from '@vafast/api-client'
 import { defineRoute, defineRoutes, Type } from 'vafast'
 
 // 定义并处理路由
@@ -238,10 +238,9 @@ const routes = defineRoutes([
 
 // ✅ 类型推断自动工作
 type Api = InferEden<typeof routes>
-const api = eden<Api>('http://localhost:3000')
+const api = eden<Api>(createClient('http://localhost:3000'))
 
 // ❌ 缺少 password 字段 → 编译时报错
-// @errors: 2345
 const { data } = await api.user.put({
   username: 'mika'
 })
