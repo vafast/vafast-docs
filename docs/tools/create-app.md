@@ -77,7 +77,7 @@ AI 将自动学习：
 - ✅ Vafast 路由定义模式（`defineRoute` + `defineRoutes`）
 - ✅ TypeBox schema 用法
 - ✅ 中间件编写规范（`defineMiddleware`）
-- ✅ SSE 流式响应（`createSSEHandler`）
+- ✅ SSE 流式响应（`sse: true`）
 - ✅ 错误处理最佳实践（`err` 函数）
 - ✅ API 客户端使用（`@vafast/api-client`）
 

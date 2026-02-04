@@ -656,40 +656,34 @@ const logMiddleware = createMiddleware({
 })
 ```
 
-### createSSEHandler
+### SSE 端点
 
-用于创建 Server-Sent Events (SSE) 流式响应处理器。
+通过 `sse: true` 显式声明 Server-Sent Events (SSE) 流式响应端点。
 
 ```typescript
-import { createSSEHandler, Type } from 'vafast'
+import { defineRoute, Type } from 'vafast'
 
-// 方式 1: 无 Schema
-const handler = createSSEHandler(async function* () {
-  yield { data: { message: 'hello' } }
+// GET + params
+defineRoute({
+  method: 'GET',
+  path: '/stream/:id',
+  sse: true,
+  schema: { params: Type.Object({ id: Type.String() }) },
+  handler: async function* ({ params }) {
+    yield { data: { taskId: params.id } }
+  },
 })
 
-// 方式 2: 带 Schema
-const handler = createSSEHandler(
-  { params: Type.Object({ id: Type.String() }) },
-  async function* ({ params }) {
-    yield { data: { taskId: params.id } }
-  }
-)
-```
-
-**函数签名：**
-
-```typescript
-// 无 Schema
-function createSSEHandler(
-  generator: SSEGenerator
-): SSEHandler
-
-// 带 Schema
-function createSSEHandler<T extends RouteSchema>(
-  schema: T,
-  generator: SSEGenerator<T>
-): SSEHandler<T>
+// POST + body（AI 场景）
+defineRoute({
+  method: 'POST',
+  path: '/chat/stream',
+  sse: true,
+  schema: { body: Type.Object({ prompt: Type.String() }) },
+  handler: async function* ({ body }) {
+    yield { data: { message: 'hello' } }
+  },
+})
 ```
 
 **SSE 事件格式：**
@@ -701,22 +695,6 @@ interface SSEEvent {
   id?: string       // 事件 ID（可选）
   retry?: number    // 重试间隔（可选）
 }
-```
-
-**使用方式：**
-
-支持两种路由定义方式：
-
-```typescript
-// 方式 1: defineRoute（推荐）
-defineRoute({
-  method: 'GET',
-  path: '/stream/:id',
-  handler: createSSEHandler(...)
-})
-
-// 方式 2: route()
-route('GET', '/stream', createSSEHandler(...))
 ```
 
 > 📖 详细文档见 [SSE 流式响应](/essential/sse)

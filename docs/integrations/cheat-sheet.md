@@ -475,43 +475,35 @@ OTEL_EXPORTER_OTLP_ENDPOINT="http://localhost:4317"
 ### AI 聊天流式响应
 
 ```typescript
-import { createSSEHandler, defineRoute, defineRoutes, Type } from 'vafast'
+import { defineRoute, defineRoutes, Type } from 'vafast'
 import OpenAI from 'openai'
 
 const openai = new OpenAI()
 
-const chatStreamHandler = createSSEHandler(
-  { 
-    query: Type.Object({ 
-      message: Type.String(),
-    }) 
-  },
-  async function* ({ query }) {
-    const stream = await openai.chat.completions.create({
-      model: 'gpt-4',
-      messages: [{ role: 'user', content: query.message }],
-      stream: true,
-    })
-    
-    for await (const chunk of stream) {
-      const content = chunk.choices[0]?.delta?.content
-      if (content) {
-        yield { data: { token: content } }
-      }
-    }
-    
-    yield { event: 'done', data: { message: 'Stream completed' } }
-  }
-)
-
 const routes = defineRoutes([
   defineRoute({
-    method: 'GET',
+    method: 'POST',
     path: '/chat/stream',
+    sse: true,  // 显式声明 SSE 端点
     schema: {
-      query: Type.Object({ message: Type.String() })
+      body: Type.Object({ message: Type.String() })
     },
-    handler: chatStreamHandler
+    handler: async function* ({ body }) {
+      const stream = await openai.chat.completions.create({
+        model: 'gpt-4',
+        messages: [{ role: 'user', content: body.message }],
+        stream: true,
+      })
+      
+      for await (const chunk of stream) {
+        const content = chunk.choices[0]?.delta?.content
+        if (content) {
+          yield { data: { token: content } }
+        }
+      }
+      
+      yield { event: 'done', data: { message: 'Stream completed' } }
+    },
   })
 ])
 ```
@@ -519,36 +511,32 @@ const routes = defineRoutes([
 ### 进度更新
 
 ```typescript
-import { createSSEHandler, defineRoute, defineRoutes, Type } from 'vafast'
-
-const progressHandler = createSSEHandler(
-  { params: Type.Object({ taskId: Type.String() }) },
-  async function* ({ params }) {
-    const { taskId } = params
-    
-    while (true) {
-      const task = await getTaskStatus(taskId) // 你的业务逻辑
-      
-      yield { data: { 
-        status: task.status,
-        progress: task.progress,
-      }}
-      
-      if (task.status === 'completed' || task.status === 'failed') {
-        return
-      }
-      
-      await new Promise(r => setTimeout(r, 2000))
-    }
-  }
-)
+import { defineRoute, defineRoutes, Type } from 'vafast'
 
 const routes = defineRoutes([
   defineRoute({
     method: 'GET',
     path: '/tasks/:taskId/progress',
+    sse: true,
     schema: { params: Type.Object({ taskId: Type.String() }) },
-    handler: progressHandler
+    handler: async function* ({ params }) {
+      const { taskId } = params
+      
+      while (true) {
+        const task = await getTaskStatus(taskId) // 你的业务逻辑
+        
+        yield { data: { 
+          status: task.status,
+          progress: task.progress,
+        }}
+        
+        if (task.status === 'completed' || task.status === 'failed') {
+          return
+        }
+        
+        await new Promise(r => setTimeout(r, 2000))
+      }
+    },
   })
 ])
 ```

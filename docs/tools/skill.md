@@ -13,7 +13,7 @@ Skill 是 Claude CLI 的扩展机制，安装后 AI 会自动理解特定框架�
 - ✅ **路由定义** - `defineRoute` + `defineRoutes` 模式
 - ✅ **Schema 验证** - TypeBox 类型定义
 - ✅ **中间件** - `defineMiddleware` 类型安全模式
-- ✅ **SSE** - `createSSEHandler` 流式响应
+- ✅ **SSE** - `sse: true` 流式响应
 - ✅ **错误处理** - Go 风格 `{ data, error }`
 - ✅ **API 客户端** - `@vafast/api-client` 使用
 
@@ -89,16 +89,17 @@ const authMiddleware = defineMiddleware<{ user: User }>(async (req, next) => {
 ### SSE 流式响应
 
 ```typescript
-import { createSSEHandler } from 'vafast'
+import { defineRoute } from 'vafast'
 
 defineRoute({
   method: 'GET',
   path: '/stream',
-  handler: createSSEHandler(async function* (ctx) {
+  sse: true,
+  handler: async function* (ctx) {
     yield { event: 'start', data: {} }
     yield { data: { text: 'chunk' } }
     yield { event: 'end', data: {} }
-  })
+  },
 })
 ```
 
