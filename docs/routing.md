@@ -122,6 +122,71 @@ const routes = defineRoutes([
 ])
 ```
 
+## 路由匹配规则
+
+Vafast 使用 Radix Tree 实现高效路由匹配（O(k) 时间复杂度，k 为路径段数）。
+
+### 路由类型
+
+| 类型 | 语法 | 示例 | 说明 |
+|------|------|------|------|
+| 静态路由 | `/path` | `/users`, `/api/v1/health` | 完全匹配 |
+| 动态参数 | `/:param` | `/users/:id` | 匹配单个路径段，`params.id` |
+| 通配符 | `/*` 或 `/*name` | `/files/*`, `/static/*filepath` | 匹配剩余所有路径 |
+
+### 优先级规则
+
+```
+静态路由 > 动态参数 > 通配符
+```
+
+**注册顺序不影响优先级**：
+
+```typescript
+const routes = defineRoutes([
+  // 乱序注册
+  defineRoute({ method: 'GET', path: '/api/*', handler: wildcardHandler }),
+  defineRoute({ method: 'GET', path: '/api/health', handler: staticHandler }),
+  defineRoute({ method: 'GET', path: '/api/:id', handler: dynamicHandler }),
+])
+
+// GET /api/health      → staticHandler   ✅ 静态优先
+// GET /api/123         → dynamicHandler  ✅ 动态次之
+// GET /api/users/list  → wildcardHandler ✅ 通配符最后
+```
+
+### 同一位置支持不同参数名
+
+不同路由在同一位置可以使用不同的参数名，每个路由独立返回其定义的参数名：
+
+```typescript
+const routes = defineRoutes([
+  defineRoute({
+    method: 'GET',
+    path: '/users/:userId',
+    handler: ({ params }) => params  // { userId: '1' }
+  }),
+  defineRoute({
+    method: 'PUT',
+    path: '/users/:id',
+    handler: ({ params }) => params  // { id: '2' }
+  }),
+  defineRoute({
+    method: 'DELETE',
+    path: '/users/:uid',
+    handler: ({ params }) => params  // { uid: '3' }
+  }),
+])
+
+// GET /users/1    → { userId: '1' }
+// PUT /users/2    → { id: '2' }
+// DELETE /users/3 → { uid: '3' }
+```
+
+::: tip
+参数名冲突时会输出警告（建议保持一致），但不影响功能。
+:::
+
 ## 动态路由
 
 Vafast 支持动态路由参数，允许您捕获 URL 中的变量值。
@@ -149,6 +214,46 @@ defineRoute({
     postId: params.postId
   })
 })
+```
+
+### 通配符路由
+
+通配符 `*` 匹配路径的剩余所有部分：
+
+```typescript
+const routes = defineRoutes([
+  // 匿名通配符
+  defineRoute({
+    method: 'GET',
+    path: '/files/*',
+    handler: ({ params }) => ({
+      path: params['*']  // 'path/to/file.txt'
+    })
+  }),
+  
+  // 命名通配符
+  defineRoute({
+    method: 'GET',
+    path: '/static/*filepath',
+    handler: ({ params }) => ({
+      filepath: params.filepath  // 'assets/css/style.css'
+    })
+  }),
+  
+  // 动态参数 + 通配符混合
+  defineRoute({
+    method: 'GET',
+    path: '/repos/:owner/*path',
+    handler: ({ params }) => ({
+      owner: params.owner,       // 'facebook'
+      path: params.path          // 'src/components/Button.tsx'
+    })
+  })
+])
+
+// GET /files/path/to/file.txt             → { '*': 'path/to/file.txt' }
+// GET /static/assets/css/style.css        → { filepath: 'assets/css/style.css' }
+// GET /repos/facebook/src/components/...  → { owner: 'facebook', path: '...' }
 ```
 
 ### 可选参数
@@ -887,11 +992,15 @@ const postRoutes = getRoutesByMethod('POST')
 
 Vafast 的路由系统提供了：
 
+- ✅ **Radix Tree 路由** - O(k) 时间复杂度的高效路由匹配
+- ✅ **优先级规则** - 静态 > 动态 > 通配符，与 Hono/Fastify 一致
+- ✅ **同一位置不同参数名** - 支持 CRUD 场景下不同方法使用不同参数名
 - ✅ **defineRoutes()** - 自动保留字面量类型，支持端到端类型推断
 - ✅ **defineRoute()** - 推荐的处理器定义方式，提供统一上下文和类型安全
 - ✅ **自动响应转换** - 直接返回数据，无需手动创建 Response
 - ✅ **完整的 HTTP 方法支持** - GET, POST, PUT, DELETE, PATCH, OPTIONS, HEAD
 - ✅ **动态路由参数** - `:id` 必选参数，`:id?` 可选参数
+- ✅ **通配符路由** - `*` 或 `*name` 匹配剩余所有路径
 - ✅ **嵌套路由结构** - children 支持无限嵌套
 - ✅ **灵活的中间件系统** - 路由级和组级中间件
 - ✅ **Schema 验证与类型推导** - 配合 TypeBox 实现运行时验证

@@ -102,24 +102,79 @@ const routes = defineRoutes([
 ])
 ```
 
-## 路由优先级
+## 路由匹配规则
 
-Vafast 使用智能路由匹配算法，静态路径优先于动态路径：
+Vafast 使用 Radix Tree 实现高效路由匹配（O(k) 时间复杂度，k 为路径段数）。
+
+### 路由类型
+
+```typescript
+// 静态路由
+'/users'
+'/api/v1/health'
+
+// 动态参数 (:param)
+'/users/:id'
+'/posts/:postId/comments/:commentId'
+
+// 通配符 (* 或 *name)
+'/files/*'           // 匿名通配符，params['*']
+'/static/*filepath'  // 命名通配符，params['filepath']
+```
+
+### 优先级规则
+
+```
+静态路由 > 动态参数 > 通配符
+```
+
+注册顺序不影响优先级：
+
+```typescript
+const routes = defineRoutes([
+  // 即使先注册动态路由
+  defineRoute({
+    method: 'GET',
+    path: '/users/:id',
+    handler: ({ params }) => `User ${params.id}`
+  }),
+  // 静态路由仍然优先匹配
+  defineRoute({
+    method: 'GET',
+    path: '/users/admin',
+    handler: () => 'Admin user'
+  })
+])
+
+// GET /users/admin → 'Admin user' ✅ 静态优先
+// GET /users/123   → 'User 123'
+```
+
+### 同一位置支持不同参数名
+
+不同路由在同一位置可以使用不同的参数名，每个路由独立返回其定义的参数名：
 
 ```typescript
 const routes = defineRoutes([
   defineRoute({
-    method: 'GET',
-    path: '/users/123',        // 静态路径 - 优先级高
-    handler: () => 'Specific user'
+    method: 'PUT',
+    path: '/sessions/:id',
+    handler: ({ params }) => params  // { id: '123' }
   }),
   defineRoute({
     method: 'GET',
-    path: '/users/:id',        // 动态路径 - 优先级低
-    handler: ({ params }) => `User ${params.id}`
+    path: '/sessions/:sessionId/messages',
+    handler: ({ params }) => params  // { sessionId: '456' }
   })
 ])
+
+// PUT /sessions/123           → params = { id: '123' }
+// GET /sessions/456/messages  → params = { sessionId: '456' }
 ```
+
+::: tip
+参数名冲突时会输出警告（建议保持一致），但不影响功能。
+:::
 
 ## 嵌套路由
 
