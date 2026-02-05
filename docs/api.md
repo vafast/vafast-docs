@@ -699,6 +699,131 @@ interface SSEEvent {
 
 > 📖 详细文档见 [SSE 流式响应](/essential/sse)
 
+## 请求解析工具
+
+Vafast 提供了一系列请求解析函数，用于从请求中提取数据。
+
+### parseBody()
+
+解析请求体，自动根据 Content-Type 处理 JSON、表单等格式。
+
+```typescript
+import { parseBody } from 'vafast'
+
+const handler = async ({ req }) => {
+  const body = await parseBody(req)
+  return { received: body }
+}
+```
+
+**支持的格式：**
+- `application/json` → 解析为 JSON 对象
+- `application/x-www-form-urlencoded` → 解析为对象
+- 其他 → 返回原始文本
+
+**HTTP 方法限制：**
+- GET/HEAD 请求调用此函数返回 `null`（防御性设计）
+- POST、PUT、PATCH、DELETE 正常解析
+
+### parseFormData()
+
+解析 multipart/form-data 格式的表单数据，支持文件上传。
+
+```typescript
+import { parseFormData } from 'vafast'
+
+const handler = async ({ req }) => {
+  const formData = await parseFormData(req)
+  // formData.fields: 普通表单字段
+  // formData.files: 上传的文件
+  return { fields: formData.fields }
+}
+```
+
+**返回类型：**
+
+```typescript
+interface FormData {
+  fields: Record<string, string>
+  files: Record<string, FileInfo>
+}
+
+interface FileInfo {
+  name: string      // 文件名
+  type: string      // MIME 类型
+  size: number      // 文件大小（字节）
+  data: Buffer      // 文件内容
+}
+```
+
+**HTTP 方法限制：**
+- GET/HEAD 请求调用会抛出错误
+- POST、PUT、PATCH、DELETE 正常解析
+
+### parseFile()
+
+解析单个文件上传，适用于只上传一个文件的场景。
+
+```typescript
+import { parseFile } from 'vafast'
+
+const handler = async ({ req }) => {
+  const file = await parseFile(req)
+  await saveFile(file.name, file.data)
+  return { filename: file.name, size: file.size }
+}
+```
+
+**HTTP 方法最佳实践：**
+
+| 方法 | 用途 | 示例 |
+|------|------|------|
+| **POST** | 上传新文件，服务器生成 ID | `POST /files` |
+| **PUT** | 上传到指定位置，或替换文件 | `PUT /files/abc123` |
+
+### parseQuery()
+
+解析 URL 查询参数。
+
+```typescript
+import { parseQuery } from 'vafast'
+
+// URL: /users?page=1&limit=10&filter[name]=john
+const handler = async ({ req }) => {
+  const query = parseQuery(req)
+  // { page: '1', limit: '10', filter: { name: 'john' } }
+  return { query }
+}
+```
+
+### parseHeaders()
+
+解析请求头为对象。
+
+```typescript
+import { parseHeaders } from 'vafast'
+
+const handler = async ({ req }) => {
+  const headers = parseHeaders(req)
+  const token = headers['authorization']
+  return { hasAuth: !!token }
+}
+```
+
+### parseCookies()
+
+解析 Cookie 为对象。
+
+```typescript
+import { parseCookies } from 'vafast'
+
+const handler = async ({ req }) => {
+  const cookies = parseCookies(req)
+  const sessionId = cookies['sessionId']
+  return { sessionId }
+}
+```
+
 ## 响应工具
 
 Vafast 提供简洁的响应工具函数。

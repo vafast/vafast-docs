@@ -228,32 +228,67 @@ server.useGlobalMiddleware(serverTiming())
 
 ### 文件上传
 
+文件上传推荐使用 **POST**（创建新资源）或 **PUT**（替换指定资源）。
+
 ```typescript
-import { defineRoute, defineRoutes } from 'vafast'
+import { defineRoute, defineRoutes, parseFile, parseFormData, err } from 'vafast'
 import { writeFile } from 'node:fs/promises'
 
 const routes = defineRoutes([
+  // 方式1：POST 上传新文件（最常用）
+  // 服务器决定存储位置，返回文件 ID
+  defineRoute({
+    method: 'POST',
+    path: '/files',
+    handler: async ({ req }) => {
+      const file = await parseFile(req)
+      const fileId = crypto.randomUUID()
+      
+      await writeFile(`./uploads/${fileId}-${file.name}`, file.data)
+      
+      return { 
+        id: fileId, 
+        filename: file.name,
+        size: file.size 
+      }
+    }
+  }),
+
+  // 方式2：PUT 上传到指定位置（替换/覆盖）
+  // 客户端指定文件 ID，幂等操作
+  defineRoute({
+    method: 'PUT',
+    path: '/files/:fileId',
+    handler: async ({ req, params }) => {
+      const file = await parseFile(req)
+      
+      await writeFile(`./uploads/${params.fileId}`, file.data)
+      
+      return { 
+        id: params.fileId,
+        filename: file.name,
+        replaced: true 
+      }
+    }
+  }),
+
+  // 方式3：使用原生 formData API
   defineRoute({
     method: 'POST',
     path: '/upload',
-    handler: async ({ request }) => {
-      const formData = await request.formData()
+    handler: async ({ req }) => {
+      const formData = await req.formData()
       const file = formData.get('file') as File
       
-      if (file) {
-        const bytes = await file.arrayBuffer()
-        const buffer = Buffer.from(bytes)
-        
-        // 保存文件
-        await writeFile(`./uploads/${file.name}`, buffer)
-        
-        return { success: true, filename: file.name }
+      if (!file) {
+        throw err.badRequest('未上传文件')
       }
       
-      return new Response(JSON.stringify({ error: 'No file uploaded' }), { 
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      })
+      const bytes = await file.arrayBuffer()
+      const buffer = Buffer.from(bytes)
+      await writeFile(`./uploads/${file.name}`, buffer)
+      
+      return { success: true, filename: file.name }
     }
   })
 ])
