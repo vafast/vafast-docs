@@ -177,20 +177,34 @@ console.log(data.users)
 
 ## SSE 流式响应
 
+SSE 通过**链式调用**实现：普通 HTTP 方法后接 `.sse()`。
+
 ```typescript
-const subscription = api.chat.stream.subscribe(
-  { prompt: 'Hello' },
-  {
-    onMessage: (data) => console.log('收到:', data.text),
-    onError: (error) => console.error('错误:', error),
-    onOpen: () => console.log('连接建立'),
-    onClose: () => console.log('连接关闭'),
-  }
-)
+// POST SSE - AI 对话
+api.chat.stream.post({ messages: [{ role: 'user', content: '你好' }] }).sse({
+  onMessage: (data) => {
+    // data 是服务端 yield 的原始数据
+    if (data.content) process.stdout.write(data.content)
+    if (data.done) console.log('\n[完成]')
+  },
+  onError: (error) => console.error('错误:', error),
+  onOpen: () => console.log('连接建立'),
+  onClose: () => console.log('连接关闭')
+})
+
+// GET SSE - 事件订阅
+api.events.get({ channel: 'news' }).sse({
+  onMessage: (data) => console.log(data)
+})
 
 // 取消订阅
-subscription.unsubscribe()
+const sub = api.events.get({ channel: 'live' }).sse({ onMessage: console.log })
+sub.unsubscribe()
 ```
+
+::: tip SSE 数据格式
+服务端直接 `yield` 的数据会自动作为 `data` 字段发送。客户端通过 `onMessage` 接收解析后的数据，无需额外处理 SSE 格式。
+:::
 
 ## 请求取消
 
