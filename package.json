@@ -18,7 +18,7 @@
         "@number-flow/vue": "^0.4.8",
         "@tailwindcss/vite": "^4.1.11",
         "@vafast/api-client": "^0.2.2",
-        "@vueuse/core": "^13.6.0",
+        "@vueuse/core": "^14.1.0",
         "clsx": "^2.1.1",
         "dayjs": "^1.11.13",
         "medium-zoom": "^1.1.0",
