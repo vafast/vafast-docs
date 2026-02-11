@@ -22,7 +22,7 @@
         "clsx": "^2.1.1",
         "dayjs": "^1.11.13",
         "medium-zoom": "^1.1.0",
-        "motion-v": "^1.6.1",
+        "motion-v": "^1.9.0",
         "shiki": "^3.9.2",
         "tailwindcss": "^4.1.11",
         "vafast": "^0.5.6"
