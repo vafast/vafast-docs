@@ -613,6 +613,7 @@ Vafast 提供独立的中间件包，功能更丰富：
 
 | 包名 | 功能 | 文档 |
 |------|------|------|
+| `@vafast/auth-middleware` | JWT/API Key + app 认证（对接 auth-server） | [查看](/middleware/auth-middleware) |
 | `@vafast/cors` | CORS 跨域处理 | [查看](/middleware/cors) |
 | `@vafast/jwt` | JWT 认证 | [查看](/middleware/jwt) |
 | `@vafast/rate-limit` | 速率限制 | [查看](/middleware/rate-limit) |

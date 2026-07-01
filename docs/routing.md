@@ -650,125 +650,47 @@ const routes = defineRoutes([
 ])
 ```
 
-#### 封装多个路由定义器
+#### 生产项目：@vafast/auth-middleware
 
-在实际项目中，你可以根据不同的上下文需求封装多个路由定义器：
+微服务场景直接使用官方认证包，无需手写 `withContext`：
 
 ```typescript
-// middleware/index.ts
+import { authWithApp, requireUser, defineAuthRouteWithApp } from '@vafast/auth-middleware'
+
+defineRoute({
+  path: '/files',
+  middleware: [authWithApp],
+  children: [
+    defineAuthRouteWithApp({
+      method: 'GET',
+      path: '/list',
+      middleware: [requireUser],
+      handler: ({ userInfo, app }) => ({ userId: userInfo.id, appId: app.id }),
+    }),
+  ],
+})
+```
+
+> 📖 完整 API 见 [Auth Middleware](/middleware/auth-middleware)
+
+#### 自定义 withContext（高级）
+
+自建认证时可手动封装：
+
+```typescript
 import { withContext } from 'vafast'
-import type { UserInfo } from './authenticateJwt'
 
-// 定义上下文类型
-type AuthContext = { userInfo: UserInfo }
-type AuthWithAppContext = { userInfo: UserInfo; appId: string }
-type AppContext = { appId: string }
-
-/**
- * 带 UserInfo 上下文的路由定义器
- * 用于需要认证但不需要 app-id 的路由
- */
-export const defineAuthRoute = withContext<AuthContext>()
-
-/**
- * 带 UserInfo 和 appId 上下文的路由定义器
- * 用于需要认证且需要 app-id 的路由（最常用）
- */
-export const defineAuthRouteWithAppId = withContext<AuthWithAppContext>()
-
-/**
- * 只带 appId 上下文的路由定义器
- * 用于需要 app-id 但不需要 userInfo 的路由
- */
-export const defineRouteWithAppId = withContext<AppContext>()
-
-/**
- * 带可选 UserInfo 上下文的路由定义器
- * 用于可能有/没有认证的路由
- */
-export const defineOptionalAuthRoute = withContext<{ userInfo?: UserInfo }>()
+export const defineAuthRoute = withContext<{ userInfo: UserInfo }>()
+export const defineAuthRouteWithApp = withContext<{ userInfo: UserInfo; app: AppInfo }>()
+export const defineRouteWithApp = withContext<{ app: AppInfo }>()
 ```
 
-#### 为什么需要多个路由定义器？
+路由定义器对照：
 
-在实际项目中，不同的路由需要不同的上下文组合：
-
-- **`defineAuthRoute`**：只需要用户信息（如个人资料、设置）
-- **`defineAuthRouteWithAppId`**：需要用户信息 + 应用ID（如应用管理、应用内操作）
-- **`defineRouteWithAppId`**：只需要应用ID（如公开的应用信息查询）
-- **`defineOptionalAuthRoute`**：可能有/没有用户信息（如内容列表，登录用户看到更多）
-
-通过创建多个路由定义器，你可以：
-1. **按需组合上下文**：根据路由的实际需求选择合适的路由定义器
-2. **类型精确匹配**：每个路由定义器只包含需要的上下文类型，避免类型冗余
-3. **代码可读性**：通过命名就能知道路由需要什么上下文，无需查看实现细节
-
-#### 使用示例
-
-```typescript
-// routes/apps.ts
-import { defineRoutes, defineRoute } from 'vafast'
-import { authenticate, guardAuth, guardUser } from '~/middleware'
-import { defineAuthRoute, defineAuthRouteWithAppId } from '~/middleware'
-
-export const appsRoutes = defineRoutes([
-  defineRoute({
-    path: '/apps',
-    name: '应用',
-    description: '应用管理相关接口',
-    middleware: [authenticate],  // 父级中间件注入 userInfo
-    children: [
-      // 使用 defineAuthRoute（只需要 userInfo）
-      defineAuthRoute({
-        method: 'GET',
-        path: '/list',
-        name: '获取应用列表',
-        handler: ({ userInfo }) => {
-          // ✅ userInfo 自动有类型
-          return getAppsByUserId(userInfo.id)
-        }
-      }),
-      
-      // 使用 defineAuthRouteWithAppId（需要 userInfo 和 appId）
-      defineAuthRouteWithAppId({
-        method: 'POST',
-        path: '/update',
-        name: '更新应用',
-        middleware: [guardAuth],  // guardAuth 会注入 appId
-        handler: ({ userInfo, appId }) => {
-          // ✅ userInfo 和 appId 都有类型
-          return updateApp(appId, userInfo.id)
-        }
-      }),
-      
-      // 使用 defineRouteWithAppId（只需要 appId）
-      defineRouteWithAppId({
-        method: 'GET',
-        path: '/:appId/info',
-        middleware: [guardAuth],  // guardAuth 会注入 appId
-        handler: ({ appId }) => {
-          // ✅ appId 有类型
-          return getAppInfo(appId)
-        }
-      })
-    ]
-  })
-])
-```
-
-#### 为什么需要多个路由定义器？
-
-在实际项目中，不同的路由需要不同的上下文组合：
-
-- **`defineAuthRoute`**：只需要用户信息（如个人资料、设置）
-- **`defineAuthRouteWithAppId`**：需要用户信息 + 应用ID（如应用管理、应用内操作）
-- **`defineRouteWithAppId`**：只需要应用ID（如公开的应用信息查询）
-- **`defineOptionalAuthRoute`**：可能有/没有用户信息（如内容列表，登录用户看到更多）
-
-通过创建多个路由定义器，你可以：
-1. **按需组合上下文**：根据路由的实际需求选择合适的路由定义器
-2. **类型精确匹配**：每个路由定义器只包含需要的上下文类型，避免类型冗余
-3. **代码可读性**：通过命名就能知道路由需要什么上下文，无需查看实现细节
+- **`defineAuthRoute`**：只需要 `userInfo`
+- **`defineAuthRouteWithApp`**：需要 `userInfo` + `app`（最常用）
+- **`defineRouteWithApp`**：只需要 `app`
+- **`defineOptionalAuthRoute`**：可选 `userInfo`
 
 #### 特性
 

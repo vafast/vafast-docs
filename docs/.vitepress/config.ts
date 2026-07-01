@@ -361,6 +361,10 @@ export default defineConfig({
                         link: '/middleware/ip'
                     },
                     {
+                        text: 'Auth Middleware',
+                        link: '/middleware/auth-middleware'
+                    },
+                    {
                         text: 'JWT',
                         link: '/middleware/jwt'
                     },

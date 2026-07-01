@@ -167,10 +167,18 @@ const notes: Note[] = []
 
 ### 2. 创建路由
 
-现在让我们创建我们的 API 路由：
+Vafast 后端有两种 `defineRoute` 写法：
+
+| 类型 | 必有字段 | 作用 |
+|------|---------|------|
+| **路由组** | `path` + `children` | 路径前缀、共享中间件，**无 method** |
+| **叶子路由** | `method` + `path` + `handler` | 实际 API 端点 |
+
+推荐做法：先把每个 handler 定义为常量，再用**路由组**（无 method）组织：
 
 ```typescript
-import { Server, defineRoute, defineRoutes, serve, Type, json, err } from 'vafast'
+// src/routes/notes.ts
+import { defineRoute, defineRoutes, Type, json, err } from 'vafast'
 
 interface Note {
   id: string
@@ -182,100 +190,99 @@ interface Note {
 
 const notes: Note[] = []
 
-// 笔记 Schema
 const NoteSchema = Type.Object({
   title: Type.String({ minLength: 1 }),
-  content: Type.String({ minLength: 1 })
+  content: Type.String({ minLength: 1 }),
 })
 
-const routes = defineRoutes([
-  // 获取所有笔记
-  defineRoute({
-    method: 'GET',
-    path: '/notes',
-    handler: () => notes
-  }),
-  
-  // 获取单个笔记
-  defineRoute({
-    method: 'GET',
-    path: '/notes/:id',
-    handler: ({ params }) => {
-      const note = notes.find(n => n.id === params.id)
-      
-      if (!note) {
-        throw err.notFound('Note not found')
-      }
-      
-      return note
-    }
-  }),
-  
-  // 创建笔记
-  defineRoute({
-    method: 'POST',
-    path: '/notes',
-    schema: { body: NoteSchema },
-    handler: ({ body }) => {
-      const note: Note = {
-        id: Date.now().toString(),
-        title: body.title,
-        content: body.content,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      }
-      
-      notes.push(note)
-      return json(note, 201)  // 201 Created
-    }
-  }),
-  
-  // 更新笔记
-  defineRoute({
-    method: 'PUT',
-    path: '/notes/:id',
-    schema: { body: NoteSchema },
-    handler: ({ params, body }) => {
-      const noteIndex = notes.findIndex(n => n.id === params.id)
-      
-      if (noteIndex === -1) {
-        throw err.notFound('Note not found')
-      }
-      
-      notes[noteIndex] = {
-        ...notes[noteIndex],
-        title: body.title,
-        content: body.content,
-        updatedAt: new Date()
-      }
-      
-      return notes[noteIndex]
-    }
-  }),
-  
-  // 删除笔记
-  defineRoute({
-    method: 'DELETE',
-    path: '/notes/:id',
-    handler: ({ params }) => {
-      const noteIndex = notes.findIndex(n => n.id === params.id)
-      
-      if (noteIndex === -1) {
-        throw err.notFound('Note not found')
-      }
-      
-      notes.splice(noteIndex, 1)
-      return null  // 204 No Content
-    }
-  })
-])
+// --- 叶子路由：每个 handler 单独定义 ---
 
-const server = new Server(routes)
+const listHandler = defineRoute({
+  method: 'GET',
+  path: '/',
+  name: '获取笔记列表',
+  handler: () => notes,
+})
+
+const getOneHandler = defineRoute({
+  method: 'GET',
+  path: '/:id',
+  name: '获取单条笔记',
+  handler: ({ params }) => {
+    const note = notes.find(n => n.id === params.id)
+    if (!note) throw err.notFound('Note not found')
+    return note
+  },
+})
+
+const createHandler = defineRoute({
+  method: 'POST',
+  path: '/create',
+  name: '创建笔记',
+  schema: { body: NoteSchema },
+  handler: ({ body }) => {
+    const note: Note = {
+      id: Date.now().toString(),
+      title: body.title,
+      content: body.content,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }
+    notes.push(note)
+    return json(note, 201)
+  },
+})
+
+const updateHandler = defineRoute({
+  method: 'PUT',
+  path: '/:id',
+  name: '更新笔记',
+  schema: { body: NoteSchema },
+  handler: ({ params, body }) => {
+    const idx = notes.findIndex(n => n.id === params.id)
+    if (idx === -1) throw err.notFound('Note not found')
+    notes[idx] = { ...notes[idx], ...body, updatedAt: new Date() }
+    return notes[idx]
+  },
+})
+
+const deleteHandler = defineRoute({
+  method: 'DELETE',
+  path: '/:id',
+  name: '删除笔记',
+  handler: ({ params }) => {
+    const idx = notes.findIndex(n => n.id === params.id)
+    if (idx === -1) throw err.notFound('Note not found')
+    notes.splice(idx, 1)
+    return null  // 204
+  },
+})
+
+// --- 路由组：无 method，挂 children ---
+
+export const notesRoutes = defineRoutes([
+  defineRoute({
+    path: '/notes',
+    name: '笔记',
+    description: '笔记 CRUD API',
+    children: [listHandler, getOneHandler, createHandler, updateHandler, deleteHandler],
+  }),
+])
+```
+
+```typescript
+// src/index.ts
+import { Server, serve } from 'vafast'
+import { notesRoutes } from './routes/notes'
+
+const server = new Server(notesRoutes)
 
 serve({ fetch: server.fetch, port: 3000 }, () => {
   console.log('Server running on http://localhost:3000')
 })
 ```
+
+实际路径：`GET /notes/`、`GET /notes/:id`、`POST /notes/create` 等。
 
 ### 3. 测试 API
 
@@ -288,7 +295,7 @@ npm run dev
 #### 创建笔记
 
 ```bash
-curl -X POST http://localhost:3000/notes \
+curl -X POST http://localhost:3000/notes/create \
   -H "Content-Type: application/json" \
   -d '{"title": "我的第一个笔记", "content": "这是笔记的内容"}'
 ```
@@ -296,7 +303,7 @@ curl -X POST http://localhost:3000/notes \
 #### 获取所有笔记
 
 ```bash
-curl http://localhost:3000/notes
+curl http://localhost:3000/notes/
 ```
 
 #### 获取单个笔记
@@ -321,7 +328,7 @@ curl -X DELETE http://localhost:3000/notes/<id>
 
 ## 添加中间件
 
-让我们为我们的 API 添加一些中间件来增强功能：
+在路由组（无 method）上挂中间件，**所有 children 自动继承**——这是生产项目最常用的模式。
 
 ### 1. 日志中间件
 
@@ -331,118 +338,141 @@ import { defineMiddleware } from 'vafast'
 const logMiddleware = defineMiddleware(async (req, next) => {
   const start = Date.now()
   console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`)
-  
+
   const response = await next()
-  
-  const duration = Date.now() - start
-  console.log(`Response: ${response.status} (${duration}ms)`)
-  
+
+  console.log(`Response: ${response.status} (${Date.now() - start}ms)`)
   return response
 })
 ```
 
-> **新框架用法说明**：
-> - 中间件使用 `defineMiddleware` 定义，支持类型注入
-> - 中间件签名：`(req: Request, next: () => Promise<Response>) => Promise<Response>`
+中间件签名：`(req, next) => Response`。通过 `next({ ctx })` 可向下游注入类型化上下文。
 
-### 2. 错误处理中间件
+框架会**自动注入** `errorHandler`，捕获 `throw err.notFound()` 等错误，**无需手写错误处理中间件**。
 
-```typescript
-import { defineMiddleware, json } from 'vafast'
+### 2. 三层中间件
 
-const errorHandler = defineMiddleware(async (req, next) => {
-  try {
-    return await next()
-  } catch (error) {
-    console.error('Error:', error)
-    return json({ 
-      error: 'Internal Server Error', 
-      message: error instanceof Error ? error.message : 'Unknown error'
-    }, 500)
-  }
-})
-```
-
-### 3. 使用中间件
+| 层级 | 写法 | 作用范围 |
+|------|------|---------|
+| 全局 | `server.use(mw)` | 所有路由 |
+| 路由组 | `defineRoute({ path, middleware, children })` | 该组所有子路由 |
+| 叶子路由 | `defineRoute({ method, middleware, handler })` | 单个端点 |
 
 ```typescript
-const routes = defineRoutes([
-  defineRoute({
-    method: 'GET',
-    path: '/notes',
-    middleware: [logMiddleware, errorHandler],
-    handler: () => notes
-  })
-  // ... 其他路由
-])
-```
-
-或者添加全局中间件：
-
-```typescript
-const server = new Server(routes)
+// 全局
+const server = new Server(notesRoutes)
 server.use(logMiddleware)
-server.use(errorHandler)
+
+// 路由组级（无 method）
+export const notesRoutes = defineRoutes([
+  defineRoute({
+    path: '/notes',
+    middleware: [logMiddleware],  // 所有 children 继承
+    children: [listHandler, createHandler, ...],
+  }),
+])
+
+// 叶子路由级
+const createHandler = defineRoute({
+  method: 'POST',
+  path: '/create',
+  middleware: [rateLimitMiddleware],  // 仅此路由
+  handler: ...
+})
 ```
 
-## 添加验证
+执行顺序：全局 → `errorHandler`（自动） → 路由组 → 叶子路由 → handler。
 
-Vafast 内置 TypeBox 进行 Schema 验证，直接从 `vafast` 导入 `Type`：
+### 3. 中间件注入上下文（认证预备）
 
 ```typescript
-import { Server, defineRoute, defineRoutes, serve, Type } from 'vafast'
+import { defineMiddleware } from 'vafast'
 
-const NoteSchema = Type.Object({
-  title: Type.String({ minLength: 1, maxLength: 100 }),
-  content: Type.String({ minLength: 1, maxLength: 1000 })
+const authMiddleware = defineMiddleware<{ userId: string }>(async (req, next) => {
+  const token = req.headers.get('authorization')
+  if (!token) throw err.unauthorized('未登录')
+  return next({ userId: 'user-123' })  // 注入下游 handler
 })
 
-const routes = defineRoutes([
+// handler 中可直接使用 userId（需配合 withContext 或 @vafast/auth-middleware 获得类型）
+```
+
+生产认证见 [Auth Middleware](/middleware/auth-middleware)。
+
+## Schema 验证
+
+- `Type` 直接从 `vafast` 导入
+- 验证失败自动返回 400
+- 支持 `body` / `query` / `params` / `headers` / `cookies`
+
+```typescript
+defineRoute({
+  method: 'GET',
+  path: '/search',
+  schema: {
+    query: Type.Object({
+      keyword: Type.String(),
+      page: Type.Optional(Type.Number({ minimum: 1 })),
+    }),
+  },
+  handler: ({ query }) => ({ keyword: query.keyword, page: query.page ?? 1 }),
+})
+```
+
+## 汇总：后端最小知识清单
+
+看完本教程，你应该能独立写出如下结构的后端：
+
+```typescript
+// 1. 叶子路由（有 method + handler）
+const createHandler = defineRoute({
+  method: 'POST',
+  path: '/create',
+  schema: { body: NoteSchema },
+  middleware: [requireUser],          // 可选：路由级
+  handler: ({ body }) => { ... },
+})
+
+// 2. 路由组（无 method + children）
+export const notesRoutes = defineRoutes([
   defineRoute({
-    method: 'POST',
     path: '/notes',
-    schema: { body: NoteSchema },
-    handler: ({ body }) => {
-      // body 已经通过验证，类型安全
-      const note: Note = {
-        id: Date.now().toString(),
-        title: body.title,
-        content: body.content,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      }
-      
-      notes.push(note)
-      return note
-    }
-  })
+    middleware: [authMiddleware],       // 组级，children 继承
+    children: [listHandler, createHandler],
+  }),
 ])
+
+// 3. 入口
+const server = new Server([...notesRoutes])
+server.use(cors())                      // 全局
+serve({ fetch: server.fetch, port: 3000 })
 ```
 
 ## 总结
 
 恭喜！您已经成功构建了一个完整的 CRUD API 服务器，包括：
 
-- ✅ 创建、读取、更新和删除笔记
-- ✅ 中间件支持（日志记录、错误处理）
-- ✅ Schema 验证
-- ✅ 类型安全的 TypeScript 代码
-- ✅ 内存数据存储
+- ✅ **路由组**（无 method）+ **叶子路由**（有 method）组织方式
+- ✅ handler 提前定义为常量，放入 `children`
+- ✅ 三层中间件：全局 / 路由组 / 叶子路由
+- ✅ `schema` 验证 body、query、params
+- ✅ `err.notFound()` 等结构化错误
+- ✅ `defineMiddleware` + `next({ ctx })` 上下文注入
+- ✅ 多文件拆分（`routes/` + `index.ts`）
 
 ### 下一步
 
 现在您可以：
 
-1. **添加更多功能** - 如搜索、分页、排序等
-2. **集成数据库** - 如 SQLite、PostgreSQL 或 MongoDB
-3. **添加身份验证** - 用户登录和权限控制
-4. **部署到生产环境** - 如 Vercel、Netlify 或自己的服务器
+1. **嵌套路由与类型包装** — [路由指南](/routing)、[Auth Middleware](/middleware/auth-middleware)
+2. **SSE 流式响应** — [SSE 指南](/essential/sse)（`sse: true` + `async function*`）
+3. **集成数据库** — [Drizzle](/integrations/drizzle)、[Prisma](/integrations/prisma)
+4. **部署** — [部署指南](/patterns/deploy)
 
 ### 相关资源
 
-- [核心概念](/key-concept) - 深入了解 Vafast 的工作原理
-- [路由指南](/routing) - 学习更多路由技巧
-- [中间件系统](/middleware) - 探索中间件的强大功能
-- [API 参考](/api) - 完整的 API 文档
+- [核心概念](/key-concept) - 架构与请求处理流程
+- [API 参考](/api) - 完整 API 文档
+- [中间件系统](/middleware) - `defineMiddleware`、`withContext` 原理
 
 如果您有任何问题或需要帮助，请查看我们的 [GitHub 仓库](https://github.com/vafast/vafast)。

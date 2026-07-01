@@ -378,5 +378,5 @@ NEXTAUTH_SECRET="your-nextauth-secret"
 
 - [Better Auth 文档](https://better-auth.com) - 官方文档
 - [Vafast 中间件](/middleware) - 探索其他可用的中间件
-- [认证最佳实践](/patterns/auth) - 了解认证模式
+- [Auth Middleware](/middleware/auth-middleware) - 微服务认证与路由类型包装
 - [安全指南](/essential/security) - 安全最佳实践

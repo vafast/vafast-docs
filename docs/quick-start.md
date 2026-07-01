@@ -116,6 +116,46 @@ my-vafast-app/
 └── tsconfig.json
 ```
 
+## 两种路由：叶子 vs 路由组
+
+`defineRoute` 有两种写法，这是写后端最重要的结构：
+
+### 叶子路由（有 `method`）
+
+实际处理请求的端点，**必须有** `method`、`path`、`handler`：
+
+```typescript
+defineRoute({
+  method: 'GET',       // GET | POST | PUT | DELETE | PATCH | ...
+  path: '/users/:id',
+  handler: ({ params }) => ({ id: params.id })
+})
+```
+
+### 路由组（无 `method`）
+
+只做**路径前缀 + 中间件共享**，**没有** `handler`，通过 `children` 挂子路由：
+
+```typescript
+defineRoute({
+  path: '/api/users',           // 无 method
+  name: '用户',
+  description: '用户管理',
+  middleware: [authMiddleware], // 子路由全部继承
+  children: [
+    defineRoute({ method: 'GET',  path: '/list',   handler: () => [...] }),
+    defineRoute({ method: 'POST', path: '/create', handler: ({ body }) => body }),
+  ]
+})
+// 实际路径：/api/users/list、/api/users/create
+```
+
+::: tip 生产项目惯例
+- **路由组**：`path` + `middleware` + `children`（无 method）
+- **子路由**：`method` + `path` + `handler`，path 写相对路径（`/list` 而非 `/api/users/list`）
+- **handler 提前定义**：复杂 handler 可先 `const createHandler = defineRoute({...})` 再放入 `children`
+:::
+
 ## 创建应用
 
 创建 `src/index.ts`，有两种写法：
@@ -152,24 +192,35 @@ serve({
 })
 ```
 
-### 方式二：直接传数组
+### 方式二：导出 fetch（Bun / Workers）
 
-适合快速原型或简单项目：
+不调用 `serve()`，直接导出 `fetch` 给边缘运行时：
 
 ```typescript
-import { Server, defineRoute, defineRoutes, serve } from 'vafast'
+import { Server, defineRoute, defineRoutes } from 'vafast'
 
-const routes = defineRoutes([
-  defineRoute({
-    method: 'GET',
-    path: '/',
-    handler: () => 'Hello Vafast!'
-  })
-])
+const server = new Server(defineRoutes([
+  defineRoute({ method: 'GET', path: '/', handler: () => 'Hello Vafast!' })
+]))
 
-const server = new Server(routes)
-serve({ fetch: server.fetch, port: 3000 })
+export default { fetch: server.fetch }
 ```
+
+## 核心 API 一览
+
+入门阶段需要掌握的 API：
+
+| API | 作用 |
+|-----|------|
+| `defineRoute()` | 定义路由：叶子（有 method）或路由组（无 method，有 children） |
+| `defineRoutes()` | 路由数组，保留字面量类型 |
+| `new Server(routes)` | 创建服务器，负责路由匹配 |
+| `server.use(mw)` | 注册**全局**中间件 |
+| `serve({ fetch, port })` | 启动 Node.js HTTP 服务 |
+| `Type` + `schema` | TypeBox 请求验证 |
+| `err.notFound()` 等 | 结构化错误，由框架 `errorHandler` 自动转 JSON |
+
+> `Server` 只管路由，端口/超时/代理等配置走 `serve()`，详见 [API 参考](/api)。
 
 ## 启动服务
 
@@ -259,10 +310,126 @@ const server = new Server(routes)
 serve({ fetch: server.fetch, port: 3000 })
 ```
 
+### 全局中间件
+
+```typescript
+import { cors } from '@vafast/cors'
+
+const server = new Server(routes)
+server.use(cors())  // 作用于所有路由
+
+serve({ fetch: server.fetch, port: 3000 })
+```
+
+### 嵌套路由
+
+```typescript
+const routes = defineRoutes([
+  defineRoute({
+    path: '/api',
+    middleware: [logMiddleware],
+    children: [
+      defineRoute({
+        method: 'GET',
+        path: '/users',
+        handler: () => ({ users: [] })
+      })
+    ]
+  })
+])
+```
+
+路径自动扁平化为 `/api/users`，父级中间件自动继承。
+
+### Handler 上下文
+
+handler 接收一个上下文对象，常用字段：
+
+```typescript
+defineRoute({
+  method: 'GET',
+  path: '/users/:id',
+  schema: {
+    params: Type.Object({ id: Type.String() }),
+    query:  Type.Object({ page: Type.Optional(Type.Number()) }),
+  },
+  handler: ({ req, params, query, body, headers, cookies }) => {
+    // params.id、query.page 均有类型
+    return { id: params.id, page: query.page ?? 1 }
+  }
+})
+```
+
+| 字段 | 来源 |
+|------|------|
+| `req` | 原始 `Request` |
+| `params` | 路径参数 `/users/:id` |
+| `query` | URL 查询参数 `?page=1` |
+| `body` | 请求体（POST/PUT/PATCH） |
+| `headers` | 请求头 |
+| `cookies` | Cookie |
+
+### 响应写法
+
+handler 返回值会自动转为 `Response`：
+
+```typescript
+handler: () => 'plain text'           // text/plain
+handler: () => ({ ok: true })         // application/json
+handler: () => null                    // 204 No Content
+handler: () => json(data, 201)        // 指定状态码
+handler: () => new Response(...)       // 原生 Response
+```
+
+### 结构化错误
+
+```typescript
+import { err } from 'vafast'
+
+handler: ({ params }) => {
+  const user = findUser(params.id)
+  if (!user) throw err.notFound('用户不存在')
+  return user
+}
+```
+
+`err` 常用方法：`badRequest` `unauthorized` `forbidden` `notFound` `conflict` `internal`
+
+### 项目结构（多文件）
+
+```
+src/
+├── index.ts          # Server + serve + 全局中间件
+├── routes/
+│   ├── index.ts      # defineRoutes 汇总
+│   └── users.ts      # 按模块拆分
+└── middleware/
+    └── auth.ts
+```
+
+```typescript
+// routes/users.ts
+export const usersRoutes = defineRoutes([
+  defineRoute({
+    path: '/users',
+    middleware: [authMiddleware],
+    children: [
+      defineRoute({ method: 'GET', path: '/list', handler: () => [...] }),
+    ]
+  })
+])
+
+// index.ts
+import { usersRoutes } from './routes/users'
+const server = new Server([...usersRoutes])
+```
+
 ## 下一步
 
 现在你已经成功创建了一个 Vafast 应用！接下来你可以：
 
 - 查看 [核心概念](/key-concept) 了解 Vafast 的基本原理
-- 阅读 [路由指南](/routing) 学习如何定义路由
-- 探索 [中间件系统](/middleware) 了解如何扩展功能
+- 阅读 [路由指南](/routing) 学习嵌套路由与 `withContext` 类型包装
+- 探索 [中间件系统](/middleware) 了解 `defineMiddleware` 与全局中间件
+- 微服务认证见 [Auth Middleware](/middleware/auth-middleware)（`ones-server` 同款方案）
+- 完整 API 见 [API 参考](/api)
