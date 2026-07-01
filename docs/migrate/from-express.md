@@ -273,16 +273,18 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: err.message })
 })
 
-// Vafast 错误处理
-import { json } from 'vafast'
+// Vafast：框架内置 errorHandler，handler 中 throw err.xxx()
+import { err } from 'vafast'
 
-const errorHandler = async (req: Request, next: () => Promise<Response>) => {
-  try {
-    return await next()
-  } catch (error) {
-    return json({ error: error instanceof Error ? error.message : 'Unknown error' }, 500)
-  }
-}
+defineRoute({
+  method: 'GET',
+  path: '/users/:id',
+  handler: ({ params }) => {
+    const user = getUserById(params.id)
+    if (!user) throw err.notFound('User not found')
+    return user
+  },
+})
 ```
 
 ## 完整迁移示例

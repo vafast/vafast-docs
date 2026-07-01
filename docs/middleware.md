@@ -585,7 +585,7 @@ const routes = defineRoutes([
       corsMiddleware,       // 2. CORS 处理
       rateLimitMiddleware,  // 3. 速率限制
       authMiddleware,       // 4. 身份验证
-      errorHandler          // 5. 错误处理
+      // errorHandler 由框架自动注入，无需手动注册
     ],
     handler: () => ({ message: 'Users' })
   })

@@ -292,64 +292,39 @@ export default function CreateUserPage() {
 
 ### 认证中间件
 
-```typescript
-// src/api/middleware/auth.ts
-import { NextFunction } from 'next/server'
-
-export interface AuthenticatedRequest extends Request {
-  user?: {
-    id: string
-    email: string
-    role: string
-  }
-}
-
-export const authMiddleware = async (
-  request: Request,
-  next: NextFunction
-) => {
-  const token = request.headers.get('authorization')?.replace('Bearer ', '')
-  
-  if (!token) {
-    return new Response('Unauthorized', { status: 401 })
-  }
-  
-  try {
-    // 验证 JWT token
-    const user = await verifyToken(token)
-    ;(request as AuthenticatedRequest).user = user
-    return next()
-  } catch (error) {
-    return new Response('Invalid token', { status: 401 })
-  }
-}
-
-async function verifyToken(token: string) {
-  // 实现 JWT 验证逻辑
-  // 这里应该使用 @vafast/jwt 中间件
-  return { id: '123', email: 'user@example.com', role: 'user' }
-}
-```
-
-### 使用认证中间件
+::: tip 生产环境推荐
+完整用户认证请使用 [@vafast/auth-middleware](/middleware/auth-middleware)（`authWithApp`、`requireUser`）。以下展示在 Next.js API 路由中的集成方式。
+:::
 
 ```typescript
 // src/api/routes.ts
 import { defineRoute, defineRoutes } from 'vafast'
-import { authMiddleware } from './middleware/auth'
+import {
+  authWithApp,
+  requireUser,
+  defineAuthRouteWithApp,
+} from '@vafast/auth-middleware'
 
 export const routes = defineRoutes([
   defineRoute({
-    method: 'GET',
-    path: '/api/profile',
-    handler: async ({ request }) => {
-      const user = (request as AuthenticatedRequest).user
-      return { user }
-    },
-    middleware: [authMiddleware]
-  })
+    path: '/api',
+    middleware: [authWithApp],
+    children: [
+      defineAuthRouteWithApp({
+        method: 'GET',
+        path: '/profile',
+        middleware: [requireUser],
+        handler: ({ userInfo, app }) => ({
+          userId: userInfo.id,
+          appId: app.id,
+        }),
+      }),
+    ],
+  }),
 ])
 ```
+
+若仅需简单 JWT 校验（无 auth-server），可参考 [@vafast/jwt](/middleware/jwt) 或手写 `defineMiddleware`。
 
 ## 环境配置
 

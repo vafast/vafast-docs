@@ -441,43 +441,28 @@ const routes: any[] = [
 ]
 ```
 
-### 4. 错误处理
+### 错误处理
 
-为组件路由添加错误处理：
+`ComponentServer` 同样受益于框架内置的 `errorHandler`。组件路由中推荐在 handler 内 `throw err.xxx()`：
 
 ```typescript
-import { html } from 'vafast'
+import { err, html } from 'vafast'
 
-const errorHandler = async (req: Request, next: () => Promise<Response>) => {
-  try {
-    return await next()
-  } catch (error) {
-    console.error('Component routing error:', error)
-    
-    // 返回错误页面
-    return html(`
-      <!DOCTYPE html>
-      <html>
-        <head><title>Error</title></head>
-        <body>
-          <h1>页面加载失败</h1>
-          <p>请稍后重试</p>
-        </body>
-      </html>
-    `, 500)
-  }
-}
-
-const routes: any[] = [
-  {
-    path: '/',
-    middleware: [errorHandler],
-    children: [
-      // 子路由
-    ]
-  }
-]
+defineRoute({
+  method: 'GET',
+  path: '/page',
+  handler: async () => {
+    try {
+      return await renderPage()
+    } catch (error) {
+      // 渲染失败时返回 HTML 错误页
+      return html(`<h1>页面加载失败</h1>`, 500)
+    }
+  },
+})
 ```
+
+若需统一捕获组件渲染异常，可在路由组（无 method）上挂自定义中间件，但一般叶子 handler 内处理即可。
 
 ## 实际应用示例
 

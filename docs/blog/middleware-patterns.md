@@ -232,43 +232,28 @@ const requestLogger = async (req: Request, next: () => Promise<Response>) => {
 }
 ```
 
-## 模式五：错误处理中间件
+## 模式五：错误处理
 
-统一处理所有未捕获的错误：
+框架**自动注入** `errorHandler`。业务错误在 handler 中 `throw err.xxx()`，无需手写 try/catch 中间件：
 
 ```ts
-interface AppError extends Error {
-  status?: number
-  code?: string
-}
+import { err } from 'vafast'
 
-const errorHandler = async (req: Request, next: () => Promise<Response>) => {
-  try {
-    return await next()
-  } catch (error) {
-    const appError = error as AppError
-    
-    // 开发环境输出详细错误
-    if (process.env.NODE_ENV === 'development') {
-      console.error('Unhandled error:', error)
-    }
-    
-    // 根据错误类型返回适当的响应
-    const status = appError.status || 500
-    const message = status === 500 
-      ? '服务器内部错误' 
-      : appError.message
-    
-    return json({
-      error: message,
-      code: appError.code || 'INTERNAL_ERROR',
-      ...(process.env.NODE_ENV === 'development' && {
-        stack: appError.stack
-      })
-    }, status)
-  }
-}
+defineRoute({
+  method: 'GET',
+  path: '/users/:id',
+  handler: ({ params }) => {
+    const user = findUser(params.id)
+    if (!user) throw err.notFound('用户不存在')
+    return user
+  },
+})
+// → { code: 404, message: '用户不存在' }
 ```
+
+::: tip 高级场景
+仅当需要处理**非 VafastError** 的第三方库异常时，才考虑在 `server.use()` 外层包一层自定义中间件，并 `throw error` 交回框架处理。
+:::
 
 ## 模式六：CORS 中间件
 

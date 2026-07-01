@@ -283,6 +283,10 @@ export const protectedRoutes = defineRoutes([
 > - 通过 `next({ user })` 传递上下文
 > - Handler 自动获得类型推断，无需手动类型断言
 
+::: tip 生产环境推荐
+多租户业务服务（对接 auth-server）请使用 [@vafast/auth-middleware](/middleware/auth-middleware) 的 `authWithApp`、`requireUser`、`defineAuthRouteWithApp`，无需手写 JWT 验证逻辑。
+:::
+
 ### ❌ 不推荐：在服务中处理 HTTP 响应
 
 服务应该只处理业务逻辑，不要在服务中构造 HTTP 响应：
@@ -501,19 +505,21 @@ export class ValidationError extends VafastError {
 
 // 使用示例
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/users/:id',
     handler: async ({ params }) => {
       const user = await db.user.findUnique({ where: { id: params.id } })
       if (!user) throw new NotFoundError('User')
       return user
-    }
-  })
+    },
+  }),
 ])
 ```
 
 ### ✅ 可选：自定义错误处理中间件
+
+框架已内置 `errorHandler`，**优先使用 `err()` 抛出业务错误**。仅当需要处理第三方库异常等非 `VafastError` 时，才在 `server.use()` 挂自定义中间件：
 
 ```typescript
 import { json, VafastError } from 'vafast'
