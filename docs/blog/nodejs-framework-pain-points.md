@@ -39,11 +39,11 @@ app.get('/comments', getComments)
 
 ```typescript
 const routes = defineRoutes([
-  { method: 'GET',    path: '/users',     handler: getUsers },
-  { method: 'POST',   path: '/users',     handler: createUser },
-  { method: 'GET',    path: '/users/:id', handler: getUser },
-  { method: 'GET',    path: '/posts',     handler: getPosts },
-  { method: 'GET',    path: '/comments',  handler: getComments },
+  defineRoute({ method: 'GET',    path: '/users',     handler: getUsers }),
+  defineRoute({ method: 'POST',   path: '/users',     handler: createUser }),
+  defineRoute({ method: 'GET',    path: '/users/:id', handler: getUser }),
+  defineRoute({ method: 'GET',    path: '/posts',     handler: getPosts }),
+  defineRoute({ method: 'GET',    path: '/comments',  handler: getComments }),
 ])
 ```
 
@@ -64,8 +64,8 @@ app.get('/api/public', getPublic)  // 也有 auth？不想要啊！
 
 ```typescript
 const routes = defineRoutes([
-  { method: 'GET', path: '/public', handler: publicHandler },
-  { method: 'GET', path: '/api/users', middleware: [authMiddleware], handler: getUsers },
+  defineRoute({ method: 'GET', path: '/public', handler: publicHandler }),
+  defineRoute({ method: 'GET', path: '/api/users', middleware: [authMiddleware], handler: getUsers }),
 ])
 ```
 
@@ -209,13 +209,13 @@ app.use('/api/users', userRouter)
 
 ```typescript
 const routes = defineRoutes([
-  {
+  defineRoute({
     path: '/api/users',
     children: [
-      { method: 'GET', path: '/', handler: getUsers },
-      { path: '/:id/posts', children: [...] }
-    ]
-  }
+      defineRoute({ method: 'GET', path: '/', handler: getUsers }),
+      defineRoute({ path: '/:id/posts', children: [...] }),
+    ],
+  }),
 ])
 ```
 

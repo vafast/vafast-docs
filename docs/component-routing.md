@@ -308,25 +308,22 @@ Vafast 的组件路由系统支持路由守卫，允许您在路由切换时执�
 ### 前置守卫
 
 ```typescript
-import { redirect } from 'vafast'
+import { defineMiddleware, redirect } from 'vafast'
 
-const authGuard = async (req: Request, next: () => Promise<Response>) => {
+const authGuard = defineMiddleware(async (req, next) => {
   const token = req.headers.get('authorization')
   
   if (!token) {
-    // 重定向到登录页面
     return redirect('/login')
   }
   
-  // 验证 token
   try {
     const user = await validateToken(token)
-    ;(req as any).user = user
-    return next()
-  } catch (error) {
+    return next({ user })
+  } catch {
     return redirect('/login')
   }
-}
+})
 
 const routes: any[] = [
   {
@@ -340,7 +337,9 @@ const routes: any[] = [
 ### 后置守卫
 
 ```typescript
-const logGuard = async (req: Request, next: () => Promise<Response>) => {
+import { defineMiddleware } from 'vafast'
+
+const logGuard = defineMiddleware(async (req, next) => {
   const start = Date.now()
   const response = await next()
   const duration = Date.now() - start
@@ -348,7 +347,7 @@ const logGuard = async (req: Request, next: () => Promise<Response>) => {
   console.log(`Route ${req.url} took ${duration}ms`)
   
   return response
-}
+})
 ```
 
 ## 最佳实践

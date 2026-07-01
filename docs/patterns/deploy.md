@@ -355,7 +355,9 @@ readinessProbe:
 ### 结构化日志
 
 ```typescript
-const loggingMiddleware = async (req: Request, next: () => Promise<Response>) => {
+import { Server, defineMiddleware } from 'vafast'
+
+const loggingMiddleware = defineMiddleware(async (req, next) => {
   const startTime = Date.now()
   const response = await next()
   const duration = Date.now() - startTime
@@ -370,7 +372,7 @@ const loggingMiddleware = async (req: Request, next: () => Promise<Response>) =>
   }))
   
   return response
-}
+})
 
 const server = new Server(routes)
 server.use(loggingMiddleware)

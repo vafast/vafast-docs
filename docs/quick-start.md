@@ -403,18 +403,20 @@ src/
 ├── routes/
 │   ├── index.ts      # defineRoutes 汇总
 │   └── users.ts      # 按模块拆分
-└── middleware/
-    └── auth.ts
 ```
 
+生产项目认证见 [@vafast/auth-middleware](/middleware/auth-middleware)；自建 JWT 见 [@vafast/jwt](/middleware/jwt)。
+
 ```typescript
-// routes/users.ts
+// routes/users.ts — 路由组 + 子路由
+import { authWithApp, requireUser } from '@vafast/auth-middleware'
+
 export const usersRoutes = defineRoutes([
   defineRoute({
     path: '/users',
-    middleware: [authMiddleware],
+    middleware: [authWithApp],
     children: [
-      defineRoute({ method: 'GET', path: '/list', handler: () => [...] }),
+      defineRoute({ method: 'GET', path: '/list', middleware: [requireUser], handler: () => [...] }),
     ]
   })
 ])

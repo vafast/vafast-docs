@@ -1217,18 +1217,20 @@ precompileSchemas([userSchema, postSchema]) // 启动时预编译，避免首请
 
 ```typescript
 import { jwt } from '@vafast/jwt'
+import { defineMiddleware, type Middleware } from 'vafast'
 
-// 创建认证中间件
 const authMiddleware = jwt({ secret: 'your-secret' })
 
-// 使用条件中间件避免不必要的执行
-const conditionalMiddleware = (condition: (req: Request) => boolean, middleware: Middleware) => {
-  return async (req: Request, next: () => Promise<Response>) => {
+const conditionalMiddleware = (
+  condition: (req: Request) => boolean,
+  middleware: Middleware
+) => {
+  return defineMiddleware(async (req, next) => {
     if (condition(req)) {
       return middleware(req, next)
     }
     return next()
-  }
+  })
 }
 
 const routes = defineRoutes([

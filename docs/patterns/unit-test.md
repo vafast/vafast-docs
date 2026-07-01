@@ -113,15 +113,15 @@ describe('Vafast Routes', () => {
 ```typescript
 // test/middleware.test.ts
 import { describe, expect, it } from 'bun:test'
-import { Server, defineRoute, defineRoutes } from 'vafast'
+import { Server, defineRoute, defineRoutes, defineMiddleware } from 'vafast'
 
 describe('Vafast Middleware', () => {
-    const loggingMiddleware = async (req: Request, next: () => Promise<Response>) => {
+    const loggingMiddleware = defineMiddleware(async (req, next) => {
         console.log(`${req.method} ${req.url}`)
         const response = await next()
         console.log(`Response: ${response.status}`)
         return response
-    }
+    })
 
     const routes = defineRoutes([
       defineRoute({

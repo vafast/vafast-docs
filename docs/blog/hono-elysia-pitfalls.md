@@ -167,10 +167,10 @@ export const userRoutes = new Elysia()
 **声明式路由**：
 
 ```typescript
-const routes = [
-  { method: 'GET', path: '/users', handler: getUsers },
-  { method: 'POST', path: '/users', handler: createUser, middleware: [auth] },
-]
+const routes = defineRoutes([
+  defineRoute({ method: 'GET', path: '/users', handler: getUsers }),
+  defineRoute({ method: 'POST', path: '/users', handler: createUser, middleware: [auth] }),
+])
 ```
 
 **优点**：

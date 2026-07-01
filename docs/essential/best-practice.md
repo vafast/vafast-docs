@@ -524,24 +524,21 @@ const routes = defineRoutes([
 框架已内置 `errorHandler`，**优先使用 `err()` 抛出业务错误**。仅当需要处理第三方库异常等非 `VafastError` 时，才在 `server.use()` 挂自定义中间件：
 
 ```typescript
-import { json, VafastError } from 'vafast'
+import { json, VafastError, defineMiddleware } from 'vafast'
 
-// 自定义错误处理（框架已内置，仅在需要特殊处理时使用）
-const customErrorHandler = async (req: Request, next: () => Promise<Response>) => {
+const customErrorHandler = defineMiddleware(async (req, next) => {
   try {
     return await next()
   } catch (error) {
     console.error('Error:', error)
     
-    // VafastError 会被框架自动处理，这里可以处理其他类型的错误
     if (error instanceof SomeExternalLibraryError) {
       return json({ error: 'external_error', message: '外部服务错误' }, 502)
     }
     
-    // 重新抛出让框架处理
     throw error
   }
-}
+})
 
 const server = new Server(routes)
 server.use(customErrorHandler)

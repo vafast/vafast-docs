@@ -51,12 +51,12 @@ app.get('/posts', getPosts)
 ```typescript
 // Vafast 风格
 const routes = defineRoutes([
-  { method: 'GET',    path: '/users',     handler: getUsers },
-  { method: 'POST',   path: '/users',     handler: createUser },
-  { method: 'GET',    path: '/users/:id', handler: getUser },
-  { method: 'PUT',    path: '/users/:id', handler: updateUser },
-  { method: 'DELETE', path: '/users/:id', handler: deleteUser },
-  { method: 'GET',    path: '/posts',     handler: getPosts },
+  defineRoute({ method: 'GET',    path: '/users',     handler: getUsers }),
+  defineRoute({ method: 'POST',   path: '/users',     handler: createUser }),
+  defineRoute({ method: 'GET',    path: '/users/:id', handler: getUser }),
+  defineRoute({ method: 'PUT',    path: '/users/:id', handler: updateUser }),
+  defineRoute({ method: 'DELETE', path: '/users/:id', handler: deleteUser }),
+  defineRoute({ method: 'GET',    path: '/posts',     handler: getPosts }),
 ])
 ```
 

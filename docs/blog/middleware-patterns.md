@@ -23,30 +23,25 @@ Vafast 的中间件设计简洁而强大，本文将介绍几种常用的中间�
 
 ## 中间件基础
 
-在 Vafast 中，中间件是一个接收 `Request` 和 `next` 函数的异步函数：
+在 Vafast 中，使用 `defineMiddleware` 定义中间件，通过 `next({ ... })` 向下游传递上下文：
 
 ```ts
-type Middleware = (
-  req: Request,
-  next: () => Promise<Response>
-) => Promise<Response>
-```
+import { defineMiddleware } from 'vafast'
 
-最简单的中间件：
-
-```ts
-const logger: Middleware = async (req, next) => {
+const logger = defineMiddleware(async (req, next) => {
   console.log(`${req.method} ${req.url}`)
   return await next()
-}
+})
 ```
 
 ## 模式一：认证中间件
 
-认证是最常见的中间件场景。让我们实现一个 JWT 认证中间件：
+::: tip 生产环境
+对接 auth-server 请直接用 [@vafast/auth-middleware](/middleware/auth-middleware)。以下展示手写 JWT 中间件的工厂模式。
+:::
 
 ```ts
-import { json } from 'vafast'
+import { defineMiddleware, json } from 'vafast'
 
 interface AuthConfig {
   secret: string
@@ -54,10 +49,9 @@ interface AuthConfig {
 }
 
 const createAuthMiddleware = (config: AuthConfig) => {
-  return async (req: Request, next: () => Promise<Response>) => {
+  return defineMiddleware(async (req, next) => {
     const url = new URL(req.url)
     
-    // 跳过排除的路径
     if (config.excludePaths?.includes(url.pathname)) {
       return await next()
     }
@@ -69,25 +63,12 @@ const createAuthMiddleware = (config: AuthConfig) => {
     }
     
     try {
-      // 验证 JWT（这里简化处理）
       const payload = verifyJWT(token, config.secret)
-      
-      // 将用户信息附加到请求头，供后续处理器使用
-      const headers = new Headers(req.headers)
-      headers.set('X-User-Id', payload.userId)
-      headers.set('X-User-Role', payload.role)
-      
-      const newReq = new Request(req.url, {
-        method: req.method,
-        headers,
-        body: req.body
-      })
-      
-      return await next()
+      return await next({ userId: payload.userId, role: payload.role })
     } catch {
       return json({ error: '令牌无效或已过期' }, 401)
     }
-  }
+  })
 }
 
 // 使用
@@ -101,19 +82,22 @@ const authMiddleware = createAuthMiddleware({
 
 基于认证中间件，我们可以实现角色权限控制：
 
+基于认证中间件，实现角色权限守卫（上游 `next({ role })` 注入后检查）：
+
 ```ts
+import { defineMiddleware, json } from 'vafast'
+
 type Role = 'admin' | 'user' | 'guest'
 
 const requireRole = (...roles: Role[]) => {
-  return async (req: Request, next: () => Promise<Response>) => {
-    const userRole = req.headers.get('X-User-Role') as Role
-    
+  return defineMiddleware<{ role: Role }>(async (req, next) => {
+    const locals = (req as Request & { __locals?: { role?: Role } }).__locals
+    const userRole = locals?.role
     if (!userRole || !roles.includes(userRole)) {
       return json({ error: '权限不足' }, 403)
     }
-    
-    return await next()
-  }
+    return next()
+  })
 }
 
 // 使用示例
@@ -123,20 +107,23 @@ const routes = defineRoutes([
     path: '/users/:id',
     middleware: [authMiddleware, requireRole('admin')],
     schema: { params: Type.Object({ id: Type.String() }) },
-    handler: async ({ params }) => {
-      // 只有管理员可以删除用户
+    handler: async ({ params, role }) => {
       await deleteUser(params.id)
-      return { success: true }
+      return { success: true, deletedBy: role }
     }
   })
 ])
 ```
+
+生产环境推荐 [@vafast/auth-middleware](/middleware/auth-middleware) 的 `requireUser` 等守卫，无需手写角色检查逻辑。
 
 ## 模式三：请求限流中间件
 
 防止 API 被滥用，实现简单的速率限制：
 
 ```ts
+import { defineMiddleware, json } from 'vafast'
+
 interface RateLimitConfig {
   windowMs: number      // 时间窗口（毫秒）
   maxRequests: number   // 最大请求数
@@ -145,7 +132,7 @@ interface RateLimitConfig {
 const createRateLimiter = (config: RateLimitConfig) => {
   const requests = new Map<string, { count: number; resetTime: number }>()
   
-  return async (req: Request, next: () => Promise<Response>) => {
+  return defineMiddleware(async (req, next) => {
     const clientIP = req.headers.get('X-Forwarded-For') || 'unknown'
     const now = Date.now()
     
@@ -200,7 +187,9 @@ interface LogEntry {
   timestamp: string
 }
 
-const requestLogger = async (req: Request, next: () => Promise<Response>) => {
+import { defineMiddleware } from 'vafast'
+
+const requestLogger = defineMiddleware(async (req, next) => {
   const start = performance.now()
   const url = new URL(req.url)
   
@@ -260,6 +249,8 @@ defineRoute({
 处理跨域请求：
 
 ```ts
+import { defineMiddleware } from 'vafast'
+
 interface CorsConfig {
   origins: string[]
   methods?: string[]
@@ -275,7 +266,7 @@ const createCors = (config: CorsConfig) => {
     credentials = false
   } = config
   
-  return async (req: Request, next: () => Promise<Response>) => {
+  return defineMiddleware(async (req, next) => {
     const origin = req.headers.get('Origin')
     
     // 检查是否允许的来源
@@ -323,6 +314,8 @@ const cors = createCors({
 对 GET 请求进行简单缓存：
 
 ```ts
+import { defineMiddleware } from 'vafast'
+
 interface CacheConfig {
   ttl: number  // 缓存时间（秒）
   keyFn?: (req: Request) => string
@@ -338,7 +331,7 @@ const createCache = (config: CacheConfig) => {
   
   const keyFn = config.keyFn || defaultKeyFn
   
-  return async (req: Request, next: () => Promise<Response>) => {
+  return defineMiddleware(async (req, next) => {
     // 只缓存 GET 请求
     if (req.method !== 'GET') {
       return await next()
@@ -404,15 +397,15 @@ server.use(requestLogger)
 ## 最佳实践总结
 
 1. **单一职责**：每个中间件只做一件事
-2. **可配置**：使用工厂函数创建可配置的中间件
-3. **顺序重要**：注意中间件的执行顺序（错误处理应该在最外层）
+2. **可配置**：使用工厂函数 + `defineMiddleware` 创建可配置中间件
+3. **顺序重要**：认证/限流等在 handler 之前；`errorHandler` 由框架自动注入
 4. **性能考虑**：避免在中间件中进行昂贵的操作
-5. **类型安全**：利用 TypeScript 确保中间件的类型正确
+5. **类型安全**：用 `defineMiddleware<TContext>` + `next({ ... })` 传递上下文
 
 Vafast 的中间件系统简洁而强大，合理使用中间件可以让你的代码更加模块化、可维护。
 
 查看更多：
-- [Vafast 中间件文档](/essential/middleware)
+- [Vafast 中间件文档](/middleware)
 - [Vafast GitHub](https://github.com/vafast/vafast)
 
 </Blog>
