@@ -239,18 +239,18 @@ app.onError((err, c) => {
 })
 ```
 
-**Vafast** 支持中间件链中的错误处理：
-```typescript
-import { defineMiddleware, json } from 'vafast'
+**Vafast** 内置 `errorHandler`，在 handler 中 `throw err.xxx()` 即可：
 
-const errorHandler = defineMiddleware(async (req, next) => {
-  try {
-    return await next()
-  } catch (error) {
-    return json({ error: error instanceof Error ? error.message : 'Unknown error' }, 500)
-  }
+```typescript
+import { err } from 'vafast'
+
+handler: ({ params }) => {
+  if (!found) throw err.notFound('Not found')
+  return data
 }
 ```
+
+> 框架自动注入 `errorHandler`，无需手写 try/catch 中间件。
 
 ## 迁移步骤
 

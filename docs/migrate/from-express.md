@@ -192,21 +192,23 @@ app.use((err, req, res, next) => {
 })
 ```
 
-**Vafast** 支持中间件链中的错误处理：
-```typescript
-import { defineMiddleware, json } from 'vafast'
+**Vafast** 内置 `errorHandler`，在 handler 中 `throw err.xxx()` 即可：
 
-const errorHandler = defineMiddleware(async (req, next) => {
-  try {
-    return await next()
-  } catch (error) {
-    return json({ error: error.message }, 500)
-  }
+```typescript
+import { err } from 'vafast'
+
+defineRoute({
+  method: 'GET',
+  path: '/users/:id',
+  handler: ({ params }) => {
+    const user = findUser(params.id)
+    if (!user) throw err.notFound('用户不存在')
+    return user
+  },
 })
 ```
 
-> **新框架用法说明**：
-> - 中间件使用 `defineMiddleware` 定义，支持类型注入
+> 框架自动注入 `errorHandler`，**无需**手写 try/catch 中间件。
 
 ## 迁移步骤
 

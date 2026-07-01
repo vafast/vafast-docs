@@ -192,25 +192,26 @@ const rateLimitMiddleware = defineMiddleware(async (req, next) => {
 
 > 💡 **提示**：Vafast 提供了官方的速率限制中间件 `@vafast/rate-limit`，推荐使用官方中间件而不是手动实现。
 
-### 5. 错误处理中间件
+### 5. 错误处理
+
+框架**自动注入** `errorHandler`，无需手写错误捕获中间件。在 handler 中 `throw err.xxx()` 即可：
 
 ```typescript
-import { defineMiddleware, json } from 'vafast'
+import { err } from 'vafast'
 
-const errorHandler = defineMiddleware(async (req, next) => {
-  try {
-    return await next()
-  } catch (error) {
-    console.error('Error in route:', error)
-    
-    if (error instanceof Error) {
-      return json({ error: error.message }, 500)
-    }
-    
-    return json({ error: 'Internal Server Error' }, 500)
-  }
+defineRoute({
+  method: 'GET',
+  path: '/users/:id',
+  handler: ({ params }) => {
+    const user = findUser(params.id)
+    if (!user) throw err.notFound('用户不存在')
+    return user
+  },
 })
+// 自动返回 { code: 404, message: '用户不存在' }
 ```
+
+常用：`err.badRequest()` `err.unauthorized()` `err.forbidden()` `err.notFound()` `err.conflict()` `err.internal()`
 
 ### 6. 数据验证中间件
 

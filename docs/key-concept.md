@@ -50,6 +50,29 @@ export default { fetch: server.fetch }
 > - 所有路由必须使用 `defineRoute` 包装
 > - Handler 直接是函数，不再需要 `createHandler` 包装
 
+## 路由类型：叶子 vs 路由组
+
+`defineRoute` 有两种形态，写后端必须区分：
+
+| 类型 | 必有字段 | 说明 |
+|------|---------|------|
+| **叶子路由** | `method` + `path` + `handler` | 实际 API 端点 |
+| **路由组** | `path` + `children` | 路径前缀、共享中间件，**无 method、无 handler** |
+
+```typescript
+// 路由组（无 method）
+defineRoute({
+  path: '/api/users',
+  middleware: [authMiddleware],
+  children: [
+    // 叶子路由（有 method）
+    defineRoute({ method: 'GET', path: '/list', handler: () => [...] }),
+  ]
+})
+```
+
+生产惯例：handler 先定义为常量，再放入 `children`。详见 [快速入门](/quick-start#两种路由-叶子-vs-路由组)。
+
 ## 路由系统
 
 Vafast 的路由系统基于配置对象，支持静态路径、动态参数和嵌套路由。
@@ -102,9 +125,9 @@ Vafast 使用智能路径匹配算法，支持：
 
 ```typescript
 type Middleware = (
-  req: Request, 
-  next: () => Promise<Response>
-) => Promise<Response>
+  req: Request,
+  next: (ctx?: unknown) => Promise<Response>
+) => Response | Promise<Response>
 ```
 
 ### 中间件链
@@ -377,7 +400,7 @@ const token = getHeader(req, 'Authorization')
 
 1. 查看 [路由指南](/routing) 学习如何定义复杂路由
 2. 阅读 [中间件系统](/middleware) 了解如何扩展功能
-3. 探索 [API 参考](/api) 查看完整的 API 文档
-4. 查看 [示例代码](/examples) 获取更多实践示例
+3. 微服务认证见 [Auth Middleware](/middleware/auth-middleware)
+4. 探索 [API 参考](/api) 查看完整的 API 文档
 
 如果你有任何问题，欢迎在我们的 [GitHub Issues](https://github.com/vafast/vafast/issues) 社区询问。

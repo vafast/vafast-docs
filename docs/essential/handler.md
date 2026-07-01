@@ -280,14 +280,12 @@ const routes = defineRoutes([
 处理程序可以与中间件配合使用：
 
 ```typescript
-import { defineRoute, defineRoutes, defineMiddleware, json } from 'vafast'
+import { defineRoute, defineRoutes, defineMiddleware, err } from 'vafast'
 
-const authMiddleware = defineMiddleware(async (req, next) => {
+const authMiddleware = defineMiddleware<{ userId: string }>(async (req, next) => {
   const token = req.headers.get('authorization')
-  if (!token) {
-    return json({ error: 'Unauthorized' }, 401)
-  }
-  return await next()
+  if (!token) throw err.unauthorized('未登录')
+  return next({ userId: 'user-123' })
 })
 
 const routes = defineRoutes([
@@ -306,10 +304,10 @@ const routes = defineRoutes([
 
 ## Schema 验证
 
-处理程序可以与 TypeBox 验证集成，使用两参数形式：
+处理程序可以与 TypeBox 验证集成，在路由 `schema` 字段中声明：
 
 ```typescript
-import { defineRoute, defineRoutes, Type } from 'vafast'
+import { defineRoute, defineRoutes, Type, err } from 'vafast'
 
 const userSchema = Type.Object({
   name: Type.String({ minLength: 1 }),

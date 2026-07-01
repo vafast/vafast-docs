@@ -178,7 +178,42 @@ const routes = defineRoutes([
 
 ## 嵌套路由
 
-Vafast 支持嵌套路由结构，使用 `children` 属性：
+Vafast 支持嵌套路由，分两种节点：
+
+### 路由组（无 `method`）
+
+只做路径前缀和中间件共享，**不写 handler**：
+
+```typescript
+defineRoute({
+  path: '/files',
+  name: '文件',
+  middleware: [authWithApp],
+  children: [ /* 叶子路由 */ ],
+})
+```
+
+### 叶子路由（有 `method`）
+
+实际处理请求，path 写**相对路径**：
+
+```typescript
+const listHandler = defineRoute({
+  method: 'GET',
+  path: '/list',
+  handler: () => [...],
+})
+
+// 放入路由组
+defineRoute({
+  path: '/files',
+  middleware: [authWithApp],
+  children: [listHandler],
+})
+// 实际路径：/files/list
+```
+
+### 多层嵌套
 
 ```typescript
 const routes = defineRoutes([
@@ -209,6 +244,8 @@ const routes = defineRoutes([
   })
 ])
 ```
+
+> 认证场景的路由组 + 类型包装见 [Auth Middleware](/middleware/auth-middleware)。
 
 ## 路由配置选项
 

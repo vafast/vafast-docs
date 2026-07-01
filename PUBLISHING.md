@@ -16,7 +16,7 @@
 ### 部署流程
 
 1. 代码推送到 `main` 分支
-2. GitHub Actions 自动运行 `Deploy Docs (GitHub Pages)` 工作流
+2. GitHub Actions 自动运行 **Deploy to GitHub Pages** 工作流（`.github/workflows/deploy.yml`）
 3. 构建 VitePress 文档
 4. 部署到 GitHub Pages
 
@@ -67,7 +67,7 @@ gh pr merge <PR_NUMBER> --merge --delete-branch
 
 ```bash
 # 检查部署状态
-gh run list --workflow="Deploy Docs (GitHub Pages)" --limit 1
+gh run list --workflow="Deploy to GitHub Pages" --limit 1
 
 # 访问网站验证
 open https://vafast.huyooo.com
@@ -139,7 +139,7 @@ const base = '/vafast-docs/'
 
 ## 相关文件
 
-- `.github/workflows/deploy-pages.yml` - 部署工作流配置
+- `.github/workflows/deploy.yml` - 部署工作流配置
 - `.github/workflows/ci.yml` - CI 检查工作流
 - `docs/.vitepress/config.ts` - VitePress 配置
 - `package.json` - 项目依赖和脚本
@@ -157,9 +157,9 @@ npm run build
 npm run preview
 
 # 检查部署状态
-gh run list --workflow="Deploy Docs (GitHub Pages)" --limit 5
+gh run list --workflow="Deploy to GitHub Pages" --limit 5
 
 # 手动触发部署
-gh workflow run "Deploy Docs (GitHub Pages)"
+gh workflow run "Deploy to GitHub Pages"
 ```
 

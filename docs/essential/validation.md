@@ -389,35 +389,24 @@ const routes = defineRoutes([
 ])
 ```
 
-### 自定义错误处理
+### 错误处理
 
-::: tip
-框架内置了验证错误处理，通常无需手动编写错误处理中间件。
-:::
+`defineRoute` 的 `schema` 验证失败时**自动返回 400**，无需额外中间件。
+
+业务错误在 handler 中 `throw err.xxx()`，框架 `errorHandler` 自动转为 JSON：
 
 ```typescript
-import { defineRoute, defineRoutes, defineMiddleware, json } from 'vafast'
+import { defineRoute, Type, err } from 'vafast'
 
-const errorHandler = defineMiddleware(async (req, next) => {
-  try {
-    return await next()
-  } catch (error) {
-    if (error instanceof Error && error.message.includes('验证失败')) {
-      return json({ error: 'Validation failed', message: error.message }, 400)
-    }
-    return json({ error: 'Internal server error' }, 500)
-  }
+defineRoute({
+  method: 'POST',
+  path: '/users',
+  schema: { body: userSchema },
+  handler: ({ body }) => {
+    if (emailExists(body.email)) throw err.conflict('邮箱已存在')
+    return createUser(body)
+  },
 })
-
-const routes = defineRoutes([
-  defineRoute({
-    method: 'POST',
-    path: '/users',
-    schema: { body: userSchema },
-    handler: ({ body }) => createUser(body),
-    middleware: [errorHandler]
-  })
-])
 ```
 
 ## 性能优化

@@ -261,23 +261,23 @@ const app = new Elysia()
   })
 ```
 
-**Vafast** 使用中间件：
+**Vafast** 内置 `errorHandler`，在 handler 中 `throw err.xxx()` 即可：
+
 ```typescript
-import { defineMiddleware, json } from 'vafast'
+import { err } from 'vafast'
 
-const errorHandler = defineMiddleware(async (req, next) => {
-  try {
-    return await next()
-  } catch (error) {
-    return json({ 
-      error: error instanceof Error ? error.message : 'Unknown error' 
-    }, 500)
-  }
+defineRoute({
+  method: 'GET',
+  path: '/users/:id',
+  handler: ({ params }) => {
+    const user = getUser(params.id)
+    if (!user) throw err.notFound('User not found')
+    return user
+  },
 })
-
-const server = new Server(routes)
-server.use(errorHandler)
 ```
+
+> 框架自动注入 `errorHandler`，**不要** `server.use(errorHandler)`。
 
 ## 迁移步骤
 
@@ -408,14 +408,6 @@ const authMiddleware = defineMiddleware(async (req, next) => {
   return await next({ user })
 })
 
-const errorHandler = defineMiddleware(async (req, next) => {
-  try {
-    return await next()
-  } catch (error) {
-    return json({ error: error instanceof Error ? error.message : 'Unknown error' }, 500)
-  }
-})
-
 const routes = defineRoutes([
   defineRoute({
     method: 'GET',
@@ -443,8 +435,6 @@ const routes = defineRoutes([
 
 const server = new Server(routes)
 server.use(cors())
-server.use(authMiddleware)
-server.use(errorHandler)
 
 serve({ fetch: server.fetch, port: 3000 })
 ```

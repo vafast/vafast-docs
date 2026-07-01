@@ -8,51 +8,61 @@ Vafast 的路由系统是框架的核心，它提供了强大而灵活的方式�
 
 ## 路由类型定义
 
-### Route 接口
+### 叶子路由 vs 路由组
 
 ```typescript
-import type { Route, NestedRoute, Method, Handler, Middleware } from 'vafast'
+// 叶子路由：有 method + handler
+defineRoute({
+  method: 'GET',
+  path: '/users/:id',
+  handler: ({ params }) => ({ id: params.id }),
+})
 
-// HTTP 方法类型
-type Method = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'OPTIONS' | 'HEAD'
+// 路由组：无 method，只有 path + children（可挂 middleware）
+defineRoute({
+  path: '/api',
+  middleware: [authMiddleware],
+  children: [
+    defineRoute({ method: 'GET', path: '/users', handler: () => [...] }),
+  ],
+})
+```
 
-// 基本路由接口
-interface Route {
+`defineRoutes()` 会自动扁平化嵌套路径并合并中间件。
+
+### ProcessedRoute
+
+`defineRoutes()` 返回扁平化后的路由对象（`Route` 别名）：
+
+```typescript
+interface ProcessedRoute {
   method: Method
   path: string
-  handler: Handler
+  handler: (req: Request) => Promise<Response>
   middleware?: Middleware[]
-  name?: string         // 路由名称（用于文档、事件等）
-  description?: string  // 路由描述
-  [key: string]: unknown // 允许任意扩展（支持 Webhook、权限等插件）
-}
-
-// 嵌套路由配置
-interface NestedRoute {
-  path: string
-  middleware?: Middleware[]
-  children?: (NestedRoute | Route)[]
-  name?: string         // 路由组名称
-  description?: string  // 路由组描述
-  [key: string]: unknown
+  schema?: RouteSchema
+  sse?: boolean
+  name?: string
+  description?: string
+  [key: string]: unknown  // webhook、permission 等扩展
 }
 ```
 
 ### Handler 类型
 
 ```typescript
-// Handler 支持两种风格
-type Handler = LegacyHandler | FactoryHandler
+// handler 接收上下文对象，返回值自动转 Response
+type Handler = (ctx: HandlerContext) => unknown | Promise<unknown>
 
-// 传统 Handler（不推荐）
-type LegacyHandler = (
-  req: Request,
-  params?: Record<string, string>,
-  user?: Record<string, any>
-) => ResponseBody | Promise<ResponseBody>
-
-// Handler 类型（推荐）
-type Handler = (ctx: HandlerContext) => ResponseBody | Promise<ResponseBody>
+interface HandlerContext {
+  req: Request
+  params: Record<string, string>
+  query: Record<string, string>
+  body: unknown
+  headers: Record<string, string>
+  cookies: Record<string, string>
+  // + 中间件通过 defineMiddleware / next({ ... }) 注入的字段
+}
 ```
 
 ### Middleware 类型
@@ -60,9 +70,11 @@ type Handler = (ctx: HandlerContext) => ResponseBody | Promise<ResponseBody>
 ```typescript
 type Middleware = (
   req: Request,
-  next: () => Promise<Response>
+  next: (ctx?: unknown) => Promise<Response>
 ) => Response | Promise<Response>
 ```
+
+生产认证与路由类型包装见 [Auth Middleware](/middleware/auth-middleware)。
 
 ## 基本路由
 
@@ -726,12 +738,10 @@ export const defineRouteWithApp = withContext<{ app: AppInfo }>()
 
 | 类型/函数 | 说明 | 用途 |
 |-----------|------|------|
-| `Route` | 基本路由接口 | 定义单个路由 |
-| `NestedRoute` | 嵌套路由接口 | 定义路由组 |
-| `Method` | HTTP 方法联合类型 | 类型约束 |
-| `Handler` | 处理函数类型 | 类型约束 |
-| `Middleware` | 中间件类型 | 类型约束 |
-| `defineRoutes()` | 创建路由数组 | 自动保留字面量类型，支持端到端类型推断 |
+| 叶子路由 | `method` + `path` + `handler` | 实际 API 端点 |
+| 路由组 | `path` + `children`（无 method） | 路径前缀、共享中间件 |
+| `ProcessedRoute` / `Route` | 扁平化后的路由对象 | `Server` 内部使用 |
+| `defineRoutes()` | 创建并扁平化路由数组 | 类型推断 + 嵌套合并 |
 
 ## 扩展字段 — 声明式元数据
 
