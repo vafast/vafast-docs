@@ -22,10 +22,12 @@ Vafast 采用模块化架构设计，主要包含以下核心组件：
 
 ### 主要特性
 
-- **路由管理**: 自动扁平化嵌套路由
-- **中间件支持**: 全局和路由级中间件
-- **错误处理**: 内置的错误处理机制
-- **性能优化**: 智能路由排序和冲突检测
+- **Radix Tree 路由**: O(k) 时间复杂度的高效路径匹配
+- **嵌套路由**: `defineRoute` + `children` 自动扁平化，中间件自动继承
+- **中间件支持**: 全局 `server.use()` 与路由级中间件，洋葱模型执行
+- **类型注入**: `defineMiddleware` / `withContext` 支持中间件上下文类型推断
+- **SSE 流式响应**: `sse: true` + `async function*` 声明式流式端点
+- **错误处理**: 内置 `errorHandler` + `VafastError` / `err()` 结构化错误
 
 ### 基本用法
 
@@ -107,10 +109,26 @@ type Middleware = (
 
 ### 中间件链
 
-中间件按以下顺序执行：
-1. 全局中间件
-2. 路由级中间件
-3. 路由处理器
+中间件按洋葱模型执行，`errorHandler` 由框架自动注入：
+
+1. 全局中间件（`server.use()`）
+2. `errorHandler`（捕获后续链路异常）
+3. 路由级中间件（含嵌套路由继承的中间件）
+4. 路由处理器
+
+### defineMiddleware 与类型注入
+
+```typescript
+import { defineMiddleware, json } from 'vafast'
+
+const authMiddleware = defineMiddleware<{ user: { id: string } }>((req, next) => {
+  const user = getUserFromToken(req)
+  if (!user) return json({ error: 'Unauthorized' }, 401)
+  return next({ user }) // 通过 next 向下游注入上下文
+})
+```
+
+父级中间件注入的上下文，子路由 handler 可自动获得类型推断。对于跨文件复用，使用 `withContext<T>()` 预设上下文类型。
 
 ### 中间件示例
 
@@ -159,17 +177,20 @@ Vafast 提供完整的 TypeScript 支持，包括类型安全的处理器和验�
 ### 处理器类型
 
 ```typescript
-type Handler = (context: HandlerContext) => Response | Promise<Response>
+type Handler = (context: HandlerContext) => Response | Promise<Response> | unknown
 
-interface HandlerContext {
+interface HandlerContext<TSchema extends RouteSchema = RouteSchema> {
   req: Request
-  params?: Record<string, string>
-  body?: any
-  query?: any
-  headers?: any
-  cookies?: any
+  body: InferSchemaType<TSchema>['body']
+  query: InferSchemaType<TSchema>['query']
+  params: InferSchemaType<TSchema>['params']
+  headers: InferSchemaType<TSchema>['headers']
+  cookies: InferSchemaType<TSchema>['cookies']
+  // + 中间件通过 defineMiddleware 注入的额外字段
 }
 ```
+
+Handler 返回值会自动转换为 `Response`（对象 → JSON，字符串 → text，null → 204）。
 
 ### Schema 验证
 
@@ -268,17 +289,32 @@ const fullRoute = defineRoute({
 > - Schema 验证统一在 `schema` 字段中定义
 > - Handler 直接接收所有验证后的数据
 
+## SSE 流式响应
+
+通过 `sse: true` 声明 SSE 端点，handler 使用 `async function*`，直接 `yield` 数据：
+
+```typescript
+import { defineRoute, sse } from 'vafast'
+
+defineRoute({
+  method: 'POST',
+  path: '/chat/stream',
+  sse: true,
+  handler: async function* ({ body }) {
+    yield { delta: 'Hello' }
+    yield sse({ event: 'done' }, { finished: true })
+  }
+})
+```
+
 ## 请求处理流程
 
-Vafast 的请求处理流程如下：
-
 1. **请求接收**: 接收 HTTP 请求
-2. **路由匹配**: 根据路径和方法匹配路由
-3. **中间件执行**: 按顺序执行全局和路由中间件
-4. **参数解析**: 解析路径参数、查询参数等
-5. **Schema 验证**: 验证请求数据（如果配置了）
-6. **处理器执行**: 执行路由处理器
-7. **响应返回**: 返回 HTTP 响应
+2. **路由匹配**: Radix Tree 按路径和方法匹配
+3. **中间件执行**: 全局 → errorHandler → 路由中间件
+4. **参数解析与验证**: 解析 body/query/params 等，执行 TypeBox schema 验证
+5. **处理器执行**: 执行 handler，自动转换返回值
+6. **响应返回**: 返回 HTTP 响应（SSE 端点返回 `text/event-stream`）
 
 ## 性能优化
 
@@ -331,9 +367,9 @@ const token = getHeader(req, 'Authorization')
 
 基于 Radix Tree 的高效路由匹配，时间复杂度 O(k)（k 为路径段数）：
 
-- **路由预排序**: 构造时按特异性排序
-- **智能路径匹配**: 静态路径 > 动态参数 > 通配符
+- **路由预排序**: 构造时按特异性排序（静态 > 动态参数 > 通配符）
 - **冲突检测**: 自动检测并警告路由冲突
+- **嵌套扁平化**: `defineRoutes()` 自动合并路径与中间件
 
 ## 下一步
 

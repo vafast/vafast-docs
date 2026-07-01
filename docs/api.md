@@ -22,18 +22,17 @@ export default { fetch: server.fetch }
 #### 构造函数
 
 ```typescript
-new Server(routes: Route[], options?: ServerOptions)
+new Server(routes?: readonly ProcessedRoute[])
 ```
 
 **参数：**
-- `routes`: 路由配置数组
-- `options`: 可选的服务器配置
+- `routes`: 由 `defineRoutes()` 返回的路由数组，可省略后通过 `addRoute()` / `addRoutes()` 动态注册
 
 #### 方法
 
 ##### `fetch(request: Request): Promise<Response>`
 
-处理 HTTP 请求并返回响应。
+处理 HTTP 请求并返回响应。可导出给 Bun、Cloudflare Workers 等运行时，或通过 `serve()` 启动 Node.js 服务。
 
 ```typescript
 const server = new Server(routes)
@@ -51,6 +50,22 @@ server.use(cors())
 server.use(requestLogger())
 ```
 
+##### `addRoute(route: ProcessedRoute): void`
+
+动态添加单个路由。
+
+##### `addRoutes(routes: readonly ProcessedRoute[]): void`
+
+动态批量添加路由，并自动更新全局 `RouteRegistry`。
+
+##### `getRoutes(): Array<{ method: Method; path: string }>`
+
+获取已注册路由的方法与路径列表。
+
+##### `getRoutesWithMeta(): ProcessedRoute[]`
+
+获取完整路由元信息（含 `schema`、`name`、`description` 等），用于 OpenAPI 生成、Webhook 注册等场景。
+
 ### ComponentServer
 
 `ComponentServer` 用于创建支持组件路由的服务器。
@@ -65,12 +80,11 @@ export default { fetch: server.fetch }
 #### 构造函数
 
 ```typescript
-new ComponentServer(routes: ComponentRoute[], options?: ServerOptions)
+new ComponentServer(routes: (ComponentRoute | NestedComponentRoute)[])
 ```
 
 **参数：**
-- `routes`: 组件路由配置数组
-- `options`: 可选的服务器配置
+- `routes`: 组件路由配置数组，支持嵌套结构
 
 #### 方法
 
@@ -80,30 +94,56 @@ new ComponentServer(routes: ComponentRoute[], options?: ServerOptions)
 
 ## 类型定义
 
-### Route
+### ProcessedRoute（Route）
 
-基本路由配置接口。
+`defineRoutes()` 扁平化后的路由对象，也是 `Server` 内部使用的路由类型（`Route` 为其别名）。
 
 ```typescript
-interface Route {
+interface ProcessedRoute {
   method: Method
   path: string
-  handler: Handler
+  handler: (req: Request) => Promise<Response>
   middleware?: Middleware[]
-  name?: string         // 路由名称（用于文档、事件等）
-  description?: string  // 路由描述
-  [key: string]: unknown // 允许任意扩展
+  schema?: RouteSchema
+  sse?: boolean
+  name?: string
+  description?: string
+  docs?: {
+    tags?: string[]
+    security?: unknown[]
+    responses?: Record<string, unknown>
+  }
+  parent?: { path: string; name?: string; description?: string }
+  [key: string]: unknown // 允许任意扩展（webhook、permission 等）
 }
 ```
 
 **属性：**
-- `method`: HTTP 方法（GET、POST、PUT、DELETE、PATCH、OPTIONS、HEAD）
-- `path`: 路由路径
-- `handler`: 路由处理函数
-- `middleware`: 中间件数组
-- `name`: 路由名称（用于文档生成、事件等）
-- `description`: 路由描述
-- `[key]`: 允许任意扩展（支持 Webhook、权限等插件）
+- `method`: HTTP 方法
+- `path`: 扁平化后的完整路径
+- `handler`: 框架包装后的处理函数
+- `middleware`: 合并父级后的中间件数组
+- `schema`: TypeBox 验证配置（`body` / `query` / `params` / `headers` / `cookies` / `response`）
+- `sse`: 是否为 SSE 流式端点
+- `name` / `description`: 路由元信息
+- `docs`: OpenAPI 文档配置
+- `parent`: 嵌套路由的父级信息
+- `[key]`: 插件扩展字段（如 `webhook`、`permission`）
+
+### RouteSchema
+
+路由验证配置，基于 TypeBox：
+
+```typescript
+interface RouteSchema {
+  body?: TSchema
+  query?: TSchema
+  params?: TSchema
+  headers?: TSchema
+  cookies?: TSchema
+  response?: TSchema  // 仅用于类型同步，运行时不校验
+}
+```
 
 ### ComponentRoute
 
@@ -126,25 +166,23 @@ interface ComponentRoute {
 
 ### NestedRoute
 
-嵌套路由配置接口。
+嵌套路由通过 `defineRoute` 的 `children` 字段定义，由 `defineRoutes()` 自动扁平化：
 
 ```typescript
-interface NestedRoute {
-  path: string
-  middleware?: Middleware[]
-  children?: (Route | NestedRoute)[]
-  name?: string         // 路由组名称
-  description?: string  // 路由组描述
-  [key: string]: unknown
-}
+defineRoute({
+  path: '/api',
+  middleware: [authMiddleware],
+  children: [
+    defineRoute({
+      method: 'GET',
+      path: '/users',
+      handler: () => ({ users: [] })
+    })
+  ]
+})
 ```
 
-**属性：**
-- `path`: 路由路径
-- `middleware`: 中间件数组
-- `children`: 子路由配置
-- `name`: 路由组名称
-- `description`: 路由组描述
+扁平化后路径为 `/api/users`，中间件自动合并。
 
 ## 路由函数
 
@@ -195,16 +233,22 @@ type Api = InferEden<typeof routes>
 
 ```typescript
 type Middleware = (
-  req: Request, 
-  next: () => Promise<Response>
-) => Promise<Response>
+  req: Request,
+  next: (ctx?: unknown) => Promise<Response>
+) => Response | Promise<Response>
 ```
 
 **参数：**
 - `req`: HTTP 请求对象
-- `next`: 下一个中间件或路由处理函数
+- `next`: 调用下一个中间件；`defineMiddleware` 可通过 `next({ ...ctx })` 向下游注入上下文
 
-**返回值：** HTTP 响应对象
+**执行顺序（洋葱模型）：**
+
+```
+全局中间件 → errorHandler → 路由中间件 → handler
+```
+
+`errorHandler` 由框架自动注入，捕获后续链路中的 `VafastError` 及未处理异常。
 
 ### RouteHandler
 
@@ -539,48 +583,27 @@ interface ServeResult {
 }
 ```
 
-### ServerOptions
+### Server 与 serve 的职责划分
 
-服务器配置选项。
-
-```typescript
-interface ServerOptions {
-  port?: number
-  host?: string
-  cors?: CorsOptions
-  compression?: boolean
-  trustProxy?: boolean
-  [key: string]: any
-}
-```
-
-**属性：**
-- `port`: 服务器端口
-- `host`: 服务器主机
-- `cors`: CORS 配置
-- `compression`: 是否启用压缩
-- `trustProxy`: 是否信任代理
-
-### CorsOptions
-
-CORS 配置选项。
+`Server` 只负责路由匹配与请求处理，**不接受** `port` / `cors` 等运行时配置。服务器启动、超时、代理信任等选项通过 `serve()` 配置：
 
 ```typescript
-interface CorsOptions {
-  origin?: string | string[] | boolean
-  methods?: string[]
-  allowedHeaders?: string[]
-  credentials?: boolean
-  maxAge?: number
-}
-```
+import { Server, serve } from 'vafast'
+import { cors } from '@vafast/cors'
 
-**属性：**
-- `origin`: 允许的源
-- `methods`: 允许的 HTTP 方法
-- `allowedHeaders`: 允许的请求头
-- `credentials`: 是否允许凭据
-- `maxAge`: 预检请求缓存时间
+const server = new Server(routes)
+server.use(cors({ origin: ['https://yourdomain.com'] }))
+
+serve({
+  fetch: server.fetch,
+  port: Number(process.env.PORT) || 3000,
+  hostname: '0.0.0.0',
+  trustProxy: true,
+  bodyLimit: 10 * 1024 * 1024,
+  gracefulShutdown: true,
+  timeout: { requestTimeout: 30000 }
+})
+```
 
 ## 中间件类型
 
@@ -643,42 +666,87 @@ const routes = defineRoutes([
     handler: () => 'Login'
   })
 ])
+```
 
 ## 工具函数
 
 ### defineRoute
 
-用于定义类型安全的路由。
+定义类型安全的路由，支持叶子路由与嵌套路由两种形式。
 
 ```typescript
-import { defineRoute } from 'vafast'
+import { defineRoute, Type } from 'vafast'
 
+// 叶子路由
 const userRoute = defineRoute({
   method: 'GET',
   path: '/users/:id',
-  handler: (req, params) => `User ${params?.id}`
+  schema: { params: Type.Object({ id: Type.String() }) },
+  handler: ({ params }) => ({ id: params.id })
+})
+
+// 嵌套路由
+const apiGroup = defineRoute({
+  path: '/api',
+  middleware: [authMiddleware],
+  children: [
+    defineRoute({
+      method: 'GET',
+      path: '/profile',
+      handler: ({ user }) => ({ name: user.name }) // user 来自 authMiddleware
+    })
+  ]
 })
 ```
 
-### createMiddleware
+### defineRoutes
 
-用于创建可配置的中间件。
+将路由数组扁平化并保留字面量类型，供 `vafast-api-client` 推断：
 
 ```typescript
-import { createMiddleware } from 'vafast'
+const routes = defineRoutes([
+  defineRoute({ method: 'GET', path: '/users', handler: () => ({ users: [] }) })
+])
 
-const logMiddleware = createMiddleware({
-  level: 'info',
-  format: 'json'
+type Api = InferEden<typeof routes> // 无需 as const
+```
+
+### defineMiddleware
+
+定义带类型注入的中间件，通过 `next(ctx)` 向下游传递上下文：
+
+```typescript
+import { defineMiddleware } from 'vafast'
+
+const authMiddleware = defineMiddleware<{ user: { id: string } }>((req, next) => {
+  const user = getUserFromToken(req)
+  if (!user) return json({ error: 'Unauthorized' }, 401)
+  return next({ user })
+})
+```
+
+### withContext
+
+为父级中间件注入的上下文创建预设类型的路由定义器：
+
+```typescript
+import { withContext } from 'vafast'
+
+export const defineAuthRoute = withContext<{ userInfo: UserInfo }>()
+
+defineAuthRoute({
+  method: 'GET',
+  path: '/profile',
+  handler: ({ userInfo }) => ({ id: userInfo.id })
 })
 ```
 
 ### SSE 端点
 
-通过 `sse: true` 显式声明 Server-Sent Events (SSE) 流式响应端点。
+通过 `sse: true` 显式声明 Server-Sent Events (SSE) 流式响应端点。handler 使用 `async function*`，直接 `yield` 数据即可：
 
 ```typescript
-import { defineRoute, Type } from 'vafast'
+import { defineRoute, defineRoutes, Type, sse } from 'vafast'
 
 // GET + params
 defineRoute({
@@ -687,7 +755,8 @@ defineRoute({
   sse: true,
   schema: { params: Type.Object({ id: Type.String() }) },
   handler: async function* ({ params }) {
-    yield { data: { taskId: params.id } }
+    yield { taskId: params.id }
+    yield sse({ event: 'complete' }, { done: true })
   },
 })
 
@@ -698,20 +767,17 @@ defineRoute({
   sse: true,
   schema: { body: Type.Object({ prompt: Type.String() }) },
   handler: async function* ({ body }) {
-    yield { data: { message: 'hello' } }
+    yield { message: `reply to: ${body.prompt}` }
   },
 })
 ```
 
-**SSE 事件格式：**
+**SSE 辅助函数 `sse()`：**
+
+需要自定义 `event` / `id` / `retry` 元数据时使用：
 
 ```typescript
-interface SSEEvent {
-  event?: string    // 事件名称（可选）
-  data: unknown     // 事件数据（必需）
-  id?: string       // 事件 ID（可选）
-  retry?: number    // 重试间隔（可选）
-}
+yield sse({ event: 'status', id: '42', retry: 5000 }, { online: true })
 ```
 
 > 📖 详细文档见 [SSE 流式响应](/essential/sse)
@@ -1106,52 +1172,40 @@ const routes = defineRoutes([
 ])
 ```
 
-## 生命周期钩子
+## 错误处理
 
-### 服务器生命周期
+### VafastError 与 err()
+
+框架内置结构化错误类型，配合 `errorHandler` 自动转换为 JSON 响应：
 
 ```typescript
-const server = new Server(routes)
+import { err, VafastError, isVafastError } from 'vafast'
 
-// 启动前
-server.on('beforeStart', () => {
-  console.log('Server starting...')
-})
+// 语义化快捷方法
+throw err.notFound('用户不存在')
+throw err.unauthorized('请先登录')
+throw err.badRequest('参数无效')
 
-// 启动后
-server.on('afterStart', () => {
-  console.log('Server started')
-})
-
-// 关闭前
-server.on('beforeClose', () => {
-  console.log('Server closing...')
-})
-
-// 关闭后
-server.on('afterClose', () => {
-  console.log('Server closed')
-})
+// 自定义错误
+throw new VafastError('内部错误', { status: 500, code: 50001, expose: false })
 ```
+
+`expose: true` 时错误信息会返回给客户端，否则统一返回通用提示。
 
 ## 性能优化
 
-### 路由缓存
+### Radix Tree 路由
 
-Vafast 自动缓存路由匹配结果以提高性能：
+基于 Radix Tree 的路由匹配，时间复杂度 O(k)（k 为路径段数）。构造时自动按特异性排序并检测冲突，无需手动配置路由缓存。
+
+### JIT 编译验证器
+
+Schema 验证器在首次使用时编译并缓存：
 
 ```typescript
-const routes: any[] = [
-  {
-    method: 'GET',
-    path: '/users/:id',
-    handler: (req, params) => `User ${params?.id}`,
-    cache: {
-      ttl: 300, // 5 分钟缓存
-      key: (req, params) => `user:${params?.id}`
-    }
-  }
-]
+import { validateFast, createValidator, precompileSchemas } from 'vafast'
+
+precompileSchemas([userSchema, postSchema]) // 启动时预编译，避免首请求延迟
 ```
 
 ### 中间件优化
@@ -1173,7 +1227,7 @@ const conditionalMiddleware = (condition: (req: Request) => boolean, middleware:
 }
 
 const routes = defineRoutes([
-  {
+  defineRoute({
     method: 'GET',
     path: '/admin',
     middleware: [
@@ -1192,30 +1246,33 @@ const routes = defineRoutes([
 ### 生产环境配置
 
 ```typescript
-const productionConfig: ServerOptions = {
-  port: process.env.PORT || 3000,
-  host: '0.0.0.0',
-  cors: {
-    origin: ['https://yourdomain.com'],
-    credentials: true
-  },
-  compression: true,
-  trustProxy: true
-}
+import { Server, serve } from 'vafast'
+import { cors } from '@vafast/cors'
+import { helmet } from '@vafast/helmet'
 
-const server = new Server(routes, productionConfig)
+const server = new Server(routes)
+server.use(cors({ origin: ['https://yourdomain.com'], credentials: true }))
+server.use(helmet())
+
+serve({
+  fetch: server.fetch,
+  port: Number(process.env.PORT) || 3000,
+  hostname: '0.0.0.0',
+  trustProxy: true,
+  gracefulShutdown: { timeout: 30000 },
+  timeout: { requestTimeout: 30000 }
+})
 ```
 
 ### 环境变量
 
 ```typescript
-const config: ServerOptions = {
+serve({
+  fetch: server.fetch,
   port: parseInt(process.env.PORT || '3000'),
-  host: process.env.HOST || 'localhost',
-  cors: {
-    origin: process.env.CORS_ORIGIN?.split(',') || ['http://localhost:3000']
-  }
-}
+  hostname: process.env.HOST || '0.0.0.0',
+  trustProxy: process.env.TRUST_PROXY === 'true'
+})
 ```
 
 ## 测试

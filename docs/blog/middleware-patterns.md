@@ -394,12 +394,6 @@ const cacheMiddleware = createCache({ ttl: 60 })  // 缓存 60 秒
 Vafast 支持在路由级别和全局级别组合中间件：
 
 ```ts
-const server = new Server(routes, {
-  // 全局中间件
-  middleware: [cors, errorHandler, requestLogger]
-})
-
-// 路由级别中间件
 const routes = defineRoutes([
   defineRoute({
     method: 'GET',
@@ -414,6 +408,12 @@ const routes = defineRoutes([
     handler: ({ body }) => doAction(body)
   })
 ])
+
+const server = new Server(routes)
+
+// 全局中间件（errorHandler 由框架自动注入）
+server.use(cors)
+server.use(requestLogger)
 ```
 
 ## 最佳实践总结

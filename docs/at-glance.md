@@ -21,9 +21,9 @@ API 用代码定义，而非行为。没有装饰器，没有魔法。
 
 ```typescript
 // 所见即所得
-const routes = [
-  { method: 'GET', path: '/users/:id', handler: getUser }
-]
+const routes = defineRoutes([
+  defineRoute({ method: 'GET', path: '/users/:id', handler: getUser })
+])
 ```
 
 ### 错误即数据 <span class="tag">Errors are Data</span>
@@ -37,7 +37,13 @@ throw err.notFound('资源不存在')  // 404 + 语义化类型
 中间件显式组合，执行顺序清晰可控，无全局污染。
 
 ```typescript
-{ path: '/admin', middleware: [auth, log], handler }
+defineRoute({
+  path: '/admin',
+  middleware: [auth, log],
+  children: [
+    defineRoute({ method: 'GET', path: '/dashboard', handler: dashboard })
+  ]
+})
 ```
 
 ### 多运行时支持 <span class="tag">Multi-Runtime</span>
@@ -76,6 +82,8 @@ export default { port: 3000, fetch: server.fetch }
 - ✅ **结构化响应** — `{ data, status }` 统一格式，错误也是数据
 - ✅ **内置响应工具** — `json()`、`html()`、`text()` 等，简洁统一
 - ✅ **SSE 流式响应** — 通过 `sse: true` 声明，适用于 AI 聊天、进度更新等场景
+- ✅ **中间件类型注入** — `defineMiddleware` + `withContext` 支持上下文类型推断
+- ✅ **结构化错误** — `err()` / `VafastError` 配合自动 `errorHandler`
 - ✅ **多运行时** — 支持 Node.js、Bun、Deno、Workers 等
 - ✅ **零样板代码** — 一个文件即可运行，可选 `npx create-vafast-app` 快速开始
 - ✅ **类型安全** — 路由、处理器、响应，全部 TypeScript 类型推断
