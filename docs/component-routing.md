@@ -190,15 +190,15 @@ const routes: any[] = [
 ### 组件级中间件
 
 ```typescript
-import { json } from 'vafast'
+import { defineMiddleware, json } from 'vafast'
 
-const authMiddleware = async (req: Request, next: () => Promise<Response>) => {
+const authMiddleware = defineMiddleware(async (req, next) => {
   const token = req.headers.get('authorization')
   if (!token) {
     return json({ error: 'Unauthorized' }, 401)
   }
   return next()
-}
+})
 
 const routes: any[] = [
   {
@@ -218,12 +218,12 @@ const routes: any[] = [
 ### 全局中间件
 
 ```typescript
-const logMiddleware = async (req: Request, next: () => Promise<Response>) => {
+const logMiddleware = defineMiddleware(async (req, next) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`)
   const response = await next()
   console.log(`Response: ${response.status}`)
   return response
-}
+})
 
 const routes: any[] = [
   {

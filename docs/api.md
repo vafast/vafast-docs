@@ -649,6 +649,10 @@ const routes = defineRoutes([
 ])
 ```
 
+::: tip 生产环境
+对接 auth-server 的微服务请使用 [@vafast/auth-middleware](/middleware/auth-middleware)，而非 `@vafast/jwt`。
+:::
+
 #### 示例：速率限制
 
 ```typescript

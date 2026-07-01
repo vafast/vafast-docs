@@ -6,6 +6,16 @@ title: Better Auth 集成 - Vafast
 
 Better Auth 是一个现代化的身份验证库，专为现代 Web 应用设计。它提供了一整套全面的功能，并包括一个中间件生态系统，可以简化添加高级功能。
 
+## 与 @vafast/auth-middleware 的区别
+
+| | Better Auth | [@vafast/auth-middleware](/middleware/auth-middleware) |
+|---|---|---|
+| **适用场景** | 在应用内自建完整认证（注册/登录/OAuth/会话） | 微服务对接已有 **auth-server** |
+| **数据存储** | 自带适配器，直连你的数据库 | 无本地用户表，远程校验 JWT / API Key |
+| **典型项目** | 独立全栈应用、需要 OAuth 的 SaaS | `ones-server`、`ai-server`、`billing-server` |
+
+两者可并存：全栈应用用 Better Auth 管理用户，业务微服务用 `@vafast/auth-middleware` 校验 auth-server 签发的 token。
+
 ## 安装
 
 ```bash
@@ -97,8 +107,9 @@ const routes = defineRoutes([
 ])
 
 const server = new Server(routes)
-server.use(authMiddleware)
 ```
+
+认证中间件挂在**路由级**即可，无需 `server.use(authMiddleware)` 全局重复注册。
 
 ## 认证中间件
 
@@ -115,10 +126,9 @@ export const authMiddleware = defineMiddleware(async (request, next) => {
   const session = await auth.api.getSession(request)
   
   if (!session) {
-    return new Response('Unauthorized', { status: 401 })
+    throw err.unauthorized('Unauthorized')
   }
   
-  // 通过 next 传递用户信息
   return await next({ user: session.user })
 })
 

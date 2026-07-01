@@ -176,16 +176,18 @@ export const userRoutes = defineRoutes([
 
 ```typescript
 // modules/user/routes.ts
+import { defineRoute, defineRoutes } from 'vafast'
+
 export const userRoutes = defineRoutes([
-  { method: 'GET', path: '/users', handler: ... },
-  { method: 'GET', path: '/users/:id', handler: ... },
-  { method: 'POST', path: '/users', handler: ... },
+  defineRoute({ method: 'GET', path: '/users', handler: ... }),
+  defineRoute({ method: 'GET', path: '/users/:id', handler: ... }),
+  defineRoute({ method: 'POST', path: '/users', handler: ... }),
 ])
 
 // modules/post/routes.ts
 export const postRoutes = defineRoutes([
-  { method: 'GET', path: '/posts', handler: ... },
-  { method: 'GET', path: '/posts/:id', handler: ... },
+  defineRoute({ method: 'GET', path: '/posts', handler: ... }),
+  defineRoute({ method: 'GET', path: '/posts/:id', handler: ... }),
 ])
 ```
 

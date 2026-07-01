@@ -416,11 +416,19 @@ export const tagService = new TagService()
 
 ## 在 Vafast 路由中使用
 
+::: tip 认证
+受保护路由使用 [@vafast/auth-middleware](/middleware/auth-middleware) 的 `authWithApp` + `requireUser`。注册/登录等公开路由无需认证中间件。
+:::
+
 ```typescript
 // src/routes.ts
 import { defineRoute, defineRoutes, err, Type } from 'vafast'
+import {
+  authWithApp,
+  requireUser,
+  defineAuthRouteWithApp,
+} from '@vafast/auth-middleware'
 import { userService, postService, tagService } from './services'
-import { authMiddleware } from './middleware/auth'
 
 export const routes = defineRoutes([
   // 用户认证路由
@@ -537,16 +545,14 @@ export const routes = defineRoutes([
     }
   }),
   
-  defineRoute({
+  defineAuthRouteWithApp({
     method: 'POST',
     path: '/api/posts',
-    handler: async ({ body, request }) => {
-      // 这里应该验证用户身份
-      const authorId = 'user-id-from-auth' // 从认证中间件获取
-      
+    middleware: [authWithApp, requireUser],
+    handler: async ({ body, userInfo }) => {
       const newPost = await postService.create({
         ...body,
-        authorId
+        authorId: userInfo.id,
       })
       
       return { post: newPost }
@@ -559,12 +565,12 @@ export const routes = defineRoutes([
         tagIds: Type.Optional(Type.Array(Type.String()))
       })
     },
-    middleware: [authMiddleware]
   }),
   
-  defineRoute({
+  defineAuthRouteWithApp({
     method: 'PUT',
     path: '/api/posts/:id',
+    middleware: [authWithApp, requireUser],
     schema: {
       params: Type.Object({
         id: Type.String()
@@ -574,25 +580,27 @@ export const routes = defineRoutes([
         content: Type.Optional(Type.String({ minLength: 1 })),
         published: Type.Optional(Type.Boolean()),
         tagIds: Type.Optional(Type.Array(Type.String()))
-    }),
-    middleware: [authMiddleware]
-  },
+      })
+    },
+    handler: async ({ params, body }) => {
+      const post = await postService.update(params.id, body)
+      return { post }
+    },
+  }),
   
-  defineRoute({
+  defineAuthRouteWithApp({
     method: 'DELETE',
     path: '/api/posts/:id',
+    middleware: [authWithApp, requireUser],
     schema: {
       params: Type.Object({
         id: Type.String()
       })
     },
     handler: async ({ params }) => {
-      // 这里应该验证用户身份和权限
-      
       await postService.delete(params.id)
       return { message: '文章删除成功' }
     },
-    middleware: [authMiddleware]
   }),
   
   // 标签路由
@@ -605,9 +613,10 @@ export const routes = defineRoutes([
     }
   }),
   
-  defineRoute({
+  defineAuthRouteWithApp({
     method: 'POST',
     path: '/api/tags',
+    middleware: [authWithApp, requireUser],
     schema: {
       body: Type.Object({
         name: Type.String({ minLength: 1 })
@@ -617,7 +626,6 @@ export const routes = defineRoutes([
       const newTag = await tagService.create(body)
       return { tag: newTag }
     },
-    middleware: [authMiddleware]
   })
 ])
 ```

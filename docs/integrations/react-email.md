@@ -579,12 +579,20 @@ export const emailService = new EmailService({
 
 ## 在 Vafast 路由中使用
 
+::: tip 认证
+管理类邮件接口使用 [@vafast/auth-middleware](/middleware/auth-middleware) 的 `authWithApp` + `requireUser`。
+:::
+
 ```typescript
 // src/routes.ts
 import { defineRoute, defineRoutes, err, Type } from 'vafast'
+import {
+  authWithApp,
+  requireUser,
+  defineAuthRouteWithApp,
+} from '@vafast/auth-middleware'
 import { emailService } from './services/emailService'
 import { userService } from './services/userService'
-import { authMiddleware } from './middleware/auth'
 
 export const routes = defineRoutes([
   // 用户注册
@@ -682,10 +690,11 @@ export const routes = defineRoutes([
     }
   }),
   
-  // 发送通知邮件
-  defineRoute({
+  // 发送通知邮件（需认证）
+  defineAuthRouteWithApp({
     method: 'POST',
     path: '/api/notifications/send-email',
+    middleware: [authWithApp, requireUser],
     schema: {
       body: Type.Object({
         userId: Type.String(),
@@ -695,17 +704,14 @@ export const routes = defineRoutes([
         actionText: Type.Optional(Type.String())
       })
     },
-    handler: async ({ body, request }) => {
-      // 这里应该验证用户身份和权限
+    handler: async ({ body }) => {
       const { userId, notificationTitle, notificationMessage, actionUrl, actionText } = body
       
-      // 获取用户信息
       const user = await userService.findById(userId)
       if (!user) {
         throw err.notFound('用户不存在')
       }
       
-      // 发送通知邮件
       try {
         await emailService.sendNotificationEmail(
           user.email,
@@ -722,13 +728,13 @@ export const routes = defineRoutes([
         throw err.internal('邮件发送失败')
       }
     },
-    middleware: [authMiddleware]
   }),
   
-  // 批量发送邮件
-  defineRoute({
+  // 批量发送邮件（需认证）
+  defineAuthRouteWithApp({
     method: 'POST',
     path: '/api/notifications/send-bulk-email',
+    middleware: [authWithApp, requireUser],
     schema: {
       body: Type.Object({
         userIds: Type.Array(Type.String()),
@@ -772,7 +778,6 @@ export const routes = defineRoutes([
         failed
       }
     },
-    middleware: [authMiddleware]
   })
 ])
 ```

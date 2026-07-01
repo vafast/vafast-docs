@@ -348,21 +348,23 @@ const routes = defineRoutes([
 ### 中间件定义
 
 ```typescript
-const authMiddleware = async (req: Request, next: () => Promise<Response>) => {
+import { defineMiddleware, json } from 'vafast'
+
+const authMiddleware = defineMiddleware(async (req, next) => {
   const auth = req.headers.get('authorization')
   if (!auth) {
-    return new Response('Unauthorized', { status: 401 })
+    return json({ error: 'Unauthorized' }, 401)
   }
   return next()
-}
+})
 
-const logMiddleware = async (req: Request, next: () => Promise<Response>) => {
+const logMiddleware = defineMiddleware(async (req, next) => {
   const start = Date.now()
   const response = await next()
   const duration = Date.now() - start
   console.log(`${req.method} ${req.url} - ${duration}ms`)
   return response
-}
+})
 ```
 
 ### 应用中间件

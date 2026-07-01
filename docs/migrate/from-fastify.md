@@ -319,15 +319,15 @@ fastify.addHook('preHandler', async (request, reply) => {
 })
 
 // Vafast 中间件
-import { json } from 'vafast'
+import { defineMiddleware, json } from 'vafast'
 
-const authMiddleware = async (req: Request, next: () => Promise<Response>) => {
+const authMiddleware = defineMiddleware(async (req, next) => {
   const token = req.headers.get('authorization')
   if (!token) {
     return json({ error: 'Unauthorized' }, 401)
   }
   return await next()
-}
+})
 ```
 
 ### 步骤 5: 更新错误处理
