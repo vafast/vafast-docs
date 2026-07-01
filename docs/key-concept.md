@@ -144,12 +144,12 @@ const routes = defineRoutes([
 ])
 
 const server = new Server(routes)
-server.useGlobalMiddleware(loggingMiddleware) // 全局中间件
+server.use(loggingMiddleware) // 全局中间件
 ```
 
 > **新框架用法说明**：
 > - 中间件使用 `defineMiddleware` 定义，支持类型注入
-> - 全局中间件使用 `server.useGlobalMiddleware()` 方法
+> - 全局中间件使用 `server.use()` 方法
 > - Handler 不再需要 `createHandler` 包装
 
 ## 类型系统

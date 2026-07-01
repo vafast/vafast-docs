@@ -350,7 +350,7 @@ const routes = defineRoutes([
 ])
 
 const server = new Server(routes)
-server.useGlobalMiddleware(cors())
+server.use(cors())
 
 export default { fetch: server.fetch }
 ```
@@ -358,7 +358,7 @@ export default { fetch: server.fetch }
 > **新框架用法说明**：
 > - 所有路由使用 `defineRoute` 包装
 > - Handler 直接是函数，不再需要 `createHandler`
-> - 全局中间件使用 `server.useGlobalMiddleware()`
+> - 全局中间件使用 `server.use()`
 
 ## 优势对比
 

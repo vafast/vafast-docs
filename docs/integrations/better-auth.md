@@ -97,7 +97,7 @@ const routes = defineRoutes([
 ])
 
 const server = new Server(routes)
-server.useGlobalMiddleware(authMiddleware)
+server.use(authMiddleware)
 ```
 
 ## 认证中间件
@@ -337,11 +337,11 @@ const routes = defineRoutes([
 ])
 
 const server = new Server(routes)
-server.useGlobalMiddleware(cors({
+server.use(cors({
   origin: ['http://localhost:3000', 'https://yourdomain.com'],
   credentials: true
 }))
-server.useGlobalMiddleware(auth.middleware)
+server.use(auth.middleware)
 ```
 
 ## 环境变量

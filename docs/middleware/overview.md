@@ -51,7 +51,7 @@ const routes = defineRoutes([
 ])
 
 const server = new Server(routes)
-server.useGlobalMiddleware(cors())
+server.use(cors())
 
 export default { fetch: server.fetch }
 ```

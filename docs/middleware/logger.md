@@ -27,7 +27,7 @@ const routes = defineRoutes([
 ])
 
 const server = new Server(routes)
-server.useGlobalMiddleware(logger())
+server.use(logger())
 
 export default { fetch: server.fetch }
 ```
@@ -84,7 +84,7 @@ import { logger } from '@vafast/logger'
 
 const pinoLogger = pino()
 
-server.useGlobalMiddleware(logger({
+server.use(logger({
   output: (message) => pinoLogger.info(message)
 }))
 ```

@@ -27,7 +27,7 @@ const routes = defineRoutes([
 ])
 
 const server = new Server(routes)
-server.useGlobalMiddleware(cors())
+server.use(cors())
 
 serve({ fetch: server.fetch, port: 3000 })
 ```
@@ -163,7 +163,7 @@ const routes = defineRoutes([
 ])
 
 const server = new Server(routes)
-server.useGlobalMiddleware(cors({
+server.use(cors({
   origin: /.*\.example\.com$/
 }))
 
@@ -175,7 +175,7 @@ serve({ fetch: server.fetch, port: 3000 })
 ### 指定允许的源
 
 ```typescript
-server.useGlobalMiddleware(cors({
+server.use(cors({
   origin: ['https://example.com', 'https://app.example.com']
 }))
 ```
@@ -183,7 +183,7 @@ server.useGlobalMiddleware(cors({
 ### 使用函数动态判断
 
 ```typescript
-server.useGlobalMiddleware(cors({
+server.use(cors({
   origin: (request) => {
     const origin = request.headers.get('origin')
     return origin?.endsWith('.example.com') ?? false
@@ -194,7 +194,7 @@ server.useGlobalMiddleware(cors({
 ### 限制允许的方法和头
 
 ```typescript
-server.useGlobalMiddleware(cors({
+server.use(cors({
   methods: ['GET', 'POST'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true

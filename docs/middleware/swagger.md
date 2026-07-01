@@ -34,7 +34,7 @@ const routes = defineRoutes([
 const server = new Server(routes)
 
 // 应用 Swagger 中间件
-server.useGlobalMiddleware(swagger({
+server.use(swagger({
   provider: 'scalar',
   documentation: {
     info: {
@@ -167,7 +167,7 @@ const routes = defineRoutes([
 ])
 
 const server = new Server(routes)
-server.useGlobalMiddleware(swagger({
+server.use(swagger({
   provider: 'scalar',
   documentation: {
     info: {
@@ -208,7 +208,7 @@ const routes = defineRoutes([
 ])
 
 const server = new Server(routes)
-server.useGlobalMiddleware(swagger({
+server.use(swagger({
   provider: 'swagger-ui',
   version: '4.18.2',
   documentation: {
@@ -247,7 +247,7 @@ const routes = defineRoutes([
 ])
 
 const server = new Server(routes)
-server.useGlobalMiddleware(swagger({
+server.use(swagger({
   provider: 'scalar',
   path: '/docs',                    // 自定义文档路径
   specPath: '/docs/openapi.json',   // 自定义规范路径
@@ -402,7 +402,7 @@ const routes = defineRoutes([
 const server = new Server(routes)
 
 // 应用 Swagger 中间件
-server.useGlobalMiddleware(swaggerMiddleware)
+server.use(swaggerMiddleware)
 
 export default { fetch: server.fetch }
 ```
@@ -446,7 +446,7 @@ const routes = defineRoutes([
 const server = new Server(routes)
 
 // 应用 Swagger 中间件
-server.useGlobalMiddleware(swaggerMiddleware)
+server.use(swaggerMiddleware)
 
 // 导出 fetch 函数
 export default { fetch: server.fetch }
@@ -662,7 +662,7 @@ const routes = defineRoutes([
 const server = new Server(routes)
 
 // 应用 Swagger 中间件
-server.useGlobalMiddleware(swaggerMiddleware)
+server.use(swaggerMiddleware)
 
 // 导出 fetch 函数
 export default { fetch: server.fetch }
@@ -714,7 +714,7 @@ describe('Vafast Swagger Plugin', () => {
         ]))
 
         // 应用中间件
-        app.useGlobalMiddleware(swaggerMiddleware)
+        app.use(swaggerMiddleware)
 
         // 测试访问 Scalar 文档页面
         const res = await app.fetch(new Request('http://localhost/docs'))
@@ -743,7 +743,7 @@ describe('Vafast Swagger Plugin', () => {
         ]))
 
         // 应用中间件
-        app.useGlobalMiddleware(swaggerMiddleware)
+        app.use(swaggerMiddleware)
         const wrappedFetch = (req: Request) => {
             return swaggerMiddleware(req, () => app.fetch(req))
         }
@@ -830,7 +830,7 @@ describe('Vafast Swagger Plugin', () => {
         ]))
 
         // 应用中间件
-        app.useGlobalMiddleware(swaggerMiddleware)
+        app.use(swaggerMiddleware)
 
         const res = await app.fetch(
             new Request('http://localhost/api/data')

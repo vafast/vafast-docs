@@ -228,7 +228,7 @@ const routes = defineRoutes([
 ])
 
 const server = new Server(routes)
-server.useGlobalMiddleware(loggingMiddleware)
+server.use(loggingMiddleware)
 ```
 
 ### 5. 错误处理
@@ -435,7 +435,7 @@ const routes = defineRoutes([
 ])
 
 const server = new Server(routes)
-server.useGlobalMiddleware(cors())
+server.use(cors())
 
 export default { fetch: server.fetch }
 ```
@@ -443,7 +443,7 @@ export default { fetch: server.fetch }
 > **新框架用法说明**：
 > - 所有路由使用 `defineRoute` 包装
 > - Schema 验证在 `schema` 字段中定义
-> - 全局中间件使用 `server.useGlobalMiddleware()`
+> - 全局中间件使用 `server.use()`
 
 ## 优势对比
 

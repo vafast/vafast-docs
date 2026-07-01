@@ -35,7 +35,7 @@ const routes = defineRoutes([
 const server = new Server(routes)
 
 // 应用 Server-Timing 中间件
-server.useGlobalMiddleware(serverTiming())
+server.use(serverTiming())
 
 // 导出 fetch 函数
 export default { fetch: server.fetch }
@@ -102,7 +102,7 @@ const routes = defineRoutes([
 ])
 
 const server = new Server(routes)
-server.useGlobalMiddleware(serverTiming({
+server.use(serverTiming({
   enabled: true,
   trace: { handle: true, total: true }
 }))
@@ -137,8 +137,8 @@ const routes = defineRoutes([
 
 const server = new Server(routes)
 
-// 使用 server.useGlobalMiddleware() 应用全局中间件（推荐）
-server.useGlobalMiddleware(timing)
+// 使用 server.use() 应用全局中间件（推荐）
+server.use(timing)
 
 export default {
   fetch: server.fetch
@@ -172,7 +172,7 @@ const routes = defineRoutes([
 const server = new Server(routes)
 
 // 只追踪总时间，不追踪处理时间
-server.useGlobalMiddleware(serverTiming({
+server.use(serverTiming({
   enabled: true,
   trace: { handle: false, total: true }
 }))
@@ -206,7 +206,7 @@ const routes = defineRoutes([
 const server = new Server(routes)
 
 // 应用 Server Timing 中间件
-server.useGlobalMiddleware(serverTiming({
+server.use(serverTiming({
   enabled: true,
   allow: async (ctx) => {
     const url = new URL(ctx.request.url)
@@ -247,7 +247,7 @@ const routes = defineRoutes([
 const server = new Server(routes)
 
 // 应用 Server Timing 中间件
-server.useGlobalMiddleware(serverTiming({
+server.use(serverTiming({
   enabled: process.env.NODE_ENV !== 'production',
   allow: process.env.ENABLE_TIMING === 'true',
   trace: { handle: true, total: true }
@@ -411,7 +411,7 @@ const server = new Server(routes)
 
 // 根据环境应用不同的 Server Timing 中间件
 if (process.env.NODE_ENV === 'development') {
-  server.useGlobalMiddleware(serverTiming({
+  server.use(serverTiming({
     enabled: true,
     allow: true,
     trace: { handle: true, total: true }
@@ -461,7 +461,7 @@ describe('Vafast Server Timing Plugin', () => {
     ]))
 
     // 应用中间件
-    app.useGlobalMiddleware(serverTiming({
+    app.use(serverTiming({
       enabled: true,
       trace: { handle: true, total: true }
     }))
@@ -491,7 +491,7 @@ describe('Vafast Server Timing Plugin', () => {
     ]))
 
     // 应用中间件（禁用状态）
-    app.useGlobalMiddleware(serverTiming({
+    app.use(serverTiming({
       enabled: false,
       trace: { handle: true, total: true }
     }))
@@ -526,7 +526,7 @@ describe('Vafast Server Timing Plugin', () => {
     ]))
 
     // 应用中间件
-    app.useGlobalMiddleware(serverTiming({
+    app.use(serverTiming({
       enabled: true,
       allow: (ctx) => ctx.request.url.includes('/allow'),
       trace: { handle: true, total: true }
@@ -553,7 +553,7 @@ describe('Vafast Server Timing Plugin', () => {
     ]))
 
     // 应用中间件
-    app.useGlobalMiddleware(serverTiming({
+    app.use(serverTiming({
       enabled: true,
       trace: { handle: false, total: true }
     }))
@@ -580,7 +580,7 @@ describe('Vafast Server Timing Plugin', () => {
     ]))
 
     // 应用中间件
-    app.useGlobalMiddleware(serverTiming({
+    app.use(serverTiming({
       enabled: true,
       trace: { handle: true, total: true }
     }))

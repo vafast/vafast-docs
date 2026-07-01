@@ -185,7 +185,7 @@ const routes = defineRoutes([
 ])
 
 const server = new Server(routes)
-server.useGlobalMiddleware(loggingMiddleware)
+server.use(loggingMiddleware)
 ```
 
 ### 4. 验证系统
@@ -447,7 +447,7 @@ const routes = defineRoutes([
 ])
 
 const server = new Server(routes)
-server.useGlobalMiddleware(cors())
+server.use(cors())
 
 export default { fetch: server.fetch }
 ```

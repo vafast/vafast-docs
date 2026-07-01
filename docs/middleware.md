@@ -316,7 +316,7 @@ const routes = defineRoutes([
 
 Vafast 支持两种方式应用全局中间件：
 
-### 方式一：使用 server.useGlobalMiddleware()
+### 方式一：使用 server.use()
 
 为整个应用应用全局中间件：
 
@@ -339,8 +339,8 @@ const routes = defineRoutes([
 const server = new Server(routes)
 
 // 应用全局中间件
-server.useGlobalMiddleware(logMiddleware)
-server.useGlobalMiddleware(corsMiddleware)
+server.use(logMiddleware)
+server.use(corsMiddleware)
 
 export default { fetch: server.fetch }
 ```

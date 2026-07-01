@@ -23,12 +23,12 @@ const routes = defineRoutes([
 ])
 
 const server = new Server(routes)
-server.useGlobalMiddleware(swagger())
+server.use(swagger())
 ```
 
 > **新框架用法说明**：
 > - 使用 `Server` 类创建服务器实例
-> - 全局中间件使用 `server.useGlobalMiddleware()` 方法
+> - 全局中间件使用 `server.use()` 方法
 
 默认情况下，Vafast 使用 OpenAPI V3 模式和 [Scalar UI](http://scalar.com)。
 
@@ -69,7 +69,7 @@ const routes = defineRoutes([
 ])
 
 const server = new Server(routes)
-server.useGlobalMiddleware(swagger())
+server.use(swagger())
 ```
 
 > **新框架用法说明**：
@@ -219,9 +219,9 @@ const routes = defineRoutes([
 ])
 
 const server = new Server(routes)
-server.useGlobalMiddleware(cors())
-server.useGlobalMiddleware(helmet())
-server.useGlobalMiddleware(swagger({
+server.use(cors())
+server.use(helmet())
+server.use(swagger({
     documentation: {
       info: {
         title: 'Vafast API',
@@ -246,7 +246,7 @@ import { swagger } from '@vafast/swagger'
 
 const server = new Server(routes)
 
-server.useGlobalMiddleware(swagger({
+server.use(swagger({
   documentation: {
     info: {
       title: '我的 API',

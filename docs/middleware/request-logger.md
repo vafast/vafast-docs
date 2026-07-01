@@ -27,7 +27,7 @@ const routes = defineRoutes([
 ])
 
 const server = new Server(routes)
-server.useGlobalMiddleware(requestLogger())
+server.use(requestLogger())
 
 export default { fetch: server.fetch }
 ```
@@ -85,7 +85,7 @@ const pinoLogger = pino({
   }
 })
 
-server.useGlobalMiddleware(requestLogger({
+server.use(requestLogger({
   logger: pinoLogger
 }))
 ```

@@ -132,7 +132,7 @@ describe('Vafast Middleware', () => {
     ])
     
     const server = new Server(routes)
-    server.useGlobalMiddleware(loggingMiddleware)
+    server.use(loggingMiddleware)
 
     it('executes middleware correctly', async () => {
         const response = await server

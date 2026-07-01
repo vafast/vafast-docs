@@ -41,7 +41,7 @@ const routes = defineRoutes([
 const server = new Server(routes)
 
 // 应用 OpenTelemetry 中间件
-server.useGlobalMiddleware(opentelemetry({
+server.use(opentelemetry({
   serviceName: 'example-app',
   instrumentations: []
 }))
@@ -116,7 +116,7 @@ const routes = defineRoutes([
 const server = new Server(routes)
 
 // 应用 OpenTelemetry 中间件
-server.useGlobalMiddleware(opentelemetry({
+server.use(opentelemetry({
   serviceName: 'your-service-name'
 }))
 
@@ -210,8 +210,8 @@ const routes = defineRoutes([
 
 const server = new Server(routes)
 
-// 使用 server.useGlobalMiddleware() 应用全局中间件（推荐）
-server.useGlobalMiddleware(telemetryMiddleware)
+// 使用 server.use() 应用全局中间件（推荐）
+server.use(telemetryMiddleware)
 
 export default {
     fetch: server.fetch
@@ -276,7 +276,7 @@ const routes = defineRoutes([
 const server = new Server(routes)
 
 // 应用 OpenTelemetry 中间件
-server.useGlobalMiddleware(opentelemetry({
+server.use(opentelemetry({
   serviceName: 'custom-spans-app'
 }))
 
@@ -354,8 +354,8 @@ const routes = defineRoutes([
 
 const server = new Server(routes)
 
-// 使用 server.useGlobalMiddleware() 应用全局中间件（推荐）
-server.useGlobalMiddleware(telemetryMiddleware)
+// 使用 server.use() 应用全局中间件（推荐）
+server.use(telemetryMiddleware)
 
 export default {
     fetch: server.fetch
@@ -443,7 +443,7 @@ const routes = defineRoutes([
 const server = new Server(routes)
 
 // 应用 OpenTelemetry 中间件
-server.useGlobalMiddleware(opentelemetry({
+server.use(opentelemetry({
   serviceName: 'error-tracking-app'
 }))
 
@@ -812,7 +812,7 @@ const routes = defineRoutes([
 const server = new Server(routes)
 
 // 应用 OpenTelemetry 中间件
-server.useGlobalMiddleware(opentelemetry({
+server.use(opentelemetry({
   serviceName: 'ecommerce-api',
   instrumentations: []
 }))
@@ -855,7 +855,7 @@ describe('Vafast OpenTelemetry Plugin', () => {
         ]))
 
         // 应用中间件
-        app.useGlobalMiddleware(opentelemetry({
+        app.use(opentelemetry({
           serviceName: 'test-app',
           instrumentations: []
         }))
@@ -879,7 +879,7 @@ describe('Vafast OpenTelemetry Plugin', () => {
         ]))
 
         // 应用中间件
-        app.useGlobalMiddleware(opentelemetry({
+        app.use(opentelemetry({
           serviceName: 'test-app',
           instrumentations: []
         }))
@@ -925,7 +925,7 @@ describe('Vafast OpenTelemetry Plugin', () => {
         ]))
 
         // 应用中间件
-        app.useGlobalMiddleware(opentelemetry({
+        app.use(opentelemetry({
           serviceName: 'test-app',
           instrumentations: []
         }))

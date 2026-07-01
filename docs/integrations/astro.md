@@ -41,13 +41,13 @@ import { helmet } from '@vafast/helmet'
 import { routes } from './routes'
 
 const server = new Server(routes)
-server.useGlobalMiddleware(cors({
+server.use(cors({
   origin: process.env.NODE_ENV === 'development' 
     ? ['http://localhost:4321'] 
     : [process.env.PUBLIC_APP_URL],
   credentials: true
 }))
-server.useGlobalMiddleware(helmet())
+server.use(helmet())
 
 export const handler = server.fetch
 ```

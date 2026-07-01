@@ -54,7 +54,7 @@ const webhooks = defineWebhooks([
 const server = new Server(routes)
 
 // 使用 Webhook 中间件
-server.useGlobalMiddleware(webhook({
+server.use(webhook({
   storage: webhooks
 }))
 

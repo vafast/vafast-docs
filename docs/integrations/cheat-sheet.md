@@ -114,7 +114,7 @@ const routes = defineRoutes([
 ])
 
 const server = new Server(routes)
-server.useGlobalMiddleware(jwt({
+server.use(jwt({
   secret: process.env.JWT_SECRET
 }))
 ```
@@ -157,7 +157,7 @@ const routes = defineRoutes([
 ])
 
 const server = new Server(routes)
-server.useGlobalMiddleware(cors({
+server.use(cors({
   origin: ['http://localhost:3000'],
   credentials: true
 }))
@@ -170,7 +170,7 @@ import { Server } from 'vafast'
 import { helmet } from '@vafast/helmet'
 
 const server = new Server(routes)
-server.useGlobalMiddleware(helmet({
+server.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
@@ -187,7 +187,7 @@ import { Server } from 'vafast'
 import { rateLimit } from '@vafast/rate-limit'
 
 const server = new Server(routes)
-server.useGlobalMiddleware(rateLimit({
+server.use(rateLimit({
   windowMs: 15 * 60 * 1000, // 15分钟
   max: 100 // 限制每个IP 15分钟内最多100个请求
 }))
@@ -202,7 +202,7 @@ import { Server } from 'vafast'
 import { opentelemetry } from '@vafast/opentelemetry'
 
 const server = new Server(routes)
-server.useGlobalMiddleware(opentelemetry({
+server.use(opentelemetry({
   serviceName: 'my-vafast-app',
   tracing: {
     enabled: true,
@@ -221,7 +221,7 @@ import { Server } from 'vafast'
 import { serverTiming } from '@vafast/server-timing'
 
 const server = new Server(routes)
-server.useGlobalMiddleware(serverTiming())
+server.use(serverTiming())
 ```
 
 ## 文件处理
@@ -301,7 +301,7 @@ import { Server } from 'vafast'
 import { staticFiles } from '@vafast/static'
 
 const server = new Server(routes)
-server.useGlobalMiddleware(staticFiles({
+server.use(staticFiles({
   root: './public',
   prefix: '/static'
 }))
@@ -374,7 +374,7 @@ import { Server } from 'vafast'
 import { cron } from '@vafast/cron'
 
 const server = new Server(routes)
-server.useGlobalMiddleware(cron({
+server.use(cron({
   jobs: [
     {
       name: 'cleanup',
@@ -397,7 +397,7 @@ import { Server } from 'vafast'
 import { compress } from '@vafast/compress'
 
 const server = new Server(routes)
-server.useGlobalMiddleware(compress({
+server.use(compress({
   algorithms: ['gzip', 'brotli'],
   threshold: 1024
 }))

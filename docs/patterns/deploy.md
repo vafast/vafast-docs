@@ -373,7 +373,7 @@ const loggingMiddleware = async (req: Request, next: () => Promise<Response>) =>
 }
 
 const server = new Server(routes)
-server.useGlobalMiddleware(loggingMiddleware)
+server.use(loggingMiddleware)
 ```
 
 ---
@@ -418,7 +418,7 @@ import { Server } from 'vafast'
 import { helmet } from '@vafast/helmet'
 
 const server = new Server(routes)
-server.useGlobalMiddleware(helmet())
+server.use(helmet())
 ```
 
 ### 速率限制
@@ -428,7 +428,7 @@ import { Server } from 'vafast'
 import { rateLimit } from '@vafast/rate-limit'
 
 const server = new Server(routes)
-server.useGlobalMiddleware(rateLimit({
+server.use(rateLimit({
   windowMs: 15 * 60 * 1000, // 15分钟
   max: 100 // 每个 IP 最多 100 次请求
 }))
@@ -476,7 +476,7 @@ import { Server } from 'vafast'
 import { compress } from '@vafast/compress'
 
 const server = new Server(routes)
-server.useGlobalMiddleware(compress())
+server.use(compress())
 ```
 
 ### 缓存策略

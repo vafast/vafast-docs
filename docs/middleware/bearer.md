@@ -178,9 +178,9 @@ const routes = defineRoutes([
 
 const server = new Server(routes)
 
-// 使用 server.useGlobalMiddleware() 应用全局中间件（推荐）
-server.useGlobalMiddleware(cors())
-server.useGlobalMiddleware(bearer())
+// 使用 server.use() 应用全局中间件（推荐）
+server.use(cors())
+server.use(bearer())
 
 export default {
   fetch: server.fetch
@@ -212,8 +212,8 @@ const routes = [
 
 const server = new Server(routes)
 
-// 方式一：使用 server.useGlobalMiddleware()（推荐，适用于所有路由）
-server.useGlobalMiddleware(bearer())
+// 方式一：使用 server.use()（推荐，适用于所有路由）
+server.use(bearer())
 
 export default {
   fetch: server.fetch

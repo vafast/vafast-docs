@@ -45,13 +45,13 @@ import { helmet } from '@vafast/helmet'
 import { routes } from './routes'
 
 const server = new Server(routes)
-server.useGlobalMiddleware(cors({
+server.use(cors({
   origin: process.env.NODE_ENV === 'development' 
     ? ['http://localhost:3000'] 
     : [process.env.NUXT_PUBLIC_APP_URL],
   credentials: true
 }))
-server.useGlobalMiddleware(helmet())
+server.use(helmet())
 
 export const handler = server.fetch
 ```
@@ -59,7 +59,7 @@ export const handler = server.fetch
 > **新框架用法说明**：
 > - 不再使用 `createHandler` 函数
 > - 使用 `Server` 类创建服务器实例
-> - 全局中间件使用 `server.useGlobalMiddleware()` 方法
+> - 全局中间件使用 `server.use()` 方法
 
 ## 定义 API 路由
 

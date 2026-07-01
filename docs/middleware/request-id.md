@@ -29,7 +29,7 @@ const routes = defineRoutes([
 ])
 
 const server = new Server(routes)
-server.useGlobalMiddleware(requestId())
+server.use(requestId())
 
 export default { fetch: server.fetch }
 ```
@@ -90,8 +90,8 @@ import { logger } from '@vafast/logger'
 
 const server = new Server(routes)
 
-server.useGlobalMiddleware(requestId())
-server.useGlobalMiddleware(logger({
+server.use(requestId())
+server.use(logger({
   format: ({ method, path, status, duration, requestId }) => {
     return `[${requestId}] ${method} ${path} ${status} ${duration}ms`
   }

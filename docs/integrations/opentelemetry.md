@@ -31,7 +31,7 @@ const routes = defineRoutes([
 ])
 
 const server = new Server(routes)
-server.useGlobalMiddleware(opentelemetry({
+server.use(opentelemetry({
   serviceName: 'my-vafast-app',
   serviceVersion: '1.0.0'
 }))
@@ -47,7 +47,7 @@ import { opentelemetry } from '@vafast/opentelemetry'
 
 const server = new Server(routes)
 
-server.useGlobalMiddleware(opentelemetry({
+server.use(opentelemetry({
   // 服务信息
   serviceName: 'my-vafast-app',
   serviceVersion: '1.0.0',
@@ -112,7 +112,7 @@ const routes = defineRoutes([
 ])
 
 const server = new Server(routes)
-server.useGlobalMiddleware(opentelemetry({
+server.use(opentelemetry({
   serviceName: 'user-service',
   tracing: {
     enabled: true,
@@ -178,7 +178,7 @@ import { opentelemetry } from '@vafast/opentelemetry'
 
 const server = new Server(routes)
 
-server.useGlobalMiddleware(opentelemetry({
+server.use(opentelemetry({
   metrics: {
     enabled: true,
     exporter: {
@@ -207,7 +207,7 @@ import { opentelemetry } from '@vafast/opentelemetry'
 
 const server = new Server(routes)
 
-server.useGlobalMiddleware(opentelemetry({
+server.use(opentelemetry({
   logging: {
     enabled: true,
     level: 'info',
@@ -230,7 +230,7 @@ import { opentelemetry } from '@vafast/opentelemetry'
 const server = new Server(routes)
 const isDevelopment = process.env.NODE_ENV === 'development'
 
-server.useGlobalMiddleware(opentelemetry({
+server.use(opentelemetry({
   serviceName: 'my-vafast-app',
   serviceVersion: process.env.APP_VERSION || '1.0.0',
   
@@ -271,7 +271,7 @@ import { opentelemetry } from '@vafast/opentelemetry'
 
 const server = new Server(routes)
 
-server.useGlobalMiddleware(opentelemetry({
+server.use(opentelemetry({
   tracing: {
     exporter: {
       type: 'otlp',
@@ -289,7 +289,7 @@ import { opentelemetry } from '@vafast/opentelemetry'
 
 const server = new Server(routes)
 
-server.useGlobalMiddleware(opentelemetry({
+server.use(opentelemetry({
   metrics: {
     exporter: {
       type: 'prometheus',
@@ -308,7 +308,7 @@ import { opentelemetry } from '@vafast/opentelemetry'
 
 const server = new Server(routes)
 
-server.useGlobalMiddleware(opentelemetry({
+server.use(opentelemetry({
   logging: {
     exporter: {
       type: 'otlp',
@@ -328,7 +328,7 @@ import { opentelemetry } from '@vafast/opentelemetry'
 
 const server = new Server(routes)
 
-server.useGlobalMiddleware(opentelemetry({
+server.use(opentelemetry({
   tracing: {
     sampler: {
       type: 'traceidratio',

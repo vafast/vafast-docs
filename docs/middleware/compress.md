@@ -332,7 +332,7 @@ const routes = defineRoutes([
 const server = new Server(routes)
 
 // 创建全局压缩中间件
-server.useGlobalMiddleware(compression({
+server.use(compression({
   encodings: ['br', 'gzip'],
   threshold: 1024,
   compressStream: false,

@@ -40,6 +40,17 @@ const server = new Server(routes)
 const response = await server.fetch(new Request('http://localhost:3000/api/users'))
 ```
 
+##### `use(middleware: Middleware): void`
+
+注册全局中间件，作用于所有路由（包括 404/405 响应）。
+
+```typescript
+const server = new Server(routes)
+
+server.use(cors())
+server.use(requestLogger())
+```
+
 ### ComponentServer
 
 `ComponentServer` 用于创建支持组件路由的服务器。
@@ -60,6 +71,12 @@ new ComponentServer(routes: ComponentRoute[], options?: ServerOptions)
 **参数：**
 - `routes`: 组件路由配置数组
 - `options`: 可选的服务器配置
+
+#### 方法
+
+##### `use(middleware: Middleware): void`
+
+注册全局中间件，与 `Server.use()` 行为一致。
 
 ## 类型定义
 
@@ -585,7 +602,7 @@ import { cors } from '@vafast/cors'
 
 const server = new Server(routes)
 
-server.useGlobalMiddleware(cors({
+server.use(cors({
   origin: ['https://example.com'],
   credentials: true
 }))

@@ -536,7 +536,7 @@ const customErrorHandler = async (req: Request, next: () => Promise<Response>) =
 }
 
 const server = new Server(routes)
-server.useGlobalMiddleware(customErrorHandler)
+server.use(customErrorHandler)
 ```
 
 ## 测试

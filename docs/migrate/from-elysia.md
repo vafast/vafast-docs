@@ -442,9 +442,9 @@ const routes = defineRoutes([
 ])
 
 const server = new Server(routes)
-server.useGlobalMiddleware(cors())
-server.useGlobalMiddleware(authMiddleware)
-server.useGlobalMiddleware(errorHandler)
+server.use(cors())
+server.use(authMiddleware)
+server.use(errorHandler)
 
 serve({ fetch: server.fetch, port: 3000 })
 ```
@@ -453,7 +453,7 @@ serve({ fetch: server.fetch, port: 3000 })
 > - 所有路由使用 `defineRoute` 包装
 > - Schema 验证在 `schema` 字段中定义
 > - 中间件使用 `defineMiddleware` 定义
-> - 全局中间件使用 `server.useGlobalMiddleware()`
+> - 全局中间件使用 `server.use()`
 
 ## 优势对比
 
