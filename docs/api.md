@@ -748,7 +748,7 @@ defineAuthRoute({
 
 ### SSE 端点
 
-通过 `sse: true` 声明流式端点。handler 写 `async function*` 即可，框架内部自动包装为 SSE（**无需 `createSSEHandler`**）：
+通过 `sse: true` 声明流式端点。handler 写 `async function*` 即可，框架内部自动包装为 SSE：
 
 ```typescript
 import { defineRoute, defineRoutes, Type, sse } from 'vafast'

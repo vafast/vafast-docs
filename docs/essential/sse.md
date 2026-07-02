@@ -4,13 +4,13 @@ Vafast 提供了内置的 SSE 支持，用于实现流式响应，如 AI 聊天�
 
 ## 框架集成方式
 
-声明 `sse: true` 后，**无需** `createSSEHandler` 或手写 `ReadableStream`。`defineRoute` 在扁平化时会自动：
+声明 `sse: true` 后，无需手写 `ReadableStream`。`defineRoute` 在扁平化时会自动：
 
 1. 用 `wrapGeneratorToSSEHandler` 把你的 `async function*` 转为 SSE 响应
 2. 用 `wrapSSEHandler` 走与普通路由相同的 schema 验证、中间件上下文（`userInfo` 等）
 
 ```typescript
-// ✅ 推荐：sse: true + async function*
+// sse: true + async function*
 defineRoute({
   sse: true,
   handler: async function* (ctx) {
@@ -18,8 +18,6 @@ defineRoute({
     yield { type: 'done' }
   },
 })
-
-// ❌ 已移除：createSSEHandler 不再需要
 ```
 
 handler 与普通路由一样享有完整上下文：`params` / `query` / `body` / `headers`，以及中间件 `next({ userInfo })` 注入的字段。
