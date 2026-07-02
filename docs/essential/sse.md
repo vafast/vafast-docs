@@ -2,6 +2,28 @@
 
 Vafast 提供了内置的 SSE 支持，用于实现流式响应，如 AI 聊天、实时进度更新、通知推送等场景。
 
+## 框架集成方式
+
+声明 `sse: true` 后，**无需** `createSSEHandler` 或手写 `ReadableStream`。`defineRoute` 在扁平化时会自动：
+
+1. 用 `wrapGeneratorToSSEHandler` 把你的 `async function*` 转为 SSE 响应
+2. 用 `wrapSSEHandler` 走与普通路由相同的 schema 验证、中间件上下文（`userInfo` 等）
+
+```typescript
+// ✅ 推荐：sse: true + async function*
+defineRoute({
+  sse: true,
+  handler: async function* (ctx) {
+    yield { type: 'start' }
+    yield { type: 'done' }
+  },
+})
+
+// ❌ 已移除：createSSEHandler 不再需要
+```
+
+handler 与普通路由一样享有完整上下文：`params` / `query` / `body` / `headers`，以及中间件 `next({ userInfo })` 注入的字段。
+
 ## 快速开始
 
 通过 `sse: true` 显式声明 SSE 端点，handler 使用 `async function*` 语法。直接 `yield` 任意数据，框架自动包装为 SSE 格式：
@@ -53,7 +75,11 @@ yield 42
 ::: tip 为什么推荐简单模式？
 - **代码更简洁** — 无需包装每个事件
 - **符合直觉** — `yield data` 直接发送数据
-- **类型友好** — 与 AI SDK 的 ChatEvent 等类型无缝集成
+- **类型友好** — 与 AI SDK 的 `{ type, data }` ChatEvent 等类型无缝集成
+:::
+
+::: warning 不要混用旧格式
+`yield { event: 'done', data: {...} }` **不会**自动变成 SSE 的 `event:` 行，整段对象会作为 `data` 字段发出。需要自定义事件名请用 `sse({ event: 'done' }, payload)`。
 :::
 
 ### 高级模式
@@ -136,6 +162,72 @@ defineRoute({
     }
     
     yield { type: 'done', usage: { tokens: 100 } }
+  },
+})
+```
+
+## 生产项目写法
+
+与 `ones-server` / `ai-server` 一致：**先定义 handler 常量**，再挂到 `defineRoutes`（可与 `defineAuthRoute` 组合）：
+
+```typescript
+import { defineRoute, defineRoutes, Type } from 'vafast'
+import { authWithApp, requireUser, defineAuthRoute } from '@vafast/auth-middleware'
+
+/** SSE 进度订阅 — 需登录 */
+const progressHandler = defineAuthRoute({
+  method: 'GET',
+  path: '/tasks/:id/progress',
+  name: '订阅任务进度',
+  middleware: [requireUser],
+  sse: true,
+  schema: {
+    params: Type.Object({ id: Type.String() }),
+  },
+  handler: async function* ({ params, userInfo }) {
+    const task = await getTask(params.id, userInfo.id)
+    if (!task) {
+      yield { error: '记录不存在' }
+      return
+    }
+
+    yield { status: task.status, progress: task.progress }
+
+    while (task.status === 'running') {
+      await sleep(2000)
+      const updated = await getTask(params.id, userInfo.id)
+      if (!updated) return
+      yield { status: updated.status, progress: updated.progress }
+      if (updated.status === 'success' || updated.status === 'failed') return
+    }
+  },
+})
+
+export const taskRoutes = defineRoutes([
+  defineRoute({
+    path: '/api/tasks',
+    middleware: [authWithApp],
+    children: [
+      // 普通 REST handler...
+    ],
+  }),
+  progressHandler, // SSE 路由与 REST 同级导出
+])
+```
+
+AI 流式对话（`ai-server` agent 同款）：`yield` ChatEvent，直接 `for await` 业务生成器：
+
+```typescript
+const streamHandler = defineAuthRoute({
+  method: 'POST',
+  path: '/stream',
+  middleware: [requireUser],
+  sse: true,
+  schema: { body: Type.Object({ message: Type.String() }) },
+  handler: async function* ({ body, userInfo }) {
+    for await (const event of streamAgentRun(body.message, { userId: userInfo.id })) {
+      yield event // { type: 'text_delta', data: { ... } }
+    }
   },
 })
 ```
@@ -281,6 +373,32 @@ SSE 端点会自动设置以下响应头：
 | `X-Accel-Buffering` | `no` | Nginx 禁用缓冲 |
 
 ## 客户端使用
+
+### @vafast/api-client（推荐）
+
+类型安全客户端通过链式 `.sse()` 消费流式接口，无需手写解析：
+
+```typescript
+import { createApiClient } from './api.generated'
+
+const api = createApiClient(client)
+
+// POST SSE — AI 对话
+api.agent.stream.post({ message: '你好' }).sse({
+  onMessage: (data) => {
+    // data 即服务端 yield 的 JSON（如 { type, data }）
+    if (data.type === 'text_delta') process.stdout.write(data.data?.content ?? '')
+  },
+  onError: (error) => console.error(error),
+})
+
+// GET SSE — 进度订阅
+api.videoGeneration.progress.get({ id: taskId }).sse({
+  onMessage: (data) => console.log(data.progress),
+})
+```
+
+> 📖 详见 [API Client 概览](/api-client/overview#sse-流式响应)
 
 ### 浏览器原生 EventSource（GET 请求）
 

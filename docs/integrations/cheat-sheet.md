@@ -569,11 +569,11 @@ const routes = defineRoutes([
       for await (const chunk of stream) {
         const content = chunk.choices[0]?.delta?.content
         if (content) {
-          yield { data: { token: content } }
+          yield { type: 'text_delta', data: { content } }
         }
       }
       
-      yield { event: 'done', data: { message: 'Stream completed' } }
+      yield { type: 'done', data: { message: 'Stream completed' } }
     },
   })
 ])
@@ -596,10 +596,7 @@ const routes = defineRoutes([
       while (true) {
         const task = await getTaskStatus(taskId) // 你的业务逻辑
         
-        yield { data: { 
-          status: task.status,
-          progress: task.progress,
-        }}
+        yield { status: task.status, progress: task.progress }
         
         if (task.status === 'completed' || task.status === 'failed') {
           return

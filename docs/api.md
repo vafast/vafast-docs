@@ -748,13 +748,13 @@ defineAuthRoute({
 
 ### SSE 端点
 
-通过 `sse: true` 显式声明 Server-Sent Events (SSE) 流式响应端点。handler 使用 `async function*`，直接 `yield` 数据即可：
+通过 `sse: true` 声明流式端点。handler 写 `async function*` 即可，框架内部自动包装为 SSE（**无需 `createSSEHandler`**）：
 
 ```typescript
 import { defineRoute, defineRoutes, Type, sse } from 'vafast'
 
-// GET + params
-defineRoute({
+// handler 提前定义为常量（生产惯例）
+const streamHandler = defineRoute({
   method: 'GET',
   path: '/stream/:id',
   sse: true,
@@ -765,16 +765,7 @@ defineRoute({
   },
 })
 
-// POST + body（AI 场景）
-defineRoute({
-  method: 'POST',
-  path: '/chat/stream',
-  sse: true,
-  schema: { body: Type.Object({ prompt: Type.String() }) },
-  handler: async function* ({ body }) {
-    yield { message: `reply to: ${body.prompt}` }
-  },
-})
+const routes = defineRoutes([streamHandler])
 ```
 
 **SSE 辅助函数 `sse()`：**
