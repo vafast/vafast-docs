@@ -296,3 +296,10 @@ await dispatchWebhook({
 - [GitHub](https://github.com/vafast/vafast-webhook)
 - [npm](https://www.npmjs.com/package/@vafast/webhook)
 
+## 版本说明
+
+### v0.1.7
+
+- `createHttpDispatcher` 通过 `serializeDispatchSubscription()` 透传订阅字段至 webhook-server（如邮件投递的 `notifyEmails`），库内不枚举业务投递类型
+- 修复 `WebhookDispatchSubscription` 与 `WebhookSubscription` 的类型兼容性
+
