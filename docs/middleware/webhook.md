@@ -298,6 +298,11 @@ await dispatchWebhook({
 
 ## 版本说明
 
+### v0.1.8
+
+- 移除 `{ success, code: 20001, data }` 兼容逻辑，与 vafast handler 直出 JSON 对齐
+- `createHttpStorage` / `createHttpDispatcher` 仅解析 vafast handler 直出格式
+
 ### v0.1.7
 
 - `createHttpDispatcher` 通过 `serializeDispatchSubscription()` 透传订阅字段至 webhook-server（如邮件投递的 `notifyEmails`），库内不枚举业务投递类型
