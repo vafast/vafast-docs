@@ -366,9 +366,35 @@ const routes = defineRoutes([
 
 ## 错误处理
 
-### 验证错误
+### Schema 校验失败（422）
 
-当验证失败时，Vafast 会自动返回 400 错误：
+当 `defineRoute` 的 `schema` 校验失败时，Vafast **自动返回 HTTP 422**（不是 400）：
+
+```json
+HTTP 422 Unprocessable Entity
+
+{
+  "code": 422,
+  "message": "请求参数校验失败",
+  "details": [
+    {
+      "location": "body",
+      "path": "/email",
+      "field": "email",
+      "message": "Expected string to match 'email' format",
+      "value": "invalid"
+    }
+  ]
+}
+```
+
+| 字段 | 说明 |
+|------|------|
+| `details[].location` | 校验位置：`body` / `query` / `params` / `headers` / `cookies` |
+| `details[].path` | JSON Pointer，如 `/receiver/name`、`/orderIds/0` |
+| `details[].field` | 表单字段路径，如 `receiver.name`、`orderIds.0` |
+| `details[].message` | TypeBox 原始英文，服务端不做翻译 |
+| `details[].value` | 可选，触发错误的实际值 |
 
 ```typescript
 const routes = defineRoutes([
@@ -378,22 +404,20 @@ const routes = defineRoutes([
     schema: {
       body: Type.Object({
         name: Type.String({ minLength: 1 }),
-      email: Type.String({ format: 'email' })
-    })
+        email: Type.String({ format: 'email' })
+      })
     },
     handler: ({ body }) => {
-      // 如果验证失败，这里不会执行
+      // 校验失败时不会执行到这里
       return createUser(body)
     }
   })
 ])
 ```
 
-### 错误处理
+### 业务错误
 
-`defineRoute` 的 `schema` 验证失败时**自动返回 400**，无需额外中间件。
-
-业务错误在 handler 中 `throw err.xxx()`，框架 `errorHandler` 自动转为 JSON：
+业务错误在 handler 中 `throw err.xxx()`，框架 `errorHandler` 自动转为 JSON（**不含** `details`）：
 
 ```typescript
 import { defineRoute, Type, err } from 'vafast'

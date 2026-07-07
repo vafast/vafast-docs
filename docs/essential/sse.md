@@ -252,7 +252,7 @@ defineRoute({
 
 ### Schema 验证错误
 
-如果 schema 验证失败，会返回 400 错误（JSON 格式）：
+如果 schema 验证失败，会返回 **422** 错误（JSON 格式）：
 
 ```typescript
 defineRoute({
@@ -264,7 +264,8 @@ defineRoute({
 })
 
 // 请求 /stream（缺少 required 参数）
-// 响应: { "code": 400, "message": "验证失败: ..." }
+// HTTP 422
+// { "code": 422, "message": "请求参数校验失败", "details": [...] }
 ```
 
 ## 实际应用场景

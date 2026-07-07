@@ -466,7 +466,7 @@ throw err.forbidden('无权限')         // 403
 throw err.notFound('资源不存在')      // 404
 throw err.conflict('资源冲突')        // 409
 throw err.internal('服务器错误')      // 500
-throw err('自定义错误', 422, 'TYPE')  // 自定义
+throw err('自定义错误', 422, 20001)  // HTTP 422, { code: 20001, message: "..." }
 ```
 
 ### ✅ 推荐：扩展 VafastError 创建自定义错误类

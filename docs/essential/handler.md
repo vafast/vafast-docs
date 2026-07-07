@@ -261,7 +261,7 @@ const routes = defineRoutes([
   })
 ])
 
-// 错误响应格式: { "error": "NOT_FOUND", "message": "User not found" }
+// 错误响应格式: { "code": 404, "message": "User not found" }
 ```
 
 **预定义错误列表：**

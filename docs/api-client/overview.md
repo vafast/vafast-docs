@@ -162,7 +162,11 @@ const { data, error } = await ones.users.find.post({ current: 1, pageSize: 10 })
 const { data, error } = await api.users.get()
 
 if (error) {
-  // error: { code: number; message: string }
+  // error: { code: number; message: string; details?: ErrorDetail[] }
+  if (error.code === 422 && error.details) {
+    formRef.setFields(mapDetailsToFormFields(error.details))
+    return
+  }
   switch (error.code) {
     case 401: redirectToLogin(); break
     case 403: showPermissionDenied(); break
@@ -173,6 +177,18 @@ if (error) {
 
 // data 在这里保证非 null
 console.log(data.users)
+```
+
+### 422 校验错误
+
+```typescript
+import { isValidationError, mapDetailsToFormFields } from '@vafast/api-client'
+
+const { error } = await api.users.post(formData)
+if (error && isValidationError(error)) {
+  // error.details: { location, path, field, message, value? }[]
+  formRef.setFields(mapDetailsToFormFields(error.details))
+}
 ```
 
 ## SSE 流式响应

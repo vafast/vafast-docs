@@ -402,7 +402,7 @@ const authMiddleware = defineMiddleware<{ userId: string }>(async (req, next) =>
 ## Schema 验证
 
 - `Type` 直接从 `vafast` 导入
-- 验证失败自动返回 400
+- 验证失败自动返回 422（含 `details`）
 - 支持 `body` / `query` / `params` / `headers` / `cookies`
 
 ```typescript

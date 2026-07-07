@@ -988,21 +988,43 @@ throw err.tooMany('请求过于频繁')     // 429 TOO_MANY_REQUESTS
 throw err.internal('服务器错误')      // 500 INTERNAL_ERROR
 
 // 自定义错误
-throw err('自定义错误消息', 418, 'CUSTOM_ERROR_TYPE')
+throw err('自定义错误消息', 418, 20001)  // HTTP 418, { code: 20001, message: "..." }
 ```
 
 **完整的预定义错误列表：**
 
-| 方法 | 状态码 | 错误类型 | 默认消息 |
-|------|--------|----------|----------|
-| `err.badRequest(msg?)` | 400 | BAD_REQUEST | 请求参数错误 |
-| `err.unauthorized(msg?)` | 401 | UNAUTHORIZED | 未授权 |
-| `err.forbidden(msg?)` | 403 | FORBIDDEN | 禁止访问 |
-| `err.notFound(msg?)` | 404 | NOT_FOUND | 资源不存在 |
-| `err.conflict(msg?)` | 409 | CONFLICT | 资源冲突 |
-| `err.unprocessable(msg?)` | 422 | UNPROCESSABLE_ENTITY | 无法处理的实体 |
-| `err.tooMany(msg?)` | 429 | TOO_MANY_REQUESTS | 请求过于频繁 |
-| `err.internal(msg?)` | 500 | INTERNAL_ERROR | 服务器内部错误 |
+| 方法 | 状态码 | 默认消息 |
+|------|--------|----------|
+| `err.badRequest(msg?)` | 400 | 请求参数错误 |
+| `err.unauthorized(msg?)` | 401 | 未授权 |
+| `err.forbidden(msg?)` | 403 | 禁止访问 |
+| `err.notFound(msg?)` | 404 | 资源不存在 |
+| `err.conflict(msg?)` | 409 | 资源冲突 |
+| `err.unprocessable(msg?)` | 422 | 无法处理的实体 |
+| `err.tooMany(msg?)` | 429 | 请求过于频繁 |
+| `err.internal(msg?)` | 500 | 服务器内部错误 |
+
+### Schema 校验失败（422）
+
+`defineRoute` 的 `schema` 校验失败时**自动返回 HTTP 422**，无需手写中间件：
+
+```json
+{
+  "code": 422,
+  "message": "请求参数校验失败",
+  "details": [
+    {
+      "location": "body",
+      "path": "/email",
+      "field": "email",
+      "message": "Expected string to match 'email' format",
+      "value": "invalid"
+    }
+  ]
+}
+```
+
+业务错误 `{ code, message }` 不含 `details`；`details[].message` 为 TypeBox 原始英文。
 
 ### VafastError 类
 
@@ -1013,25 +1035,25 @@ import { VafastError } from 'vafast'
 
 class VafastError extends Error {
   status: number      // HTTP 状态码，默认 500
-  type: string        // 错误类型，默认 'internal_error'
+  code: number        // 业务错误码，默认等于 status
   expose: boolean     // 是否暴露错误消息给客户端，默认 false
   
   constructor(
     message: string,
     options?: {
-      status?: number    // HTTP 状态码
-      type?: string      // 错误类型标识
-      expose?: boolean   // 是否暴露消息给客户端
-      cause?: unknown    // 原始错误（用于错误链）
+      status?: number
+      code?: number
+      expose?: boolean
+      cause?: unknown
     }
   )
 }
 
-// 直接使用（不推荐，除非需要 expose: false）
+// 直接使用（不推荐，优先 err()）
 throw new VafastError('Internal error', { 
   status: 500, 
-  type: 'DB_ERROR',
-  expose: false  // 不暴露给客户端
+  code: 50001,
+  expose: false
 })
 ```
 
@@ -1083,7 +1105,8 @@ const routes = defineRoutes([
 ])
 
 // 错误响应格式：
-// { "error": "NOT_FOUND", "message": "用户不存在" }
+// { "code": 404, "message": "用户不存在" }
+// Schema 校验失败：HTTP 422 + { "code": 422, "message": "...", "details": [...] }
 ```
 
 ### API 速查表
@@ -1108,7 +1131,8 @@ const routes = defineRoutes([
 │  throw err.unprocessable() →  422                           │
 │  throw err.tooMany()       →  429                           │
 │  throw err.internal()      →  500                           │
-│  throw err(msg, 418, 'X')  →  自定义                        │
+│  throw err(msg, 418, 20001)→  自定义                        │
+│  schema 校验失败           →  422 + details                 │
 └─────────────────────────────────────────────────────────────┘
 ```
 

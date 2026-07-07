@@ -200,7 +200,10 @@ describe('Vafast Validation', () => {
                 })
             }))
 
-        expect(response.status).toBe(400)
+        expect(response.status).toBe(422)
+        const body = await response.json()
+        expect(body.code).toBe(422)
+        expect(body.details).toBeArray()
     })
 })
 ```

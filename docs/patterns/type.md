@@ -42,7 +42,7 @@ const routes = defineRoutes([
   defineRoute({
     method: 'POST',
     path: '/',
-    // schema 会自动验证并返回 400 错误
+    // schema 会自动验证并返回 422 错误（含 details）
     schema: { body: BodySchema },
     handler: ({ body }) => `Hello ${body}`
   })
@@ -378,7 +378,7 @@ const routes = defineRoutes([
   defineRoute({
     method: 'POST',
     path: '/users',
-    // schema 自动验证 body，验证失败返回 400
+    // schema 自动验证 body，验证失败返回 422
     schema: { body: userSchema },
     handler: ({ body }) => ({ success: true, data: body })
   })
@@ -489,7 +489,22 @@ type User = Static<typeof userSchema>
 
 ### 验证错误处理
 
-使用 `defineRoute` 时，验证错误会自动返回 400 响应。如果需要自定义错误处理：
+使用 `defineRoute` 时，Schema 校验失败会自动返回 **HTTP 422**：
+
+```json
+{
+  "code": 422,
+  "message": "请求参数校验失败",
+  "details": [
+    {
+      "location": "body",
+      "path": "/email",
+      "field": "email",
+      "message": "Expected string to match 'email' format"
+    }
+  ]
+}
+```
 
 ```typescript
 import { Server, defineRoute, defineRoutes, Type } from 'vafast'
@@ -503,7 +518,6 @@ const routes = defineRoutes([
   defineRoute({
     method: 'POST',
     path: '/users',
-    // 基本用法：验证失败自动返回 400
     schema: { body: userSchema },
     handler: ({ body }) => ({ success: true, data: body })
   })
