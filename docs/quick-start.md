@@ -7,7 +7,7 @@ next:
 
 # 快速入门
 
-用几分钟跑起一个 Vafast 服务。本页覆盖 **安装 → Hello → 常见请求类型 → 简单中间件**；带 Schema 的 CRUD、嵌套路由请跟 [教程](/tutorial) 一步步做。
+用几分钟跑起一个 Vafast 服务。本页覆盖 **安装 → Hello → Schema → 常见请求类型 → 简单中间件**。CRUD 拆分与嵌套路由请跟 [教程](/tutorial) 做。
 
 ## 创建项目
 
@@ -89,59 +89,84 @@ npm run dev
 
 浏览器打开 [http://localhost:3000](http://localhost:3000)，应看到 `Hello Vafast!`。
 
-## 常见请求类型
+## Schema
 
-handler 里按需取 `params` / `query` / `body`，方法写在 `method` 上：
+用 `Type` 声明 `schema`：校验失败自动 422，handler 里字段自动有类型。
 
 ```typescript
-const routes = defineRoutes([
-  // GET + 路径参数：/hello/world → Hello, world!
-  defineRoute({
-    method: 'GET',
-    path: '/hello/:name',
-    handler: ({ params }) => `Hello, ${params.name}!`,
-  }),
+import { defineRoute, Type } from 'vafast'
 
-  // GET + 查询参数：/search?q=vafast&page=1
+const CreateUser = Type.Object({
+  name: Type.String({ minLength: 1 }),
+  age: Type.Optional(Type.Number({ minimum: 0 })),
+})
+
+defineRoute({
+  method: 'POST',
+  path: '/users',
+  schema: { body: CreateUser },
+  handler: ({ body }) => ({ id: '1', name: body.name, age: body.age ?? 18 }),
+})
+```
+
+| schema 字段 | 作用 |
+|-------------|------|
+| `body` | JSON 请求体 |
+| `query` | 查询串 |
+| `params` | 路径 `:id` |
+
+更多见 [验证](/essential/validation)。
+
+## 常见请求类型
+
+方法写在 `method` 上，入参用 `schema` 约束：
+
+```typescript
+import { defineRoute, defineRoutes, Type } from 'vafast'
+
+const routes = defineRoutes([
+  // GET + 路径 / 查询参数
   defineRoute({
     method: 'GET',
-    path: '/search',
-    handler: ({ query }) => ({
-      q: query.q,
-      page: query.page ?? '1',
+    path: '/users/:id',
+    schema: {
+      params: Type.Object({ id: Type.String() }),
+      query: Type.Object({
+        verbose: Type.Optional(Type.Boolean()),
+      }),
+    },
+    handler: ({ params, query }) => ({
+      id: params.id,
+      verbose: query.verbose ?? false,
     }),
   }),
 
-  // POST + JSON body
+  // POST + body
   defineRoute({
     method: 'POST',
     path: '/users',
-    handler: async ({ body }) => ({
-      id: '1',
-      name: body.name,
-    }),
+    schema: {
+      body: Type.Object({ name: Type.String({ minLength: 1 }) }),
+    },
+    handler: ({ body }) => ({ id: '1', name: body.name }),
   }),
 
-  // PUT / PATCH / DELETE
+  // PUT / PATCH
   defineRoute({
     method: 'PUT',
     path: '/users/:id',
-    handler: async ({ params, body }) => ({
-      id: params.id,
-      ...body,
-    }),
+    schema: {
+      params: Type.Object({ id: Type.String() }),
+      body: Type.Object({ name: Type.String() }),
+    },
+    handler: ({ params, body }) => ({ id: params.id, ...body }),
   }),
-  defineRoute({
-    method: 'PATCH',
-    path: '/users/:id',
-    handler: async ({ params, body }) => ({
-      id: params.id,
-      ...body,
-    }),
-  }),
+
+  // DELETE
   defineRoute({
     method: 'DELETE',
     path: '/users/:id',
+    schema: { params: Type.Object({ id: Type.String() }) },
     handler: ({ params }) => {
       console.log('deleted', params.id)
       return null // → 204 No Content
@@ -150,26 +175,12 @@ const routes = defineRoutes([
 ])
 ```
 
-| 取数据 | 来源 | 示例 |
-|--------|------|------|
-| `params` | 路径 `:id` | `/users/1` → `params.id` |
-| `query` | URL 查询串 | `?q=a` → `query.q` |
-| `body` | JSON 请求体 | POST / PUT / PATCH |
-
-handler **直接返回值**即可，框架会转成 `Response`：
-
-| 返回值 | 结果 |
-|--------|------|
-| `'text'` | `text/plain` |
-| `{ ok: true }` | `application/json` |
-| `null` | `204 No Content` |
+handler 直接返回值即可：`'text'` → text/plain，`{ ok: true }` → JSON，`null` → 204。
 
 ## 简单中间件
 
-用 `defineMiddleware` 包一层；挂在路由的 `middleware` 上即可：
-
 ```typescript
-import { Server, defineRoute, defineRoutes, defineMiddleware, serve } from 'vafast'
+import { defineMiddleware, defineRoute } from 'vafast'
 
 const log = defineMiddleware(async (req, next) => {
   const start = Date.now()
@@ -178,21 +189,17 @@ const log = defineMiddleware(async (req, next) => {
   return res
 })
 
-const routes = defineRoutes([
-  defineRoute({
-    method: 'GET',
-    path: '/',
-    middleware: [log],
-    handler: () => 'Hello Vafast!',
-  }),
-])
+defineRoute({
+  method: 'GET',
+  path: '/',
+  middleware: [log],
+  handler: () => 'Hello Vafast!',
+})
 
-const server = new Server(routes)
-// 全局中间件（作用于全部路由）：server.use(log)
-serve({ fetch: server.fetch, port: 3000 })
+// 全局：server.use(log)
 ```
 
-需要把数据传给 handler 时，用 `next({ ... })`：
+向 handler 注入数据用 `next({ ... })`：
 
 ```typescript
 const withUser = defineMiddleware(async (req, next) => {
@@ -203,29 +210,21 @@ defineRoute({
   method: 'GET',
   path: '/me',
   middleware: [withUser],
-  handler: ({ userId }) => ({ userId }), // userId 有类型
+  handler: ({ userId }) => ({ userId }),
 })
 ```
 
-| 挂载方式 | 写法 |
-|----------|------|
-| 单条路由 | `defineRoute({ middleware: [log], ... })` |
-| 全局 | `server.use(log)` |
-
-更多（组级继承、`withContext`、鉴权）见 [教程 · 中间件](/tutorial#第五步加一层中间件)。
+更多见 [教程 · 中间件](/tutorial#第五步加一层中间件)。
 
 ## 你现在掌握了什么
 
 | API | 作用 |
 |-----|------|
-| `defineRoute` | 定义一条路由（`method` + `path` + `handler`） |
-| `defineRoutes` | 组成路由表 |
-| `defineMiddleware` | 定义中间件；`next()` / `next({ ctx })` |
-| `new Server(routes)` | 创建应用 |
-| `serve({ fetch, port })` | 在 Node 里监听端口 |
+| `Type` + `schema` | 请求校验与类型推断 |
+| `defineRoute` / `defineRoutes` | 定义路由 |
+| `defineMiddleware` | 中间件；`next()` / `next({ ctx })` |
+| `Server` + `serve` | 创建应用并监听端口 |
 
 ## 下一步
 
-接着做 [教程](/tutorial)：给 body / query 加上 Schema 校验，再拆文件、嵌套路由。
-
-想先摸清原理，也可以看 [核心概念](/key-concept)。
+接着做 [教程](/tutorial)：拆文件、嵌套路由。想先摸清原理看 [核心概念](/key-concept)。

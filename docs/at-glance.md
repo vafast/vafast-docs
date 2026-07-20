@@ -202,7 +202,7 @@ Vafast 采用现代化的架构设计：
 
 ## 下一步
 
-1. [快速入门](/quick-start) — Hello + 常见请求类型 + 简单中间件
+1. [快速入门](/quick-start) — Hello + Schema + 请求类型 + 中间件
 2. [教程](/tutorial) — 渐进做出笔记 API
 3. [核心概念](/key-concept) — 理解请求如何穿过框架
 
