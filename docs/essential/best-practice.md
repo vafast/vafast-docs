@@ -4,539 +4,256 @@ title: 最佳实践 - Vafast
 
 # 最佳实践
 
-Vafast 是一个与模式无关的框架，选择何种编码模式由您和您的团队决定。
+Vafast 不强制编码模式。本页按生产项目（如 ones-server）里的高频写法，整理一套可直接落地的结构与约定。
 
-本页面是关于如何结合 MVC 模式 [(Model-View-Controller)](https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller) 遵循 Vafast 结构最佳实践的指南，但也可以适用于任何您喜欢的编码模式。
+更细的 API 说明见 [路由指南](/routing)、[Auth Middleware](/middleware/auth-middleware)、[入门教程](/tutorial)。
 
 ## 文件夹结构
 
-Vafast 对文件夹结构没有固定看法，留给您 **自行决定** 如何组织代码。
-
-然而，**如果您没有具体结构的想法**，我们推荐基于功能的文件夹结构。每个功能模块拥有自己的文件夹，里面包含路由、服务和模型。
+框架不规定目录。没有现成约定时，推荐 **按层划分**：
 
 ```
-| src
-  | modules
-	| auth
-      | routes.ts (路由定义)
-	  | service.ts (服务)
-	  | model.ts (模型)
-	| user
-      | routes.ts (路由定义)
-	  | service.ts (服务)
-	  | model.ts (模型)
-  | utils
-	| a
-	  | index.ts
-	| b
-	  | index.ts
-  | index.ts (入口文件)
+src/
+  index.ts          # Server + 全局中间件 + serve
+  routes/           # 按业务域的路由文件 + index 聚合
+    index.ts
+    blog.ts
+    files.ts
+  services/         # 业务逻辑（可再分子目录）
+  middleware/       # 少量项目级中间件
+  common/           # env、常量、共享 schema
+  utils/
 ```
 
-这种结构使您更容易找到和管理代码，并将相关代码集中在一起。
+- **路由文件**：定义叶子 handler，用 `children` 挂到资源组后导出
+- **服务**：与 HTTP 无关的业务逻辑；路由负责鉴权、校验、映射错误
+- **也可按功能模块拆**（`modules/blog/{routes,service}`），但生产更常见的是上面这种扁平 `routes/` + `services/`
 
-下面是一个如何将代码分布到基于功能文件夹结构的示例：
+## 嵌套路由（核心）
 
-::: code-group
+生产主路径是：**叶子 handler → 资源组 `children` → `defineRoutes` 导出 → 入口拼接**。
 
-```typescript [auth/routes.ts]
-// 路由定义处理 HTTP 相关，如路由、请求验证
-import { defineRoute, defineRoutes, Type } from 'vafast'
-import { signIn, signUp } from './service'
-import { AuthModel } from './model'
+### ✅ 推荐：叶子提前定义，再用路由组挂载
 
-export const authRoutes = defineRoutes([
+```typescript
+// routes/blog.ts
+import { defineRoute, defineRoutes, Type, err } from 'vafast'
+import {
+  authWithApp,
+  requireUser,
+  defineAuthRouteWithApp,
+} from '@vafast/auth-middleware'
+import { createBlog, findBlog } from '../services/blog'
+
+const createHandler = defineAuthRouteWithApp({
+  method: 'POST',
+  path: '/create',
+  name: '创建博客',
+  description: '创建新博客',
+  webhook: true, // 写操作可声明，见 @vafast/webhook
+  middleware: [requireUser],
+  schema: {
+    body: Type.Object({
+      title: Type.String(),
+      content: Type.String(),
+    }),
+  },
+  handler: async ({ body, userInfo, app }) => {
+    return createBlog({ ...body, appId: app.id, userId: userInfo.id })
+  },
+})
+
+const findOneHandler = defineAuthRouteWithApp({
+  method: 'POST',
+  path: '/findOne',
+  name: '博客详情',
+  middleware: [requireUser],
+  schema: {
+    body: Type.Object({ id: Type.String() }),
+  },
+  handler: async ({ body, app }) => {
+    const blog = await findBlog(body.id, app.id)
+    if (!blog) throw err.notFound('博客不存在')
+    return blog
+  },
+})
+
+export const blogRoutes = defineRoutes([
   defineRoute({
-    method: 'POST',
-    path: '/auth/sign-in',
-    schema: { body: AuthModel.signInBody },
-    handler: async ({ body }) => {
-      const response = await signIn(body)
-      return response
-    }
+    path: '/blog',
+    name: '博客',
+    description: '博客管理',
+    middleware: [authWithApp], // 组级中间件，children 继承
+    children: [createHandler, findOneHandler],
   }),
-  defineRoute({
-    method: 'POST',
-    path: '/auth/sign-up',
-    schema: { body: AuthModel.signUpBody },
-    handler: async ({ body }) => {
-      const user = await signUp(body)
-      return user
-    }
-  })
 ])
 ```
 
-```typescript [auth/service.ts]
-// 服务处理业务逻辑，解耦于路由定义
-import type { Static } from 'vafast'
-import { AuthModel } from './model'
+要点：
 
-type SignInBody = Static<typeof AuthModel.signInBody>
-type SignUpBody = Static<typeof AuthModel.signUpBody>
+| 写法 | 作用 |
+|------|------|
+| 叶子：`method` + `path` + `handler` | 真正处理请求 |
+| 组：仅 `path` + `children`（无 `method`） | 路径前缀 + 共享中间件 |
+| `name` / `description` | 给 api-spec / 文档用 |
+| 组上挂 `authWithApp`，叶子再挂 `requireUser` | 生产最常见鉴权分层 |
 
-export async function signIn({ username, password }: SignInBody) {
-  const user = await db.user.findUnique({ where: { username } })
+### ✅ 推荐：入口聚合 + 统一前缀
 
-  if (!user || !await verifyPassword(password, user.password)) {
-    throw new Error('Invalid username or password')
-  }
+```typescript
+// routes/index.ts
+import { blogRoutes } from './blog'
+import { filesRoutes } from './files'
 
-  return {
-    username,
-    token: await generateToken(user.id)
-  }
-}
-
-export async function signUp({ username, password, email }: SignUpBody) {
-  const hashedPassword = await hashPassword(password)
-
-  return await db.user.create({
-    data: { username, password: hashedPassword, email }
-  })
-}
+export const allRoutes = [
+  ...blogRoutes,
+  ...filesRoutes,
+]
 ```
 
-```typescript [auth/model.ts]
-// 模型定义请求和响应的数据结构和验证
-import { Type } from 'vafast'
+```typescript
+// index.ts
+import { Server, serve, defineRoute, defineRoutes } from 'vafast'
+import { cors } from '@vafast/cors'
+import { requestId } from '@vafast/request-id'
+import { allRoutes } from './routes'
 
-export const AuthModel = {
-  signInBody: Type.Object({
-    username: Type.String({ minLength: 1 }),
-    password: Type.String({ minLength: 6 }),
+const BASE_PATH = '/api'
+
+const rootRoutes = defineRoutes([
+  defineRoute({
+    method: 'GET',
+    path: '/',
+    handler: () => ({ status: 'ok' }),
   }),
-
-  signUpBody: Type.Object({
-    username: Type.String({ minLength: 1 }),
-    password: Type.String({ minLength: 6 }),
-    email: Type.String({ format: 'email' }),
-  }),
-
-  signInResponse: Type.Object({
-    username: Type.String(),
-    token: Type.String(),
-  }),
-}
-```
-
-```typescript [index.ts]
-// 入口文件：组合所有路由
-import { Server, serve } from 'vafast'
-import { authRoutes } from './modules/auth/routes'
-import { userRoutes } from './modules/user/routes'
-
-const server = new Server([
-  ...authRoutes,
-  ...userRoutes,
 ])
 
-serve({ fetch: server.fetch, port: 3000 }, () => {
-  console.log('Server running on http://localhost:3000')
+const routesWithBasePath = allRoutes.map((route) => ({
+  ...route,
+  path: BASE_PATH + route.path,
+}))
+
+const server = new Server([...rootRoutes, ...routesWithBasePath])
+
+server.use(cors())
+server.use(requestId())
+
+serve({
+  fetch: server.fetch,
+  port: 3000,
+  hostname: '0.0.0.0',
+  gracefulShutdown: true,
+  trustProxy: true,
 })
 ```
 
-:::
+无前缀的 `GET /` 适合负载均衡探活；业务路由统一加 `BASE_PATH`。
 
-每个文件的职责如下：
-- **路由（Routes）**：处理 HTTP 路由、请求验证和响应。
-- **服务（Service）**：处理业务逻辑，完全解耦于框架。
-- **模型（Model）**：定义请求和响应的数据结构及验证 Schema。
+### ❌ 不推荐：在入口平铺大量叶子路由
 
-您可以随意调整此结构以满足自己的需求，使用任何您喜欢的编码模式。
+把几十个 `defineRoute` 直接塞进 `new Server([...])` 会难维护。按域拆文件，组内用 `children`。
 
-## 路由组织
+## 鉴权
 
-### ✅ 推荐：使用 defineRoutes 定义路由
+多租户业务服务对接 auth-server 时，**优先**用 [@vafast/auth-middleware](/middleware/auth-middleware)，不要手写 JWT。
 
-使用 `defineRoutes` 定义路由数组，获得更好的类型推断：
+常用组合：
 
-```typescript
-import { defineRoute, defineRoutes } from 'vafast'
+| API | 场景 |
+|-----|------|
+| `defineAuthRouteWithApp` + `authWithApp` + `requireUser` | 需登录且绑定 app（最常见） |
+| `defineRouteWithApp` + `requireApp` | 只需 app，不强制用户 |
+| `defineOptionalAuthRouteWithApp` | 可选登录 |
+| `defineApiKeyRoute` / `requireApiKey` | API Key、服务间调用 |
 
-export const userRoutes = defineRoutes([
-  defineRoute({
-    method: 'GET',
-    path: '/users',
-    handler: () => getUsers()
-  }),
-  defineRoute({
-    method: 'GET',
-    path: '/users/:id',
-    handler: ({ params }) => getUserById(params.id)
-  })
-])
-```
+自建鉴权时再用 `defineMiddleware` + `next({ user })`，详见 [中间件](/middleware) 与 [教程](/tutorial)。
 
-### ✅ 推荐：按功能模块分组路由
+## Schema
 
-将相关路由放在同一模块中，便于维护：
-
-```typescript
-// modules/user/routes.ts
-import { defineRoute, defineRoutes } from 'vafast'
-
-export const userRoutes = defineRoutes([
-  defineRoute({ method: 'GET', path: '/users', handler: ... }),
-  defineRoute({ method: 'GET', path: '/users/:id', handler: ... }),
-  defineRoute({ method: 'POST', path: '/users', handler: ... }),
-])
-
-// modules/post/routes.ts
-export const postRoutes = defineRoutes([
-  defineRoute({ method: 'GET', path: '/posts', handler: ... }),
-  defineRoute({ method: 'GET', path: '/posts/:id', handler: ... }),
-])
-```
-
-### ✅ 推荐：在入口文件组合路由
-
-```typescript
-import { Server, serve } from 'vafast'
-import { userRoutes } from './modules/user/routes'
-import { postRoutes } from './modules/post/routes'
-
-const server = new Server([
-  ...userRoutes,
-  ...postRoutes,
-])
-
-serve({ fetch: server.fetch, port: 3000 })
-```
-
-## 服务层
-
-服务是独立的工具/辅助函数集合，作为业务逻辑被解耦出来，供路由使用。
-
-任何可以从路由处理函数中解耦的技术逻辑都可以放在 **服务** 中。
-
-### ✅ 推荐：抽象不依赖请求的服务
-
-建议将服务与 Vafast 解耦。
-
-如果服务不依赖 HTTP 请求，推荐抽成普通函数：
-
-```typescript
-// services/math.ts
-export function fibo(n: number): number {
-  if (n < 2) return n
-  return fibo(n - 1) + fibo(n - 2)
-}
-
-// routes.ts
-import { defineRoute, defineRoutes, Type } from 'vafast'
-import { fibo } from './services/math'
-
-export const routes = defineRoutes([
-  defineRoute({
-    method: 'GET',
-    path: '/fibo/:n',
-    schema: { params: Type.Object({ n: Type.String() }) },
-    handler: ({ params }) => fibo(parseInt(params.n))
-  })
-])
-```
-
-### ✅ 推荐：依赖请求的逻辑使用中间件
-
-如果逻辑依赖请求（如身份验证），推荐使用中间件：
-
-```typescript
-import { defineRoute, defineRoutes, defineMiddleware, json } from 'vafast'
-
-// 身份验证中间件
-const authMiddleware = defineMiddleware(async (req, next) => {
-  const token = req.headers.get('authorization')?.replace('Bearer ', '')
-  
-  if (!token) {
-    return json({ error: 'Unauthorized' }, 401)
-  }
-  
-  const user = await verifyToken(token)
-  if (!user) {
-    return json({ error: 'Invalid token' }, 401)
-  }
-  
-  // 通过 next 传递用户信息
-  return await next({ user })
-})
-
-export const protectedRoutes = defineRoutes([
-  defineRoute({
-    method: 'GET',
-    path: '/profile',
-    middleware: [authMiddleware],
-    handler: ({ user }) => {
-      // user 自动有类型
-      return { id: user.id, username: user.username }
-    }
-  })
-])
-```
-
-> **新框架用法说明**：
-> - 使用 `defineMiddleware` 定义中间件
-> - 通过 `next({ user })` 传递上下文
-> - Handler 自动获得类型推断，无需手动类型断言
-
-::: tip 生产环境推荐
-多租户业务服务（对接 auth-server）请使用 [@vafast/auth-middleware](/middleware/auth-middleware) 的 `authWithApp`、`requireUser`、`defineAuthRouteWithApp`，无需手写 JWT 验证逻辑。
-:::
-
-### ❌ 不推荐：在服务中处理 HTTP 响应
-
-服务应该只处理业务逻辑，不要在服务中构造 HTTP 响应：
-
-```typescript
-// ❌ 不推荐
-export async function getUser(id: string) {
-  const user = await db.user.findUnique({ where: { id } })
-  if (!user) {
-    return new Response('Not Found', { status: 404 }) // ❌
-  }
-  return user
-}
-
-// ✅ 推荐
-export async function getUser(id: string) {
-  const user = await db.user.findUnique({ where: { id } })
-  if (!user) {
-    throw new Error('User not found') // 或返回 null
-  }
-  return user
-}
-
-// 在路由中处理 HTTP 响应
-{
-  method: 'GET',
-  path: '/users/:id',
-  handler: async ({ params }) => {
-    const user = await getUser(params.id)
-    if (!user) {
-      throw err.notFound('User not found')
-    }
-    return user
-  }
-})
-```
-
-## 模型（Schema）
-
-模型或 [DTO（数据传输对象）](https://en.wikipedia.org/wiki/Data_transfer_object) 使用 TypeBox（通过 vafast 导出的 `Type`）处理。
-
-Vafast 内置验证系统能从代码推断类型并进行运行时校验。
-
-### ✅ 推荐：使用 Type 定义 Schema
+用 `Type` 做运行时校验，用 `Static` 推断类型；**不要**用 class / interface 当请求模型。
 
 ```typescript
 import { Type, type Static } from 'vafast'
 
-// 定义 Schema
-export const UserSchema = Type.Object({
-  username: Type.String({ minLength: 1 }),
-  email: Type.String({ format: 'email' }),
-  age: Type.Optional(Type.Number({ minimum: 0 }))
+export const CreateBlogBody = Type.Object({
+  title: Type.String({ minLength: 1 }),
+  content: Type.String(),
+  tags: Type.Optional(Type.Array(Type.String())),
 })
 
-// 获取 TypeScript 类型
-export type User = Static<typeof UserSchema>
+export type CreateBlogBody = Static<typeof CreateBlogBody>
 ```
 
-### ✅ 推荐：组织 Schema 到模型对象
+生产里 body 校验最常见；`params` / `query` 按需使用。复杂结构可用 `Type.Recursive`、`Type.Union` 等，见 [验证](/essential/validation)。
 
-将相关 Schema 归组到一个对象中，便于管理：
-
-```typescript
-import { Type } from 'vafast'
-
-export const UserModel = {
-  create: Type.Object({
-    username: Type.String({ minLength: 1 }),
-    email: Type.String({ format: 'email' }),
-    password: Type.String({ minLength: 6 })
-  }),
-  
-  update: Type.Object({
-    username: Type.Optional(Type.String({ minLength: 1 })),
-    email: Type.Optional(Type.String({ format: 'email' }))
-  }),
-  
-  response: Type.Object({
-    id: Type.String(),
-    username: Type.String(),
-    email: Type.String(),
-    createdAt: Type.String()
-  })
-}
-```
-
-### ❌ 不推荐：使用类或接口定义模型
-
-不要将类实例或接口用于模型声明，因为它们无法进行运行时验证：
+相关 Schema 可收拢到对象里：
 
 ```typescript
-// ❌ 不推荐 - 无法运行时验证
-class UserDto {
-	username: string
-	password: string
+export const BlogModel = {
+  create: CreateBlogBody,
+  findOne: Type.Object({ id: Type.String() }),
 }
-
-// ❌ 不推荐 - 只是类型，无法运行时验证
-interface IUser {
-	username: string
-	password: string
-}
-
-// ✅ 推荐 - 可以运行时验证
-const UserSchema = Type.Object({
-  username: Type.String(),
-  password: Type.String()
-})
-```
-
-### ❌ 不推荐：把类型和 Schema 分开声明
-
-不要把 Schema 和类型分开声明，应通过 Schema 的 `Static` 获取类型：
-
-```typescript
-// ❌ 不推荐 - 重复定义，容易不同步
-const userSchema = Type.Object({
-  username: Type.String(),
-  password: Type.String()
-})
-
-type User = {
-	username: string
-	password: string
-}
-
-// ✅ 推荐 - 从 Schema 推断类型
-const userSchema = Type.Object({
-  username: Type.String(),
-  password: Type.String()
-})
-
-type User = Static<typeof userSchema>
 ```
 
 ## 错误处理
 
-### ✅ 推荐：使用 err() 错误工具函数
+### ✅ 推荐：`throw err.*`
+
+框架内置错误处理，业务侧直接抛语义化错误即可：
 
 ```typescript
-import { defineRoute, defineRoutes, err } from 'vafast'
+import { err } from 'vafast'
 
-const routes = defineRoutes([
-  defineRoute({
-    method: 'GET',
-    path: '/users/:id',
-    handler: async ({ params }) => {
-      const user = await db.user.findUnique({ where: { id: params.id } })
-      
-      if (!user) {
-        // 使用 err() 抛出语义化错误
-        throw err.notFound('用户不存在')
-      }
-      
-      return user
-    }
-  })
-])
-
-// 框架内置错误处理器会自动捕获错误并返回：
-// { "error": "NOT_FOUND", "message": "用户不存在" }
+if (!id) throw err.badRequest('参数错误')
+if (!user) throw err.unauthorized('请先登录')
+if (!allowed) throw err.forbidden('无权限')
+if (!row) throw err.notFound('资源不存在')
+if (dup) throw err.conflict('资源冲突')
+throw err.internal('服务器错误')
 ```
 
-**常用错误方法：**
+默认响应形态类似：`{ "error": "NOT_FOUND", "message": "资源不存在" }`。
+
+### ❌ 不推荐：在服务里构造 `Response`
+
+服务返回数据或抛错；HTTP 状态与对外错误由路由 / `err` 负责。
 
 ```typescript
-throw err.badRequest('参数错误')      // 400
-throw err.unauthorized('请先登录')    // 401
-throw err.forbidden('无权限')         // 403
-throw err.notFound('资源不存在')      // 404
-throw err.conflict('资源冲突')        // 409
-throw err.internal('服务器错误')      // 500
-throw err('自定义错误', 422, 20001)  // HTTP 422, { code: 20001, message: "..." }
-```
-
-### ✅ 推荐：扩展 VafastError 创建自定义错误类
-
-```typescript
-import { VafastError } from 'vafast'
-
-// 继承 VafastError 创建业务错误
-export class NotFoundError extends VafastError {
-  constructor(resource: string) {
-    super(`${resource} not found`, { 
-      status: 404, 
-      type: 'NOT_FOUND',
-      expose: true 
-    })
-  }
+// ❌
+export async function getBlog(id: string) {
+  if (!id) return new Response('Bad Request', { status: 400 })
 }
 
-export class UnauthorizedError extends VafastError {
-  constructor(message = '未授权访问') {
-    super(message, { 
-      status: 401, 
-      type: 'UNAUTHORIZED',
-      expose: true 
-    })
-  }
+// ✅
+export async function getBlog(id: string) {
+  const blog = await db.blog.findById(id)
+  return blog // 不存在则返回 null，由路由 throw err.notFound
 }
-
-export class ValidationError extends VafastError {
-  constructor(message: string, public details?: Record<string, string>) {
-    super(message, { 
-      status: 400, 
-      type: 'VALIDATION_ERROR',
-      expose: true 
-    })
-  }
-}
-
-// 使用示例
-const routes = defineRoutes([
-  defineRoute({
-    method: 'GET',
-    path: '/users/:id',
-    handler: async ({ params }) => {
-      const user = await db.user.findUnique({ where: { id: params.id } })
-      if (!user) throw new NotFoundError('User')
-      return user
-    },
-  }),
-])
 ```
 
-### ✅ 可选：自定义错误处理中间件
+仅当需要消化第三方库异常时，再挂自定义错误中间件；优先仍用 `err.*`。详见 [错误处理相关 API](/api)。
 
-框架已内置 `errorHandler`，**优先使用 `err()` 抛出业务错误**。仅当需要处理第三方库异常等非 `VafastError` 时，才在 `server.use()` 挂自定义中间件：
+## 服务层
+
+把与请求无关的逻辑抽成普通函数，便于单测与复用：
 
 ```typescript
-import { json, VafastError, defineMiddleware } from 'vafast'
-
-const customErrorHandler = defineMiddleware(async (req, next) => {
-  try {
-    return await next()
-  } catch (error) {
-    console.error('Error:', error)
-    
-    if (error instanceof SomeExternalLibraryError) {
-      return json({ error: 'external_error', message: '外部服务错误' }, 502)
-    }
-    
-    throw error
-  }
-})
-
-const server = new Server(routes)
-server.use(customErrorHandler)
+// services/blog.ts
+export async function createBlog(input: {
+  title: string
+  content: string
+  appId: string
+  userId: string
+}) {
+  return db.blog.create(input)
+}
 ```
+
+路由负责：鉴权上下文、`schema`、调用服务、`err` 映射。不必强行 MVC；handler 内写薄编排、重逻辑进 `services/` 即可。
 
 ## 测试
 
-### ✅ 推荐：使用 server.fetch 测试路由
+用 `server.fetch` 做路由集成测试，服务函数单独单测：
 
 ```typescript
 import { describe, it, expect } from 'vitest'
@@ -545,46 +262,42 @@ import { Server, defineRoute, defineRoutes } from 'vafast'
 const routes = defineRoutes([
   defineRoute({
     method: 'GET',
-    path: '/',
-    handler: () => 'Hello World'
-  })
+    path: '/health',
+    handler: () => ({ ok: true }),
+  }),
 ])
 
 const server = new Server(routes)
 
-describe('Routes', () => {
-  it('should return Hello World', async () => {
-    const response = await server.fetch(new Request('http://localhost/'))
-    const text = await response.text()
-    
-    expect(response.status).toBe(200)
-    expect(text).toBe('Hello World')
-  })
-    })
-```
-
-### ✅ 推荐：服务层单独测试
-
-```typescript
-import { describe, it, expect } from 'vitest'
-import { fibo } from './services/math'
-
-describe('fibo', () => {
-  it('should calculate fibonacci', () => {
-    expect(fibo(0)).toBe(0)
-    expect(fibo(1)).toBe(1)
-    expect(fibo(10)).toBe(55)
+describe('health', () => {
+  it('returns ok', async () => {
+    const res = await server.fetch(new Request('http://localhost/health'))
+    expect(res.status).toBe(200)
+    expect(await res.json()).toEqual({ ok: true })
   })
 })
 ```
 
+更多见 [单元测试](/patterns/unit-test)。
+
+## 生产配套（按需）
+
+这些在 ones 系服务里很常见，本页不展开，按链接深入：
+
+| 能力 | 说明 |
+|------|------|
+| [Webhook](/middleware/webhook) | 路由声明 `webhook: true`，全局挂 webhook 中间件 |
+| [Request Logger](/middleware/request-logger) / [Request Id](/middleware/request-id) / [CORS](/middleware/cors) | 入口 `server.use(...)` |
+| [API Client / Sync](/api-client/overview) | `getApiSpec` + `vafast sync` 生成前端客户端 |
+| [SSE](/essential/sse) | 流式接口（如 AI agent） |
+
 ## 总结
 
-| 推荐做法 | 原因 |
-|---------|------|
-| 使用 `defineRoutes` 定义路由 | 更好的类型推断 |
-| 按功能模块分组代码 | 便于维护和查找 |
-| 服务层解耦于框架 | 易于测试和重用 |
-| 使用 `Type` 定义 Schema | 运行时验证 + 类型推断 |
-| 使用中间件处理横切关注点 | 统一处理认证、日志、错误 |
-| 使用 `server.fetch` 测试 | 完整的集成测试 |
+| 推荐 | 原因 |
+|------|------|
+| `children` 嵌套路由 + 按域拆文件 | 前缀与中间件共享，易维护 |
+| `@vafast/auth-middleware` | 多租户鉴权与类型安全，避免手写 JWT |
+| `Type` + `Static` | 运行时校验与类型同源 |
+| `throw err.*` | 统一错误响应，服务不碰 HTTP |
+| 入口：全局中间件 + `gracefulShutdown` + `trustProxy` | 对齐生产启动约定 |
+| `server.fetch` 测路由 | 无需起端口的集成测试 |
