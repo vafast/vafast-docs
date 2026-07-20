@@ -241,9 +241,36 @@ export const NoteModel = {
 }
 ```
 
-详见 [验证](/essential/validation)。
+校验失败时不进 handler，框架直接返回 HTTP **422**：
+
+```json
+{
+  "code": 422,
+  "message": "请求参数校验失败",
+  "details": [
+    {
+      "location": "body",
+      "path": "/title",
+      "field": "title",
+      "message": "Expected string length greater or equal to 1",
+      "value": ""
+    }
+  ]
+}
+```
+
+| 字段 | 说明 |
+|------|------|
+| `details[].location` | `body` / `query` / `params` 等 |
+| `details[].field` | 表单字段路径 |
+| `details[].message` | TypeBox 原始英文提示 |
+| `details[].value` | 触发错误的实际值（可选） |
+
+业务错误（404、403 等）用下一节的 `err.*`，响应里一般没有 `details`。完整说明见 [验证](/essential/validation)。
 
 ## 5. 错误用 `err.*`，服务不碰 HTTP
+
+业务错误在路由 / handler 里 `throw err.xxx()`，框架转成 JSON；服务层只返回数据或 `null`，不构造 `Response`。
 
 ```typescript
 import { err } from 'vafast'
@@ -251,6 +278,37 @@ import { err } from 'vafast'
 if (!id) throw err.badRequest('参数错误')
 if (!row) throw err.notFound('资源不存在')
 if (!allowed) throw err.forbidden('无权限')
+```
+
+响应形状（无 `details`，与 Schema 422 区分）：
+
+```json
+{
+  "code": 404,
+  "message": "资源不存在"
+}
+```
+
+### 预定义错误一览
+
+| 方法 | HTTP | 默认 message |
+|------|------|----------------|
+| `err.badRequest(msg?)` | 400 | 请求参数错误 |
+| `err.unauthorized(msg?)` | 401 | 未授权 |
+| `err.forbidden(msg?)` | 403 | 禁止访问 |
+| `err.notFound(msg?)` | 404 | 资源不存在 |
+| `err.conflict(msg?)` | 409 | 资源冲突 |
+| `err.unprocessable(msg?)` | 422 | 无法处理的实体 |
+| `err.tooMany(msg?)` | 429 | 请求过于频繁 |
+| `err.internal(msg?)` | 500 | 服务器内部错误 |
+
+第二个参数可传业务码（写入响应 `code`，HTTP 状态仍按上表）：
+
+```typescript
+throw err.notFound('用户不存在', 10001)
+// → HTTP 404, { code: 10001, message: "用户不存在" }
+
+throw err('自定义消息', 418, 20001) // 任意状态码
 ```
 
 ```typescript
@@ -264,6 +322,14 @@ export function getNote(id: string) {
   return db.notes.findById(id)
 }
 ```
+
+| 场景 | 做法 |
+|------|------|
+| 请求形状不对 | 靠 `schema` → 自动 422 + `details` |
+| 业务规则失败 | `throw err.*` → 对应状态码，无 `details` |
+| 服务层 | 不碰 HTTP；由路由 `throw` |
+
+更多见 [API 参考 · 错误处理](/api#错误处理)。
 
 ## 6. 服务层：普通函数即可
 

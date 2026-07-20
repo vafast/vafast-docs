@@ -115,6 +115,31 @@ defineRoute({
 | `query` | 查询串 |
 | `params` | 路径 `:id` |
 
+校验失败时 **不会进入 handler**，框架直接返回 HTTP **422**：
+
+```json
+{
+  "code": 422,
+  "message": "请求参数校验失败",
+  "details": [
+    {
+      "location": "body",
+      "path": "/name",
+      "field": "name",
+      "message": "Expected string length greater or equal to 1",
+      "value": ""
+    }
+  ]
+}
+```
+
+| 字段 | 说明 |
+|------|------|
+| `details[].location` | `body` / `query` / `params` 等 |
+| `details[].field` | 表单字段路径，如 `name`、`receiver.email` |
+| `details[].message` | TypeBox 原始英文提示 |
+| `details[].value` | 触发错误的实际值（可选） |
+
 更多见 [验证](/essential/validation)。
 
 ## 常见请求类型
