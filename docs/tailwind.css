@@ -207,6 +207,10 @@ button.copy::after {
     background-image: url(/assets/book.svg);
 }
 
+#VPSidebarNav > .group:nth-child(12) > .VPSidebarItem > .item > .text::before {
+    background-image: url(/assets/stub.svg);
+}
+
 .dark
     #VPSidebarNav
     > .group:nth-child(-n + 12):not(:first-child)

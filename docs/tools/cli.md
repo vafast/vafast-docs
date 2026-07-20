@@ -31,10 +31,10 @@ npx vafast sync --url http://localhost:3000 --out src/types/api.ts
 npx vafast sync --url http://localhost:3000 --endpoint /api-spec
 
 # 去掉路径前缀
-npx vafast sync --url http://localhost:9002 \
-  --endpoint /restfulApi/api-spec \
-  --out src/types/api/ones.generated.ts \
-  --strip-prefix /restfulApi
+npx vafast sync --url http://localhost:3000 \
+  --endpoint /api/api-spec \
+  --out src/types/api/blog.generated.ts \
+  --strip-prefix /api
 ```
 
 #### 选项
@@ -150,9 +150,9 @@ export function createApiClient(client: Client): EdenClient<Api> {
 ```json
 {
   "scripts": {
-    "sync:auth": "vafast sync --url http://localhost:9003 --endpoint /authRestfulApi/api-spec --out src/types/api/auth.generated.ts --strip-prefix /authRestfulApi",
-    "sync:ones": "vafast sync --url http://localhost:9002 --endpoint /restfulApi/api-spec --out src/types/api/ones.generated.ts --strip-prefix /restfulApi",
-    "sync:types": "npm run sync:auth && npm run sync:ones",
+    "sync:auth": "vafast sync --url http://localhost:9003 --endpoint /auth/api/api-spec --out src/types/api/auth.generated.ts --strip-prefix /auth/api",
+    "sync:blog": "vafast sync --url http://localhost:9002 --endpoint /blog/api/api-spec --out src/types/api/blog.generated.ts --strip-prefix /blog/api",
+    "sync:types": "npm run sync:auth && npm run sync:blog",
     "dev": "vite",
     "build": "npm run sync:types && vite build"
   }
@@ -165,22 +165,22 @@ export function createApiClient(client: Client): EdenClient<Api> {
 // src/utils/apiClients.ts
 import { createClient } from '@vafast/api-client'
 import { createApiClient as createAuthClient } from '~/types/api/auth.generated'
-import { createApiClient as createOnesClient } from '~/types/api/ones.generated'
+import { createApiClient as createBlogClient } from '~/types/api/blog.generated'
 
 // 公共配置
-const AUTH_API = { baseURL: '/authRestfulApi', timeout: 30000 }
-const ONES_API = { baseURL: '/restfulApi', timeout: 30000 }
+const AUTH_API = { baseURL: '/auth/api', timeout: 30000 }
+const BLOG_API = { baseURL: '/blog/api', timeout: 30000 }
 
 // 创建客户端
 const authClient = createClient(AUTH_API)
-const onesClient = createClient(ONES_API).use(appIdMiddleware)
+const blogClient = createClient(BLOG_API).use(appIdMiddleware)
 
 // 导出类型安全的 API
 export const auth = createAuthClient(authClient)
-export const ones = createOnesClient(onesClient)
+export const blog = createBlogClient(blogClient)
 
 // 使用
-const { data, error } = await ones.users.find.post({ current: 1, pageSize: 10 })
+const { data, error } = await blog.posts.find.post({ current: 1, pageSize: 10 })
 ```
 
 ## 注意事项

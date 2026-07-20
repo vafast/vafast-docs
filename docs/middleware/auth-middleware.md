@@ -4,9 +4,9 @@ title: Auth Middleware - Vafast
 
 # Auth Middleware
 
-`@vafast/auth-middleware` 是面向多租户业务服务的认证中间件包，对接 `auth-server`，开箱即用。
+`@vafast/auth-middleware` 是面向多租户后端的认证中间件包，对接独立认证服务，开箱即用。
 
-适用于 `ones-server`、`ai-server`、`billing-server` 等需要 **JWT / API Key 认证**、**app-id 验证**、**类型安全路由包装** 的后端服务。
+适用于需要 **JWT / API Key 认证**、**app-id 验证**、**类型安全路由包装** 的 API 服务。
 
 ```bash
 npm install @vafast/auth-middleware
@@ -57,7 +57,7 @@ serve({ fetch: server.fetch, port: 3000 })
 
 | 变量 | 说明 |
 |------|------|
-| `AUTH_API_BASE_URL` | auth-server 地址，如 `http://127.0.0.1:9003` |
+| `AUTH_API_BASE_URL` | 认证服务地址，如 `http://127.0.0.1:9003` |
 | `AUTH_SERVICE_API_KEY_ID` | 服务间通信 API Key ID |
 | `AUTH_SERVICE_API_KEY_SECRET` | 服务间通信 API Key Secret |
 | `AUTH_API_TIMEOUT` | 请求超时（毫秒），默认 5000 |
@@ -150,7 +150,7 @@ defineAuthRouteWithApp({
 
 所有定义器内置 `webhook` 扩展字段类型支持。
 
-## 生产模式（ones-server 风格）
+## 生产模式
 
 ### 路由组 + 子路由
 
@@ -201,7 +201,7 @@ import { requestId } from '@vafast/request-id'
 import { requestLogger } from '@vafast/request-logger'
 import { filesRoutes } from './routes/files'
 
-const BASE_PATH = '/onesRestfulApi'
+const BASE_PATH = '/api'
 
 const rootRoutes = defineRoutes([
   defineRoute({ method: 'GET', path: '/', handler: () => ({ status: 'ok' }) }),
@@ -216,11 +216,11 @@ const server = new Server([...rootRoutes, ...routesWithBasePath])
 
 server.use(cors())
 server.use(requestId())
-server.use(requestLogger({ service: 'ones-server', url: '...' }))
+server.use(requestLogger({ service: 'my-api', url: '...' }))
 
 serve({
   fetch: server.fetch,
-  port: 9002,
+  port: 3000,
   gracefulShutdown: true,
   trustProxy: true,
 })
@@ -270,13 +270,13 @@ interface ApiKeyInfo {
 
 | | `@vafast/jwt` | `@vafast/auth-middleware` |
 |--|---------------|---------------------------|
-| 定位 | 通用 JWT 解析/验证 | 对接 auth-server 的完整认证方案 |
+| 定位 | 通用 JWT 解析/验证 | 对接独立认证服务的完整方案 |
 | app-id | 不支持 | 内置多租户 app 验证 |
 | API Key | 不支持 | 内置 |
 | 路由定义器 | 无 | 内置 `defineAuthRouteWithApp` 等 |
-| 适用 | 简单自建认证 | Captions 体系微服务 |
+| 适用 | 简单自建认证 | 多租户 / 微服务鉴权 |
 
-简单项目用 `@vafast/jwt`；接入 auth-server 的业务服务用 `@vafast/auth-middleware`。
+简单项目用 `@vafast/jwt`；需要远程校验 JWT / API Key、多租户 `app-id` 时用 `@vafast/auth-middleware`。
 
 ## 相关链接
 

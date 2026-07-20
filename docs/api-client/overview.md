@@ -136,22 +136,22 @@ const client = createClient({ baseURL: '/api', timeout: 30000 })
 
 ```typescript
 // 公共配置
-const AUTH_API = { baseURL: '/authRestfulApi', timeout: 30000 }
-const ONES_API = { baseURL: '/restfulApi', timeout: 30000 }
+const AUTH_API = { baseURL: '/auth/api', timeout: 30000 }
+const BLOG_API = { baseURL: '/blog/api', timeout: 30000 }
 
 // 创建客户端
 const authClient = createClient(AUTH_API)
-const onesClient = createClient(ONES_API).use(appIdMiddleware)
+const blogClient = createClient(BLOG_API).use(appIdMiddleware)
 
 // 使用 CLI 生成的类型安全客户端
 import { createApiClient as createAuthClient } from './types/auth.generated'
-import { createApiClient as createOnesClient } from './types/ones.generated'
+import { createApiClient as createBlogClient } from './types/blog.generated'
 
 export const auth = createAuthClient(authClient)
-export const ones = createOnesClient(onesClient)
+export const blog = createBlogClient(blogClient)
 
 // 使用
-const { data, error } = await ones.users.find.post({ current: 1, pageSize: 10 })
+const { data, error } = await blog.posts.find.post({ current: 1, pageSize: 10 })
 ```
 
 ## Go 风格错误处理

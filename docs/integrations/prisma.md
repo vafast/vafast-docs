@@ -899,7 +899,7 @@ describe('UserService', () => {
 
 ## 相关链接
 
-- [Vafast 文档](/getting-started/quickstart) - 快速开始指南
+- [Vafast 文档](/quick-start) - 快速开始指南
 - [Prisma 文档](https://www.prisma.io/docs) - Prisma ORM 官方文档
 - [中间件系统](/middleware) - 探索可用的中间件
 - [类型验证](/patterns/type) - 了解类型验证系统

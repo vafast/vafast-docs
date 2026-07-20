@@ -29,11 +29,6 @@ const server = new Server(routes)
 export default { fetch: server.fetch }
 ```
 
-> **新框架用法说明**：
-> - Schema 验证在路由配置的 `schema` 字段中定义
-> - Handler 直接是函数，不再需要 `createHandler` 包装
-> - 所有路由必须使用 `defineRoute` 包装
-
 ### TypeBox
 
 **TypeBox** 是一个用于运行时、编译时和 OpenAPI 模式的类型安全模式构建器，用于生成 OpenAPI/Swagger 文档。
@@ -128,10 +123,6 @@ const routes = defineRoutes([
   })
 ])
 ```
-
-> **新框架用法说明**：
-> - Schema 验证通过 `schema` 字段定义，不再使用 `body`、`query` 等独立字段
-> - Handler 直接接收验证后的数据，自动获得类型推断
 
 ### 查询参数验证
 
@@ -359,11 +350,6 @@ const routes = defineRoutes([
 ])
 ```
 
-> **新框架用法说明**：
-> - Schema 验证在 `schema` 字段中定义
-> - Handler 可以是异步函数，直接处理业务逻辑
-> - 不再使用 `createHandler` 的两参数形式
-
 ## 错误处理
 
 ### Schema 校验失败（422）
@@ -468,11 +454,6 @@ const routes = defineRoutes([
 ])
 ```
 
-> **新框架用法说明**：
-> - Schema 验证在路由配置的 `schema` 字段中定义
-> - 框架自动预编译和缓存验证器，无需手动处理
-> - Handler 直接接收验证后的数据，自动获得类型推断
-
 ## 最佳实践
 
 ### 1. 使用描述性的错误消息
@@ -535,11 +516,6 @@ const routes = defineRoutes([
 ])
 ```
 
-> **新框架用法说明**：
-> - Schema 验证在路由配置的 `schema` 字段中定义
-> - Handler 直接接收验证后的数据，自动获得类型推断
-> - 不再使用 `createHandler` 的两参数形式
-
 ## 总结
 
 Vafast 的验证系统提供了：
@@ -553,7 +529,7 @@ Vafast 的验证系统提供了：
 
 ### 下一步
 
-- 查看 [路由系统](/essential/route) 了解如何组织路由
+- 查看 [路由系统](/routing) 了解如何组织路由
 - 学习 [处理程序](/essential/handler) 了解如何处理请求
 - 探索 [中间件系统](/middleware) 了解如何增强功能
 - 查看 [最佳实践](/essential/best-practice) 获取更多开发建议

@@ -722,7 +722,7 @@ Vafast 的类型系统提供了：
 ### 下一步
 
 - 查看 [验证系统](/essential/validation) 了解完整的验证功能
-- 学习 [路由系统](/essential/route) 了解如何组织路由
+- 学习 [路由系统](/routing) 了解如何组织路由
 - 探索 [中间件系统](/middleware) 了解如何增强功能
 - 查看 [最佳实践](/essential/best-practice) 获取更多开发建议
 

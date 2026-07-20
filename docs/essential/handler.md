@@ -26,10 +26,6 @@ const routes = defineRoutes([
 ])
 ```
 
-> **新框架用法说明**：
-> - Handler 不再需要 `createHandler` 包装，直接是函数
-> - 所有路由必须使用 `defineRoute` 包装
-
 ## 基本用法
 
 ### 简单响应
@@ -55,11 +51,6 @@ const routes = defineRoutes([
   })
 ])
 ```
-
-> **新框架用法说明**：
-> - 返回字符串自动转换为 `text/plain`
-> - 返回对象自动转换为 `application/json`
-> - 返回 HTML 字符串自动识别为 `text/html`
 
 ### 访问请求信息
 
@@ -150,11 +141,6 @@ const routes = defineRoutes([
   })
 ])
 ```
-
-> **新框架用法说明**：
-> - Schema 验证现在在路由配置的 `schema` 字段中定义
-> - Handler 函数直接接收验证后的数据，自动获得类型推断
-> - 不再需要 `createHandler` 包装
 
 ### 查询参数
 
@@ -298,10 +284,6 @@ const routes = defineRoutes([
 ])
 ```
 
-> **新框架用法说明**：
-> - 中间件使用 `defineMiddleware` 定义，支持类型注入
-> - Handler 不再需要 `createHandler` 包装
-
 ## Schema 验证
 
 处理程序可以与 TypeBox 验证集成，在路由 `schema` 字段中声明：
@@ -328,11 +310,6 @@ const routes = defineRoutes([
   })
 ])
 ```
-
-> **新框架用法说明**：
-> - Schema 验证在路由配置的 `schema` 字段中定义
-> - Handler 直接接收验证后的数据，自动获得类型推断
-> - 不再使用 `createHandler` 的两参数形式
 
 ## 最佳实践
 
@@ -424,7 +401,7 @@ Vafast 的处理程序系统提供了：
 
 ### 下一步
 
-- 查看 [路由系统](/essential/route) 了解如何组织路由
+- 查看 [路由系统](/routing) 了解如何组织路由
 - 学习 [中间件系统](/middleware) 了解如何增强处理程序功能
 - 探索 [验证系统](/essential/validation) 了解如何验证请求数据
 - 查看 [最佳实践](/essential/best-practice) 获取更多开发建议

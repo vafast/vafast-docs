@@ -373,7 +373,7 @@ Vafast 的测试系统提供了：
 
 ### 下一步
 
-- 查看 [路由系统](/essential/route) 了解如何组织路由
+- 查看 [路由系统](/routing) 了解如何组织路由
 - 学习 [中间件系统](/middleware) 了解如何增强功能
 - 探索 [验证系统](/essential/validation) 了解类型安全
 - 查看 [最佳实践](/essential/best-practice) 获取更多开发建议

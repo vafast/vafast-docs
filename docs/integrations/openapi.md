@@ -289,5 +289,5 @@ server.use(swagger({
 
 - [Swagger 中间件](/middleware/swagger) - 完整的 Swagger 配置选项
 - [TypeBox 集成](/patterns/type) - 了解类型验证系统
-- [路由定义](/essential/route) - 学习如何定义路由
+- [路由定义](/routing) - 学习如何定义路由
 - [中间件系统](/middleware) - 探索其他可用的中间件

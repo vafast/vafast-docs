@@ -17,7 +17,7 @@ Vafast 旨在实现模块化和轻量化。
 | 中间件 | 说明 | 安装 |
 |--------|------|------|
 | [API Client](/api-client/overview) | 现代化、类型安全的 API 客户端 | `npm i @vafast/api-client` |
-| [Auth Middleware](/middleware/auth-middleware) | JWT/API Key + app 认证（对接 auth-server） | `npm i @vafast/auth-middleware` |
+| [Auth Middleware](/middleware/auth-middleware) | JWT/API Key + app 认证（对接独立认证服务） | `npm i @vafast/auth-middleware` |
 | [Bearer](/middleware/bearer) | 自动获取 Bearer 令牌 | `npm i @vafast/bearer` |
 | [Compress](/middleware/compress) | Brotli、GZIP、Deflate 压缩 | `npm i @vafast/compress` |
 | [Cookie](/middleware/cookie) | Cookie 解析和签名 | `npm i @vafast/cookie` |

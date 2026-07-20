@@ -74,7 +74,7 @@ type Middleware = (
 ) => Response | Promise<Response>
 ```
 
-生产认证与路由类型包装见 [Auth Middleware](/middleware/auth-middleware)。
+中间件签名见下文；自建鉴权用 `defineMiddleware` + `next({ ... })`。多租户对接独立认证服务见 [Auth Middleware](/middleware/auth-middleware)。
 
 ## 基本路由
 
@@ -103,10 +103,6 @@ const routes = defineRoutes([
 const server = new Server(routes)
 export default { fetch: server.fetch }
 ```
-
-> **新框架用法说明**：
-> - 所有路由必须使用 `defineRoute` 包装
-> - Handler 直接是函数，不再需要 `createHandler` 包装
 
 ::: tip 类型推断
 `defineRoutes()` 使用 `const T` 泛型，自动保留 `'GET'`、`'/users'` 等字面量类型，支持端到端类型推断。
@@ -400,7 +396,7 @@ const routes = defineRoutes([
 
 ## 路由处理函数
 
-处理函数是路由的核心，负责处理请求并返回响应。**Handler 直接是函数，不再需要 `createHandler` 包装**，框架会自动处理上下文解构和响应转换。
+处理函数是路由的核心，负责处理请求并返回响应。Handler 直接是函数，框架会自动处理上下文解构和响应转换。
 
 ### 基本处理函数
 
@@ -664,28 +660,9 @@ const routes = defineRoutes([
 ])
 ```
 
-#### 生产项目：@vafast/auth-middleware
+#### 生产认证（可选）
 
-微服务场景直接使用官方认证包，无需手写 `withContext`：
-
-```typescript
-import { authWithApp, requireUser, defineAuthRouteWithApp } from '@vafast/auth-middleware'
-
-defineRoute({
-  path: '/files',
-  middleware: [authWithApp],
-  children: [
-    defineAuthRouteWithApp({
-      method: 'GET',
-      path: '/list',
-      middleware: [requireUser],
-      handler: ({ userInfo, app }) => ({ userId: userInfo.id, appId: app.id }),
-    }),
-  ],
-})
-```
-
-> 📖 完整 API 见 [Auth Middleware](/middleware/auth-middleware)
+对接独立认证服务的多租户服务，可直接用 [@vafast/auth-middleware](/middleware/auth-middleware) 的 `defineAuthRouteWithApp` 等包装，不必手写 `withContext`。学习阶段先掌握上面的 `defineMiddleware` 即可。
 
 #### 自定义 withContext（高级）
 
@@ -946,6 +923,6 @@ Vafast 的路由系统提供了：
 
 - 查看 [中间件系统](/middleware) 了解更高级的中间件用法
 - 学习 [组件路由](/component-routing) 了解声明式路由
-- 探索 [最佳实践](/best-practices) 获取更多开发建议
+- 探索 [最佳实践](/essential/best-practice) 获取更多开发建议
 
 如果您有任何问题，请查看我们的 [社区页面](/community) 或 [GitHub 仓库](https://github.com/vafast/vafast)。

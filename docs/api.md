@@ -357,6 +357,8 @@ interface ServeOptions {
   timeout?: RequestTimeoutOptions
   /** 请求体大小限制（字节），默认 1MB，设为 0 不限制 */
   bodyLimit?: number
+  /** 信任代理，用于反代后获取真实 IP */
+  trustProxy?: boolean | string | string[]
 }
 ```
 
@@ -368,6 +370,7 @@ interface ServeOptions {
 - `gracefulShutdown`: 优雅关闭配置
 - `timeout`: 请求超时配置
 - `bodyLimit`: 请求体大小限制（字节），默认 1MB
+- `trustProxy`: 信任代理配置（默认 `false`）
 
 ### GracefulShutdownOptions
 
@@ -613,7 +616,7 @@ Vafast 提供独立的中间件包，功能更丰富：
 
 | 包名 | 功能 | 文档 |
 |------|------|------|
-| `@vafast/auth-middleware` | JWT/API Key + app 认证（对接 auth-server） | [查看](/middleware/auth-middleware) |
+| `@vafast/auth-middleware` | JWT/API Key + app 认证（对接独立认证服务） | [查看](/middleware/auth-middleware) |
 | `@vafast/cors` | CORS 跨域处理 | [查看](/middleware/cors) |
 | `@vafast/jwt` | JWT 认证 | [查看](/middleware/jwt) |
 | `@vafast/rate-limit` | 速率限制 | [查看](/middleware/rate-limit) |
@@ -650,7 +653,7 @@ const routes = defineRoutes([
 ```
 
 ::: tip 生产环境
-对接 auth-server 的微服务请使用 [@vafast/auth-middleware](/middleware/auth-middleware)，而非 `@vafast/jwt`。
+对接独立认证服务的微服务请使用 [@vafast/auth-middleware](/middleware/auth-middleware)，而非 `@vafast/jwt`。
 :::
 
 #### 示例：速率限制

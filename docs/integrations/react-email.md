@@ -977,7 +977,7 @@ describe('Email Templates', () => {
 
 ## 相关链接
 
-- [Vafast 文档](/getting-started/quickstart) - 快速开始指南
+- [Vafast 文档](/quick-start) - 快速开始指南
 - [React Email 文档](https://react.email/docs) - React Email 官方文档
 - [中间件系统](/middleware) - 探索可用的中间件
 - [类型验证](/patterns/type) - 了解类型验证系统

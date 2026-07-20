@@ -90,9 +90,11 @@ const routes = defineRoutes([
 
 ## 认证
 
-### Auth Middleware（生产推荐）
+速查表，非入门教程。先会 [教程](/tutorial) 里的 `defineMiddleware`，再按需选型。
 
-多租户业务服务对接 auth-server 时使用 `@vafast/auth-middleware`。详见 [Auth Middleware](/middleware/auth-middleware)。
+### Auth Middleware（对接独立认证服务）
+
+多租户业务服务对接独立认证服务时用 `@vafast/auth-middleware`。详见 [Auth Middleware](/middleware/auth-middleware)。
 
 ```typescript
 import { Server, defineRoute, defineRoutes, serve } from 'vafast'
@@ -126,7 +128,7 @@ serve({ fetch: server.fetch, port: 3000 })
 
 ### JWT（签发 / 验证 token）
 
-`@vafast/jwt` 适合**自建认证**场景（签发 token、校验签名），与 `@vafast/auth-middleware`（对接 auth-server）用途不同。
+`@vafast/jwt` 适合**自建认证**场景（签发 token、校验签名），与 `@vafast/auth-middleware`（对接独立认证服务）用途不同。
 
 ```typescript
 import { Server, defineRoute, defineRoutes, Type } from 'vafast'

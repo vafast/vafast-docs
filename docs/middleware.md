@@ -137,11 +137,6 @@ const routes = defineRoutes([
 ])
 ```
 
-> **新框架用法说明**：
-> - 使用 `defineMiddleware` 定义带类型的中间件
-> - 通过 `next({ user })` 传递上下文
-> - Handler 自动获得类型推断，无需 `createHandlerWithExtra`
-
 ### 3. CORS 中间件
 
 ```typescript
@@ -438,47 +433,13 @@ const routes = defineRoutes([
 ])
 ```
 
-### 生产项目：使用 @vafast/auth-middleware
+### 生产认证（可选）
 
-Captions 体系微服务（`ones-server`、`ai-server` 等）不手写 `withContext`，而是直接使用 `@vafast/auth-middleware` 内置的路由定义器：
-
-| 定义器 | 上下文 |
-|--------|--------|
-| `defineAuthRoute` | `{ userInfo }` |
-| `defineAuthRouteWithApp` | `{ userInfo, app }`（最常用） |
-| `defineRouteWithApp` | `{ app }` |
-
-配合 `authWithApp`、`requireUser` 等中间件使用：
-
-```typescript
-import {
-  authWithApp,
-  requireUser,
-  defineAuthRouteWithApp,
-} from '@vafast/auth-middleware'
-
-export const filesRoutes = defineRoutes([
-  defineRoute({
-    path: '/files',
-    middleware: [authWithApp],
-    children: [
-      defineAuthRouteWithApp({
-        method: 'POST',
-        path: '/create',
-        middleware: [requireUser],
-        webhook: true,
-        handler: ({ userInfo, app, body }) => ({ ... }),
-      }),
-    ],
-  }),
-])
-```
-
-> 📖 完整 API 与生产模式见 [Auth Middleware](/middleware/auth-middleware)
+对接独立认证服务时，用 [@vafast/auth-middleware](/middleware/auth-middleware) 内置的 `defineAuthRouteWithApp`、`authWithApp`、`requireUser` 等即可，不必手写 `withContext`。本页先掌握 `defineMiddleware` + `next({ ... })`。
 
 ### 自定义 withContext（高级）
 
-若需自建认证逻辑（不依赖 auth-server），可手动封装：
+若需自建认证逻辑（不依赖独立认证服务），可手动封装：
 
 `withContext` 具有以下特性：
 
@@ -634,6 +595,6 @@ Vafast 的中间件系统提供了：
 
 - 查看 [路由指南](/routing) 了解路由系统
 - 学习 [组件路由](/component-routing) 了解声明式路由
-- 探索 [最佳实践](/best-practices) 获取更多开发建议
+- 探索 [最佳实践](/essential/best-practice) 获取更多开发建议
 
 如果您有任何问题，请查看我们的 [社区页面](/community) 或 [GitHub 仓库](https://github.com/vafast/vafast)。

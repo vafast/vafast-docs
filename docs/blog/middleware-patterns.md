@@ -37,7 +37,7 @@ const logger = defineMiddleware(async (req, next) => {
 ## 模式一：认证中间件
 
 ::: tip 生产环境
-对接 auth-server 请直接用 [@vafast/auth-middleware](/middleware/auth-middleware)。以下展示手写 JWT 中间件的工厂模式。
+对接独立认证服务请直接用 [@vafast/auth-middleware](/middleware/auth-middleware)。以下展示手写 JWT 中间件的工厂模式。
 :::
 
 ```ts

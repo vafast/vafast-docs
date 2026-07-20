@@ -691,7 +691,7 @@ export const handleApiError = (error: any, showAlert = true) => {
 
 ## 相关链接
 
-- [Vafast 文档](/getting-started/quickstart) - 快速开始指南
+- [Vafast 文档](/quick-start) - 快速开始指南
 - [Expo 文档](https://docs.expo.dev) - Expo 官方文档
 - [React Native 文档](https://reactnative.dev) - React Native 官方文档
 - [API 客户端](/api-client/overview) - Vafast API 客户端指南

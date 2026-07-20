@@ -2,7 +2,6 @@
 title: 路由 - Vafast
 ---
 
-
 # 路由
 
 Web 服务器使用请求的 **路径和 HTTP 方法** 来查找正确的资源，这被称为 **"路由"**。
@@ -185,10 +184,17 @@ Vafast 支持嵌套路由，分两种节点：
 只做路径前缀和中间件共享，**不写 handler**：
 
 ```typescript
+import { defineMiddleware, defineRoute } from 'vafast'
+
+const logMiddleware = defineMiddleware(async (req, next) => {
+  console.log(req.method, req.url)
+  return next()
+})
+
 defineRoute({
   path: '/files',
   name: '文件',
-  middleware: [authWithApp],
+  middleware: [logMiddleware],
   children: [ /* 叶子路由 */ ],
 })
 ```
@@ -207,7 +213,7 @@ const listHandler = defineRoute({
 // 放入路由组
 defineRoute({
   path: '/files',
-  middleware: [authWithApp],
+  middleware: [logMiddleware],
   children: [listHandler],
 })
 // 实际路径：/files/list
@@ -279,11 +285,6 @@ const routes = defineRoutes([
 ])
 ```
 
-> **新框架用法说明**：
-> - Schema 验证现在在路由级别通过 `schema` 字段定义，而不是在 `createHandler` 中
-> - `handler` 直接是函数，不再需要 `createHandler` 包装
-> - 所有路由必须使用 `defineRoute` 包装
-
 ## 最佳实践
 
 ### 1. 使用描述性路径
@@ -327,10 +328,6 @@ const routes = defineRoutes([
 ])
 ```
 
-> **新框架用法说明**：
-> - 嵌套路由中，所有子路由也必须使用 `defineRoute` 包装
-> - 不再支持直接使用对象字面量，必须使用 `defineRoute` 函数
-
 ### 3. 使用适当的 HTTP 方法
 
 ```typescript
@@ -372,11 +369,6 @@ const routes = defineRoutes([
 // ✅ 类型推断自动工作，无需 as const！
 type Api = InferEden<typeof routes>
 ```
-
-> **新框架用法说明**：
-> - Schema 验证移到路由配置的 `schema` 字段
-> - Handler 函数直接定义，自动获得类型推断
-> - `defineRoutes()` 使用 `const T` 泛型，自动保留字面量类型
 
 ### 5. 使用扩展字段
 

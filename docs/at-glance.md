@@ -135,11 +135,6 @@ serve({ fetch: server.fetch, port: 3000 })
 // export default { fetch: server.fetch }
 ```
 
-> **新框架用法说明**：
-> - 所有路由必须使用 `defineRoute` 包装
-> - Handler 直接是函数，不再需要 `createHandler` 包装
-> - 代码更简洁，类型推断更完整
-
 打开 [localhost:3000](http://localhost:3000/)，结果应该显示 'Hello Vafast'。
 
 ::: tip
@@ -207,10 +202,8 @@ Vafast 采用现代化的架构设计：
 
 ## 下一步
 
-现在您已经了解了 Vafast 的基本概念，建议您：
+1. [快速入门](/quick-start) — Hello + 常见请求类型 + 简单中间件
+2. [教程](/tutorial) — 渐进做出笔记 API
+3. [核心概念](/key-concept) — 理解请求如何穿过框架
 
-1. 查看 [快速入门](/quick-start) 开始构建您的第一个应用
-2. 阅读 [关键概念](/key-concept) 深入了解 Vafast 的核心特性
-3. 探索 [教程](/tutorial) 学习更多高级功能
-
-如果您有任何问题，欢迎在我们的 [GitHub Issues](https://github.com/vafast/vafast/issues) 社区询问。
+若有问题，欢迎在 [GitHub Issues](https://github.com/vafast/vafast/issues) 提问。

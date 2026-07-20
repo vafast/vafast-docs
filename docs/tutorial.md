@@ -1,7 +1,10 @@
 ---
 title: 教程 - Vafast
+prev:
+  text: '快速入门'
+  link: '/quick-start'
 next:
-  text: '关键概念'
+  text: '核心概念'
   link: '/key-concept'
 ---
 
@@ -10,262 +13,206 @@ import Card from './components/nearl/card.vue'
 import Deck from './components/nearl/card-deck.vue'
 </script>
 
-# Vafast 教程
+# 教程
 
-我们将构建一个简单的 CRUD 笔记 API 服务器。
+跟着做一个 **内存版笔记 API**。没有数据库、没有生产鉴权——目标是把 Vafast 的主干用法走通，大约 15–20 分钟。
 
-这里没有数据库，也没有其他"生产就绪"功能。本教程将重点介绍 Vafast 的功能以及如何使用 Vafast。
-
-如果你跟着做，我们预计大约需要 15-20 分钟。
-
----
+若已完成 [快速入门](/quick-start)，可跳过「设置」，从「第一步」开始。
 
 ### 来自其他框架？
 
-如果您使用过其他流行框架，您会发现 Vafast 非常熟悉，只是有一些小差异。
-
 <Deck>
-    <Card title="From Express" href="/migrate/from-express">
-        从 Express 迁移到 Vafast 的指南
-    </Card>
-    <Card title="From Fastify" href="/migrate/from-fastify">
-        从 Fastify 迁移到 Vafast 的指南
-    </Card>
-    <Card title="From Hono" href="/migrate/from-hono">
-        从 Hono 迁移到 Vafast 的指南
-    </Card>
-    <Card title="From Elysia" href="/migrate/from-elysia">
-        从 Elysia 迁移到 Vafast 的指南
-    </Card>
+    <Card title="From Express" href="/migrate/from-express">Express → Vafast</Card>
+    <Card title="From Fastify" href="/migrate/from-fastify">Fastify → Vafast</Card>
+    <Card title="From Hono" href="/migrate/from-hono">Hono → Vafast</Card>
+    <Card title="From Elysia" href="/migrate/from-elysia">Elysia → Vafast</Card>
 </Deck>
 
-### 不喜欢教程？
-
-如果您更倾向于自己动手的方式，可以跳过这个教程，直接访问 [关键概念](/key-concept) 页面，深入了解 Vafast 的工作原理。
-
-<Deck>
-    <Card title="关键概念（5 分钟）" href="/key-concept">
-        Vafast 的核心概念及其使用方法。
-    </Card>
-</Deck>
-
-### llms.txt
-
-或者，您可以下载 <a href="/llms.txt" download>llms.txt</a> 或 <a href="/llms-full.txt" download>llms-full.txt</a>，并将其输入您最喜欢的 LLM，如 ChatGPT、Claude 或 Gemini，以获得更互动的体验。
-
-<Deck>
-    <Card title="llms.txt" href="/llms.txt" download>
-        下载带有参考的 Vafast 文档摘要，格式为 Markdown，以便提示 LLM。
-    </Card>
-    <Card title="llms-full.txt" href="/llms-full.txt" download>
-        下载完整的 Vafast 文档，以 Markdown 格式在一个文件中供 LLM 提示使用。
-    </Card>
-</Deck>
-
+---
 
 ## 设置
 
-### 使用脚手架（推荐）
-
-最快的方式是使用官方脚手架：
-
 ```bash
 npx create-vafast-app
-```
-
-按照提示输入项目名称（如 `hi-vafast`），然后：
-
-```bash
 cd hi-vafast
 npm install
 npm run dev
 ```
 
-### 手动创建
+确认 [http://localhost:3000](http://localhost:3000) 能打开后继续。
 
-如果你更喜欢手动配置：
+---
 
-```bash
-mkdir hi-vafast
-cd hi-vafast
-npm init -y
-npm install vafast
-npm install -D typescript tsx @types/node
-```
+## 第一步：读接口
 
-创建 `tsconfig.json`：
-
-```json
-{
-  "compilerOptions": {
-    "target": "ES2022",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "outDir": "dist",
-    "rootDir": "src"
-  },
-  "include": ["src/**/*"]
-}
-```
-
-在 `package.json` 中添加脚本：
-
-```json
-{
-  "type": "module",
-  "scripts": {
-    "dev": "tsx watch src/index.ts",
-    "start": "tsx src/index.ts"
-  }
-}
-```
-
-### 项目结构
-
-创建项目后，您应该看到以下结构：
-
-```
-hi-vafast/
-├── src/
-│   └── index.ts
-├── .gitignore
-├── package.json
-└── tsconfig.json
-```
-
-### 启动开发服务器
-
-```bash
-npm run dev
-```
-
-现在您应该能够在 [http://localhost:3000](http://localhost:3000) 看到 "Hello Vafast!" 消息。
-
-## 构建笔记 API
-
-现在让我们开始构建我们的笔记 API。我们将创建一个简单的内存存储系统来管理笔记。
-
-### 1. 定义笔记类型
-
-首先，让我们在 `src/index.ts` 中定义我们的笔记类型：
+先把逻辑写在 `src/index.ts`，只做查询，跑通再加写入。
 
 ```typescript
-interface Note {
-  id: string
-  title: string
-  content: string
-  createdAt: Date
-  updatedAt: Date
-}
-
-// 内存存储
-const notes: Note[] = []
-```
-
-### 2. 创建路由
-
-Vafast 后端有两种 `defineRoute` 写法：
-
-| 类型 | 必有字段 | 作用 |
-|------|---------|------|
-| **路由组** | `path` + `children` | 路径前缀、共享中间件，**无 method** |
-| **叶子路由** | `method` + `path` + `handler` | 实际 API 端点 |
-
-推荐做法：先把每个 handler 定义为常量，再用**路由组**（无 method）组织：
-
-```typescript
-// src/routes/notes.ts
-import { defineRoute, defineRoutes, Type, json, err } from 'vafast'
+import { Server, defineRoute, defineRoutes, serve, err } from 'vafast'
 
 interface Note {
   id: string
   title: string
   content: string
-  createdAt: Date
-  updatedAt: Date
 }
 
-const notes: Note[] = []
+const notes: Note[] = [
+  { id: '1', title: '欢迎', content: '这是第一条笔记' },
+]
 
-const NoteSchema = Type.Object({
+const routes = defineRoutes([
+  defineRoute({
+    method: 'GET',
+    path: '/notes',
+    handler: () => notes,
+  }),
+  defineRoute({
+    method: 'GET',
+    path: '/notes/:id',
+    handler: ({ params }) => {
+      const note = notes.find((n) => n.id === params.id)
+      if (!note) throw err.notFound('笔记不存在')
+      return note
+    },
+  }),
+])
+
+const server = new Server(routes)
+
+serve({ fetch: server.fetch, port: 3000 }, () => {
+  console.log('http://localhost:3000')
+})
+```
+
+```bash
+curl http://localhost:3000/notes
+curl http://localhost:3000/notes/1
+curl http://localhost:3000/notes/missing   # 应返回 404 JSON
+```
+
+::: tip 先记住两件事
+1. **叶子路由** = `method` + `path` + `handler`
+2. 业务错误用 `throw err.notFound(...)`，框架会转成 JSON 响应
+:::
+
+---
+
+## 第二步：Schema + 创建接口
+
+用 `Type` 声明请求体。校验失败自动 422，`body` 在 handler 里已有正确类型：
+
+```typescript
+import { Server, defineRoute, defineRoutes, serve, Type, err } from 'vafast'
+
+const NoteBody = Type.Object({
   title: Type.String({ minLength: 1 }),
   content: Type.String({ minLength: 1 }),
 })
 
-// --- 叶子路由：每个 handler 单独定义 ---
+// ... notes 数组同上，可清空预置数据
 
-const listHandler = defineRoute({
-  method: 'GET',
-  path: '/',
-  name: '获取笔记列表',
-  handler: () => notes,
+const routes = defineRoutes([
+  defineRoute({
+    method: 'GET',
+    path: '/notes',
+    handler: () => notes,
+  }),
+  defineRoute({
+    method: 'GET',
+    path: '/notes/:id',
+    schema: {
+      params: Type.Object({ id: Type.String() }),
+    },
+    handler: ({ params }) => {
+      const note = notes.find((n) => n.id === params.id)
+      if (!note) throw err.notFound('笔记不存在')
+      return note
+    },
+  }),
+  defineRoute({
+    method: 'POST',
+    path: '/notes',
+    schema: { body: NoteBody },
+    handler: ({ body }) => {
+      const note: Note = {
+        id: String(Date.now()),
+        title: body.title,
+        content: body.content,
+      }
+      notes.push(note)
+      return note
+    },
+  }),
+])
+```
+
+```bash
+curl -X POST http://localhost:3000/notes \
+  -H 'Content-Type: application/json' \
+  -d '{"title":"第一篇","content":"你好"}'
+```
+
+更多写法见 [验证](/essential/validation)。
+
+---
+
+## 第三步：拆成路由文件
+
+单文件会很快变长。约定：**入口只管启动，路由按域拆文件**。
+
+```
+src/
+  index.ts
+  routes/
+    notes.ts
+```
+
+```typescript
+// src/routes/notes.ts
+import { defineRoute, defineRoutes, Type, err } from 'vafast'
+
+interface Note {
+  id: string
+  title: string
+  content: string
+}
+
+const notes: Note[] = []
+
+const NoteBody = Type.Object({
+  title: Type.String({ minLength: 1 }),
+  content: Type.String({ minLength: 1 }),
 })
-
-const getOneHandler = defineRoute({
-  method: 'GET',
-  path: '/:id',
-  name: '获取单条笔记',
-  handler: ({ params }) => {
-    const note = notes.find(n => n.id === params.id)
-    if (!note) throw err.notFound('Note not found')
-    return note
-  },
-})
-
-const createHandler = defineRoute({
-  method: 'POST',
-  path: '/create',
-  name: '创建笔记',
-  schema: { body: NoteSchema },
-  handler: ({ body }) => {
-    const note: Note = {
-      id: Date.now().toString(),
-      title: body.title,
-      content: body.content,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    }
-    notes.push(note)
-    return json(note, 201)
-  },
-})
-
-const updateHandler = defineRoute({
-  method: 'PUT',
-  path: '/:id',
-  name: '更新笔记',
-  schema: { body: NoteSchema },
-  handler: ({ params, body }) => {
-    const idx = notes.findIndex(n => n.id === params.id)
-    if (idx === -1) throw err.notFound('Note not found')
-    notes[idx] = { ...notes[idx], ...body, updatedAt: new Date() }
-    return notes[idx]
-  },
-})
-
-const deleteHandler = defineRoute({
-  method: 'DELETE',
-  path: '/:id',
-  name: '删除笔记',
-  handler: ({ params }) => {
-    const idx = notes.findIndex(n => n.id === params.id)
-    if (idx === -1) throw err.notFound('Note not found')
-    notes.splice(idx, 1)
-    return null  // 204
-  },
-})
-
-// --- 路由组：无 method，挂 children ---
 
 export const notesRoutes = defineRoutes([
   defineRoute({
+    method: 'GET',
     path: '/notes',
-    name: '笔记',
-    description: '笔记 CRUD API',
-    children: [listHandler, getOneHandler, createHandler, updateHandler, deleteHandler],
+    handler: () => notes,
+  }),
+  defineRoute({
+    method: 'GET',
+    path: '/notes/:id',
+    schema: { params: Type.Object({ id: Type.String() }) },
+    handler: ({ params }) => {
+      const note = notes.find((n) => n.id === params.id)
+      if (!note) throw err.notFound('笔记不存在')
+      return note
+    },
+  }),
+  defineRoute({
+    method: 'POST',
+    path: '/notes',
+    schema: { body: NoteBody },
+    handler: ({ body }) => {
+      const note: Note = {
+        id: String(Date.now()),
+        title: body.title,
+        content: body.content,
+      }
+      notes.push(note)
+      return note
+    },
   }),
 ])
 ```
@@ -278,201 +225,205 @@ import { notesRoutes } from './routes/notes'
 const server = new Server(notesRoutes)
 
 serve({ fetch: server.fetch, port: 3000 }, () => {
-  console.log('Server running on http://localhost:3000')
+  console.log('http://localhost:3000')
 })
 ```
 
-实际路径：`GET /notes/`、`GET /notes/:id`、`POST /notes/create` 等。
+行为与第二步相同，只是结构更清晰。
 
-### 3. 测试 API
+---
 
-现在让我们测试我们的 API。重启开发服务器：
+## 第四步：用路由组组织路径
 
-```bash
-npm run dev
+当 `/notes`、`/notes/:id`、`/notes`（POST）越来越多时，可用 **路由组** 共享前缀：
+
+| 类型 | 特征 | 作用 |
+|------|------|------|
+| 叶子 | 有 `method` + `handler` | 真正的接口 |
+| 路由组 | **无** `method`，有 `children` | 路径前缀 + 共享中间件 |
+
+把叶子提成常量，再挂到组上：
+
+```typescript
+// src/routes/notes.ts
+import { defineRoute, defineRoutes, Type, err } from 'vafast'
+
+// ... Note、notes、NoteBody 同上
+
+const listHandler = defineRoute({
+  method: 'GET',
+  path: '/',
+  handler: () => notes,
+})
+
+const getOneHandler = defineRoute({
+  method: 'GET',
+  path: '/:id',
+  schema: { params: Type.Object({ id: Type.String() }) },
+  handler: ({ params }) => {
+    const note = notes.find((n) => n.id === params.id)
+    if (!note) throw err.notFound('笔记不存在')
+    return note
+  },
+})
+
+const createHandler = defineRoute({
+  method: 'POST',
+  path: '/',
+  schema: { body: NoteBody },
+  handler: ({ body }) => {
+    const note: Note = {
+      id: String(Date.now()),
+      title: body.title,
+      content: body.content,
+    }
+    notes.push(note)
+    return note
+  },
+})
+
+export const notesRoutes = defineRoutes([
+  defineRoute({
+    path: '/notes', // 无 method → 路由组
+    children: [listHandler, getOneHandler, createHandler],
+  }),
+])
 ```
 
-#### 创建笔记
+实际路径仍是 `GET /notes`、`GET /notes/:id`、`POST /notes`。子路由写相对路径即可。
 
-```bash
-curl -X POST http://localhost:3000/notes/create \
-  -H "Content-Type: application/json" \
-  -d '{"title": "我的第一个笔记", "content": "这是笔记的内容"}'
-```
+---
 
-#### 获取所有笔记
+## 第五步：加一层中间件
 
-```bash
-curl http://localhost:3000/notes/
-```
+中间件有三层：
 
-#### 获取单个笔记
+| 层级 | 写法 | 范围 |
+|------|------|------|
+| 全局 | `server.use(mw)` | 全部路由（CORS、请求 ID） |
+| 路由组 | `defineRoute({ path, middleware, children })` | 该组子路由（最常用） |
+| 叶子 | `defineRoute({ method, middleware, handler })` | 单接口 |
 
-```bash
-curl http://localhost:3000/notes/<id>
-```
-
-#### 更新笔记
-
-```bash
-curl -X PUT http://localhost:3000/notes/<id> \
-  -H "Content-Type: application/json" \
-  -d '{"title": "更新的标题", "content": "更新的内容"}'
-```
-
-#### 删除笔记
-
-```bash
-curl -X DELETE http://localhost:3000/notes/<id>
-```
-
-## 添加中间件
-
-在路由组（无 method）上挂中间件，**所有 children 自动继承**——这是生产项目最常用的模式。
-
-### 1. 日志中间件
+### 组级日志（最简单）
 
 ```typescript
 import { defineMiddleware } from 'vafast'
 
 const logMiddleware = defineMiddleware(async (req, next) => {
   const start = Date.now()
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`)
-
-  const response = await next()
-
-  console.log(`Response: ${response.status} (${Date.now() - start}ms)`)
-  return response
+  const res = await next()
+  console.log(`${req.method} ${req.url} → ${res.status} (${Date.now() - start}ms)`)
+  return res
 })
-```
 
-中间件签名：`(req, next) => Response`。通过 `next({ ctx })` 可向下游注入类型化上下文。
-
-框架会**自动注入** `errorHandler`，捕获 `throw err.notFound()` 等错误，**无需手写错误处理中间件**。
-
-### 2. 三层中间件
-
-| 层级 | 写法 | 作用范围 |
-|------|------|---------|
-| 全局 | `server.use(mw)` | 所有路由 |
-| 路由组 | `defineRoute({ path, middleware, children })` | 该组所有子路由 |
-| 叶子路由 | `defineRoute({ method, middleware, handler })` | 单个端点 |
-
-```typescript
-// 全局
-const server = new Server(notesRoutes)
-server.use(logMiddleware)
-
-// 路由组级（无 method）
 export const notesRoutes = defineRoutes([
   defineRoute({
     path: '/notes',
-    middleware: [logMiddleware],  // 所有 children 继承
-    children: [listHandler, createHandler, ...],
+    middleware: [logMiddleware], // children 全部继承
+    children: [listHandler, getOneHandler, createHandler],
   }),
 ])
-
-// 叶子路由级
-const createHandler = defineRoute({
-  method: 'POST',
-  path: '/create',
-  middleware: [rateLimitMiddleware],  // 仅此路由
-  handler: ...
-})
 ```
 
-执行顺序：全局 → `errorHandler`（自动） → 路由组 → 叶子路由 → handler。
+### 注入上下文：`next({ ... })` → handler
 
-### 3. 中间件注入上下文（认证预备）
+中间件不只做旁路逻辑，还可以把数据传给 handler：
 
 ```typescript
-import { defineMiddleware } from 'vafast'
+import { defineMiddleware, defineRoute, defineRoutes, err } from 'vafast'
 
-const authMiddleware = defineMiddleware<{ userId: string }>(async (req, next) => {
+const fakeAuth = defineMiddleware(async (req, next) => {
   const token = req.headers.get('authorization')
-  if (!token) throw err.unauthorized('未登录')
-  return next({ userId: 'user-123' })  // 注入下游 handler
+  if (!token) throw err.unauthorized('请先登录')
+  // 注入的字段会出现在同路由 handler 参数里，且有类型
+  return next({ userId: 'demo-user' })
 })
 
-// handler 中可直接使用 userId（需配合 withContext 或 @vafast/auth-middleware 获得类型）
-```
-
-生产认证见 [Auth Middleware](/middleware/auth-middleware)。
-
-## Schema 验证
-
-- `Type` 直接从 `vafast` 导入
-- 验证失败自动返回 422（含 `details`）
-- 支持 `body` / `query` / `params` / `headers` / `cookies`
-
-```typescript
-defineRoute({
-  method: 'GET',
-  path: '/search',
-  schema: {
-    query: Type.Object({
-      keyword: Type.String(),
-      page: Type.Optional(Type.Number({ minimum: 1 })),
-    }),
-  },
-  handler: ({ query }) => ({ keyword: query.keyword, page: query.page ?? 1 }),
-})
-```
-
-## 汇总：后端最小知识清单
-
-看完本教程，你应该能独立写出如下结构的后端：
-
-```typescript
-// 1. 叶子路由（有 method + handler）
 const createHandler = defineRoute({
   method: 'POST',
-  path: '/create',
-  schema: { body: NoteSchema },
-  middleware: [requireUser],          // 可选：路由级
-  handler: ({ body }) => { ... },
+  path: '/',
+  middleware: [fakeAuth], // 叶子上挂：类型可自动推断
+  schema: { body: NoteBody },
+  handler: ({ body, userId }) => {
+    // userId: string ← 来自 fakeAuth
+    return { id: String(Date.now()), userId, ...body }
+  },
+})
+```
+
+### 跨 `children` 时：用 `withContext`
+
+父级组挂中间件、子路由拆成常量时，TypeScript 推不出父级注入的字段。用 `withContext` 做**纯类型包装**（零运行时开销）：
+
+```typescript
+import { withContext, defineRoute, defineRoutes } from 'vafast'
+
+const defineAuthedRoute = withContext<{ userId: string }>()
+
+const createHandler = defineAuthedRoute({
+  method: 'POST',
+  path: '/',
+  schema: { body: NoteBody },
+  handler: ({ body, userId }) => ({ id: '1', userId, ...body }),
 })
 
-// 2. 路由组（无 method + children）
 export const notesRoutes = defineRoutes([
   defineRoute({
     path: '/notes',
-    middleware: [authMiddleware],       // 组级，children 继承
+    middleware: [fakeAuth], // 运行时注入 userId
+    children: [createHandler], // 类型靠 withContext 接上
+  }),
+])
+```
+
+::: tip 组级中间件的类型
+叶子拆到 `children`、或多文件复用同一套上下文时，用 [`withContext`](/essential/best-practice#9-用-withcontext-封装类型安全路由) 封装路由定义器。嵌套路由与中间件分层见 [§2](/essential/best-practice#2-嵌套路由)、[§3](/essential/best-practice#3-中间件怎么挂)；声明式参数见 [§8](/essential/best-practice#8-路由可以加参数声明式元数据)。自建 JWT 见 [@vafast/jwt](/middleware/jwt)。
+:::
+
+---
+
+## 你现在可以做什么
+
+```typescript
+// 叶子 + Schema
+const createHandler = defineRoute({
+  method: 'POST',
+  path: '/',
+  schema: { body: NoteBody },
+  handler: ({ body }) => { /* ... */ },
+})
+
+// 组 + 中间件
+export const notesRoutes = defineRoutes([
+  defineRoute({
+    path: '/notes',
+    middleware: [logMiddleware],
     children: [listHandler, createHandler],
   }),
 ])
 
-// 3. 入口
-const server = new Server([...notesRoutes])
-server.use(cors())                      // 全局
+// 入口 + 全局中间件
+const server = new Server(notesRoutes)
+server.use(/* cors 等 */)
 serve({ fetch: server.fetch, port: 3000 })
 ```
 
-## 总结
+对照检查：
 
-恭喜！您已经成功构建了一个完整的 CRUD API 服务器，包括：
+- [x] 叶子路由与路由组
+- [x] `Type` + `schema` 校验
+- [x] `throw err.*`
+- [x] 按文件拆路由
+- [x] 组级 / 叶子中间件
+- [x] `next({ ... })` 注入上下文
+- [x] `withContext` 跨 children 类型衔接
 
-- ✅ **路由组**（无 method）+ **叶子路由**（有 method）组织方式
-- ✅ handler 提前定义为常量，放入 `children`
-- ✅ 三层中间件：全局 / 路由组 / 叶子路由
-- ✅ `schema` 验证 body、query、params
-- ✅ `err.notFound()` 等结构化错误
-- ✅ `defineMiddleware` + `next({ ctx })` 上下文注入
-- ✅ 多文件拆分（`routes/` + `index.ts`）
+---
 
-### 下一步
+## 下一步
 
-现在您可以：
-
-1. **嵌套路由与类型包装** — [路由指南](/routing)、[Auth Middleware](/middleware/auth-middleware)
-2. **SSE 流式响应** — [SSE 指南](/essential/sse)（`sse: true` + `async function*`）
-3. **集成数据库** — [Drizzle](/integrations/drizzle)、[Prisma](/integrations/prisma)
-4. **部署** — [部署指南](/patterns/deploy)
-
-### 相关资源
-
-- [核心概念](/key-concept) - 架构与请求处理流程
-- [API 参考](/api) - 完整 API 文档
-- [中间件系统](/middleware) - `defineMiddleware`、`withContext` 原理
-
-如果您有任何问题或需要帮助，请查看我们的 [GitHub 仓库](https://github.com/vafast/vafast)。
+1. [最佳实践](/essential/best-practice) — 目录约定、`withContext`、启动配置  
+2. [核心概念](/key-concept) — 请求如何穿过框架  
+3. [路由指南](/routing) — 更完整的嵌套与匹配规则  
+4. [中间件](/middleware) — `defineMiddleware` 细节  
+5. 需要流式输出时看 [SSE](/essential/sse)；上线看 [部署](/patterns/deploy)

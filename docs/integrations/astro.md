@@ -371,7 +371,7 @@ export const routes = defineRoutes([
 ])
 ```
 
-若仅需简单 JWT 校验（无 auth-server），可参考 [@vafast/jwt](/middleware/jwt) 或手写 `defineMiddleware`。
+若仅需简单 JWT 校验（无独立认证服务），可参考 [@vafast/jwt](/middleware/jwt) 或手写 `defineMiddleware`。
 
 ## Astro 配置
 
@@ -559,7 +559,7 @@ CMD ["bun", "run", "start"]
 
 ## 相关链接
 
-- [Vafast 文档](/getting-started/quickstart) - 快速开始指南
+- [Vafast 文档](/quick-start) - 快速开始指南
 - [Astro 文档](https://docs.astro.build) - Astro 官方文档
 - [中间件系统](/middleware) - 探索可用的中间件
 - [类型验证](/patterns/type) - 了解类型验证系统

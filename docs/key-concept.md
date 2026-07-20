@@ -46,10 +46,6 @@ const server = new Server(routes)
 export default { fetch: server.fetch }
 ```
 
-> **新框架用法说明**：
-> - 所有路由必须使用 `defineRoute` 包装
-> - Handler 直接是函数，不再需要 `createHandler` 包装
-
 ## 路由类型：叶子 vs 路由组
 
 `defineRoute` 有两种形态，写后端必须区分：
@@ -71,7 +67,7 @@ defineRoute({
 })
 ```
 
-生产惯例：handler 先定义为常量，再放入 `children`。详见 [快速入门](/quick-start#两种路由-叶子-vs-路由组)。
+推荐：handler 先定义为常量，再放入 `children`。详见 [教程 · 路由组](/tutorial#第四步用路由组组织路径) 与 [路由指南](/routing)。
 
 ## 路由系统
 
@@ -97,10 +93,6 @@ defineRoute({
   description?: string
 })
 ```
-
-> **新框架用法说明**：
-> - Schema 验证统一在 `schema` 字段中定义，不再使用独立的 `body`、`query` 等字段
-> - 支持路由元信息：`name`、`description` 等
 
 ### 路径匹配
 
@@ -188,11 +180,6 @@ const server = new Server(routes)
 server.use(loggingMiddleware) // 全局中间件
 ```
 
-> **新框架用法说明**：
-> - 中间件使用 `defineMiddleware` 定义，支持类型注入
-> - 全局中间件使用 `server.use()` 方法
-> - Handler 不再需要 `createHandler` 包装
-
 ## 类型系统
 
 Vafast 提供完整的 TypeScript 支持，包括类型安全的处理器和验证器。
@@ -241,10 +228,6 @@ const routes = defineRoutes([
 ])
 ```
 
-> **新框架用法说明**：
-> - Schema 验证在路由配置的 `schema` 字段中定义
-> - Handler 直接接收验证后的数据，自动获得类型推断
-
 ## 路由定义系统
 
 `defineRoute` 函数用于定义类型安全的路由，自动处理参数解构和类型推断。
@@ -280,11 +263,6 @@ const validatedRoute = defineRoute({
 })
 ```
 
-> **新框架用法说明**：
-> - 不再使用 `createHandler` 函数
-> - Handler 直接是函数，在路由配置中定义
-> - Schema 验证在 `schema` 字段中定义
-
 ### 高级用法
 
 ```typescript
@@ -307,10 +285,6 @@ const fullRoute = defineRoute({
   }
 })
 ```
-
-> **新框架用法说明**：
-> - Schema 验证统一在 `schema` 字段中定义
-> - Handler 直接接收所有验证后的数据
 
 ## SSE 流式响应
 
@@ -396,11 +370,9 @@ const token = getHeader(req, 'Authorization')
 
 ## 下一步
 
-现在你已经了解了 Vafast 的核心概念，建议你：
+1. 尚未跟做笔记 API？先走 [教程](/tutorial)
+2. [路由指南](/routing) — 嵌套、匹配与类型包装
+3. [中间件系统](/middleware) — `defineMiddleware` 与三层挂载
+4. [最佳实践](/essential/best-practice) — 目录与启动约定
 
-1. 查看 [路由指南](/routing) 学习如何定义复杂路由
-2. 阅读 [中间件系统](/middleware) 了解如何扩展功能
-3. 微服务认证见 [Auth Middleware](/middleware/auth-middleware)
-4. 探索 [API 参考](/api) 查看完整的 API 文档
-
-如果你有任何问题，欢迎在我们的 [GitHub Issues](https://github.com/vafast/vafast/issues) 社区询问。
+多租户对接独立认证服务时再看 [Auth Middleware](/middleware/auth-middleware)。

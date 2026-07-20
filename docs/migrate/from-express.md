@@ -382,6 +382,6 @@ export default { fetch: server.fetch }
 1. 查看 [快速入门](/quick-start) 开始使用 Vafast
 2. 阅读 [核心概念](/key-concept) 深入了解 Vafast 的工作原理
 3. 探索 [中间件系统](/middleware) 了解如何扩展功能
-4. 查看 [示例代码](/examples) 获取更多实践示例
+4. 跟着 [教程](/tutorial) 熟悉 Vafast 写法
 
 如果您在迁移过程中遇到任何问题，欢迎在我们的 [GitHub Issues](https://github.com/vafast/vafast/issues) 社区寻求帮助。

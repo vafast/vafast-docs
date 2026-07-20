@@ -10,11 +10,11 @@ Better Auth 是一个现代化的身份验证库，专为现代 Web 应用设计
 
 | | Better Auth | [@vafast/auth-middleware](/middleware/auth-middleware) |
 |---|---|---|
-| **适用场景** | 在应用内自建完整认证（注册/登录/OAuth/会话） | 微服务对接已有 **auth-server** |
+| **适用场景** | 在应用内自建完整认证（注册/登录/OAuth/会话） | 微服务对接已有认证服务 |
 | **数据存储** | 自带适配器，直连你的数据库 | 无本地用户表，远程校验 JWT / API Key |
-| **典型项目** | 独立全栈应用、需要 OAuth 的 SaaS | `ones-server`、`ai-server`、`billing-server` |
+| **典型项目** | 独立全栈应用、需要 OAuth 的 SaaS | 多租户 API、按 app 隔离的后端服务 |
 
-两者可并存：全栈应用用 Better Auth 管理用户，业务微服务用 `@vafast/auth-middleware` 校验 auth-server 签发的 token。
+两者可并存：全栈应用用 Better Auth 管理用户，业务微服务用 `@vafast/auth-middleware` 校验认证服务签发的 token。
 
 ## 安装
 
@@ -389,4 +389,4 @@ NEXTAUTH_SECRET="your-nextauth-secret"
 - [Better Auth 文档](https://better-auth.com) - 官方文档
 - [Vafast 中间件](/middleware) - 探索其他可用的中间件
 - [Auth Middleware](/middleware/auth-middleware) - 微服务认证与路由类型包装
-- [安全指南](/essential/security) - 安全最佳实践
+- [最佳实践](/essential/best-practice) - 项目约定与生产增强

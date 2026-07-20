@@ -14,7 +14,7 @@ Skill 是 Claude CLI 的扩展机制，安装后 AI 会自动理解特定框架�
 - ✅ **Schema 验证** - TypeBox 类型定义
 - ✅ **中间件** - `defineMiddleware` 类型安全模式
 - ✅ **SSE** - `sse: true` 流式响应
-- ✅ **错误处理** - Go 风格 `{ data, error }`
+- ✅ **错误处理** - 服务端 `throw err.*`；客户端可用 `{ data, error }`
 - ✅ **API 客户端** - `@vafast/api-client` 使用
 
 ## 安装
@@ -95,10 +95,10 @@ defineRoute({
   method: 'GET',
   path: '/stream',
   sse: true,
-  handler: async function* (ctx) {
-    yield { event: 'start', data: {} }
-    yield { data: { text: 'chunk' } }
-    yield { event: 'end', data: {} }
+  handler: async function* () {
+    yield { status: 'start' }
+    yield { text: 'chunk' }
+    yield { status: 'end' }
   },
 })
 ```
@@ -159,8 +159,8 @@ const { data, error } = await api.users.get({ page: 1 })
 
 ### 错误处理
 
-- `err` 函数提供语义化错误 API
-- Go 风格 `{ data, error }` 返回格式
+- 服务端：`throw err.notFound(...)` 等语义化错误
+- 客户端（api-client）：可用 `{ data, error }` 消费结果
 - 统一的错误响应格式
 
 ### API 客户端

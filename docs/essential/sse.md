@@ -164,26 +164,23 @@ defineRoute({
 })
 ```
 
-## 生产项目写法
+## 与路由组组合
 
-与 `ones-server` / `ai-server` 一致：**先定义 handler 常量**，再挂到 `defineRoutes`（可与 `defineAuthRoute` 组合）：
+先定义 SSE handler 常量，再挂到 `defineRoutes`（与普通路由相同）：
 
 ```typescript
 import { defineRoute, defineRoutes, Type } from 'vafast'
-import { authWithApp, requireUser, defineAuthRoute } from '@vafast/auth-middleware'
 
-/** SSE 进度订阅 — 需登录 */
-const progressHandler = defineAuthRoute({
+const progressHandler = defineRoute({
   method: 'GET',
-  path: '/tasks/:id/progress',
+  path: '/:id/progress',
   name: '订阅任务进度',
-  middleware: [requireUser],
   sse: true,
   schema: {
     params: Type.Object({ id: Type.String() }),
   },
-  handler: async function* ({ params, userInfo }) {
-    const task = await getTask(params.id, userInfo.id)
+  handler: async function* ({ params }) {
+    const task = await getTask(params.id)
     if (!task) {
       yield { error: '记录不存在' }
       return
@@ -193,7 +190,7 @@ const progressHandler = defineAuthRoute({
 
     while (task.status === 'running') {
       await sleep(2000)
-      const updated = await getTask(params.id, userInfo.id)
+      const updated = await getTask(params.id)
       if (!updated) return
       yield { status: updated.status, progress: updated.progress }
       if (updated.status === 'success' || updated.status === 'failed') return
@@ -204,26 +201,26 @@ const progressHandler = defineAuthRoute({
 export const taskRoutes = defineRoutes([
   defineRoute({
     path: '/api/tasks',
-    middleware: [authWithApp],
     children: [
-      // 普通 REST handler...
+      progressHandler,
+      // 其它 REST handler...
     ],
   }),
-  progressHandler, // SSE 路由与 REST 同级导出
 ])
 ```
 
-AI 流式对话（`ai-server` agent 同款）：`yield` ChatEvent，直接 `for await` 业务生成器：
+需要登录态时，用教程同款的 `defineMiddleware`，或生产场景的 [@vafast/auth-middleware](/middleware/auth-middleware) 包装路由（把上面的 `defineRoute` 换成对应的 `defineAuthRoute` 即可）。
+
+AI 流式对话：`yield` 事件对象，也可直接转发业务生成器：
 
 ```typescript
-const streamHandler = defineAuthRoute({
+const streamHandler = defineRoute({
   method: 'POST',
   path: '/stream',
-  middleware: [requireUser],
   sse: true,
   schema: { body: Type.Object({ message: Type.String() }) },
-  handler: async function* ({ body, userInfo }) {
-    for await (const event of streamAgentRun(body.message, { userId: userInfo.id })) {
+  handler: async function* ({ body }) {
+    for await (const event of streamAgentRun(body.message)) {
       yield event // { type: 'text_delta', data: { ... } }
     }
   },
