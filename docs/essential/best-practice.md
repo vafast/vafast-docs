@@ -42,7 +42,7 @@ Vafast 对文件夹结构没有固定看法，留给您 **自行决定** 如何�
 ```typescript [auth/routes.ts]
 // 路由定义处理 HTTP 相关，如路由、请求验证
 import { defineRoute, defineRoutes, Type } from 'vafast'
-import { AuthService } from './service'
+import { signIn, signUp } from './service'
 import { AuthModel } from './model'
 
 export const authRoutes = defineRoutes([
@@ -51,7 +51,7 @@ export const authRoutes = defineRoutes([
     path: '/auth/sign-in',
     schema: { body: AuthModel.signInBody },
     handler: async ({ body }) => {
-      const response = await AuthService.signIn(body)
+      const response = await signIn(body)
       return response
     }
   }),
@@ -60,7 +60,7 @@ export const authRoutes = defineRoutes([
     path: '/auth/sign-up',
     schema: { body: AuthModel.signUpBody },
     handler: async ({ body }) => {
-      const user = await AuthService.signUp(body)
+      const user = await signUp(body)
       return user
     }
   })
@@ -75,27 +75,25 @@ import { AuthModel } from './model'
 type SignInBody = Static<typeof AuthModel.signInBody>
 type SignUpBody = Static<typeof AuthModel.signUpBody>
 
-export abstract class AuthService {
-  static async signIn({ username, password }: SignInBody) {
-    const user = await db.user.findUnique({ where: { username } })
+export async function signIn({ username, password }: SignInBody) {
+  const user = await db.user.findUnique({ where: { username } })
 
-    if (!user || !await verifyPassword(password, user.password)) {
-      throw new Error('Invalid username or password')
-    }
-
-		return {
-			username,
-      token: await generateToken(user.id)
-		}
+  if (!user || !await verifyPassword(password, user.password)) {
+    throw new Error('Invalid username or password')
   }
 
-  static async signUp({ username, password, email }: SignUpBody) {
-    const hashedPassword = await hashPassword(password)
-    
-    return await db.user.create({
-      data: { username, password: hashedPassword, email }
-    })
-	}
+  return {
+    username,
+    token: await generateToken(user.id)
+  }
+}
+
+export async function signUp({ username, password, email }: SignUpBody) {
+  const hashedPassword = await hashPassword(password)
+
+  return await db.user.create({
+    data: { username, password: hashedPassword, email }
+  })
 }
 ```
 
@@ -214,34 +212,30 @@ serve({ fetch: server.fetch, port: 3000 })
 
 ### ✅ 推荐：抽象不依赖请求的服务
 
-建议将服务类或函数与 Vafast 解耦。
+建议将服务与 Vafast 解耦。
 
-如果服务或函数不依赖 HTTP 请求，推荐将其抽象为静态类或函数：
+如果服务不依赖 HTTP 请求，推荐抽成普通函数：
 
 ```typescript
 // services/math.ts
-export abstract class MathService {
-  static fibo(n: number): number {
-    if (n < 2) return n
-    return MathService.fibo(n - 1) + MathService.fibo(n - 2)
-    }
+export function fibo(n: number): number {
+  if (n < 2) return n
+  return fibo(n - 1) + fibo(n - 2)
 }
 
 // routes.ts
 import { defineRoute, defineRoutes, Type } from 'vafast'
-import { MathService } from './services/math'
+import { fibo } from './services/math'
 
 export const routes = defineRoutes([
   defineRoute({
     method: 'GET',
     path: '/fibo/:n',
     schema: { params: Type.Object({ n: Type.String() }) },
-    handler: ({ params }) => MathService.fibo(parseInt(params.n))
+    handler: ({ params }) => fibo(parseInt(params.n))
   })
 ])
 ```
-
-如果服务不需要存储属性，可以使用 `abstract class` 和 `static`，避免创建类实例。
 
 ### ✅ 推荐：依赖请求的逻辑使用中间件
 
@@ -295,25 +289,21 @@ export const protectedRoutes = defineRoutes([
 
 ```typescript
 // ❌ 不推荐
-class UserService {
-  static async getUser(id: string) {
-    const user = await db.user.findUnique({ where: { id } })
-    if (!user) {
-      return new Response('Not Found', { status: 404 }) // ❌
-    }
-    return user
+export async function getUser(id: string) {
+  const user = await db.user.findUnique({ where: { id } })
+  if (!user) {
+    return new Response('Not Found', { status: 404 }) // ❌
   }
+  return user
 }
 
 // ✅ 推荐
-class UserService {
-  static async getUser(id: string) {
-    const user = await db.user.findUnique({ where: { id } })
-    if (!user) {
-      throw new Error('User not found') // 或返回 null
-    }
-    return user
+export async function getUser(id: string) {
+  const user = await db.user.findUnique({ where: { id } })
+  if (!user) {
+    throw new Error('User not found') // 或返回 null
   }
+  return user
 }
 
 // 在路由中处理 HTTP 响应
@@ -321,7 +311,7 @@ class UserService {
   method: 'GET',
   path: '/users/:id',
   handler: async ({ params }) => {
-    const user = await UserService.getUser(params.id)
+    const user = await getUser(params.id)
     if (!user) {
       throw err.notFound('User not found')
     }
@@ -577,13 +567,13 @@ describe('Routes', () => {
 
 ```typescript
 import { describe, it, expect } from 'vitest'
-import { MathService } from './services/math'
+import { fibo } from './services/math'
 
-describe('MathService', () => {
+describe('fibo', () => {
   it('should calculate fibonacci', () => {
-    expect(MathService.fibo(0)).toBe(0)
-    expect(MathService.fibo(1)).toBe(1)
-    expect(MathService.fibo(10)).toBe(55)
+    expect(fibo(0)).toBe(0)
+    expect(fibo(1)).toBe(1)
+    expect(fibo(10)).toBe(55)
   })
 })
 ```
