@@ -315,6 +315,10 @@ export default defineConfig({
                         link: '/api-client/fetch'
                     },
                     {
+                        text: '高级用法',
+                        link: '/api-client/advanced'
+                    },
+                    {
                         text: '测试',
                         link: '/api-client/test'
                     }

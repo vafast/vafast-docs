@@ -149,4 +149,5 @@ it('中间件会写入 Authorization', async () => {
 ## 相关
 
 - [基础用法](/api-client/fetch)
+- [高级用法](/api-client/advanced)
 - [服务端单元测试](/patterns/unit-test)

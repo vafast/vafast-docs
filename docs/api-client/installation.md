@@ -89,5 +89,6 @@ const client = createClient({
 ## 下一步
 
 - [基础用法](/api-client/fetch) — 链式调用、错误处理、中间件
+- [高级用法](/api-client/advanced) — 多租户、刷新队列、多服务
 - [概述](/api-client/overview) — 特性总览与 SSE
 - [测试](/api-client/test) — 用 `server.fetch` / mock 测客户端

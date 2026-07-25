@@ -208,6 +208,7 @@ async function createUser(form: { name: string; email: string }) {
 
 ## 下一步
 
-- [概述](/api-client/overview) — SSE、多服务配置
+- [高级用法](/api-client/advanced) — 多租户、token 刷新、多服务、`client.request`、上传
+- [概述](/api-client/overview)
 - [测试](/api-client/test)
-- [CLI](/tools/cli) — 同步服务端类型
+- [CLI](/tools/cli)
