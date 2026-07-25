@@ -24,46 +24,80 @@ title: 与其他 TS 客户端对比 - Vafast
 
 ## 一、调用风格
 
-### 对照
+统一场景：`POST /users/find`，请求体 `{ current: 1, pageSize: 20 }`（分页查用户）。下面只比「怎么写出这次请求」，错误处理见下一节。
 
-<div class="table-scroll">
-
-| 库 | 典型写法 | 特点 |
-|----|----------|------|
-| **本库** | `await api.users.find.post(body)` | 路径用 `.`，动词在链末，无 `$` 前缀 |
-| **Eden** | `await app.users.post(body)` | Treaty：路径即属性，与本库最接近 |
-| **tRPC** | `await trpc.users.list.query(input)` | 过程名 + `query` / `mutate`，弱化 HTTP 动词 |
-| **Hono `hc`** | `await client.users.$get({ query })` | 路径链式，方法名加 `$`；入参常嵌套 `query` / `param` |
-| **OpenAPI** | `await api.GET('/users', { params })` | 动词 + 字符串路径，资源感较弱 |
-| **Axios** | `await axios.get('/users', { params })` | 经典 REST，无路径级类型补全 |
-
-</div>
-
-### 说明
-
-本库借鉴 Eden「路径即属性」，并在细节上统一：
-
-<div class="table-scroll">
-
-| 约定 | 本库 | 其他库 |
-|------|------|--------|
-| 路径段 | `api.users.find` → `/users/find` | Eden 同类；Hono 类似但方法带 `$` |
-| HTTP 方法 | `.get` / `.post`，无前缀 | Hono 为 `$get` / `$post` |
-| 路径参数 | `api.users({ id: '1' }).get()` | 与 Eden 一致 |
-| 入参 | GET/HEAD 第一参为 query，其余为 body | Hono 多为 `{ query, param }` |
-| 路径段与动词同名 | `api.prices.delete.post()` → `POST /prices/delete` | 类型层区分路径节点与方法定义 |
-
-</div>
+### 本库
 
 ```typescript
-// 普通请求：懒执行，await 时才发出
 const { data, error } = await api.users.find.post({ current: 1, pageSize: 20 })
-
-// 路径参数 + 动词
-await api.users({ id: '123' }).put({ name: 'Ada' })
 ```
 
-方法调用返回 `RequestBuilder`（`PromiseLike`）：在 `await` 之前不发请求，因此可与下一节的 `.sse()` 共用同一表达式。相对 Hono，少 `$` 与嵌套包装；相对 tRPC，保留 HTTP 动词与路径可读性。
+路径段用 `.` 连接，HTTP 动词落在链末，body 作为第一参数。无 `$` 前缀，也无需再包一层 `{ body }` / `{ query }`。  
+**优点**：与 URL 结构一一对应，补全直观，读写成本低。  
+**代价**：依赖契约或 CLI 生成类型；路径段若与动词同名（如 `/prices/delete`）需写成 `api.prices.delete.post()`，类型层已支持，但首次见到要适应。
+
+同一次调用还可改走 SSE（`RequestBuilder` 懒执行）：`api.users.find.post(body).sse({ ... })`，不必换 API。
+
+### Eden Treaty
+
+```typescript
+const { data, error } = await app.users.find.post({ current: 1, pageSize: 20 })
+```
+
+写法与本库几乎同构（路径即属性 + 链末动词）。  
+**优点**：与 Elysia 同仓时零生成、类型最省事。  
+**代价**：强绑 Elysia；流式一般是端点上的 `subscribe` 等，与普通 `.post` 分开。
+
+### tRPC
+
+```typescript
+const data = await trpc.users.find.query({ current: 1, pageSize: 20 })
+// 或 mutate，取决于服务端 procedure 类型
+```
+
+表达的是「过程名 + query/mutate」，不一定出现 HTTP 路径与动词。  
+**优点**：全栈同仓时过程级类型与批处理等能力完整。  
+**代价**：心智是 RPC 而非 REST；换非 tRPC 后端成本高；调用形态与网关/抓包看到的 URL 不如链式直观。
+
+### Hono `hc`
+
+```typescript
+const res = await client.users.find.$post({
+  json: { current: 1, pageSize: 20 },
+})
+```
+
+路径仍可链式，但方法名带 `$`，入参常按 `json` / `query` / `param` 分区。  
+**优点**：与 Hono 路由类型对齐好。  
+**代价**：`$` 与嵌套字段增加噪音；拿到的是 `Response`，还要自行 `ok` / `json()`（见错误处理）。
+
+### OpenAPI 生成客户端
+
+```typescript
+const { data, error } = await api.POST('/users/find', {
+  body: { current: 1, pageSize: 20 },
+})
+```
+
+动词 + 字符串路径，资源树感弱于链式属性。  
+**优点**：后端无关、多语言一致。  
+**代价**：依赖 OpenAPI 流水线；路径字符串易与文档漂移，补全体验通常弱于 Proxy 链式。
+
+### Axios
+
+```typescript
+const { data } = await axios.post('/users/find', { current: 1, pageSize: 20 })
+```
+
+最直白的 HTTP 调用。  
+**优点**：生态大、上手快。  
+**代价**：无端到端路径/响应类型（除非再套生成层）；风格与类型安全链式客户端不在同一档。
+
+### 小结
+
+同一请求下，本库与 Eden 最接近：都是「看得见的路径 + 动词」。本库在此基础上去掉 Hono 式 `$`/嵌套包装，并让 JSON 与 SSE 共用同一链式表达式；相对 tRPC / OpenAPI / Axios，更强调 HTTP 可读性与类型补全的折中，而不是绑死某一运行时。
+
+路径参数同一套路（本库 / Eden）：`api.users({ id: '123' }).get()` → `GET /users/123`，避免 `users['123']` 语义不清。
 
 ## 二、错误处理
 
