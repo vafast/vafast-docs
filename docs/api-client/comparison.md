@@ -44,18 +44,35 @@ const { data, error } = await api.users.find.post({ current: 1, pageSize: 20 })
 const { data, error } = await app.users.find.post({ current: 1, pageSize: 20 })
 ```
 
-写法与本库几乎同构（路径即属性 + 链末动词）。  
-**优点**：与 Elysia 同仓时零生成、类型最省事。  
-**代价**：强绑 Elysia；流式一般是端点上的 `subscribe` 等，与普通 `.post` 分开。
+**这一条 POST 的外形与本库几乎一样**（路径即属性、链末动词、body 作第一参）。若只比「写一个带 body 的 POST」，两者刻意同构，谈不上谁更花哨。
+
+真正不同的在相邻能力，而不是这一行点号：
+
+| 点 | 本库 | Eden Treaty |
+|----|------|-------------|
+| GET query | `api.users.get({ page: 1 })`，第一参就是 query | 多为 `api.users.get({ query: { page: 1 } })`，query 要再包一层 |
+| 流式 | 同一调用：`.post(body).sse({ onMessage })` | HTTP SSE 常 `await` 后对 `data` 做 `for await`；实时双向是 `.subscribe()`（WebSocket） |
+| 客户端组装 | `createClient` → `.use(中间件)` → `eden(client)` | `treaty(url \| app, { onRequest, onResponse, headers })` |
+| 横切模型 | Koa 洋葱 `(ctx, next)`，与 SSE 共用链 | 请求/响应钩子拆开，不是 `next()` |
+| 错误字段 | `error.code` / `message` / `details`（对齐 Vafast） | `error.status` / `error.value`（对齐 Elysia） |
+| 类型从哪来 | 契约 / `vafast sync`，不绑运行时 | `typeof app` 同构，强绑 Elysia；也可 `treaty(app)` 同进程调用 |
+
+**优点（Eden）**：后端就是 Elysia 时零生成最省事；同进程 `treaty(app)` 适合单测。  
+**代价**：换非 Elysia 后端即不适用；流式与横切模型和本库不是同一套。
+
+结论：链式「长相」学的是 Eden；差异在 **GET 入参扁平化、`.sse()` 与 JSON 同链、洋葱中间件、以及面向 Vafast 的错误/契约**，而不是再发明一种点号语法。
 
 ### tRPC
 
 ```typescript
+// 服务端若写成 query 过程：
 const data = await trpc.users.find.query({ current: 1, pageSize: 20 })
-// 或 mutate，取决于服务端 procedure 类型
+
+// 服务端若写成 mutation 过程，客户端必须改成：
+// await trpc.users.find.mutate({ current: 1, pageSize: 20 })
 ```
 
-表达的是「过程名 + query/mutate」，不一定出现 HTTP 路径与动词。  
+tRPC 不写 `.get` / `.post`。服务端把接口登记成 **query（读）** 或 **mutation（写）** 两种过程之一，客户端只能调用对应的 `.query()` 或 `.mutate()`——和 HTTP 动词不是一一映射，即使传输层碰巧是 POST。  
 **优点**：全栈同仓时过程级类型与批处理等能力完整。  
 **代价**：心智是 RPC 而非 REST；换非 tRPC 后端成本高；调用形态与网关/抓包看到的 URL 不如链式直观。
 
@@ -95,9 +112,9 @@ const { data } = await axios.post('/users/find', { current: 1, pageSize: 20 })
 
 ### 小结
 
-同一请求下，本库与 Eden 最接近：都是「看得见的路径 + 动词」。本库在此基础上去掉 Hono 式 `$`/嵌套包装，并让 JSON 与 SSE 共用同一链式表达式；相对 tRPC / OpenAPI / Axios，更强调 HTTP 可读性与类型补全的折中，而不是绑死某一运行时。
+同一 `POST /users/find` 下：本库与 Eden **外形最像**（都是看得见的路径 + 动词）；和 Eden 的差别不在这一行点号，而在 GET 入参是否扁平、SSE 是否挂在同一 `RequestBuilder`、以及中间件 / 错误 / 契约是否面向 Vafast。相对 Hono，少 `$` 与嵌套包装；相对 tRPC / OpenAPI / Axios，更强调 HTTP 可读性与类型补全的折中，而不是绑死某一运行时。
 
-路径参数同一套路（本库 / Eden）：`api.users({ id: '123' }).get()` → `GET /users/123`，避免 `users['123']` 语义不清。
+路径参数本库与 Eden 同套路：`api.users({ id: '123' }).get()` → `GET /users/123`。
 
 ## 二、错误处理
 
