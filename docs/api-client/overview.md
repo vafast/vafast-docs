@@ -156,7 +156,7 @@ const { data, error } = await blog.posts.find.post({ current: 1, pageSize: 10 })
 
 ## Go 风格错误处理
 
-所有请求返回 `{ data, error }` 格式：
+所有请求返回 `{ data, error }`：**先判断 `error`，再使用 `data`**，不要用 try/catch 处理 4xx/5xx 业务失败。
 
 ```typescript
 const { data, error } = await api.users.get()

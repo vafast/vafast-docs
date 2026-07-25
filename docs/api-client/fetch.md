@@ -4,558 +4,210 @@ title: 基础用法 - Vafast API 客户端
 
 # 基础用法
 
-Vafast API 客户端提供了简单而强大的 API 来发送 HTTP 请求。本章将介绍基本的用法和常见的操作模式。
+所有请求返回 Go 风格的 `{ data, error }`：**不要**用 try/catch 判断业务失败（网络层异常才会抛出）。
 
 ## 创建客户端
 
-首先，创建一个 API 客户端实例：
-
 ```typescript
-import { VafastApiClient } from '@vafast/api-client'
+import { createClient, eden } from '@vafast/api-client'
+import { createApiClient } from './api.generated' // CLI 生成，可选
 
-const client = new VafastApiClient({
+const client = createClient({
   baseURL: 'https://api.example.com',
-  timeout: 10000,
-  retries: 3
+  timeout: 30_000,
+  headers: { 'X-App-Id': 'my-app' },
 })
+
+// 有生成类型时
+const api = createApiClient(client)
+
+// 或手动契约
+// const api = eden<Api>(client)
 ```
 
-## 📡 HTTP 请求方法
+## 链式调用
 
-### GET 请求
+最后一个方法决定 HTTP 动词，中间段是路径：
 
 ```typescript
-// 基本 GET 请求
-const response = await client.get('/users')
+// GET /users?page=1
+const { data, error } = await api.users.get({ page: 1 })
 
-// 带查询参数的 GET 请求
-const response = await client.get('/users', {
-  page: 1,
-  limit: 10,
-  search: 'john'
-})
+// POST /users
+const created = await api.users.post({ name: 'Ada' })
 
-// 带路径参数的 GET 请求
-const response = await client.get('/users/:id', { id: 123 })
+// GET /users/123
+const one = await api.users({ id: '123' }).get()
 
-// 带自定义头的 GET 请求
-const response = await client.get('/users', {}, {
-  headers: {
-    'Authorization': 'Bearer token123',
-    'X-Custom-Header': 'value'
+// PUT /users/123
+const updated = await api.users({ id: '123' }).put({ name: 'Ada Lovelace' })
+
+// DELETE /users/123
+const removed = await api.users({ id: '123' }).delete()
+```
+
+| 写法 | 请求 |
+|------|------|
+| `api.users.get(query?)` | `GET /users` |
+| `api.users.post(body)` | `POST /users` |
+| `api.users({ id }).get()` | `GET /users/:id` |
+| `api.users.find.post(body)` | `POST /users/find` |
+
+## Go 风格错误处理
+
+```typescript
+const { data, error } = await api.users.get({ page: 1 })
+
+if (error) {
+  // error: { code: number; message: string; type?: ErrorType; details?: ErrorDetail[] }
+  console.error(`${error.code}: ${error.message}`)
+  return
+}
+
+// 此处 data 非 null
+console.log(data.users)
+```
+
+按状态码分支：
+
+```typescript
+const { data, error } = await api.users.post(form)
+
+if (error) {
+  switch (error.code) {
+    case 401:
+      redirectToLogin()
+      break
+    case 403:
+      showPermissionDenied()
+      break
+    case 422:
+      // 见下方校验错误
+      break
+    default:
+      showError(error.message)
   }
-})
+  return
+}
+
+console.log(data)
 ```
 
-### POST 请求
+### 422 Schema 校验错误
+
+与服务端一致：HTTP 422 + `details`。用工具函数绑表单：
 
 ```typescript
-// 基本 POST 请求
-const response = await client.post('/users', {
-  name: 'John Doe',
-  email: 'john@example.com',
-  age: 30
-})
+import { isValidationError, mapDetailsToFormFields } from '@vafast/api-client'
 
-// 带查询参数的 POST 请求
-const response = await client.post('/users', {
-  name: 'John Doe',
-  email: 'john@example.com'
-}, {
-  query: { role: 'admin' }
-})
+const { error } = await api.users.post(formData)
 
-// 带自定义头的 POST 请求
-const response = await client.post('/users', {
-  name: 'John Doe',
-  email: 'john@example.com'
-}, {
-  headers: {
-    'Content-Type': 'application/json',
-    'Authorization': 'Bearer token123'
-  }
-})
+if (error && isValidationError(error)) {
+  formRef.setFields(mapDetailsToFormFields(error.details))
+  return
+}
 ```
 
-### PUT 请求
+| `error.type` | 含义 | 典型 `code` |
+|--------------|------|-------------|
+| `network` | 无法连接 | `0` |
+| `timeout` | 超时 | `408` |
+| `abort` | 被取消 | `0` |
+| `server` | 4xx / 5xx | HTTP 状态码 |
+| `parse` | 响应解析失败 | `0` |
+
+## 请求级配置
+
+第二参数传 `RequestConfig`（如取消、超时、额外头）：
 
 ```typescript
-// 更新用户信息
-const response = await client.put('/users/:id', {
-  name: 'John Updated',
-  email: 'john.updated@example.com'
-}, { id: 123 })
+const controller = new AbortController()
 
-// 带查询参数的 PUT 请求
-const response = await client.put('/users/:id', {
-  name: 'John Updated'
-}, {
-  id: 123,
-  query: { version: '2.0' }
-})
-```
-
-### PATCH 请求
-
-```typescript
-// 部分更新用户信息
-const response = await client.patch('/users/:id', {
-  name: 'John Updated'
-}, { id: 123 })
-```
-
-### DELETE 请求
-
-```typescript
-// 删除用户
-const response = await client.delete('/users/:id', { id: 123 })
-
-// 带查询参数的 DELETE 请求
-const response = await client.delete('/users/:id', {
-  id: 123,
-  query: { permanent: true }
-})
-```
-
-## 参数处理
-
-### 路径参数
-
-```typescript
-// 单个路径参数
-const response = await client.get('/users/:id', { id: 123 })
-
-// 多个路径参数
-const response = await client.get('/posts/:postId/comments/:commentId', {
-  postId: 456,
-  commentId: 789
-})
-
-// 嵌套路径参数
-const response = await client.get('/organizations/:orgId/departments/:deptId/employees/:empId', {
-  orgId: 'org123',
-  deptId: 'dept456',
-  empId: 'emp789'
-})
-```
-
-### 查询参数
-
-```typescript
-// 基本查询参数
-const response = await client.get('/users', {
-  page: 1,
-  limit: 10,
-  sort: 'name',
-  order: 'asc'
-})
-
-// 数组查询参数
-const response = await client.get('/products', {
-  categories: ['electronics', 'books'],
-  tags: ['featured', 'new']
-})
-
-// 复杂查询参数
-const response = await client.get('/search', {
-  query: 'laptop',
-  filters: {
-    price: { min: 100, max: 1000 },
-    brand: ['apple', 'dell', 'hp'],
-    inStock: true
+const { data, error } = await api.users.get(
+  { page: 1 },
+  {
+    signal: controller.signal,
+    timeout: 5_000,
+    headers: { Authorization: `Bearer ${token}` },
   },
-  sort: { field: 'price', order: 'asc' }
-})
+)
+
+// 取消
+controller.abort()
 ```
 
-### 请求体
+## 中间件
 
 ```typescript
-// JSON 请求体
-const response = await client.post('/users', {
-  name: 'John Doe',
-  email: 'john@example.com',
-  profile: {
-    age: 30,
-    location: 'New York',
-    interests: ['programming', 'music']
+import { createClient, defineMiddleware, retryMiddleware, loggerMiddleware } from '@vafast/api-client'
+
+const auth = defineMiddleware(async (ctx, next) => {
+  const token = localStorage.getItem('token')
+  if (token) ctx.headers.set('Authorization', `Bearer ${token}`)
+
+  const res = await next()
+
+  if (res.status === 401) {
+    // Token 过期：刷新或跳登录
   }
+  return res
 })
 
-// FormData 请求体
-const formData = new FormData()
-formData.append('name', 'John Doe')
-formData.append('avatar', fileInput.files[0])
-
-const response = await client.post('/users', formData, {
-  headers: {
-    'Content-Type': 'multipart/form-data'
-  }
-})
-
-// 文本请求体
-const response = await client.post('/logs', 'User logged in at 2024-01-01', {
-  headers: {
-    'Content-Type': 'text/plain'
-  }
-})
+const client = createClient({ baseURL: '/api' })
+  .use(auth)
+  .use(retryMiddleware({ count: 3, delay: 1000 }))
+  .use(loggerMiddleware({ prefix: '[API]' }))
 ```
 
-## 响应处理
+## SSE
 
-### 基本响应结构
-
-```typescript
-const response = await client.get('/users')
-
-if (response.error) {
-  // 处理错误
-  console.error('Error:', response.error.message)
-  console.error('Status:', response.error.status)
-  console.error('Details:', response.error.details)
-} else {
-  // 处理成功响应
-  console.log('Data:', response.data)
-  console.log('Status:', response.status)
-  console.log('Headers:', response.headers)
-}
-```
-
-### 响应类型
+普通方法后接 `.sse()`（走同一套中间件）：
 
 ```typescript
-interface ApiResponse<T> {
-  data?: T
-  error?: {
-    message: string
-    status: number
-    details?: any
-  }
-  status: number
-  headers: Record<string, string>
-}
-
-// 使用类型化的响应
-interface User {
-  id: number
-  name: string
-  email: string
-}
-
-const response: ApiResponse<User[]> = await client.get('/users')
-```
-
-### 错误处理
-
-```typescript
-try {
-  const response = await client.get('/users')
-  
-  if (response.error) {
-    switch (response.error.status) {
-      case 400:
-        console.error('Bad Request:', response.error.message)
-        break
-      case 401:
-        console.error('Unauthorized:', response.error.message)
-        // 重定向到登录页面
-        break
-      case 403:
-        console.error('Forbidden:', response.error.message)
-        break
-      case 404:
-        console.error('Not Found:', response.error.message)
-        break
-      case 500:
-        console.error('Server Error:', response.error.message)
-        break
-      default:
-        console.error('Unknown Error:', response.error.message)
-    }
-  } else {
-    console.log('Success:', response.data)
-  }
-} catch (error) {
-  console.error('Network Error:', error)
-}
-```
-
-## 请求配置
-
-### 全局配置
-
-```typescript
-const client = new VafastApiClient({
-  baseURL: 'https://api.example.com',
-  timeout: 10000,
-  retries: 3,
-  defaultHeaders: {
-    'Content-Type': 'application/json',
-    'User-Agent': 'Vafast-API-Client/1.0.0'
-  }
-})
-```
-
-### 请求级配置
-
-```typescript
-// 单个请求的配置
-const response = await client.get('/users', {}, {
-  timeout: 5000,
-  retries: 1,
-  headers: {
-    'Authorization': 'Bearer token123',
-    'X-Request-ID': 'req-123'
-  }
-})
-```
-
-### 中间件配置
-
-```typescript
-// 添加请求中间件
-client.use(async (config, next) => {
-  // 添加认证头
-  if (localStorage.getItem('token')) {
-    config.headers.Authorization = `Bearer ${localStorage.getItem('token')}`
-  }
-  
-  // 添加请求 ID
-  config.headers['X-Request-ID'] = `req-${Date.now()}`
-  
-  return await next(config)
+const sub = api.chat.stream.post({ prompt: '你好' }).sse({
+  onMessage: (chunk) => console.log(chunk),
+  onError: (error) => console.error(error),
+  onClose: () => console.log('done'),
 })
 
-// 添加响应中间件
-client.use(async (response, next) => {
-  // 记录响应时间
-  console.log(`Request completed in ${Date.now() - response.startTime}ms`)
-  
-  return await next(response)
-})
-```
-
-## 重试机制
-
-### 自动重试
-
-```typescript
-const client = new VafastApiClient({
-  baseURL: 'https://api.example.com',
-  retries: 3,
-  retryDelay: 1000,
-  retryCondition: (error) => {
-    // 只在网络错误或 5xx 错误时重试
-    return error.status >= 500 || error.type === 'network'
-  }
-})
-```
-
-### 自定义重试策略
-
-```typescript
-const client = new VafastApiClient({
-  baseURL: 'https://api.example.com',
-  retries: 5,
-  retryDelay: (attempt) => {
-    // 指数退避策略
-    return Math.min(1000 * Math.pow(2, attempt), 10000)
-  },
-  retryCondition: (error, attempt) => {
-    // 最多重试 5 次，只在特定错误时重试
-    if (attempt >= 5) return false
-    
-    return error.status === 429 || error.status >= 500
-  }
-})
-```
-
-## 缓存机制
-
-### 启用缓存
-
-```typescript
-const client = new VafastApiClient({
-  baseURL: 'https://api.example.com',
-  enableCache: true,
-  cacheExpiry: 300000, // 5分钟
-  cacheStrategy: 'memory' // 'memory' | 'localStorage' | 'sessionStorage'
-})
-```
-
-### 缓存控制
-
-```typescript
-// 强制刷新缓存
-const response = await client.get('/users', {}, {
-  cache: 'no-cache'
-})
-
-// 使用缓存
-const response = await client.get('/users', {}, {
-  cache: 'force-cache'
-})
-
-// 清除特定路径的缓存
-client.clearCache('/users')
-
-// 清除所有缓存
-client.clearCache()
-```
-
-## 请求统计
-
-### 启用统计
-
-```typescript
-const client = new VafastApiClient({
-  baseURL: 'https://api.example.com',
-  enableStats: true
-})
-
-// 获取统计信息
-const stats = client.getStats()
-console.log('Total requests:', stats.totalRequests)
-console.log('Successful requests:', stats.successfulRequests)
-console.log('Failed requests:', stats.failedRequests)
-console.log('Average response time:', stats.averageResponseTime)
-```
-
-### 自定义统计
-
-```typescript
-client.on('request', (config) => {
-  console.log('Request started:', config.url)
-})
-
-client.on('response', (response) => {
-  console.log('Response received:', response.status)
-})
-
-client.on('error', (error) => {
-  console.error('Request failed:', error.message)
-})
+sub.unsubscribe()
 ```
 
 ## 完整示例
 
 ```typescript
-import { VafastApiClient } from '@vafast/api-client'
+import { createClient, isValidationError, mapDetailsToFormFields } from '@vafast/api-client'
+import { createApiClient } from './api.generated'
 
-// 创建客户端
-const client = new VafastApiClient({
-  baseURL: 'https://jsonplaceholder.typicode.com',
-  timeout: 10000,
-  retries: 3,
-  enableCache: true,
-  cacheExpiry: 300000
-})
+const api = createApiClient(
+  createClient({ baseURL: '/api', timeout: 30_000 }),
+)
 
-// 用户管理 API
-class UserAPI {
-  // 获取用户列表
-  static async getUsers(page = 1, limit = 10) {
-    const response = await client.get('/users', {
-      _page: page,
-      _limit: limit
-    })
-    
-    if (response.error) {
-      throw new Error(`Failed to fetch users: ${response.error.message}`)
-    }
-    
-    return response.data
+async function loadUsers(page: number) {
+  const { data, error } = await api.users.get({ page })
+  if (error) {
+    showError(error.message)
+    return null
   }
-  
-  // 获取单个用户
-  static async getUser(id: number) {
-    const response = await client.get('/users/:id', { id })
-    
-    if (response.error) {
-      throw new Error(`Failed to fetch user: ${response.error.message}`)
-    }
-    
-    return response.data
-  }
-  
-  // 创建用户
-  static async createUser(userData: { name: string; email: string }) {
-    const response = await client.post('/users', userData)
-    
-    if (response.error) {
-      throw new Error(`Failed to create user: ${response.error.message}`)
-    }
-    
-    return response.data
-  }
-  
-  // 更新用户
-  static async updateUser(id: number, userData: Partial<{ name: string; email: string }>) {
-    const response = await client.put('/users/:id', userData, { id })
-    
-    if (response.error) {
-      throw new Error(`Failed to update user: ${response.error.message}`)
-    }
-    
-    return response.data
-  }
-  
-  // 删除用户
-  static async deleteUser(id: number) {
-    const response = await client.delete('/users/:id', { id })
-    
-    if (response.error) {
-      throw new Error(`Failed to delete user: ${response.error.message}`)
-    }
-    
-    return response.data
-  }
+  return data
 }
 
-// 使用示例
-async function main() {
-  try {
-    // 获取用户列表
-    const users = await UserAPI.getUsers(1, 5)
-    console.log('Users:', users)
-    
-    // 获取单个用户
-    const user = await UserAPI.getUser(1)
-    console.log('User:', user)
-    
-    // 创建新用户
-    const newUser = await UserAPI.createUser({
-      name: 'John Doe',
-      email: 'john@example.com'
-    })
-    console.log('New user:', newUser)
-    
-    // 更新用户
-    const updatedUser = await UserAPI.updateUser(1, {
-      name: 'John Updated'
-    })
-    console.log('Updated user:', updatedUser)
-    
-    // 删除用户
-    await UserAPI.deleteUser(1)
-    console.log('User deleted successfully')
-    
-  } catch (error) {
-    console.error('API Error:', error.message)
+async function createUser(form: { name: string; email: string }) {
+  const { data, error } = await api.users.post(form)
+  if (error) {
+    if (isValidationError(error)) {
+      formRef.setFields(mapDetailsToFormFields(error.details))
+      return null
+    }
+    showError(error.message)
+    return null
   }
+  return data
 }
-
-main()
 ```
 
 ## 下一步
 
-现在您已经掌握了 Vafast API 客户端的基础用法，接下来可以：
-
-1. **探索类型安全** - 学习如何创建类型安全的客户端
-2. **学习 WebSocket** - 掌握实时通信功能
-3. **配置中间件** - 自定义请求和响应处理
-4. **高级配置** - 了解更复杂的配置选项
-5. **错误处理** - 学习更完善的错误处理策略
-
-如果您有任何问题，请查看我们的 [GitHub 仓库](https://github.com/vafast/vafast) 或 [社区页面](/community)。
+- [概述](/api-client/overview) — SSE、多服务配置
+- [测试](/api-client/test)
+- [CLI](/tools/cli) — 同步服务端类型
