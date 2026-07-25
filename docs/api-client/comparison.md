@@ -34,7 +34,7 @@ const { data, error } = await api.users.find.post({ current: 1, pageSize: 20 })
 
 路径段用 `.` 连接，HTTP 动词落在链末，body 作为第一参数。无 `$` 前缀，也无需再包一层 `{ body }` / `{ query }`。  
 **优点**：与 URL 结构一一对应，补全直观，读写成本低。  
-**代价**：依赖契约或 CLI 生成类型；路径段若与动词同名（如 `/prices/delete`）需写成 `api.prices.delete.post()`，类型层已支持，但首次见到要适应。
+**注意**：路径段若与动词同名（如 `POST /prices/delete`），须写成 `api.prices.delete.post(...)`——中间的 `delete` 是路径，末尾才是动词。详见 [基础用法 · 注意事项](/api-client/fetch#注意事项路径段与动词同名)。
 
 同一次调用还可改走 SSE（`RequestBuilder` 懒执行）：`api.users.find.post(body).sse({ ... })`，不必换 API。
 

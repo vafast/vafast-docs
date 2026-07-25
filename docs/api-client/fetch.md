@@ -27,7 +27,7 @@ const api = createApiClient(client)
 
 ## 链式调用
 
-最后一个方法决定 HTTP 动词，中间段是路径：
+**只有链末被调用的那一段**才是 HTTP 动词；前面的属性一律当作路径段。
 
 ```typescript
 // GET /users?page=1
@@ -52,6 +52,31 @@ const removed = await api.users({ id: '123' }).delete()
 | `api.users.post(body)` | `POST /users` |
 | `api.users({ id }).get()` | `GET /users/:id` |
 | `api.users.find.post(body)` | `POST /users/find` |
+
+### 注意事项：路径段与动词同名
+
+路径里可能出现 `get` / `post` / `put` / `patch` / `delete` / `head` / `options` 这样的段名（例如 `POST /prices/delete`）。本库**不用** `$post` 之类前缀回避，约定是：
+
+1. 中间段即使叫 `delete`，也只是路径的一部分  
+2. **必须再写真正的 HTTP 动词**作为链末调用  
+
+```typescript
+// POST /prices/delete
+await api.prices.delete.post({ ids: ['1', '2'] })
+
+// GET /reports/export
+await api.reports.export.get({ format: 'csv' })
+
+// DELETE /prices/delete（路径末段与动词都是 delete）
+await api.prices.delete.delete({ ids: ['1'] })
+```
+
+| 易混写法 | 实际含义 |
+|----------|----------|
+| `api.prices.delete()` | `DELETE /prices`（`delete` 被当成动词） |
+| `api.prices.delete.post(...)` | `POST /prices/delete`（`delete` 是路径，`post` 是动词） |
+
+补全与类型已按「路径节点 / 方法定义」区分，上表第二种可以正常提示。若接口路径段必须叫 `delete` 等，记住：**路径段后面一定要再跟 `.get` / `.post` / …**。
 
 ## Go 风格错误处理
 
