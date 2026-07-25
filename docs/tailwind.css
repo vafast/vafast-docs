@@ -548,6 +548,21 @@ button.copy::after {
     } */
 }
 
+/* 宽表横向滚动，单元格不强制竖排换行 */
+.table-scroll {
+    @apply w-full max-w-full overflow-x-auto my-4;
+
+    table {
+        width: max-content;
+        min-width: 100%;
+    }
+
+    th,
+    td {
+        white-space: nowrap;
+    }
+}
+
 .md-table {
     @apply w-full max-w-full overflow-x-auto md:!table;
 

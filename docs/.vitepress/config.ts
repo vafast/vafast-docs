@@ -307,6 +307,10 @@ export default defineConfig({
                         link: '/api-client/overview'
                     },
                     {
+                        text: '对比',
+                        link: '/api-client/comparison'
+                    },
+                    {
                         text: '安装',
                         link: '/api-client/installation'
                     },

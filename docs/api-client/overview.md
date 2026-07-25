@@ -158,6 +158,7 @@ controller.abort()
 
 ## 相关链接
 
+- [对比](/api-client/comparison) — 与 tRPC / Eden / Hono / OpenAPI / Axios
 - [基础用法](/api-client/fetch)
 - [高级用法](/api-client/advanced) — 多租户、刷新队列、多服务、上传编排
 - [CLI 工具](/tools/cli)
