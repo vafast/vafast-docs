@@ -142,7 +142,7 @@ defineRoute({
 - jose 附带的 `iss` / `exp` / `iat` 等标准 claims 不会误杀业务 schema（会同时试「完整 payload」与「去掉标准 claims 后的业务字段」）
 
 ```typescript
-import { Type } from '@sinclair/typebox'
+import { Type } from 'vafast'
 import { jwt } from '@vafast/jwt'
 
 const Payload = Type.Object({
