@@ -1,988 +1,309 @@
 ---
-title: Swagger 中间件 - Vafast
+title: Swagger - Vafast
 ---
 
-# Swagger 中间件
+# Swagger
 
-该中间件为 [Vafast](https://github.com/vafastjs/vafast) 提供了完整的 Swagger/OpenAPI 文档生成和 UI 展示功能，支持 Scalar 和 Swagger UI 两种界面，让 API 文档更加专业和易用。
+`@vafast/swagger` 为 Vafast 提供 **OpenAPI 文档 UI** 与 **OpenAPI JSON** 端点。UI 可选 [Scalar](https://github.com/scalar/scalar)（默认）或经典 [Swagger UI](https://swagger.io/tools/swagger-ui/)。
+
+::: warning 不会自动扫描路由
+当前实现**只**响应配置的 `path`（UI 页面）与 `specPath`（JSON 规范）。规范内容完全来自你传入的 `documentation`（尤其是 `documentation.paths`），**不会**从 `defineRoute` 自动生成。
+:::
+
+## 先搞清几个概念（给新用户）
+
+### OpenAPI 文档长什么样？
+
+中间件最终产出一份 OpenAPI **3.0.3** JSON，结构固定为：
+
+```typescript
+{
+  openapi: '3.0.3',
+  info: { title, description, version },
+  paths: { /* 各接口 */ },
+  components: { /* 可复用 schema / 安全方案等 */ },
+  tags: [ /* 分组标签 */ ],
+}
+```
+
+### `documentation.info` 字段（拆开说明）
+
+| 字段 | 作用 | 缺省值（源码） |
+|------|------|----------------|
+| `info.title` | API 名称，显示在 UI 标题等处 | `'Vafast API'` |
+| `info.description` | 简短说明，介绍这套 API 做什么 | `'API documentation'` |
+| `info.version` | **你的 API 版本号**（不是 Swagger UI CDN 版本） | `'1.0.0'` |
+
+注意区分：
+
+- `documentation.info.version` → OpenAPI 里的 API 版本
+- 配置项 `version` → **Swagger UI** 的 `swagger-ui-dist` CDN 版本（默认 `'4.18.2'`）
+- `scalarVersion` → **Scalar** CDN 版本（默认 `'latest'`）
+
+### `paths` / `components` / `tags` 是什么？
+
+| 字段 | 白话 |
+|------|------|
+| **`paths`** | 核心：每个 URL 路径下有哪些 HTTP 方法、参数、响应。UI 里看到的接口列表就来自这里。**不写就空白。** |
+| **`components`** | 可复用零件：如 `schemas`（数据模型）、`securitySchemes`（Bearer / API Key 等）。在 path 里用 `$ref` 引用。 |
+| **`tags`** | 给接口分组的标签元数据（名称 + 可选描述）。各 operation 上的 `tags: ['users']` 与之对应，UI 会按组折叠。 |
+
+### `provider`：Scalar vs Swagger UI
+
+| `provider` | 体验 | 主要相关配置 |
+|------------|------|----------------|
+| **`'scalar'`**（默认） | 现代阅读体验，适合浏览与试调用 | `scalarVersion`、`scalarCDN`、`scalarConfig` |
+| **`'swagger-ui'`** | 经典 Swagger UI，「Try it out」习惯用户多 | `version`、`swaggerOptions`、`autoDarkMode` |
+
+两者都从相对路径 `./json` 拉取规范（相对 UI 页面路径）。自定义 `path` / `specPath` 时注意相对关系。
+
+### 哪些配置目前没用？
+
+类型 `VafastSwaggerConfig` 里仍有 `theme`、`excludeStaticFile`、`exclude`、`excludeMethods`、`excludeTags`，但 **`swagger()` 中间件主路径未用它们做换肤、扫描或过滤**（详见下方 API 表）。请以手写 `documentation` 为准。
 
 ## 安装
 
-安装命令：
 ```bash
 npm install @vafast/swagger
 ```
 
-## 基本用法
+## 快速开始
 
 ```typescript
-import { Server, defineRoute, defineRoutes } from 'vafast'
-import { swagger } from '@vafast/swagger'
-
-// 定义路由
-const routes = defineRoutes([
-  defineRoute({
-    method: 'GET',
-    path: '/api/',
-    handler: () => {
-      return { message: 'Hello API' }
-    }
-  })
-])
-
-// 创建服务器
-const server = new Server(routes)
-
-// 应用 Swagger 中间件
-server.use(swagger({
-  provider: 'scalar',
-  documentation: {
-    info: {
-      title: 'My API',
-      version: '1.0.0'
-    }
-  }
-}))
-
-// 导出 fetch 函数
-export default { fetch: server.fetch }
-```
-
-## 配置选项
-
-### VafastSwaggerConfig
-
-```typescript
-interface VafastSwaggerConfig<Path extends string = '/swagger'> {
-  /** 文档提供者，默认：'scalar' */
-  provider?: 'scalar' | 'swagger-ui'
-  
-  /** Scalar 版本，默认：'latest' */
-  scalarVersion?: string
-  
-  /** Scalar CDN 地址，默认：官方 CDN */
-  scalarCDN?: string
-  
-  /** Scalar 配置选项 */
-  scalarConfig?: Record<string, any>
-  
-  /** OpenAPI 文档配置 */
-  documentation?: OpenAPIDocumentation
-  
-  /** Swagger UI 版本，默认：'4.18.2' */
-  version?: string
-  
-  /** 是否排除静态文件，默认：true */
-  excludeStaticFile?: boolean
-  
-  /** 文档路径，默认：'/swagger' */
-  path?: Path
-  
-  /** OpenAPI 规范路径，默认：'${path}/json' */
-  specPath?: string
-  
-  /** 排除的路径或方法 */
-  exclude?: string | RegExp | (string | RegExp)[]
-  
-  /** Swagger UI 选项 */
-  swaggerOptions?: Record<string, any>
-  
-  /** 主题配置 */
-  theme?: string | { light: string; dark: string }
-  
-  /** 是否启用自动暗色模式，默认：true */
-  autoDarkMode?: boolean
-  
-  /** 排除的 HTTP 方法，默认：['OPTIONS'] */
-  excludeMethods?: string[]
-  
-  /** 排除的标签 */
-  excludeTags?: string[]
-}
-```
-
-### OpenAPIDocumentation
-
-```typescript
-interface OpenAPIDocumentation {
-  /** API 基本信息 */
-  info?: OpenAPIInfo
-  
-  /** API 标签 */
-  tags?: OpenAPITag[]
-  
-  /** 组件定义 */
-  components?: OpenAPIComponents
-  
-  /** API 路径定义 */
-  paths?: Record<string, any>
-}
-
-interface OpenAPIInfo {
-  title?: string
-  description?: string
-  version?: string
-}
-
-interface OpenAPITag {
-  name: string
-  description?: string
-}
-
-interface OpenAPISchema {
-  type: string
-  properties?: Record<string, any>
-  required?: string[]
-}
-
-interface OpenAPISecurityScheme {
-  type: string
-  scheme?: string
-  bearerFormat?: string
-  description?: string
-}
-
-interface OpenAPIComponents {
-  schemas?: Record<string, OpenAPISchema>
-  securitySchemes?: Record<string, OpenAPISecurityScheme>
-}
-```
-
-## 使用模式
-
-### 1. 基本 Scalar 文档
-
-```typescript
-import { Server, defineRoute, defineRoutes } from 'vafast'
+import { Server, defineRoute, defineRoutes, serve } from 'vafast'
 import { swagger } from '@vafast/swagger'
 
 const routes = defineRoutes([
   defineRoute({
     method: 'GET',
-    path: '/api/users',
-    handler: () => {
-      return { users: [] }
-    }
-  })
+    path: '/users',
+    handler: () => [{ id: 1, name: 'Ada' }],
+  }),
 ])
 
 const server = new Server(routes)
-server.use(swagger({
-  provider: 'scalar',
-  documentation: {
-    info: {
-      title: 'Vafast API',
-      description: 'A modern TypeScript web framework API',
-      version: '1.0.0'
-    },
-    tags: [
-      {
-        name: 'Users',
-        description: 'User management endpoints'
+
+server.use(
+  swagger({
+    path: '/swagger',
+    provider: 'scalar',
+    documentation: {
+      info: {
+        title: 'My API',
+        version: '1.0.0',
+        description: '示例 API',
       },
-      {
-        name: 'Auth',
-        description: 'Authentication endpoints'
-      }
-    ]
-  }
-}))
+      paths: {
+        '/users': {
+          get: {
+            summary: '用户列表',
+            responses: {
+              '200': {
+                description: 'OK',
+                content: {
+                  'application/json': {
+                    schema: {
+                      type: 'array',
+                      items: {
+                        type: 'object',
+                        properties: {
+                          id: { type: 'number' },
+                          name: { type: 'string' },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  }),
+)
 
-export default { fetch: server.fetch }
+serve({ fetch: server.fetch, port: 3000 })
 ```
 
-### 2. Swagger UI 文档
+- UI：`http://localhost:3000/swagger`
+- JSON：`http://localhost:3000/swagger/json`（默认 `specPath = ${path}/json`）
+
+## 用法
+
+### 手写完整 `documentation`（含 components 最小示例）
+
+路由增加后，必须同步维护 `paths`，否则 UI 里看不到：
 
 ```typescript
-import { Server, defineRoute, defineRoutes } from 'vafast'
-import { swagger } from '@vafast/swagger'
-
-const routes = defineRoutes([
-  defineRoute({
-    method: 'GET',
-    path: '/api/health',
-    handler: () => {
-      return { status: 'OK' }
-    }
-  })
-])
-
-const server = new Server(routes)
-server.use(swagger({
-  provider: 'swagger-ui',
-  version: '4.18.2',
-  documentation: {
-    info: {
-      title: 'Vafast API',
-      description: 'API documentation with Swagger UI',
-      version: '1.0.0'
-    }
+documentation: {
+  info: {
+    title: 'API',
+    description: '业务 API',
+    version: '1.0.0',
   },
+  tags: [{ name: 'users', description: '用户相关' }],
+  paths: {
+    '/users/{id}': {
+      get: {
+        tags: ['users'],
+        summary: '用户详情',
+        parameters: [
+          {
+            name: 'id',
+            in: 'path',
+            required: true,
+            schema: { type: 'string' },
+          },
+        ],
+        responses: {
+          '200': {
+            description: 'OK',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/User' },
+              },
+            },
+          },
+        },
+        security: [{ bearerAuth: [] }],
+      },
+    },
+  },
+  components: {
+    schemas: {
+      User: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+          name: { type: 'string' },
+        },
+        required: ['id'],
+      },
+    },
+    securitySchemes: {
+      bearerAuth: {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+      },
+    },
+  },
+}
+```
+
+源码里 `components` / `schemas` 结构较宽松（属性多为 `any`），上表是常见、可用的最小写法。
+
+### 切换 Swagger UI
+
+```typescript
+swagger({
+  provider: 'swagger-ui',
+  version: '4.18.2', // swagger-ui-dist CDN 版本
+  autoDarkMode: true,
   swaggerOptions: {
     persistAuthorization: true,
-    displayOperationId: true,
-    filter: true
   },
-  theme: 'https://unpkg.com/swagger-ui-dist@4.18.2/swagger-ui.css',
-  autoDarkMode: true
-}))
-
-export default { fetch: server.fetch }
+  documentation: { /* ... */ },
+})
 ```
 
-### 3. 自定义路径和配置
+### Scalar 自定义
 
 ```typescript
-import { Server, defineRoute, defineRoutes } from 'vafast'
-import { swagger } from '@vafast/swagger'
-
-const routes = defineRoutes([
-  defineRoute({
-    method: 'GET',
-    path: '/api/data',
-    handler: () => {
-      return { data: 'example' }
-    }
-  })
-])
-
-const server = new Server(routes)
-server.use(swagger({
+swagger({
   provider: 'scalar',
-  path: '/docs',                    // 自定义文档路径
-  specPath: '/docs/openapi.json',   // 自定义规范路径
-  scalarVersion: '1.0.0',           // 指定 Scalar 版本
-  scalarCDN: 'https://cdn.example.com/scalar', // 自定义 CDN
-  scalarConfig: {
-    theme: 'light',
-    search: true,
-    navigation: true
-  },
-  documentation: {
-    info: {
-      title: 'Custom API',
-      version: '2.0.0'
-    }
-  }
-}))
-
-export default { fetch: server.fetch }
-```
-
-### 4. 完整的 API 文档
-
-```typescript
-import { Server, defineRoute, defineRoutes } from 'vafast'
-import { swagger } from '@vafast/swagger'
-
-const swaggerMiddleware = swagger({
-    provider: 'scalar',
-    documentation: {
-        info: {
-            title: 'Complete API',
-            description: 'A comprehensive API with full documentation',
-            version: '1.0.0'
-        },
-        tags: [
-            {
-                name: 'Users',
-                description: 'User management operations'
-            },
-            {
-                name: 'Posts',
-                description: 'Blog post operations'
-            },
-            {
-                name: 'Auth',
-                description: 'Authentication and authorization'
-            }
-        ],
-        components: {
-            schemas: {
-                User: {
-                    type: 'object',
-                    properties: {
-                        id: { type: 'string', format: 'uuid' },
-                        username: { type: 'string', minLength: 3 },
-                        email: { type: 'string', format: 'email' },
-                        createdAt: { type: 'string', format: 'date-time' }
-                    },
-                    required: ['username', 'email']
-                },
-                Post: {
-                    type: 'object',
-                    properties: {
-                        id: { type: 'string', format: 'uuid' },
-                        title: { type: 'string', minLength: 1 },
-                        content: { type: 'string', minLength: 10 },
-                        authorId: { type: 'string', format: 'uuid' },
-                        published: { type: 'boolean', default: false }
-                    },
-                    required: ['title', 'content', 'authorId']
-                }
-            },
-            securitySchemes: {
-                BearerAuth: {
-                    type: 'http',
-                    scheme: 'bearer',
-                    bearerFormat: 'JWT',
-                    description: 'Enter your JWT token in the format: Bearer <token>'
-                },
-                ApiKeyAuth: {
-                    type: 'apiKey',
-                    in: 'header',
-                    name: 'X-API-Key',
-                    description: 'Enter your API key'
-                }
-            }
-        },
-        paths: {
-            '/api/users': {
-                get: {
-                    summary: 'Get all users',
-                    tags: ['Users'],
-                    responses: {
-                        '200': {
-                            description: 'List of users',
-                            content: {
-                                'application/json': {
-                                    schema: {
-                                        type: 'array',
-                                        items: { $ref: '#/components/schemas/User' }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                },
-                post: {
-                    summary: 'Create a new user',
-                    tags: ['Users'],
-                    requestBody: {
-                        required: true,
-                        content: {
-                            'application/json': {
-                                schema: { $ref: '#/components/schemas/User' }
-                            }
-                        }
-                    },
-                    responses: {
-                        '201': {
-                            description: 'User created successfully',
-                            content: {
-                                'application/json': {
-                                    schema: { $ref: '#/components/schemas/User' }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-})
-
-const routes = defineRoutes([
-  defineRoute({
-    method: 'GET',
-    path: '/api/users',
-    handler: () => {
-      return { users: [] }
-    }
-  }),
-  defineRoute({
-    method: 'POST',
-    path: '/api/users',
-    handler: async ({ body }) => {
-      return { ...body, id: 'generated-id' }
-    }
-  })
-])
-
-const server = new Server(routes)
-
-// 应用 Swagger 中间件
-server.use(swaggerMiddleware)
-
-export default { fetch: server.fetch }
-```
-
-### 5. 中间件集成
-
-```typescript
-import { Server, defineRoute, defineRoutes } from 'vafast'
-import { swagger } from '@vafast/swagger'
-
-// 创建 Swagger 中间件
-const swaggerMiddleware = swagger({
-    provider: 'scalar',
-    path: '/api-docs',
-    documentation: {
-        info: {
-            title: 'Middleware API',
-            version: '1.0.0'
-        }
-    }
-})
-
-// 定义路由
-const routes = defineRoutes([
-  defineRoute({
-    method: 'GET',
-    path: '/',
-    handler: () => {
-      return { message: 'API is running' }
-    }
-  }),
-  defineRoute({
-    method: 'GET',
-    path: '/api/status',
-    handler: () => {
-      return { status: 'healthy', timestamp: new Date().toISOString() }
-    }
-  })
-])
-
-const server = new Server(routes)
-
-// 应用 Swagger 中间件
-server.use(swaggerMiddleware)
-
-// 导出 fetch 函数
-export default { fetch: server.fetch }
-```
-
-## 完整示例
-
-```typescript
-import { Server, defineRoute, defineRoutes } from 'vafast'
-import { swagger } from '@vafast/swagger'
-
-// 创建 Swagger 中间件
-const swaggerMiddleware = swagger({
-    provider: 'scalar',
-    scalarVersion: 'latest',
-    scalarConfig: {
-        theme: 'light',
-        search: true,
-        navigation: true,
-        sidebar: true
-    },
-    documentation: {
-        info: {
-            title: 'Vafast Swagger Example',
-            description: 'A complete example of Vafast with Swagger documentation',
-            version: '0.8.1'
-        },
-        tags: [
-            {
-                name: 'Test',
-                description: 'Test endpoints for demonstration'
-            },
-            {
-                name: 'Users',
-                description: 'User management endpoints'
-            },
-            {
-                name: 'Files',
-                description: 'File upload and management'
-            }
-        ],
-        components: {
-            schemas: {
-                User: {
-                    type: 'object',
-                    properties: {
-                        username: { type: 'string', minLength: 3 },
-                        email: { type: 'string', format: 'email' },
-                        age: { type: 'number', minimum: 0 }
-                    },
-                    required: ['username', 'email']
-                },
-                ApiResponse: {
-                    type: 'object',
-                    properties: {
-                        success: { type: 'boolean' },
-                        message: { type: 'string' },
-                        data: { type: 'object' }
-                    }
-                }
-            },
-            securitySchemes: {
-                JwtAuth: {
-                    type: 'http',
-                    scheme: 'bearer',
-                    bearerFormat: 'JWT',
-                    description: 'Enter JWT Bearer token **_only_**'
-                },
-                ApiKeyAuth: {
-                    type: 'apiKey',
-                    in: 'header',
-                    name: 'X-API-Key',
-                    description: 'Enter your API key'
-                }
-            }
-        },
-        paths: {
-            '/api/test': {
-                get: {
-                    summary: 'Test endpoint',
-                    description: 'A simple test endpoint',
-                    tags: ['Test'],
-                    responses: {
-                        '200': {
-                            description: 'Successful response',
-                            content: {
-                                'application/json': {
-                                    schema: { $ref: '#/components/schemas/ApiResponse' }
-                                }
-                            }
-                        }
-                    }
-                }
-            },
-            '/api/users': {
-                get: {
-                    summary: 'Get all users',
-                    tags: ['Users'],
-                    security: [{ JwtAuth: [] }],
-                    responses: {
-                        '200': {
-                            description: 'List of users',
-                            content: {
-                                'application/json': {
-                                    schema: {
-                                        type: 'array',
-                                        items: { $ref: '#/components/schemas/User' }
-                                    }
-                                }
-                            }
-                        },
-                        '401': {
-                            description: 'Unauthorized'
-                        }
-                    }
-                },
-                post: {
-                    summary: 'Create a new user',
-                    tags: ['Users'],
-                    requestBody: {
-                        required: true,
-                        content: {
-                            'application/json': {
-                                schema: { $ref: '#/components/schemas/User' }
-                            }
-                        }
-                    },
-                    responses: {
-                        '201': {
-                            description: 'User created successfully',
-                            content: {
-                                'application/json': {
-                                    schema: { $ref: '#/components/schemas/User' }
-                                }
-                            }
-                        },
-                        '400': {
-                            description: 'Bad request'
-                        }
-                    }
-                }
-            }
-        }
-    },
-    swaggerOptions: {
-        persistAuthorization: true,
-        displayOperationId: true,
-        filter: true,
-        showExtensions: true
-    }
-})
-
-// 定义 API 路由
-const routes = defineRoutes([
-  defineRoute({
-    method: 'GET',
-    path: '/',
-    handler: () => {
-      return {
-        message: 'Vafast Swagger Example API',
-        version: '1.0.0',
-        documentation: '/swagger',
-        openapi: '/swagger/json'
-      }
-    }
-  }),
-  defineRoute({
-    method: 'GET',
-    path: '/api/test',
-    handler: () => {
-      return {
-        success: true,
-        message: 'Test endpoint working',
-        data: { timestamp: new Date().toISOString() }
-      }
-    }
-  }),
-  defineRoute({
-    method: 'GET',
-    path: '/api/users',
-    handler: () => {
-      return [
-        { username: 'john_doe', email: 'john@example.com', age: 30 },
-        { username: 'jane_smith', email: 'jane@example.com', age: 25 }
-      ]
-    }
-  }),
-  defineRoute({
-    method: 'POST',
-    path: '/api/users',
-    handler: async ({ body }) => {
-      return {
-        ...body,
-        id: `user_${Date.now()}`,
-        createdAt: new Date().toISOString()
-      }
-    }
-  }),
-  defineRoute({
-    method: 'GET',
-    path: '/api/health',
-    handler: () => {
-      return {
-        status: 'healthy',
-        uptime: process.uptime(),
-        timestamp: new Date().toISOString()
-      }
-    }
-  })
-])
-
-// 创建服务器
-const server = new Server(routes)
-
-// 应用 Swagger 中间件
-server.use(swaggerMiddleware)
-
-// 导出 fetch 函数
-export default { fetch: server.fetch }
-```
-
-console.log('Vafast Swagger Example Server 启动成功！')
-console.log('API 文档：/swagger')
-console.log('OpenAPI 规范：/swagger/json')
-console.log('健康检查：/api/health')
-```
-
-## 测试示例
-
-```typescript
-import { describe, expect, it } from 'bun:test'
-import { Server, defineRoute, defineRoutes } from 'vafast'
-import { swagger } from '@vafast/swagger'
-
-describe('Vafast Swagger Plugin', () => {
-    it('should create swagger middleware', () => {
-        const swaggerMiddleware = swagger({
-            provider: 'scalar',
-            documentation: {
-                info: {
-                    title: 'Test API',
-                    version: '1.0.0'
-                }
-            }
-        })
-
-        expect(swaggerMiddleware).toBeDefined()
-        expect(typeof swaggerMiddleware).toBe('function')
-    })
-
-    it('should serve Scalar documentation page', async () => {
-        const swaggerMiddleware = swagger({
-            provider: 'scalar',
-            path: '/docs'
-        })
-
-        const app = new Server(defineRoutes([
-          defineRoute({
-            method: 'GET',
-            path: '/',
-            handler: () => {
-              return 'Hello, API!'
-            }
-          })
-        ]))
-
-        // 应用中间件
-        app.use(swaggerMiddleware)
-
-        // 测试访问 Scalar 文档页面
-        const res = await app.fetch(new Request('http://localhost/docs'))
-        expect(res.status).toBe(200)
-        expect(res.headers.get('content-type')).toContain('text/html')
-
-        const html = await res.text()
-        expect(html).toContain('scalar')
-    })
-
-    it('should serve OpenAPI specification', async () => {
-        const swaggerMiddleware = swagger({
-            provider: 'scalar',
-            path: '/docs',
-            specPath: '/docs/json'
-        })
-
-        const app = new Server(defineRoutes([
-          defineRoute({
-            method: 'GET',
-            path: '/',
-            handler: () => {
-              return 'Hello, API!'
-            }
-          })
-        ]))
-
-        // 应用中间件
-        app.use(swaggerMiddleware)
-        const wrappedFetch = (req: Request) => {
-            return swaggerMiddleware(req, () => app.fetch(req))
-        }
-
-        // 测试访问 OpenAPI 规范
-        const res = await wrappedFetch(
-            new Request('http://localhost/docs/json')
-        )
-        expect(res.status).toBe(200)
-        expect(res.headers.get('content-type')).toContain('application/json')
-
-        const spec = await res.json()
-        expect(spec.openapi).toBe('3.0.3')
-        expect(spec.info.title).toBe('Vafast API')
-    })
-
-    it('should handle custom documentation info', async () => {
-        const swaggerMiddleware = swagger({
-            provider: 'scalar',
-            documentation: {
-                info: {
-                    title: 'Custom API',
-                    description: 'Custom API description',
-                    version: '2.0.0'
-                },
-                tags: [
-                    {
-                        name: 'Users',
-                        description: 'User management endpoints'
-                    }
-                ]
-            }
-        })
-
-        const app = new Server([])
-        const wrappedFetch = (req: Request) => {
-            return swaggerMiddleware(req, () => app.fetch(req))
-        }
-
-        const res = await wrappedFetch(
-            new Request('http://localhost/swagger/json')
-        )
-        const spec = await res.json()
-
-        expect(spec.info.title).toBe('Custom API')
-        expect(spec.info.description).toBe('Custom API description')
-        expect(spec.info.version).toBe('2.0.0')
-        expect(spec.tags).toHaveLength(1)
-        expect(spec.tags[0].name).toBe('Users')
-    })
-
-    it('should handle Swagger UI provider', async () => {
-        const swaggerMiddleware = swagger({
-            provider: 'swagger-ui',
-            version: '4.18.2'
-        })
-
-        const app = new Server([])
-        const wrappedFetch = (req: Request) => {
-            return swaggerMiddleware(req, () => app.fetch(req))
-        }
-
-        const res = await wrappedFetch(new Request('http://localhost/swagger'))
-        const html = await res.text()
-
-        expect(res.status).toBe(200)
-        expect(html).toContain('swagger-ui')
-        expect(html).toContain('4.18.2')
-    })
-
-    it('should pass through non-swagger requests', async () => {
-        const swaggerMiddleware = swagger({
-            provider: 'scalar'
-        })
-
-        const app = new Server(defineRoutes([
-            defineRoute({
-                method: 'GET',
-                path: '/api/data',
-                handler: () => {
-                    return { message: 'Data endpoint' }
-                }
-            })
-        ]))
-
-        // 应用中间件
-        app.use(swaggerMiddleware)
-
-        const res = await app.fetch(
-            new Request('http://localhost/api/data')
-        )
-        const data = await res.json()
-
-        expect(res.status).toBe(200)
-        expect(data.message).toBe('Data endpoint')
-    })
-
-    it('should handle custom path configuration', async () => {
-        const swaggerMiddleware = swagger({
-            provider: 'scalar',
-            path: '/custom-docs',
-            specPath: '/custom-docs/spec'
-        })
-
-        const app = new Server([])
-        const wrappedFetch = (req: Request) => {
-            return swaggerMiddleware(req, () => app.fetch(req))
-        }
-
-        // 测试自定义文档路径
-        const docsRes = await wrappedFetch(
-            new Request('http://localhost/custom-docs')
-        )
-        expect(docsRes.status).toBe(200)
-
-        // 测试自定义规范路径
-        const specRes = await wrappedFetch(
-            new Request('http://localhost/custom-docs/spec')
-        )
-        expect(specRes.status).toBe(200)
-        expect(specRes.headers.get('content-type')).toContain('application/json')
-    })
+  scalarVersion: 'latest',
+  scalarCDN: '', // 空则用 jsDelivr；可换成自建 URL
+  scalarConfig: { theme: 'default' },
+  documentation: { /* ... */ },
 })
 ```
 
-## 特性
+### 自定义路径
 
-- ✅ **双界面支持**: 支持 Scalar 和 Swagger UI 两种文档界面
-- ✅ **自动生成**: 自动生成 OpenAPI 3.0.3 规范
-- ✅ **灵活配置**: 丰富的配置选项和自定义支持
-- ✅ **中间件集成**: 无缝集成到 Vafast 应用
-- ✅ **类型安全**: 完整的 TypeScript 类型支持
-- ✅ **主题定制**: 支持自定义主题和暗色模式
-- ✅ **CDN 配置**: 支持自定义 CDN 地址
-- ✅ **路径配置**: 灵活的文档和规范路径配置
+```typescript
+swagger({
+  path: '/docs',
+  specPath: '/docs/openapi.json',
+  documentation: { paths: { /* ... */ } },
+})
+```
+
+## API
+
+### `swagger(config?)`
+
+```typescript
+swagger(config?: VafastSwaggerConfig): Middleware
+```
+
+中间件逻辑：
+
+1. `pathname === path` → 返回 UI HTML（`htmlResponse`）
+2. `pathname === specPath` → 返回 `createOpenAPISpec(documentation)` JSON
+3. 其它 → `next()`
+
+### `VafastSwaggerConfig`
+
+| 参数 | 类型 | 默认 | 说明 |
+|------|------|------|------|
+| `provider` | `'scalar' \| 'swagger-ui'` | `'scalar'` | UI 提供方 |
+| `path` | `string` | `'/swagger'` | UI 路径 |
+| `specPath` | `string` | `` `${path}/json` `` | OpenAPI JSON 路径 |
+| `documentation` | 见下表 | `{}` | **手写**规范片段 |
+| `scalarVersion` | `string` | `'latest'` | Scalar CDN 版本 |
+| `scalarCDN` | `string` | `''` | 自定义 Scalar script URL；空则用 jsDelivr |
+| `scalarConfig` | `Record<string, any>` | `{}` | 写入 Scalar `data-configuration` |
+| `version` | `string` | `'4.18.2'` | Swagger UI dist 版本 |
+| `swaggerOptions` | `Record<string, any>` | `{}` | 注入 `SwaggerUIBundle({...})`（函数类选项不支持） |
+| `autoDarkMode` | `boolean` | `true` | Swagger UI 暗色媒体查询 |
+
+### `documentation` 字段
+
+| 字段 | 说明 |
+|------|------|
+| `info.title` | API 标题；缺省 `'Vafast API'` |
+| `info.description` | API 描述；缺省 `'API documentation'` |
+| `info.version` | API 版本；缺省 `'1.0.0'` |
+| `paths` | OpenAPI paths（**需手写**）；缺省 `{}` |
+| `components` | 如 `schemas`、`securitySchemes`；缺省 `{}` |
+| `tags` | `{ name, description? }[]`；缺省 `[]` |
+
+### 配置了但当前未使用的选项
+
+类型里仍有以下字段，**当前 `swagger()` 实现未用于过滤、扫描或换肤**：
+
+| 参数 | 默认 | 说明 |
+|------|------|------|
+| `theme` | unpkg swagger-ui.css URL | 传入 `renderSwaggerUI` 形参但**未使用**；CSS 写死 unpkg |
+| `excludeStaticFile` | `true` | 未参与中间件分支逻辑 |
+| `exclude` | `[]` | 未用于排除 path |
+| `excludeMethods` | `['OPTIONS']` | 未用于过滤 methods |
+| `excludeTags` | `[]` | 未用于过滤 tags |
+
+请以手写 `documentation` 为准，不要假设这些选项会自动改规范。
 
 ## 最佳实践
 
-### 1. 选择合适的提供者
-
-```typescript
-// 现代、美观的界面，推荐用于生产环境
-const scalarMiddleware = swagger({
-    provider: 'scalar',
-    scalarVersion: 'latest'
-})
-
-// 传统、功能丰富的界面，适合开发调试
-const swaggerUIMiddleware = swagger({
-    provider: 'swagger-ui',
-    version: '4.18.2'
-})
-```
-
-### 2. 结构化文档组织
-
-```typescript
-const swaggerMiddleware = swagger({
-    provider: 'scalar',
-    documentation: {
-        info: {
-            title: 'API Name',
-            description: 'Clear API description',
-            version: '1.0.0'
-        },
-        tags: [
-            { name: 'Users', description: 'User management' },
-            { name: 'Auth', description: 'Authentication' }
-        ],
-        components: {
-            schemas: {
-                // 定义可重用的数据模型
-            },
-            securitySchemes: {
-                // 定义安全方案
-            }
-        }
-    }
-})
-```
-
-### 3. 安全配置
-
-```typescript
-const swaggerMiddleware = swagger({
-    provider: 'scalar',
-    documentation: {
-        components: {
-            securitySchemes: {
-                BearerAuth: {
-                    type: 'http',
-                    scheme: 'bearer',
-                    bearerFormat: 'JWT'
-                }
-            }
-        }
-    }
-})
-```
-
-### 4. 生产环境配置
-
-```typescript
-const swaggerMiddleware = swagger({
-    provider: 'scalar',
-    path: '/api/docs',           // 使用子路径
-    excludeStaticFile: true,      // 排除静态文件
-    scalarCDN: 'https://cdn.example.com/scalar', // 使用自己的 CDN
-    documentation: {
-        info: {
-            title: 'Production API',
-            version: process.env.API_VERSION || '1.0.0'
-        }
-    }
-})
-```
+1. 把 `documentation` 抽到独立模块（如 `openapi.ts`），与路由变更一起 review
+2. 需要从代码生成 OpenAPI 时，另见 [OpenAPI 集成](/integrations/openapi) 或自建生成器，再把结果传入 `documentation`
+3. 生产可把 UI 限内网，或仅暴露 `specPath` 给网关聚合
+4. Scalar 适合现代阅读；需要经典 Try-it-out 时用 `swagger-ui`
+5. `components.schemas` + `$ref` 避免在每个 path 里重复贴同一份模型
 
 ## 注意事项
 
-1. **路径冲突**: 确保 Swagger 路径不与 API 路由冲突
-2. **安全考虑**: 生产环境建议使用子路径，避免暴露在根路径
-3. **CDN 配置**: 生产环境建议使用自己的 CDN 地址
-4. **版本管理**: 保持 Swagger UI 和 Scalar 版本更新
-5. **文档维护**: 及时更新 API 文档以保持同步
-6. **性能影响**: 中间件会拦截所有请求，注意性能影响
-7. **类型定义**: 充分利用 TypeScript 类型来生成准确的文档
-
-## 版本信息
-
-- **当前版本**: 0.0.1
-- **Vafast 兼容性**: >= 0.1.12
-- **OpenAPI 版本**: 3.0.3
-- **支持界面**: Scalar (最新版本) + Swagger UI (4.18.2)
+- **不会**自动发现 `defineRoute`；漏写 `paths` = UI 空白
+- `theme` / `exclude*` / `excludeStaticFile` 在中间件路径上基本无效
+- UI 通过相对路径 `./json` 拉规范；自定义 `path` 时注意与 `specPath` 的相对关系，必要时显式设 `specPath`
+- CDN 依赖外网（unpkg / jsDelivr）；内网需自备静态资源并改 `scalarCDN`（Scalar）。Swagger UI 的 CSS/JS URL 当前写死 unpkg，内网需自行改源码或反代
 
 ## 相关链接
 
-- [OpenAPI 规范](https://swagger.io/specification/)
-- [Scalar 官方文档](https://docs.scalar.com/)
-- [Swagger UI 官方文档](https://swagger.io/tools/swagger-ui/)
-- [Vafast 官方文档](https://vafast.dev)
-- [GitHub 仓库](https://github.com/vafastjs/vafast-swagger)
-- [问题反馈](https://github.com/vafastjs/vafast-swagger/issues)
+- [OpenAPI](/integrations/openapi)
+- [路由](/routing)
+- [中间件概览](/middleware)
+- [OpenAPI 3.0.3](https://swagger.io/specification/v3)
+- [Scalar](https://github.com/scalar/scalar)
+- [Swagger UI](https://github.com/swagger-api/swagger-ui)

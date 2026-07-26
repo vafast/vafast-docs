@@ -2,859 +2,254 @@
 title: Rate Limit 中间件 - Vafast
 ---
 
-# Rate Limit 中间件
+# Rate Limit
 
-该中间件为 [Vafast](https://github.com/vafastjs/vafast) 提供了灵活的速率限制功能，保护你的 API 免受滥用和 DDoS 攻击。
+`@vafast/rate-limit` 按客户端 **key** 限制请求频率。每个 key 在时间窗口内最多允许 `max` 次请求；超限返回 **429**，并可写入 `RateLimit-*` / `Retry-After` 响应头。
+
+## 先搞清几个概念（给新用户）
+
+### 限流 key 是什么？
+
+中间件不会「按连接」或「按路由」天然限流，而是把每次请求映射成一个字符串 key，再在 `context`（默认内存表）里对该 key 计数。
+
+默认 key 来自客户端 IP 相关请求头（见下方顺序）。反代后若头不可信，或你想按用户 / API Key 限流，应自定义 `generator`。
+
+### `skip` 语义（务必记清）
+
+| `skip` 返回值 | 行为 |
+|---------------|------|
+| **`true`** | **跳过**限流：不生成计数（若尚未生成）、不递增、不写限流头 |
+| **`false`** | **应用**限流：生成 key（若需要）、递增、可能 429 |
+
+默认 `skip: () => false`，表示对所有请求都限流。
+
+`skip.length` 会影响何时生成 key：
+
+- `skip.length < 2`（只接收 `req`）：先 `skip(req)`；未跳过再 `generator`
+- `skip.length >= 2`（接收 `req, key`）：先 `generator`，再 `skip(req, key)`
+
+这样「仅按路径跳过」时可避免无谓的 key 计算；「按 key 决定是否跳过」时则先有 key。
+
+### 计数与超限判定
+
+流程是 **先 `increment`，再判断**：
+
+```text
+current >= max + 1  →  429
+```
+
+例如 `max: 10` 时，第 11 次请求会被拒绝。窗口长度由 `duration`（毫秒）决定；`Retry-After` 约为 `ceil(duration / 1000)` 秒。
+
+### 默认内存存储与多实例
+
+`DefaultContext` 使用进程内 LRU 计数。多进程 / 多副本部署时，**各实例计数互不相通**，全局 QPS 上限大约是 `max × 实例数`。需要集群级限流时，实现自定义 `Context`（如 Redis）并传入 `context` 选项。
 
 ## 安装
 
-安装命令：
 ```bash
 npm install @vafast/rate-limit
 ```
 
-## 基本用法
+## 快速开始
 
 ```typescript
-import { Server, defineRoute, defineRoutes } from 'vafast'
+import { Server, defineRoute, defineRoutes, json, serve } from 'vafast'
 import { rateLimit } from '@vafast/rate-limit'
 
-// 创建速率限制中间件
-const rateLimitMiddleware = rateLimit({
-  duration: 60000, // 1分钟
-  max: 5, // 最多5个请求
-  errorResponse: 'Rate limit exceeded. Please try again later.',
-  headers: true,
-  skip: (req) => {
-    // 跳过健康检查请求
-    return req.url.includes('/health')
-  }
-})
-
-// 定义路由
 const routes = defineRoutes([
   defineRoute({
     method: 'GET',
     path: '/',
-    middleware: [rateLimitMiddleware],
-    handler: () => {
-      return 'Hello, Vafast with Rate Limiting!'
-    }
+    handler: () => json({ ok: true }),
   }),
-  defineRoute({
-    method: 'GET',
-    path: '/health',
-    handler: () => {
-      return { status: 'OK', timestamp: new Date().toISOString() }
-    }
-  }),
-  defineRoute({
-    method: 'POST',
-    path: '/api/data',
-    middleware: [rateLimitMiddleware],
-    handler: () => {
-      return { message: 'Data created successfully' }
-    }
-  })
-])
-
-// 创建服务器
-const server = new Server(routes)
-
-// 导出 fetch 函数
-export default { fetch: server.fetch }
-```
-
-## 配置选项
-
-### Options
-
-```typescript
-interface Options {
-  /** 速率限制的时间窗口（毫秒），默认：60000ms (1分钟) */
-  duration: number
-  
-  /** 在指定时间窗口内允许的最大请求数，默认：10 */
-  max: number
-  
-  /** 当达到速率限制时的错误响应，可以是字符串、Response 对象或 Error 对象 */
-  errorResponse: string | Response | Error
-  
-  /** 速率限制的作用域（保持兼容性，在 vafast 中未使用） */
-  scoping: 'global' | 'scoped'
-  
-  /** 是否在请求失败时也计入速率限制，默认：false */
-  countFailedRequest: boolean
-  
-  /** 生成客户端标识密钥的函数 */
-  generator: Generator<any>
-  
-  /** 存储请求计数的上下文对象 */
-  context: Context
-  
-  /** 跳过速率限制的函数，返回 true 时跳过计数 */
-  skip: (req: Request, key?: string) => boolean | Promise<boolean>
-  
-  /** 注入服务器实例到生成器函数的显式方式（仅作为最后手段使用） */
-  injectServer?: () => any | null
-  
-  /** 是否让中间件控制 RateLimit-* 头部，默认：true */
-  headers: boolean
-}
-```
-
-### 默认选项
-
-```typescript
-const defaultOptions = {
-  duration: 60000,        // 1分钟
-  max: 10,               // 最多10个请求
-  errorResponse: 'rate-limit reached',
-  scoping: 'global',
-  countFailedRequest: false,
-  generator: defaultKeyGenerator,  // 基于 IP 地址的默认生成器
-  headers: true,
-  skip: () => false,     // 默认不跳过任何请求
-}
-```
-
-## 使用模式
-
-### 1. 基本速率限制
-
-```typescript
-import { Server, defineRoute, defineRoutes } from 'vafast'
-import { rateLimit } from '@vafast/rate-limit'
-
-const rateLimitMiddleware = rateLimit({
-  duration: 60000,  // 1分钟
-  max: 10,         // 最多10个请求
-  errorResponse: 'Too many requests. Please try again later.',
-  headers: true
-})
-
-const routes = defineRoutes([
-  defineRoute({
-    method: 'GET',
-    path: '/api/users',
-    middleware: [rateLimitMiddleware],
-    handler: () => {
-      return { users: ['Alice', 'Bob', 'Charlie'] }
-    }
-  }),
-  defineRoute({
-    method: 'POST',
-    path: '/api/users',
-    middleware: [rateLimitMiddleware],
-    handler: async ({ req }) => {
-      const body = await req.json()
-      return { message: 'User created', user: body }
-    }
-  })
 ])
 
 const server = new Server(routes)
-
-export default { fetch: server.fetch }
-```
-
-### 2. 自定义密钥生成器
-
-```typescript
-import { Server, defineRoute, defineRoutes } from 'vafast'
-import { rateLimit } from '@vafast/rate-limit'
-import type { Generator } from '@vafast/rate-limit'
-
-// 基于用户 ID 的密钥生成器
-const userBasedGenerator: Generator<{ userId: string }> = async (req, server, { userId }) => {
-  // 从请求头或查询参数获取用户 ID
-  const authHeader = req.headers.get('authorization')
-  if (authHeader) {
-    // 这里应该验证 JWT 令牌并提取用户 ID
-    // 为了演示，我们使用一个简单的实现
-    return `user:${userId || 'anonymous'}`
-  }
-  
-  // 如果没有认证，使用 IP 地址
-  const clientIp = req.headers.get('x-real-ip') || 
-                   req.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
-                   'unknown'
-  
-  return `ip:${clientIp}`
-}
-
-const rateLimitMiddleware = rateLimit({
-  duration: 300000,  // 5分钟
-  max: 100,         // 每个用户最多100个请求
-  generator: userBasedGenerator,
-  errorResponse: 'User rate limit exceeded',
-  headers: true
-})
-
-const routes = defineRoutes([
-  defineRoute({
-    method: 'GET',
-    path: '/api/profile',
-    middleware: [rateLimitMiddleware],
-    handler: () => {
-      return { message: 'User profile' }
-    }
-  })
-])
-
-const server = new Server(routes)
-
-export default { fetch: server.fetch }
-```
-
-### 3. 条件跳过
-
-```typescript
-import { Server, defineRoute, defineRoutes } from 'vafast'
-import { rateLimit } from '@vafast/rate-limit'
-
-const rateLimitMiddleware = rateLimit({
-  duration: 60000,
-  max: 20,
-  errorResponse: 'Rate limit exceeded',
-  headers: true,
-  skip: (req) => {
-    const url = new URL(req.url)
-    
-    // 跳过健康检查
-    if (url.pathname === '/health') return true
-    
-    // 跳过静态资源
-    if (url.pathname.startsWith('/static/')) return true
-    
-    // 跳过管理员 IP
-    const clientIp = req.headers.get('x-real-ip')
-    if (clientIp === '192.168.1.100') return true
-    
-    // 跳过特定用户代理
-    const userAgent = req.headers.get('user-agent')
-    if (userAgent?.includes('GoogleBot')) return true
-    
-    return false
-  }
-})
-
-const routes = defineRoutes([
-  defineRoute({
-    method: 'GET',
-    path: '/health',
-    handler: () => {
-      return { status: 'OK', timestamp: new Date().toISOString() }
-    }
+server.use(
+  rateLimit({
+    max: 100,
+    duration: 60_000,
   }),
-  defineRoute({
-    method: 'GET',
-    path: '/api/data',
-    middleware: [rateLimitMiddleware],
-    handler: () => {
-      return { data: 'Protected data' }
-    }
-  })
-])
-
-const server = new Server(routes)
-
-export default { fetch: server.fetch }
-```
-```
-
-### 4. 多实例速率限制
-
-```typescript
-import { Server, defineRoute, defineRoutes } from 'vafast'
-import { rateLimit } from '@vafast/rate-limit'
-import type { Generator } from '@vafast/rate-limit'
-
-// 自定义密钥生成器，基于 IP 地址
-const keyGenerator: Generator<{ ip: string }> = async (req, server, { ip }) => {
-  const clientIp = req.headers.get('x-real-ip') || 
-                   req.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
-                   'unknown'
-  
-  // 使用 IP 地址生成哈希作为密钥
-  return Bun.hash(JSON.stringify(clientIp)).toString()
-}
-
-// 创建第一个实例的速率限制中间件
-const aInstanceRateLimit = rateLimit({
-  scoping: 'scoped',
-  duration: 200 * 1000, // 200秒
-  max: 10,
-  generator: keyGenerator,
-  errorResponse: 'Instance A rate limit exceeded',
-  headers: true
-})
-
-// 创建第二个实例的速率限制中间件
-const bInstanceRateLimit = rateLimit({
-  scoping: 'scoped',
-  duration: 100 * 1000, // 100秒
-  max: 5,
-  generator: keyGenerator,
-  errorResponse: 'Instance B rate limit exceeded',
-  headers: true
-})
-
-// 定义路由
-const routes = defineRoutes([
-  defineRoute({
-    method: 'GET',
-    path: '/a',
-    middleware: [aInstanceRateLimit],
-    handler: () => {
-      return 'Instance A - Rate limited to 10 requests per 200 seconds'
-    }
-  }),
-  defineRoute({
-    method: 'GET',
-    path: '/b',
-    middleware: [bInstanceRateLimit],
-    handler: () => {
-      return 'Instance B - Rate limited to 5 requests per 100 seconds'
-    }
-  }),
-  defineRoute({
-    method: 'GET',
-    path: '/',
-    handler: () => {
-      return 'Main application - No rate limiting'
-    }
-  }),
-  defineRoute({
-    method: 'GET',
-    path: '/status',
-    handler: () => {
-      return { 
-        message: 'Application status',
-        instances: ['A', 'B'],
-        timestamp: new Date().toISOString()
-      }
-    }
-  })
-])
-
-// 创建服务器
-const server = new Server(routes)
-
-// 导出 fetch 函数
-export default { fetch: server.fetch }
-```
-
-### 5. 自定义错误响应
-
-```typescript
-import { Server, defineRoute, defineRoutes } from 'vafast'
-import { rateLimit } from '@vafast/rate-limit'
-
-// 自定义错误响应
-const customErrorResponse = new Response(
-  JSON.stringify({
-    error: 'Rate limit exceeded',
-    message: 'You have exceeded the rate limit. Please try again later.',
-    retryAfter: 60,
-    code: 'RATE_LIMIT_EXCEEDED'
-  }),
-  {
-    status: 429,
-    statusText: 'Too Many Requests',
-    headers: {
-      'Content-Type': 'application/json'
-    }
-  }
 )
-
-const rateLimitMiddleware = rateLimit({
-  duration: 60000,
-  max: 5,
-  errorResponse: customErrorResponse,
-  headers: true
-})
-
-const routes = defineRoutes([
-  defineRoute({
-    method: 'GET',
-    path: '/api/sensitive',
-    middleware: [rateLimitMiddleware],
-    handler: () => {
-      return { message: 'Sensitive data' }
-    }
-  })
-])
-
-const server = new Server(routes)
-
-export default { fetch: server.fetch }
+serve({ fetch: server.fetch, port: 3000 })
 ```
 
-## 完整示例
+## 用法
+
+### 全局限流
 
 ```typescript
-import { Server, defineRoute, defineRoutes } from 'vafast'
-import { rateLimit } from '@vafast/rate-limit'
-import type { Generator } from '@vafast/rate-limit'
+server.use(
+  rateLimit({
+    max: 100,
+    duration: 60_000,
+  }),
+)
+```
 
-// 自定义密钥生成器
-const customGenerator: Generator<{ userId?: string }> = async (req, server, { userId }) => {
-  // 优先使用用户 ID
-  if (userId) {
-    return `user:${userId}`
-  }
-  
-  // 尝试从 JWT 令牌中获取用户 ID
-  const authHeader = req.headers.get('authorization')
-  if (authHeader?.startsWith('Bearer ')) {
-    try {
-      // 这里应该验证 JWT 令牌
-      // 为了演示，我们使用一个简单的实现
-      const token = authHeader.substring(7)
-      // const decoded = jwt.verify(token, secret)
-      // return `user:${decoded.userId}`
-    } catch (error) {
-      // 令牌无效，继续使用 IP
-    }
-  }
-  
-  // 使用 IP 地址作为备用
-  const clientIp = req.headers.get('x-real-ip') || 
-                   req.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
-                   req.headers.get('cf-connecting-ip') ||
-                   'unknown'
-  
-  return `ip:${clientIp}`
+### 单路由限流
+
+```typescript
+defineRoute({
+  method: 'POST',
+  path: '/login',
+  middleware: [rateLimit({ max: 10, duration: 60_000 })],
+  handler: () => json({ ok: true }),
+})
+```
+
+### 跳过探活等路径
+
+`skip` 返回 **`true` 表示跳过**计数与限流：
+
+```typescript
+server.use(
+  rateLimit({
+    max: 60,
+    duration: 60_000,
+    skip: (req) => {
+      const path = new URL(req.url).pathname
+      return path === '/' || path === '/health'
+    },
+  }),
+)
+```
+
+### 自定义限流 key
+
+```typescript
+rateLimit({
+  max: 30,
+  duration: 60_000,
+  generator: (req) =>
+    req.headers.get('authorization') ??
+    req.headers.get('x-forwarded-for') ??
+    'anonymous',
+})
+```
+
+### 自定义超限响应（`errorResponse` 三种形态）
+
+| 类型 | 行为 |
+|------|------|
+| `string` | 以 **429** 文本响应返回该字符串（`text(...)`）；可附带限流头 |
+| `Response` | `clone()` 后返回；若 `headers: true` 会把 `RateLimit-*` / `Retry-After` 写到 clone 上 |
+| `Error` | **抛出**该 Error（由上层错误处理接管） |
+| 其它非上述类型 | 回落为文本 `'Too Many Requests'`，状态 429 |
+
+```typescript
+import { err } from 'vafast'
+
+rateLimit({
+  max: 5,
+  duration: 60_000,
+  errorResponse: new Response(JSON.stringify({ error: 'Too Many Requests' }), {
+    status: 429,
+    headers: { 'Content-Type': 'application/json' },
+  }),
+  // 或抛错：errorResponse: err('Too Many Requests', 429)
+  // 或纯文本：errorResponse: 'rate-limit reached'
+})
+```
+
+### 自定义 `Context`（存储）
+
+需要 Redis 等外部存储时，实现 `Context` 接口并传入：
+
+| 方法 | 说明 |
+|------|------|
+| `init(options)` | 中间件创建时调用；可读取 `duration` / `max` 等（不含 `context` 自身） |
+| `increment(key)` | 计数 +1，返回 `{ count, nextReset }` |
+| `decrement(key)` | 计数 -1；`countFailedRequest: false` 且下游抛错时会调用 |
+| `reset(key?)` | 重置某个 key，或不传则清空全部 |
+| `kill()` | 进程结束时的清理钩子 |
+
+```typescript
+import type { Context } from '@vafast/rate-limit'
+import { rateLimit } from '@vafast/rate-limit'
+
+const redisContext: Context = {
+  init() { /* ... */ },
+  async increment(key) { /* return { count, nextReset } */ },
+  async decrement(key) { /* ... */ },
+  async reset(key) { /* ... */ },
+  async kill() { /* ... */ },
 }
 
-// 创建不同级别的速率限制中间件
-const strictRateLimit = rateLimit({
-  duration: 60000,  // 1分钟
-  max: 5,          // 最多5个请求
-  generator: customGenerator,
-  errorResponse: 'Strict rate limit exceeded. Please wait before making more requests.',
-  headers: true,
-  skip: (req) => {
-    // 跳过健康检查和状态端点
-    const url = new URL(req.url)
-    return url.pathname === '/health' || url.pathname === '/status'
-  }
-})
-
-const moderateRateLimit = rateLimit({
-  duration: 300000,  // 5分钟
-  max: 50,          // 最多50个请求
-  generator: customGenerator,
-  errorResponse: 'Moderate rate limit exceeded. Please reduce your request frequency.',
-  headers: true,
-  skip: (req) => {
-    // 跳过健康检查、状态端点和静态资源
-    const url = new URL(req.url)
-    return url.pathname === '/health' || 
-           url.pathname === '/status' || 
-           url.pathname.startsWith('/static/')
-  }
-})
-
-const lenientRateLimit = rateLimit({
-  duration: 3600000,  // 1小时
-  max: 1000,         // 最多1000个请求
-  generator: customGenerator,
-  errorResponse: 'Lenient rate limit exceeded. Please contact support if you need higher limits.',
-  headers: true,
-  skip: (req) => {
-    // 只跳过健康检查
-    const url = new URL(req.url)
-    return url.pathname === '/health'
-  }
-})
-
-// 定义路由
-const routes = [
-  {
-    method: 'GET',
-    path: '/',
-    handler: () => {
-      return {
-        message: 'Vafast Rate Limiting API',
-        version: '1.0.0',
-        endpoints: [
-          'GET /health - 健康检查（无限制）',
-          'GET /status - 状态信息（无限制）',
-          'GET /api/public - 公开 API（宽松限制）',
-          'GET /api/user - 用户 API（中等限制）',
-          'POST /api/admin - 管理 API（严格限制）',
-          'GET /static/* - 静态资源（无限制）'
-        ]
-      }
-    }
-  }),
-  defineRoute({
-    method: 'GET',
-    path: '/health',
-    handler: () => {
-      return {
-        status: 'healthy',
-        timestamp: new Date().toISOString(),
-        uptime: process.uptime()
-      }
-    }
-  }),
-  defineRoute({
-    method: 'GET',
-    path: '/status',
-    handler: () => {
-      return {
-        message: 'System status',
-        timestamp: new Date().toISOString(),
-        version: '1.0.0'
-      }
-    }
-  }),
-  defineRoute({
-    method: 'GET',
-    path: '/api/public',
-    middleware: [lenientRateLimit],
-    handler: () => {
-      return {
-        message: 'Public API endpoint',
-        data: 'This endpoint has lenient rate limiting (1000 requests per hour)',
-        timestamp: new Date().toISOString()
-      }
-    }
-  }),
-  defineRoute({
-    method: 'GET',
-    path: '/api/user',
-    middleware: [moderateRateLimit],
-    handler: () => {
-      return {
-        message: 'User API endpoint',
-        data: 'This endpoint has moderate rate limiting (50 requests per 5 minutes)',
-        user: {
-          id: 'user123',
-          name: 'John Doe',
-          email: 'john@example.com'
-        },
-        timestamp: new Date().toISOString()
-      }
-    }
-  }),
-  defineRoute({
-    method: 'POST',
-    path: '/api/admin',
-    middleware: [strictRateLimit],
-    handler: async ({ req }) => {
-      const body = await req.json()
-      
-      return {
-        message: 'Admin API endpoint',
-        data: 'This endpoint has strict rate limiting (5 requests per minute)',
-        received: body,
-        timestamp: new Date().toISOString()
-      }
-    }
-  }),
-  defineRoute({
-    method: 'GET',
-    path: '/static/:file',
-    handler: ({ params }) => {
-      return {
-        message: 'Static file endpoint',
-        file: params.file,
-        data: 'This endpoint has no rate limiting',
-        timestamp: new Date().toISOString()
-      }
-    }
-  })
-])
-
-// 创建服务器
-const server = new Server(routes)
-
-// 导出 fetch 函数
-export default { fetch: server.fetch }
+rateLimit({ max: 100, duration: 60_000, context: redisContext })
 ```
 
-console.log('Vafast Rate Limiting API 服务器启动成功！')
-console.log('不同端点应用了不同级别的速率限制')
-console.log('管理 API：5 请求/分钟')
-console.log('👤 用户 API：50 请求/5分钟')
-console.log('公开 API：1000 请求/小时')
-console.log('✅ 健康检查和状态端点无限制')
-```
+## API
 
-## 测试示例
+### 导出
 
-```typescript
-import { describe, expect, it } from 'bun:test'
-import { Server, defineRoute, defineRoutes } from 'vafast'
-import { rateLimit } from '@vafast/rate-limit'
+| 导出 | 说明 |
+|------|------|
+| `rateLimit(options?)` | 主入口，返回中间件 |
+| `DefaultContext` | 默认内存计数存储（LRU，构造参数 `maxSize` 默认 5000） |
+| `defaultOptions` | 默认配置常量 |
+| `Options` / `Context` / `Generator` | 相关类型 |
 
-describe('Vafast Rate Limit Plugin', () => {
-  it('should create rate limit middleware', () => {
-    const rateLimitMiddleware = rateLimit({
-      duration: 60000,
-      max: 5,
-      errorResponse: 'Rate limit exceeded',
-      headers: true
-    })
-    
-    expect(rateLimitMiddleware).toBeDefined()
-    expect(typeof rateLimitMiddleware).toBe('function')
-  })
+### `rateLimit(options?: Partial<Options>)`
 
-  it('should allow requests within rate limit', async () => {
-    const app = new Server(defineRoutes([
-      defineRoute({
-        method: 'GET',
-        path: '/',
-        middleware: [rateLimit({
-          duration: 60000,
-          max: 3,
-          headers: true
-        })],
-        handler: () => {
-          return 'Hello, Rate Limited!'
-        }
-      })
-    ]))
+| 参数 | 类型 | 默认 | 说明 |
+|------|------|------|------|
+| `duration` | `number` | `60000` | 计数窗口（毫秒）；也用于 `Retry-After` |
+| `max` | `number` | `10` | 窗口内最大请求数 |
+| `errorResponse` | `string \| Response \| Error` | `'rate-limit reached'` | 超限响应，见上节三种形态 |
+| `countFailedRequest` | `boolean` | `false` | `false` 时下游 **抛错** 会 `decrement` 退还计数 |
+| `generator` | `(req, server, derived) => string \| Promise<string>` | `defaultKeyGenerator` | 限流 key |
+| `context` | `Context` | `new DefaultContext()` | 计数存储 |
+| `skip` | `(req, key?) => boolean \| Promise<boolean>` | `() => false` | 返回 **`true` 跳过**限流 |
+| `headers` | `boolean` | `true` | 是否写 `RateLimit-*` / `Retry-After` |
+| `injectServer` | `() => any` | — | 传给 `generator` 的 server；一般不需要 |
+| `scoping` | `'global' \| 'scoped'` | `'global'` | **兼容字段，当前实现未使用** |
 
-    // 前3个请求应该成功
-    for (let i = 0; i < 3; i++) {
-      const res = await app.fetch(new Request('http://localhost/'))
-      expect(res.status).toBe(200)
-      const data = await res.text()
-      expect(data).toBe('Hello, Rate Limited!')
-      
-      // 检查速率限制头部
-      expect(res.headers.get('RateLimit-Limit')).toBe('3')
-      expect(res.headers.get('RateLimit-Remaining')).toBe(String(2 - i))
-      expect(res.headers.get('RateLimit-Reset')).toBeDefined()
-    }
-  })
+### 默认 `generator` 请求头顺序
 
-  it('should block requests when rate limit exceeded', async () => {
-    const app = new Server(defineRoutes([
-      defineRoute({
-        method: 'GET',
-        path: '/',
-        middleware: [rateLimit({
-          duration: 60000,
-          max: 2,
-          errorResponse: 'Too many requests',
-          headers: true
-        })],
-        handler: () => {
-          return 'Hello, Rate Limited!'
-        }
-      })
-    ]))
+`defaultKeyGenerator` 按以下顺序取客户端地址，**命中即返回**：
 
-    // 前2个请求应该成功
-    for (let i = 0; i < 2; i++) {
-      const res = await app.fetch(new Request('http://localhost/'))
-      expect(res.status).toBe(200)
-    }
+1. `x-real-ip`
+2. `x-forwarded-for`（取逗号分隔的 **第一个**，并 `trim`）
+3. `cf-connecting-ip`
+4. `x-client-ip`
 
-    // 第3个请求应该被阻止
-    const blockedRes = await app.fetch(new Request('http://localhost/'))
-    expect(blockedRes.status).toBe(429)
-    const errorData = await blockedRes.text()
-    expect(errorData).toBe('Too many requests')
-    
-    // 检查错误响应头部
-    expect(blockedRes.headers.get('RateLimit-Limit')).toBe('2')
-    expect(blockedRes.headers.get('RateLimit-Remaining')).toBe('0')
-    expect(blockedRes.headers.get('Retry-After')).toBeDefined()
-  })
+若全部缺失：回退为 `ua:${user-agent || 'unknown'}`，并 `console.warn`。
 
-  it('should skip rate limiting when skip function returns true', async () => {
-    const app = new Server(defineRoutes([
-      defineRoute({
-        method: 'GET',
-        path: '/health',
-        middleware: [rateLimit({
-          duration: 60000,
-          max: 1,
-          headers: true,
-          skip: (req) => req.url.includes('/health')
-        })],
-        handler: () => {
-          return 'Health check'
-        }
-      })
-    ]))
+`request` 为 `undefined` 时返回空字符串并告警。
 
-    // 健康检查请求应该被跳过，不应用速率限制
-    const res = await app.fetch(new Request('http://localhost/health'))
-    expect(res.status).toBe(200)
-    
-    // 不应该有速率限制头部
-    expect(res.headers.get('RateLimit-Limit')).toBeNull()
-    expect(res.headers.get('RateLimit-Remaining')).toBeNull()
-  })
+### 响应头（`headers: true`）
 
-  it('should handle custom error responses', async () => {
-    const customError = new Response('Custom error message', { status: 429 })
-    
-    const app = new Server(defineRoutes([
-      defineRoute({
-        method: 'GET',
-        path: '/',
-        middleware: [rateLimit({
-          duration: 60000,
-          max: 1,
-          errorResponse: customError,
-          headers: true
-        })],
-        handler: () => {
-          return 'Hello'
-        }
-      })
-    ]))
+| 头 | 说明 |
+|----|------|
+| `RateLimit-Limit` | 窗口上限（`max`） |
+| `RateLimit-Remaining` | 剩余次数 |
+| `RateLimit-Reset` | 距重置的秒数（向上取整） |
+| `Retry-After` | **仅超限时**附加；约为 `ceil(duration / 1000)` 秒 |
 
-    // 第一个请求应该成功
-    const res1 = await app.fetch(new Request('http://localhost/'))
-    expect(res1.status).toBe(200)
+### `skip` 与 key 生成时机
 
-    // 第二个请求应该被阻止，返回自定义错误
-    const res2 = await app.fetch(new Request('http://localhost/'))
-    expect(res2.status).toBe(429)
-    const errorData = await res2.text()
-    expect(errorData).toBe('Custom error message')
-  })
+- `skip.length < 2`：先调用 `skip(req)`，未跳过再生成 key
+- `skip.length >= 2`：先生成 key，再调用 `skip(req, key)`
 
-  it('should work with different HTTP methods', async () => {
-    const rateLimitMiddleware = rateLimit({
-      duration: 60000,
-      max: 2,
-      headers: true
-    })
-    
-    const app = new Server(defineRoutes([
-      defineRoute({
-        method: 'POST',
-        path: '/',
-        handler: () => {
-          return { message: 'POST request' }
-        }
-      })
-    ]))
-
-    const wrappedFetch = (req: Request) => {
-      return rateLimitMiddleware(req, () => app.fetch(req))
-    }
-
-    // 前2个 POST 请求应该成功
-    for (let i = 0; i < 2; i++) {
-      const res = await wrappedFetch(new Request('http://localhost/', {
-        method: 'POST',
-        body: JSON.stringify({ test: i })
-      }))
-      expect(res.status).toBe(200)
-    }
-
-    // 第3个 POST 请求应该被阻止
-    const blockedRes = await wrappedFetch(new Request('http://localhost/', {
-      method: 'POST',
-      body: JSON.stringify({ test: 3 })
-    }))
-    expect(blockedRes.status).toBe(429)
-  })
-})
-```
-
-## 特性
-
-- ✅ **灵活配置**: 支持自定义时间窗口和请求限制
-- ✅ **智能跳过**: 支持条件跳过速率限制
-- ✅ **自定义密钥**: 支持基于 IP、用户 ID 等的自定义密钥生成
-- ✅ **标准头部**: 自动添加 RateLimit-* 标准头部
-- ✅ **错误处理**: 支持自定义错误响应和状态码
-- ✅ **高性能**: 使用 LRU 缓存存储，内存占用低
-- ✅ **类型安全**: 完整的 TypeScript 类型支持
-- ✅ **易于集成**: 无缝集成到 Vafast 应用
+判断条件为 `(await skip(...)) === false` 时才进入计数；其它真值均视为跳过。
 
 ## 最佳实践
 
-### 1. 合理的限制设置
-
-```typescript
-// 根据端点的重要性设置不同的限制
-const apiRateLimit = rateLimit({
-  duration: 60000,  // 1分钟
-  max: 100,        // 100个请求
-  errorResponse: 'API rate limit exceeded'
-})
-
-const authRateLimit = rateLimit({
-  duration: 300000,  // 5分钟
-  max: 10,          // 10个请求（防止暴力破解）
-  errorResponse: 'Too many authentication attempts'
-})
-```
-
-### 2. 智能跳过策略
-
-```typescript
-skip: (req) => {
-  const url = new URL(req.url)
-  
-  // 跳过健康检查
-  if (url.pathname === '/health') return true
-  
-  // 跳过静态资源
-  if (url.pathname.startsWith('/static/')) return true
-  
-  // 跳过管理员 IP
-  const clientIp = req.headers.get('x-real-ip')
-  if (adminIps.includes(clientIp)) return true
-  
-  return false
-}
-```
-
-### 3. 自定义密钥生成
-
-```typescript
-const userBasedGenerator: Generator = async (req, server, { userId }) => {
-  // 优先使用用户 ID
-  if (userId) return `user:${userId}`
-  
-  // 备用使用 IP 地址
-  const clientIp = req.headers.get('x-real-ip') || 'unknown'
-  return `ip:${clientIp}`
-}
-```
-
-### 4. 错误响应处理
-
-```typescript
-const customErrorResponse = new Response(
-  JSON.stringify({
-    error: 'Rate limit exceeded',
-    retryAfter: 60,
-    message: 'Please wait before making more requests'
-  }),
-  {
-    status: 429,
-    headers: { 'Content-Type': 'application/json' }
-  }
-)
-```
+- 登录、发短信等敏感接口用更小的 `max`，或单独挂路由级限流。
+- 反代后务必保证 IP 相关请求头可信，或自定义 `generator`（例如按用户 ID / API Key）。
+- 探活、静态资源等用 `skip` 排除（返回 `true`），避免误伤监控。
+- 多实例部署时默认内存 `DefaultContext` 不共享；需要全局限流请实现自定义 `Context`。
 
 ## 注意事项
 
-1. **内存使用**: 速率限制数据存储在内存中，注意设置合理的 `maxSize`
-2. **分布式环境**: 在多个实例环境中，每个实例独立计数
-3. **时间同步**: 确保服务器时间同步，避免速率限制不准确
-4. **IP 地址**: 在代理环境中，确保正确获取真实客户端 IP
-5. **错误处理**: 合理设置错误响应，避免暴露过多系统信息
+- `scoping` 仅为兼容保留，**不会改变行为**。
+- `skip` 返回 `true` 才跳过；默认 `() => false` 表示全部计数。
+- 超限判定为 `current >= max + 1`（先递增再判断）。
+- `countFailedRequest: false` 时，仅对下游 **抛错** 退还计数；正常 4xx/5xx 响应仍会计数。
+- 多实例 + 默认内存存储 ≠ 集群统一限流。
 
 ## 相关链接
 
-- [RFC 6585 - Rate Limiting](https://tools.ietf.org/html/rfc6585)
-- [Rate Limiting Best Practices](https://cloud.google.com/architecture/rate-limiting-strategies-techniques)
-- [Vafast 官方文档](https://vafast.dev)
+- [IP](/middleware/ip)
+- [中间件系统](/middleware)

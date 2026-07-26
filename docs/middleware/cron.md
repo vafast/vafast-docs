@@ -1,884 +1,266 @@
 ---
-title: Cron 中间件 - Vafast
+title: Cron - Vafast
 ---
 
-# Cron 中间件
+# Cron
 
-此中间件为 [Vafast](https://github.com/vafastjs/vafast) 服务器添加了运行 cronjob 的支持。
+`@vafast/cron` 基于 [croner](https://github.com/Hexagon/croner) 提供**进程内定时任务**。
+
+::: warning 不是 HTTP 中间件
+它**不是** Vafast 请求中间件，**不要**写 `server.use(cron(...))`。正确用法是在进程启动时调用 `cron({ pattern, name, run })`，与 `serve` 并列运行。返回值是 croner 的 `Cron` 实例，可用于 `stop()` / `resume()` 等。
+:::
+
+## 先搞清几个概念（给新用户）
+
+### 和中间件有什么区别？
+
+| | HTTP 中间件 | `@vafast/cron` |
+|--|-------------|----------------|
+| 触发时机 | 每个请求经过时 | 按日历/时钟到点执行 |
+| 挂载方式 | `server.use` / 路由 `middleware` | 进程入口直接 `cron({...})` |
+| 典型用途 | 鉴权、压缩、日志 | 清理临时文件、发报表、心跳 |
+
+多实例部署时，每个进程各自调度——若任务不能重复执行，需要外部锁或分布式调度，而不是只靠本包。
+
+### Cron 表达式是什么？
+
+用空格分隔的字段描述「何时跑」。本包（croner）支持可选的**秒**字段：
+
+```plain
+┌────────────── second（可选）
+│ ┌──────────── minute
+│ │ ┌────────── hour
+│ │ │ ┌──────── day of month
+│ │ │ │ ┌────── month
+│ │ │ │ │ ┌──── day of week
+│ │ │ │ │ │
+* * * * * *
+```
+
+示例：
+
+| 表达式 | 含义 |
+|--------|------|
+| `*/30 * * * * *` | 每 30 秒 |
+| `0 */5 * * * *` | 每 5 分钟（秒为 0） |
+| `0 0 * * *` | 每天 00:00（5 段，无秒） |
+| `0 9 * * 1-5` | 工作日 09:00 |
+
+也可用 `Patterns` 辅助生成，减少手写出错（见下文）。
+
+### `CronConfig` 三个必填字段
+
+```typescript
+cron({
+  pattern: '...', // 何时跑
+  name: '...',    // 任务名（给 run 里的 mock store 当键）
+  run: (store) => { /* 到点执行 */ },
+  // ...其余选项透传给 croner 的 CronOptions
+})
+```
+
+注意：参数是**一个配置对象**，不是 `cron(pattern, callback)`。
 
 ## 安装
-
-通过以下方式安装：
 
 ```bash
 npm install @vafast/cron
 ```
 
-## 基本用法
-
-```typescript
-import { Server, defineRoute, defineRoutes } from 'vafast'
-import { cron } from '@vafast/cron'
-
-// 创建 cron 任务
-const heartbeatCron = cron({
-    name: 'heartbeat',
-    pattern: '*/30 * * * * *', // 每30秒执行一次
-    run(store) {
-        console.log('Heartbeat - Working')
-    }
-})
-
-// 定义路由
-const routes = defineRoutes([
-  defineRoute({
-    method: 'GET',
-    path: '/',
-    handler: () => {
-      return { message: 'Vafast Cron API' }
-    }
-  })
-])
-
-// 创建服务器
-const server = new Server(routes)
-
-// 导出 fetch 函数
-export default { fetch: server.fetch }
-```
-
-上述代码将每 30 秒记录一次 `heartbeat`。
-
-## API 参考
-
-### cron
-
-为 Vafast 服务器创建一个 cronjob。
-
-```typescript
-cron(config: CronConfig, callback: (store: Cron) => void): Cron
-```
-
-### CronConfig
-
-`CronConfig` 接受以下参数：
-
-#### name
-
-注册到 `store` 的作业名称。
-
-这将以指定的名称将 cron 实例注册到 `store`，可供后续过程引用，例如停止作业。
-
-#### pattern
-
-根据下面的 [cron 语法](https://en.wikipedia.org/wiki/Cron) 指定作业运行时间：
-
-```
-┌────────────── 秒（可选）
-│ ┌──────────── 分钟
-│ │ ┌────────── 小时
-│ │ │ ┌──────── 每月的日期
-│ │ │ │ ┌────── 月
-│ │ │ │ │ ┌──── 星期几
-│ │ │ │ │ │
-* * * * * *
-```
-
-可以使用 [Crontab Guru](https://crontab.guru/) 等工具生成。
-
-#### run
-
-在指定时间执行的函数。
-
-```typescript
-run: (store: Cron) => any | Promise<any>
-```
-
----
-
-此中间件通过 [croner](https://github.com/hexagon/croner) 扩展了 Vafast 的 cron 方法。
-
-以下是 croner 接受的配置选项：
-
-### timezone
-
-以欧洲/斯德哥尔摩格式表示的时区。
-
-### startAt
-
-作业的调度开始时间。
-
-### stopAt
-
-作业的调度停止时间。
-
-### maxRuns
-
-最大执行次数。
-
-### catch
-
-即使触发的函数抛出未处理错误，也继续执行。
-
-### interval
-
-执行之间的最小间隔（秒）。
-
-## 使用模式
-
-### 1. 基本定时任务
-
-```typescript
-import { Server, defineRoute, defineRoutes } from 'vafast'
-import { cron } from '@vafast/cron'
-
-// 创建定时任务
-const cleanupCron = cron({
-    name: 'cleanup',
-    pattern: '0 2 * * *', // 每天凌晨2点执行
-    run(store) {
-        console.log('执行清理任务:', new Date().toISOString())
-        // 执行清理逻辑
-        cleanupOldFiles()
-        cleanupDatabase()
-    }
-})
-
-const routes = defineRoutes([
-  defineRoute({
-    method: 'GET',
-    path: '/',
-    handler: () => {
-      return { message: 'Cleanup cron job is running' }
-    }
-  })
-])
-
-const server = new Server(routes)
-export default { fetch: server.fetch }
-```
-
-### 2. 任务生命周期管理
-
-```typescript
-import { Server, defineRoute, defineRoutes } from 'vafast'
-import { cron } from '@vafast/cron'
-
-// 创建可控制的 cron 任务
-const loggerCron = cron({
-    name: 'logger',
-    pattern: '*/1 * * * * *', // 每秒执行一次
-    run(store) {
-        console.log(new Date().toISOString())
-    }
-})
-
-const routes = defineRoutes([
-  defineRoute({
-    method: 'GET',
-    path: '/',
-    handler: () => {
-      // 停止 logger 任务
-      loggerCron.stop()
-      return { message: 'Logger stopped' }
-    }
-  }),
-  defineRoute({
-    method: 'GET',
-    path: '/status',
-    handler: () => {
-      return {
-        logger: loggerCron.isRunning(),
-        nextRun: loggerCron.nextRun()
-      }
-    }
-  }),
-  defineRoute({
-    method: 'POST',
-    path: '/start-logger',
-    handler: () => {
-      loggerCron.resume()
-      return { message: 'Logger started' }
-    }
-  })
-])
-
-const server = new Server(routes)
-export default { fetch: server.fetch }
-```
-
-### 3. 多个定时任务
-
-```typescript
-import { Server, defineRoute, defineRoutes } from 'vafast'
-import { cron } from '@vafast/cron'
-
-// 创建多个 cron 任务
-const heartbeatCron = cron({
-    name: 'heartbeat',
-    pattern: '*/30 * * * * *', // 每30秒
-    run(store) {
-        console.log('Heartbeat check')
-        checkSystemHealth()
-    }
-})
-
-const backupCron = cron({
-    name: 'backup',
-    pattern: '0 3 * * *', // 每天凌晨3点
-    run(store) {
-        console.log('Starting backup')
-        performBackup()
-    }
-})
-
-const maintenanceCron = cron({
-    name: 'maintenance',
-    pattern: '0 4 * * 0', // 每周日凌晨4点
-    run(store) {
-        console.log('Starting maintenance')
-        performMaintenance()
-    }
-})
-
-const routes = defineRoutes([
-  defineRoute({
-    method: 'GET',
-    path: '/cron/status',
-    handler: () => {
-      return {
-        heartbeat: {
-          running: heartbeatCron.isRunning(),
-          nextRun: heartbeatCron.nextRun()
-        },
-        backup: {
-          running: backupCron.isRunning(),
-          nextRun: backupCron.nextRun()
-        },
-        maintenance: {
-          running: maintenanceCron.isRunning(),
-          nextRun: maintenanceCron.nextRun()
-        }
-      }
-    }
-  })
-])
-
-const server = new Server(routes)
-export default { fetch: server.fetch }
-```
-
-### 4. 条件执行和错误处理
-
-```typescript
-import { Server, defineRoute, defineRoutes } from 'vafast'
-import { cron } from '@vafast/cron'
-
-const dataSyncCron = cron({
-    name: 'dataSync',
-    pattern: '*/5 * * * *', // 每5分钟
-    catch: true, // 即使出错也继续执行
-    maxRuns: 1000, // 最大执行1000次
-    run(store) {
-        try {
-            console.log('开始数据同步...')
-            
-            // 检查系统状态
-            if (!isSystemReady()) {
-                console.log('系统未就绪，跳过本次同步')
-                return
-            }
-            
-            // 执行数据同步
-            const result = syncData()
-            console.log('数据同步完成:', result)
-            
-        } catch (error) {
-            console.error('数据同步出错:', error)
-            // 发送告警
-            sendAlert('数据同步失败', error)
-        }
-    }
-})
-
-const routes = defineRoutes([
-  defineRoute({
-    method: 'GET',
-    path: '/sync/status',
-    handler: () => {
-      return {
-        running: dataSyncCron.isRunning(),
-        nextRun: dataSyncCron.nextRun(),
-        lastRun: dataSyncCron.lastRun()
-      }
-    }
-  })
-])
-
-const server = new Server(routes)
-export default { fetch: server.fetch }
-```
-
-## 预定义模式
-
-您可以使用 `@vafast/cron/schedule` 中的预定义模式。
+## 快速开始
 
 ```typescript
 import { cron, Patterns } from '@vafast/cron'
 
-// 使用预定义模式
 const job = cron({
-    name: 'scheduled',
-    pattern: Patterns.EVERY_SECOND, // 每秒执行
-    run(store) {
-        console.log('Scheduled task')
-    }
+  name: 'cleanup',
+  pattern: Patterns.EVERY_HOUR,
+  run: async () => {
+    await cleanupTempFiles()
+  },
 })
 
-// 使用函数模式
-const customJob = cron({
-    name: 'custom',
-    pattern: Patterns.everyMinutes(5), // 每5分钟
-    run(store) {
-        console.log('Custom scheduled task')
-    }
-})
+// 返回 croner 的 Cron 实例（创建后即开始调度）
+// job.stop() / job.resume() / job.nextRun()
 ```
 
-### 函数模式
+## 用法
 
-| 函数                                   | 描述                                                |
-| -------------------------------------- | --------------------------------------------------- |
-| `.everySenconds(2)`                    | 每 2 秒运行一次任务                                  |
-| `.everyMinutes(5)`                    | 每 5 分钟运行一次任务                                |
-| `.everyHours(3)`                      | 每 3 小时运行一次任务                                |
-| `.everyHoursAt(3, 15)`                | 每 3 小时在 15 分钟时运行一次任务                   |
-| `.everyDayAt('04:19')`                | 每天在 04:19 运行一次任务                            |
-| `.everyWeekOn(Patterns.MONDAY, '19:30')` | 每周一在 19:30 运行一次任务                        |
-| `.everyWeekdayAt('17:00')`            | 每个工作日的 17:00 运行一次任务                     |
-| `.everyWeekendAt('11:00')`            | 每周六和周日在 11:00 运行一次任务                  |
+### 与 HTTP 服务并列启动
 
-### 函数别名到常量
-
-| 函数              | 常量                           |
-| ----------------- | ------------------------------ |
-| `.everySecond()`  | EVERY_SECOND                   |
-| `.everyMinute()`  | EVERY_MINUTE                   |
-| `.hourly()`       | EVERY_HOUR                     |
-| `.daily()`        | EVERY_DAY_AT_MIDNIGHT          |
-| `.everyWeekday()` | EVERY_WEEKDAY                  |
-| `.everyWeekend()` | EVERY_WEEKEND                  |
-| `.weekly()`       | EVERY_WEEK                     |
-| `.monthly()`      | EVERY_1ST_DAY_OF_MONTH_AT_MIDNIGHT |
-| `.everyQuarter()` | EVERY_QUARTER                  |
-| `.yearly()`       | EVERY_YEAR                     |
-
-### 常量模式
-
-| 常量                                    | 模式                    |
-| --------------------------------------- | ----------------------- |
-| `.EVERY_SECOND`                         | `* * * * * *`           |
-| `.EVERY_5_SECONDS`                      | `*/5 * * * * *`         |
-| `.EVERY_10_SECONDS`                     | `*/10 * * * * *`        |
-| `.EVERY_30_SECONDS`                     | `*/30 * * * * *`        |
-| `.EVERY_MINUTE`                         | `*/1 * * * *`           |
-| `.EVERY_5_MINUTES`                      | `0 */5 * * * *`         |
-| `.EVERY_10_MINUTES`                     | `0 */10 * * * *`        |
-| `.EVERY_30_MINUTES`                     | `0 */30 * * * *`        |
-| `.EVERY_HOUR`                           | `0 0-23/1 * * *`        |
-| `.EVERY_2_HOURS`                        | `0 0-23/2 * * *`        |
-| `.EVERY_3_HOURS`                        | `0 0-23/3 * * *`        |
-| `.EVERY_4_HOURS`                        | `0 0-23/4 * * *`        |
-| `.EVERY_5_HOURS`                        | `0 0-23/5 * * *`        |
-| `.EVERY_6_HOURS`                        | `0 0-23/6 * * *`        |
-| `.EVERY_7_HOURS`                        | `0 0-23/7 * * *`        |
-| `.EVERY_8_HOURS`                        | `0 0-23/8 * * *`        |
-| `.EVERY_9_HOURS`                        | `0 0-23/9 * * *`        |
-| `.EVERY_10_HOURS`                       | `0 0-23/10 * * *`       |
-| `.EVERY_11_HOURS`                       | `0 0-23/11 * * *`       |
-| `.EVERY_12_HOURS`                       | `0 0-23/12 * * *`       |
-| `.EVERY_DAY_AT_1AM`                     | `0 01 * * *`            |
-| `.EVERY_DAY_AT_2AM`                     | `0 02 * * *`            |
-| `.EVERY_DAY_AT_3AM`                     | `0 03 * * *`            |
-| `.EVERY_DAY_AT_4AM`                     | `0 04 * * *`            |
-| `.EVERY_DAY_AT_5AM`                     | `0 05 * * *`            |
-| `.EVERY_DAY_AT_6AM`                     | `0 06 * * *`            |
-| `.EVERY_DAY_AT_7AM`                     | `0 07 * * *`            |
-| `.EVERY_DAY_AT_8AM`                     | `0 08 * * *`            |
-| `.EVERY_DAY_AT_9AM`                     | `0 09 * * *`            |
-| `.EVERY_DAY_AT_10AM`                    | `0 10 * * *`            |
-| `.EVERY_DAY_AT_11AM`                    | `0 11 * * *`            |
-| `.EVERY_DAY_AT_NOON`                    | `0 12 * * *`            |
-| `.EVERY_DAY_AT_1PM`                     | `0 13 * * *`            |
-| `.EVERY_DAY_AT_2PM`                     | `0 14 * * *`            |
-| `.EVERY_DAY_AT_3PM`                     | `0 15 * * *`            |
-| `.EVERY_DAY_AT_4PM`                     | `0 16 * * *`            |
-| `.EVERY_DAY_AT_5PM`                     | `0 17 * * *`            |
-| `.EVERY_DAY_AT_6PM`                     | `0 18 * * *`            |
-| `.EVERY_DAY_AT_7PM`                     | `0 19 * * *`            |
-| `.EVERY_DAY_AT_8PM`                     | `0 20 * * *`            |
-| `.EVERY_DAY_AT_9PM`                     | `0 21 * * *`            |
-| `.EVERY_DAY_AT_10PM`                    | `0 22 * * *`            |
-| `.EVERY_DAY_AT_11PM`                    | `0 23 * * *`            |
-| `.EVERY_DAY_AT_MIDNIGHT`                | `0 0 * * *`             |
-| `.EVERY_WEEK`                           | `0 0 * * 0`             |
-| `.EVERY_WEEKDAY`                        | `0 0 * * 1-5`           |
-| `.EVERY_WEEKEND`                        | `0 0 * * 6,0`           |
-| `.EVERY_1ST_DAY_OF_MONTH_AT_MIDNIGHT`   | `0 0 1 * *`             |
-| `.EVERY_1ST_DAY_OF_MONTH_AT_NOON`       | `0 12 1 * *`            |
-| `.EVERY_2ND_HOUR`                       | `0 */2 * * *`           |
-| `.EVERY_2ND_HOUR_FROM_1AM_THROUGH_11PM` | `0 1-23/2 * * *`        |
-| `.EVERY_2ND_MONTH`                      | `0 0 1 */2 *`           |
-| `.EVERY_QUARTER`                        | `0 0 1 */3 *`           |
-| `.EVERY_6_MONTHS`                       | `0 0 1 */6 *`           |
-| `.EVERY_YEAR`                           | `0 0 1 1 *`             |
-| `.EVERY_30_MINUTES_BETWEEN_9AM_AND_5PM` | `0 */30 9-17 * * *`     |
-| `.EVERY_30_MINUTES_BETWEEN_9AM_AND_6PM` | `0 */30 9-18 * * *`     |
-| `.EVERY_30_MINUTES_BETWEEN_10AM_AND_7PM`| `0 */30 10-19 * * *`    |
-
-## 完整示例
+在进程启动时创建任务即可，与 `serve` 无关：
 
 ```typescript
-import { Server, defineRoute, defineRoutes } from 'vafast'
+import { Server, defineRoute, defineRoutes, serve } from 'vafast'
 import { cron, Patterns } from '@vafast/cron'
 
-// 模拟业务函数
-const checkSystemHealth = () => {
-    const health = {
-        cpu: Math.random() * 100,
-        memory: Math.random() * 100,
-        disk: Math.random() * 100,
-        timestamp: new Date().toISOString()
-    }
-    
-    if (health.cpu > 80 || health.memory > 80 || health.disk > 80) {
-        console.warn('系统资源使用率过高:', health)
-        sendAlert('系统告警', health)
-    }
-    
-    return health
-}
-
-const performBackup = async () => {
-    console.log('开始数据库备份...')
-    try {
-        // 模拟备份过程
-        await new Promise(resolve => setTimeout(resolve, 2000))
-        console.log('数据库备份完成')
-        return { success: true, timestamp: new Date().toISOString() }
-    } catch (error) {
-        console.error('备份失败:', error)
-        return { success: false, error: error.message }
-    }
-}
-
-const cleanupOldFiles = () => {
-    console.log('清理旧文件...')
-    // 清理逻辑
-    return { cleaned: Math.floor(Math.random() * 100) }
-}
-
-const sendAlert = (title: string, data: any) => {
-    console.log(`告警: ${title}`, data)
-    // 发送告警逻辑
-}
-
-// 创建多个 cron 任务
-const healthCheckCron = cron({
-    name: 'healthCheck',
-    pattern: '*/30 * * * * *', // 每30秒
-    run(store) {
-        console.log('执行健康检查...')
-        const health = checkSystemHealth()
-        console.log('健康检查结果:', health)
-    }
+cron({
+  name: 'hourly-report',
+  pattern: Patterns.EVERY_HOUR,
+  run: () => sendReport(),
 })
 
-const backupCron = cron({
-    name: 'backup',
-    pattern: '0 2 * * *', // 每天凌晨2点
-    run(store) {
-        console.log('开始定时备份...')
-        performBackup()
-    }
-})
-
-const cleanupCron = cron({
-    name: 'cleanup',
-    pattern: '0 3 * * *', // 每天凌晨3点
-    run(store) {
-        console.log('开始清理任务...')
-        const result = cleanupOldFiles()
-        console.log('清理完成:', result)
-    }
-})
-
-const maintenanceCron = cron({
-    name: 'maintenance',
-    pattern: '0 4 * * 0', // 每周日凌晨4点
-    run(store) {
-        console.log('开始系统维护...')
-        // 维护逻辑
-        console.log('系统维护完成')
-    }
-})
-
-// 定义路由
 const routes = defineRoutes([
   defineRoute({
     method: 'GET',
-    path: '/',
-    handler: () => {
-      return { 
-        message: 'Vafast Cron Management API',
-        endpoints: [
-          '/cron/status - 查看所有任务状态',
-          '/cron/health - 手动执行健康检查',
-          '/cron/backup - 手动执行备份',
-          '/cron/cleanup - 手动执行清理',
-          '/cron/stop/:name - 停止指定任务',
-                    '/cron/start/:name - 启动指定任务'
-                ]
-            }
-    }
+    path: '/health',
+    handler: () => ({ ok: true }),
   }),
-  defineRoute({
-    method: 'GET',
-    path: '/cron/status',
-    handler: () => {
-      return {
-        healthCheck: {
-          name: 'healthCheck',
-          running: healthCheckCron.isRunning(),
-          nextRun: healthCheckCron.nextRun(),
-          lastRun: healthCheckCron.lastRun()
-        },
-        backup: {
-          name: 'backup',
-          running: backupCron.isRunning(),
-          nextRun: backupCron.nextRun(),
-          lastRun: backupCron.lastRun()
-        },
-        cleanup: {
-          name: 'cleanup',
-          running: cleanupCron.isRunning(),
-          nextRun: cleanupCron.nextRun(),
-          lastRun: cleanupCron.lastRun()
-        },
-        maintenance: {
-          name: 'maintenance',
-          running: maintenanceCron.isRunning(),
-          nextRun: maintenanceCron.nextRun(),
-          lastRun: maintenanceCron.lastRun()
-        }
-      }
-    }
-  }),
-  defineRoute({
-    method: 'POST',
-    path: '/cron/health',
-    handler: () => {
-      const health = checkSystemHealth()
-      return { 
-        message: '手动健康检查完成',
-        result: health
-      }
-    }
-  }),
-  defineRoute({
-    method: 'POST',
-    path: '/cron/backup',
-    handler: async () => {
-      const result = await performBackup()
-      return { 
-        message: '手动备份完成',
-        result
-      }
-    }
-  }),
-  defineRoute({
-    method: 'POST',
-    path: '/cron/cleanup',
-    handler: () => {
-      const result = cleanupOldFiles()
-      return { 
-        message: '手动清理完成',
-        result
-      }
-    }
-  }),
-  defineRoute({
-    method: 'POST',
-    path: '/cron/stop/:name',
-    handler: ({ params }) => {
-      const name = params.name
-      
-      let cronJob: any
-      switch (name) {
-        case 'healthCheck':
-          cronJob = healthCheckCron
-          break
-        case 'backup':
-          cronJob = backupCron
-          break
-        case 'cleanup':
-          cronJob = cleanupCron
-          break
-        case 'maintenance':
-          cronJob = maintenanceCron
-          break
-        default:
-          return { error: '未知的任务名称' }
-      }
-      
-      if (cronJob.isRunning()) {
-        cronJob.stop()
-        return { message: `任务 ${name} 已停止` }
-      } else {
-        return { message: `任务 ${name} 已经停止` }
-            }
-    }
-  }),
-  defineRoute({
-    method: 'POST',
-    path: '/cron/start/:name',
-    handler: ({ params }) => {
-      const name = params.name
-      
-      let cronJob: any
-      switch (name) {
-        case 'healthCheck':
-          cronJob = healthCheckCron
-          break
-        case 'backup':
-          cronJob = backupCron
-          break
-        case 'cleanup':
-          cronJob = cleanupCron
-          break
-        case 'maintenance':
-          cronJob = maintenanceCron
-          break
-        default:
-          return { error: '未知的任务名称' }
-      }
-      
-      if (!cronJob.isRunning()) {
-        cronJob.resume()
-        return { message: `任务 ${name} 已启动` }
-      } else {
-        return { message: `任务 ${name} 已经在运行` }
-      }
-    }
-  })
 ])
 
-// 创建服务器
 const server = new Server(routes)
-
-// 导出 fetch 函数
-export default { fetch: server.fetch }
+serve({ fetch: server.fetch, port: 3000 })
 ```
 
-console.log('Vafast Cron Management API 服务器启动成功！')
-console.log('健康检查: 每30秒执行一次')
-console.log('数据备份: 每天凌晨2点执行')
-console.log('🧹 文件清理: 每天凌晨3点执行')
-console.log('系统维护: 每周日凌晨4点执行')
-```
+### Patterns 辅助
 
-## 测试示例
+从 `@vafast/cron` 直接导入（**没有** `@vafast/cron/schedule` 子路径）。`Patterns` 合并了三类内容：
+
+1. **常量表达式**（字符串）
+2. **工厂函数**（按参数生成表达式）
+3. **星期枚举**（`SUNDAY`…`SATURDAY`，值为 0–6）
+
+常用常量：
 
 ```typescript
-import { describe, expect, it } from 'bun:test'
-import { cron } from '@vafast/cron'
-import { Patterns } from '@vafast/cron/schedule'
+import { Patterns } from '@vafast/cron'
 
-describe('Vafast Cron API', () => {
-    it('should create cron job', () => {
-        let executed = false
-        
-        const job = cron({
-            pattern: '*/1 * * * * *',
-            name: 'test',
-            run() {
-                executed = true
-            }
-        })
-        
-        expect(job).toBeDefined()
-        expect(typeof job.isRunning).toBe('function')
-        expect(typeof job.stop).toBe('function')
-        expect(typeof job.resume).toBe('function')
-    })
-    
-    it('should use predefined patterns', () => {
-        const job = cron({
-            pattern: Patterns.EVERY_SECOND,
-            name: 'test',
-            run() {
-                // 测试函数
-            }
-        })
-        
-        expect(job).toBeDefined()
-        expect(job.isRunning()).toBe(true)
-    })
-    
-    it('should use function patterns', () => {
-        const job = cron({
-            pattern: Patterns.everyMinutes(5),
-            name: 'test',
-            run() {
-                // 测试函数
-            }
-        })
-        
-        expect(job).toBeDefined()
-    })
-    
-    it('should handle cron job lifecycle', async () => {
-        const job = cron({
-            pattern: '*/1 * * * * *',
-            name: 'test',
-            run() {
-                // 测试函数
-            }
-        })
-        
-        expect(job.isRunning()).toBe(true)
-        
-        // 测试停止功能
-        job.stop()
-        expect(job.isRunning()).toBe(false)
-        
-        // 测试恢复功能
-        job.resume()
-        // 注意：resume() 可能不会立即设置 isRunning 为 true
-        // 这是 croner 的预期行为
-    })
-    
-    it('should handle cron job with options', () => {
-        const job = cron({
-            pattern: '*/1 * * * * *',
-            name: 'test',
-            maxRuns: 5,
-            catch: true,
-            run() {
-                // 测试函数
-            }
-        })
-        
-        expect(job).toBeDefined()
-        expect(job.isRunning()).toBe(true)
-    })
+Patterns.EVERY_SECOND          // '* * * * * *'
+Patterns.EVERY_5_SECONDS
+Patterns.EVERY_30_SECONDS
+Patterns.EVERY_MINUTE
+Patterns.EVERY_5_MINUTES
+Patterns.EVERY_HOUR
+Patterns.EVERY_DAY_AT_MIDNIGHT
+Patterns.EVERY_DAY_AT_9AM
+Patterns.EVERY_WEEKDAY         // 工作日 00:00
+Patterns.EVERY_WEEKEND
+Patterns.EVERY_WEEK
+Patterns.EVERY_1ST_DAY_OF_MONTH_AT_MIDNIGHT
+Patterns.EVERY_QUARTER
+Patterns.EVERY_YEAR
+```
+
+常用函数：
+
+```typescript
+Patterns.everySenconds(5)              // 注意源码拼写为 Senconds
+Patterns.everyMinutes(10)
+Patterns.everyHours(2)
+Patterns.everyHoursAt(2, 15)           // 每 2 小时的第 15 分
+Patterns.everyDayAt('09:30')
+Patterns.everyWeekOn(Patterns.MONDAY, '10:00')
+Patterns.everyWeekdayAt('08:00')
+Patterns.everyWeekendAt('10:00')
+
+// 别名风格
+Patterns.everySecond()
+Patterns.everyMinute()
+Patterns.hourly()
+Patterns.daily()
+Patterns.weekly()
+Patterns.monthly()
+Patterns.everyQuarter()
+Patterns.yearly()
+Patterns.everyWeekday()
+Patterns.everyWeekend()
+```
+
+也可直接写字符串：`pattern: '0 */5 * * * *'`。
+
+### 透传有用的 CronOptions（croner）
+
+`pattern` / `name` / `run` 之外的字段会 `...options` 传给 `new Cron(pattern, options, callback)`。下列选项在实践中最常用（完整列表见 croner）：
+
+| 选项 | 类型 | 说明 |
+|------|------|------|
+| `timezone` | `string` | 时区，如 `'Asia/Shanghai'`。按当地日历解释表达式 |
+| `utcOffset` | `number` | UTC 偏移（分钟）；与 timezone 二选一场景下按 croner 规则使用 |
+| `paused` | `boolean` | `true` 时创建后先不跑，稍后 `resume()` |
+| `maxRuns` | `number` | 最多执行次数；默认无限 |
+| `protect` | `boolean \| fn` | `true` 时若上次还没跑完则跳过本次，避免重叠 |
+| `catch` | `boolean \| fn` | 捕获 `run` 抛错；可为 `true` 或 `(error, job) => void` |
+| `interval` | `number` | 两次执行的最小间隔（秒） |
+| `startAt` / `stopAt` | `string \| Date` | 调度生效的起止时间 |
+| `unref` | `boolean` | `true` 时 timer unref，不阻止 Node 进程退出 |
+| `legacyMode` | `boolean` | croner 兼容模式；库默认多为 `true` |
+| `context` | `unknown` | croner 会传给其原生 callback 的上下文；**本包包装后的 `run` 收到的是 mock store，不是该 context** |
+
+示例：
+
+```typescript
+const job = cron({
+  name: 'shanghai-morning',
+  pattern: Patterns.everyDayAt('09:00'),
+  timezone: 'Asia/Shanghai',
+  protect: true,
+  catch: (error) => console.error('cron failed', error),
+  maxRuns: 100,
+  run: async () => {
+    await sendMorningDigest()
+  },
 })
 ```
 
-## 特性
+### 控制任务生命周期
 
-- ✅ **灵活调度**: 支持标准的 cron 语法和预定义模式
-- ✅ **任务管理**: 提供启动、停止、恢复等生命周期管理
-- ✅ **错误处理**: 支持错误捕获和最大执行次数限制
-- ✅ **时区支持**: 支持自定义时区设置
-- ✅ **性能优化**: 基于 croner 的高性能实现
-- ✅ **类型安全**: 完整的 TypeScript 类型支持
-- ✅ **易于集成**: 无缝集成到 Vafast 应用
+```typescript
+const job = cron({
+  name: 'logger',
+  pattern: Patterns.EVERY_30_SECONDS,
+  run: () => console.log(new Date().toISOString()),
+})
+
+job.stop()
+job.resume()
+job.isRunning()
+job.nextRun()
+```
+
+`run` 收到的参数形如 `{ cron: { [name]: Cron } }`（类型标注为 `Cron`，实际是该 mock store），便于在回调里拿到当前任务实例。
+
+## API
+
+```typescript
+cron(config: CronConfig): Cron
+```
+
+### `CronConfig`
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| `pattern` | `string` | 是 | cron 表达式、日期或 ISO 8601 时间；缺省抛错 |
+| `name` | `string` | 是 | 任务名（mock store 键）；缺省抛错。该字段会从配置中取出，**不会**再作为 croner `options.name` 传入 |
+| `run` | `(store) => any \| Promise<any>` | 是 | 到点执行的函数 |
+| `...options` | croner `CronOptions` | 否 | 见上表透传项 |
+
+### 导出
+
+| 导出 | 说明 |
+|------|------|
+| `cron` / `default` | 创建定时任务 |
+| `Patterns` | 常量表达式 + 辅助函数 + 星期枚举 |
+| `CronConfig` | 配置类型 |
 
 ## 最佳实践
 
-### 1. 任务命名
-
-```typescript
-// 使用描述性的名称
-const healthCheckCron = cron({
-    name: 'system-health-check', // 清晰的名称
-    pattern: '*/30 * * * * *',
-    run(store) {
-        checkSystemHealth()
-    }
-})
-```
-
-### 2. 错误处理
-
-```typescript
-const criticalCron = cron({
-    name: 'critical-task',
-    pattern: '0 * * * *',
-    catch: true, // 捕获错误
-    run(store) {
-        try {
-            performCriticalTask()
-        } catch (error) {
-            console.error('关键任务执行失败:', error)
-            // 发送告警
-            sendAlert('关键任务失败', error)
-        }
-    }
-})
-```
-
-### 3. 资源管理
-
-```typescript
-const resourceIntensiveCron = cron({
-    name: 'resource-task',
-    pattern: '0 2 * * *', // 在低峰期执行
-    interval: 300, // 最小间隔5分钟
-    run(store) {
-        // 检查系统负载
-        if (getSystemLoad() > 0.8) {
-            console.log('系统负载过高，跳过本次执行')
-            return
-        }
-        
-        performResourceIntensiveTask()
-    }
-})
-```
-
-### 4. 监控和日志
-
-```typescript
-const monitoredCron = cron({
-    name: 'monitored-task',
-    pattern: '*/5 * * * *',
-    run(store) {
-        const startTime = Date.now()
-        
-        try {
-            console.log('开始执行监控任务...')
-            performTask()
-            
-            const duration = Date.now() - startTime
-            console.log(`监控任务完成，耗时: ${duration}ms`)
-            
-            // 记录指标
-            recordMetrics('monitored-task', { duration, success: true })
-            
-        } catch (error) {
-            const duration = Date.now() - startTime
-            console.error(`监控任务失败，耗时: ${duration}ms`, error)
-            
-            // 记录错误指标
-            recordMetrics('monitored-task', { duration, success: false, error: error.message })
-        }
-    }
-})
-```
+1. 在**进程入口**注册任务，不要放进请求 handler 里反复 `cron()`
+2. 优先用 `Patterns.*`，减少手写表达式出错
+3. 长任务开启 `protect: true`，并保证业务幂等
+4. 多实例部署用外部锁 / 分布式调度，避免重复执行
+5. 需要按 HTTP 启停时，把 `Cron` 实例存模块级变量，在路由里 `stop()` / `resume()`
+6. 跨时区业务明确设置 `timezone`
 
 ## 注意事项
 
-1. **任务执行**: cron 任务会在后台自动执行，无需手动启动
-2. **错误处理**: 建议在 `run` 函数中添加适当的错误处理逻辑
-3. **资源管理**: 长时间运行的任务应该检查系统资源状态
-4. **时区设置**: 在生产环境中，建议明确设置时区
-5. **任务依赖**: 复杂的任务依赖关系应该通过任务队列或工作流引擎处理
+- **不是** `server.use(cron(...))`；挂成中间件无效且语义错误
+- 每个进程各自调度；水平扩展会重复跑，除非用外部协调
+- `pattern` / `name` 为空会同步抛错
+- `Patterns.everySenconds` 的拼写与源码一致（双写 `n` 的 `Senconds`）
+- 其余调度细节以 [croner](https://github.com/Hexagon/croner) 为准
 
 ## 相关链接
 
-- [Cron 语法 - Wikipedia](https://en.wikipedia.org/wiki/Cron)
-- [Crontab Guru](https://crontab.guru/) - 在线 cron 表达式生成器
-- [Croner 文档](https://github.com/hexagon/croner) - 底层 cron 库
-- [Vafast 官方文档](https://vafast.dev)
+- [部署指南](/patterns/deploy)
+- [中间件概述](/middleware/overview)
+- [croner](https://github.com/Hexagon/croner)

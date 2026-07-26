@@ -2,975 +2,308 @@
 title: Helmet 中间件 - Vafast
 ---
 
-# Helmet 中间件
+# Helmet
 
-用于 [Vafast](https://github.com/vafastjs/vafast) 的安全头中间件，通过添加各种 HTTP 安全头部来增强 Web 应用的安全性。
+`@vafast/helmet` 为响应附加常见安全相关 HTTP 头（CSP、HSTS、X-Frame-Options 等）。只改响应头，不改业务逻辑。
+
+调用 `vafastHelmet(config?)` 返回中间件：在 `next()` 拿到业务响应后，把安全头合并进新的 `Response` 再返回。
+
+## 先搞清几个概念（给新用户）
+
+浏览器会按响应头决定「能不能嵌 iframe」「脚本从哪加载」「是否强制 HTTPS」等。Helmet 就是帮你批量写好这些头，减少漏配。
+
+| 名词 | 白话 |
+|------|------|
+| **CSP（Content-Security-Policy）** | 告诉浏览器：脚本、样式、图片、接口请求等**允许从哪些来源加载**。收紧后可明显降低 XSS 注入脚本的危害 |
+| **Nonce** | 一次性随机串。开启 `useNonce` 后写入 CSP，并额外返回 `X-Nonce`。页面里内联 `<script>` / `<style>` 需带上同一 nonce，才允许执行 |
+| **HSTS（Strict-Transport-Security）** | 告诉浏览器：以后访问本站必须用 HTTPS，并记住一段时间。**本包仅在 `NODE_ENV === 'production'` 时写出**，避免本地 HTTP 开发被「锁死」 |
+| **X-Frame-Options** | 控制本站能否被别的页面用 `<iframe>` 嵌入，用来防点击劫持 |
+| **Referrer-Policy** | 控制跳转到外站时，浏览器会不会带上完整来源 URL（可能含路径、查询串） |
+| **Permissions-Policy** | 控制页面能否用摄像头、麦克风、定位等浏览器能力；空数组 `[]` 表示禁用该能力 |
+| **CORP / COOP** | 跨源资源策略 / 跨源打开者策略：限制谁能加载你的资源、弹窗之间是否共享浏览上下文（与隔离、安全相关） |
+| **Report-To** | 告诉浏览器把违规/崩溃等报告发到哪些端点（配合监控） |
+
+不必一次全懂：默认配置已经可用；业务有 CDN、第三方脚本时再改 CSP。
 
 ## 安装
-
-通过以下命令安装：
 
 ```bash
 npm install @vafast/helmet
 ```
 
-## 基本用法
+## 快速开始
 
 ```typescript
-import { Server, defineRoute, defineRoutes } from 'vafast'
+import { Server, defineRoute, defineRoutes, json, serve } from 'vafast'
 import { vafastHelmet } from '@vafast/helmet'
 
-// 创建安全头中间件
-const helmet = vafastHelmet({
-  csp: {
-    defaultSrc: ["'self'"],
-    scriptSrc: ["'self'", "'unsafe-inline'"],
-    styleSrc: ["'self'", "'unsafe-inline'"],
-    imgSrc: ["'self'", "data:", "https:"],
-  },
-  frameOptions: "DENY",
-  xssProtection: true,
-  referrerPolicy: "strict-origin-when-cross-origin",
-})
-
-// 定义路由
 const routes = defineRoutes([
   defineRoute({
     method: 'GET',
     path: '/',
-    middleware: [helmet],
-    handler: () => {
-      return { message: 'Hello World with Security Headers!' }
-    }
+    handler: () => json({ ok: true }),
   }),
-  defineRoute({
-    method: 'GET',
-    path: '/api/data',
-    middleware: [helmet],
-    handler: () => {
-      return { data: 'Protected API endpoint' }
-    }
-  })
 ])
 
-// 创建服务器
 const server = new Server(routes)
-
-// 导出 fetch 函数
-export default { fetch: server.fetch }
+server.use(vafastHelmet())
+serve({ fetch: server.fetch, port: 3000 })
 ```
 
-## 配置选项
+零配置时会带上默认 CSP、`X-Frame-Options: DENY`、XSS 相关头、Referrer-Policy、Permissions-Policy、CORP/COOP 等；HSTS 仅在生产环境出现。另会**始终**设置 `X-Content-Type-Options: nosniff`（不可通过选项关闭）。
 
-### SecurityConfig
+## 用法
+
+### 全局挂载
 
 ```typescript
-interface SecurityConfig {
-  /** Content Security Policy 配置 */
-  csp?: CSPConfig
-  
-  /** 启用或禁用 X-Frame-Options (DENY, SAMEORIGIN, ALLOW-FROM) */
-  frameOptions?: "DENY" | "SAMEORIGIN" | "ALLOW-FROM"
-  
-  /** 启用或禁用 XSS Protection */
-  xssProtection?: boolean
-  
-  /** 启用或禁用 DNS Prefetch Control */
-  dnsPrefetch?: boolean
-  
-  /** 配置 Referrer Policy */
-  referrerPolicy?:
-    | "no-referrer"
-    | "no-referrer-when-downgrade"
-    | "origin"
-    | "origin-when-cross-origin"
-    | "same-origin"
-    | "strict-origin"
-    | "strict-origin-when-cross-origin"
-    | "unsafe-url"
-  
-  /** 配置 Permissions Policy */
-  permissionsPolicy?: Record<string, string[]>
-  
-  /** 配置 HSTS (HTTP Strict Transport Security) */
-  hsts?: HSTSConfig
-  
-  /** 启用或禁用 Cross-Origin Resource Policy */
-  corp?: "same-origin" | "same-site" | "cross-origin"
-  
-  /** 启用或禁用 Cross-Origin Opener Policy */
-  coop?: "unsafe-none" | "same-origin-allow-popups" | "same-origin"
-  
-  /** 配置 Report-To 头部 */
-  reportTo?: ReportToConfig[]
-  
-  /** 自定义头部 */
-  customHeaders?: Record<string, string>
-}
+server.use(vafastHelmet())
 ```
 
-### CSPConfig
+### 单路由挂载
 
 ```typescript
-interface CSPConfig {
-  /** 默认源指令 */
-  defaultSrc?: string[]
-  
-  /** 脚本源指令 */
-  scriptSrc?: string[]
-  
-  /** 样式源指令 */
-  styleSrc?: string[]
-  
-  /** 图片源指令 */
-  imgSrc?: string[]
-  
-  /** 字体源指令 */
-  fontSrc?: string[]
-  
-  /** 连接源指令 */
-  connectSrc?: string[]
-  
-  /** 框架源指令 */
-  frameSrc?: string[]
-  
-  /** 对象源指令 */
-  objectSrc?: string[]
-  
-  /** 基础 URI 指令 */
-  baseUri?: string[]
-  
-  /** 报告 URI 指令 */
-  reportUri?: string
-  
-  /** 为脚本和样式标签使用 nonce */
-  useNonce?: boolean
-  
-  /** 仅报告模式 */
-  reportOnly?: boolean
-}
-```
-
-### HSTSConfig
-
-```typescript
-interface HSTSConfig {
-  /** 最大年龄（秒） */
-  maxAge?: number
-  
-  /** 包含子域名 */
-  includeSubDomains?: boolean
-  
-  /** 预加载 */
-  preload?: boolean
-}
-```
-
-### ReportToConfig
-
-```typescript
-interface ReportToConfig {
-  /** 端点组名 */
-  group: string
-  
-  /** 端点配置的最大年龄（秒） */
-  maxAge: number
-  
-  /** 发送报告的端点 */
-  endpoints: Array<{
-    url: string
-    priority?: number
-    weight?: number
-  }>
-  
-  /** 在报告中包含子域名 */
-  includeSubdomains?: boolean
-}
-```
-
-## 权限常量
-
-中间件提供了一些常用的权限常量：
-
-```typescript
-import { permission } from '@vafast/helmet'
-
-const helmet = vafastHelmet({
-  csp: {
-    defaultSrc: [permission.SELF],           // "'self'"
-    scriptSrc: [permission.SELF, permission.UNSAFE_INLINE], // "'self'" "'unsafe-inline'"
-    imgSrc: [permission.SELF, permission.DATA, permission.BLOB], // "'self'" "data:" "blob:"
-    objectSrc: [permission.NONE],            // "'none'"
-    connectSrc: [permission.HTTPS],          // "https:"
-  }
+defineRoute({
+  method: 'GET',
+  path: '/secure',
+  middleware: [vafastHelmet()],
+  handler: () => json({ ok: true }),
 })
 ```
 
-### 可用权限
+### 自定义 CSP
 
-| 常量 | 值 | 描述 |
+传入的 `csp` 会与默认 CSP **浅合并**（只覆盖你写的字段，其余保留默认）：
+
+```typescript
+import { vafastHelmet, permission } from '@vafast/helmet'
+
+server.use(
+  vafastHelmet({
+    csp: {
+      defaultSrc: [permission.SELF],
+      scriptSrc: [permission.SELF],
+      imgSrc: [permission.SELF, permission.DATA, 'https:'],
+    },
+    frameOptions: 'SAMEORIGIN',
+  }),
+)
+```
+
+### 开启 CSP Nonce
+
+`csp.useNonce: true` 时会生成 nonce，写入 `script-src` / `style-src`，并额外设置响应头 `X-Nonce`（业务侧把该值注入 HTML 模板）：
+
+```typescript
+server.use(
+  vafastHelmet({
+    csp: {
+      useNonce: true,
+      scriptSrc: [permission.SELF],
+      styleSrc: [permission.SELF],
+    },
+  }),
+)
+```
+
+### Report-Only 模式
+
+先观察违规、不拦截加载，适合上线前试跑：
+
+```typescript
+server.use(
+  vafastHelmet({
+    csp: {
+      reportOnly: true,
+      reportUri: '/csp-report',
+    },
+  }),
+)
+```
+
+此时写出的是 `Content-Security-Policy-Report-Only`，而不是正式的 `Content-Security-Policy`。
+
+### 配置 Report-To
+
+```typescript
+server.use(
+  vafastHelmet({
+    reportTo: [
+      {
+        group: 'csp-endpoint',
+        maxAge: 10886400,
+        endpoints: [{ url: 'https://example.com/reports' }],
+        includeSubdomains: true,
+      },
+    ],
+  }),
+)
+```
+
+### 额外自定义头
+
+```typescript
+server.use(
+  vafastHelmet({
+    customHeaders: {
+      'X-App-Version': '1.0.0',
+    },
+  }),
+)
+```
+
+## API
+
+### 导出
+
+| 导出 | 说明 |
+|------|------|
+| `vafastHelmet(config?)` | 主入口，返回中间件 |
+| `elysiaHelmet` | `vafastHelmet` 的兼容别名 |
+| `permission` | CSP 常用字面量常量（见下表） |
+| `SecurityConfig` | 顶层配置类型 |
+| `CSPConfig` | CSP 子配置类型 |
+| `HSTSConfig` | HSTS 子配置类型 |
+| `ReportToConfig` | Report-To 单项配置类型 |
+
+### `vafastHelmet(config?: Partial<SecurityConfig>)`
+
+未传的字段使用默认值；`csp` / `hsts` / `permissionsPolicy` 在传入时与默认对象**浅合并**。
+
+| 参数 | 类型 | 默认 | 说明 |
+|------|------|------|------|
+| `csp` | `CSPConfig` | 见下方「默认 CSP」与「CSP 指令含义」 | Content-Security-Policy（或 Report-Only 变体） |
+| `frameOptions` | `'DENY' \| 'SAMEORIGIN' \| 'ALLOW-FROM'` | `'DENY'` | `X-Frame-Options`。`DENY` = 禁止任何嵌入；`SAMEORIGIN` = 仅同源可嵌；`ALLOW-FROM` 为历史取值，现代浏览器支持差，一般不要用 |
+| `xssProtection` | `boolean` | `true` | 为 `true` 时写 `X-XSS-Protection: 1; mode=block`（旧浏览器遗留机制；现代防护仍主要靠 CSP） |
+| `dnsPrefetch` | `boolean` | `false` | `X-DNS-Prefetch-Control`：`true` → `on`，`false` → `off` |
+| `referrerPolicy` | 见下方枚举 | `'strict-origin-when-cross-origin'` | `Referrer-Policy`：控制外链请求携带多少 Referer |
+| `permissionsPolicy` | `Record<string, string[]>` | 见下方「默认 Permissions-Policy」 | `Permissions-Policy`；某能力对应**空数组**表示禁用 |
+| `hsts` | `HSTSConfig` | `{ maxAge: 15552000, includeSubDomains: true, preload: true }` | **仅 `NODE_ENV === 'production'` 时写入** `Strict-Transport-Security` |
+| `corp` | `'same-origin' \| 'same-site' \| 'cross-origin'` | `'same-origin'` | `Cross-Origin-Resource-Policy`：谁可以加载本响应为资源 |
+| `coop` | `'unsafe-none' \| 'same-origin-allow-popups' \| 'same-origin'` | `'same-origin'` | `Cross-Origin-Opener-Policy`：与弹窗 / `window.opener` 隔离相关 |
+| `reportTo` | `ReportToConfig[]` | — | `Report-To` 头（JSON）；未配置则不写 |
+| `customHeaders` | `Record<string, string>` | — | 额外自定义响应头，直接合并 |
+
+另会始终设置 `X-Content-Type-Options: nosniff`（防止浏览器把非脚本 MIME 误当成脚本执行）。
+
+#### `referrerPolicy` 可选值
+
+| 值 | 白话 |
+|----|------|
+| `no-referrer` | 从不发送 Referer |
+| `no-referrer-when-downgrade` | HTTPS→HTTP 时不发，其它情况发完整 URL |
+| `origin` | 只发源（协议+主机+端口） |
+| `origin-when-cross-origin` | 同源发完整 URL，跨源只发 origin |
+| `same-origin` | 仅同源请求带 Referer |
+| `strict-origin` | 只发 origin；HTTPS→HTTP 不发 |
+| `strict-origin-when-cross-origin`（默认） | 同源完整 URL；跨源只发 origin；降级不发 |
+| `unsafe-url` | 总是发完整 URL（可能泄露路径/查询串，慎用） |
+
+#### 默认 CSP
+
+| 指令（配置字段） | 默认值 |
+|------------------|--------|
+| `defaultSrc` | `[permission.SELF]`（`'self'`） |
+| `scriptSrc` | `[permission.SELF, permission.UNSAFE_INLINE]` |
+| `styleSrc` | `[permission.SELF, permission.UNSAFE_INLINE]` |
+| `imgSrc` | `[permission.SELF, permission.DATA, permission.BLOB]` |
+| `fontSrc` | `[permission.SELF]` |
+| `connectSrc` | `[permission.SELF]` |
+| `frameSrc` | `[permission.SELF]` |
+| `objectSrc` | `[permission.NONE]` |
+| `baseUri` | `[permission.SELF]` |
+
+默认含 `'unsafe-inline'`，是为了让未改造的内联脚本/样式先能跑；生产建议逐步去掉，改用 nonce 或外链。
+
+#### CSP 指令含义（`CSPConfig`）
+
+配置字段为 camelCase，写出的头里会转成 kebab-case（如 `scriptSrc` → `script-src`）。数组里每一项是一个允许的源表达式。
+
+| 字段 | 对应指令 | 白话 |
+|------|----------|------|
+| `defaultSrc` | `default-src` | **兜底**：其它未单独声明的资源类型走这里 |
+| `scriptSrc` | `script-src` | 允许执行哪些脚本来源 |
+| `styleSrc` | `style-src` | 允许加载哪些样式来源 |
+| `imgSrc` | `img-src` | 允许加载哪些图片来源 |
+| `fontSrc` | `font-src` | 允许加载哪些字体来源 |
+| `connectSrc` | `connect-src` | 允许 `fetch` / XHR / WebSocket 等连哪些源 |
+| `frameSrc` | `frame-src` | 允许本页嵌哪些源的 frame / iframe |
+| `objectSrc` | `object-src` | 允许 `<object>` / `<embed>` / `<applet>` 的源；默认 `'none'` |
+| `baseUri` | `base-uri` | 限制 `<base href>` 能设到哪，防被改基准 URL |
+| `reportUri` | `report-uri` | CSP 违规报告提交地址（字符串，不是数组） |
+| `useNonce` | —（布尔开关） | 为 `true` 时给 `script-src` / `style-src` 追加 `'nonce-...'`，并写响应头 `X-Nonce` |
+| `reportOnly` | —（布尔开关） | 为 `true` 时使用 `Content-Security-Policy-Report-Only`，只上报不拦截 |
+
+`useNonce` / `reportOnly` **不会**被拼进 CSP 指令字符串，只影响生成逻辑。
+
+#### `HSTSConfig`
+
+| 字段 | 类型 | 默认 | 说明 |
+|------|------|------|------|
+| `maxAge` | `number` | `15552000`（约 180 天） | 浏览器记住「必须 HTTPS」的秒数。初始化时若 `< 0` 会抛错 |
+| `includeSubDomains` | `boolean` | `true` | 为 `true` 时附加 `; includeSubDomains`，子域也强制 HTTPS |
+| `preload` | `boolean` | `true` | 为 `true` 时附加 `; preload`（提交浏览器预加载列表时需要；未全站 HTTPS 勿开） |
+
+再次强调：即使配置了 `hsts`，**非 production 也不会写出** `Strict-Transport-Security`。
+
+#### 默认 Permissions-Policy
+
+| 能力键 | 默认 | 白话 |
+|--------|------|------|
+| `camera` | `[]` | 禁用摄像头 |
+| `microphone` | `[]` | 禁用麦克风 |
+| `geolocation` | `[]` | 禁用地理位置 |
+| `interest-cohort` | `[]` | 禁用 FLoC / interest-cohort 类追踪相关能力 |
+
+空数组序列化为 `camera=()` 这种「不允许任何源」的形式。若要允许自身：`{ camera: ["self"] }`（键名按浏览器 Permissions-Policy 规范书写）。
+
+传入 `permissionsPolicy` 时与默认表**浅合并**（只覆盖你写的键）。
+
+#### `ReportToConfig`
+
+| 字段 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| `group` | `string` | 是 | 端点组名 |
+| `maxAge` | `number` | 是 | 配置缓存秒数；`< 0` 时初始化抛错 |
+| `endpoints` | `Array<{ url: string; priority?: number; weight?: number }>` | 是 | 至少一个端点，否则初始化抛错 |
+| `includeSubdomains` | `boolean` | 否 | 是否包含子域 |
+
+写出时字段名会转为规范 JSON：`max_age`、`include_subdomains`。
+
+#### `permission` 常量
+
+写 CSP 数组时优先用常量，避免漏引号：
+
+| 常量 | 值 | 白话 |
 |------|-----|------|
-| `permission.SELF` | `"'self'"` | 允许同源资源 |
-| `permission.UNSAFE_INLINE` | `"'unsafe-inline'"` | 允许内联脚本和样式 |
-| `permission.HTTPS` | `"https:"` | 允许 HTTPS 资源 |
-| `permission.DATA` | `"data:"` | 允许 data URI |
-| `permission.BLOB` | `"blob:"` | 允许 blob URI |
-| `permission.NONE` | `"'none'"` | 禁止所有资源 |
+| `permission.SELF` | `'self'` | 允许与当前文档同源 |
+| `permission.UNSAFE_INLINE` | `'unsafe-inline'` | 允许内联脚本/样式（削弱 XSS 防护，尽量少用） |
+| `permission.HTTPS` | `https:` | 允许任意 HTTPS 源（很宽） |
+| `permission.DATA` | `data:` | 允许 `data:` URL（常见于小图） |
+| `permission.NONE` | `'none'` | 不允许任何源 |
+| `permission.BLOB` | `blob:` | 允许 `blob:` URL |
 
-## 使用模式
-
-### 1. 基本安全配置
-
-```typescript
-import { Server, defineRoute, defineRoutes } from 'vafast'
-import { vafastHelmet } from '@vafast/helmet'
-
-// 使用默认安全配置
-const helmet = vafastHelmet()
-
-const routes = defineRoutes([
-  defineRoute({
-    method: 'GET',
-    path: '/',
-    middleware: [helmet],
-    handler: () => {
-      return { message: 'Secure by default' }
-    }
-  })
-])
-
-const server = new Server(routes)
-export default { fetch: server.fetch }
-```
-
-### 2. 自定义 CSP 配置
-
-```typescript
-import { Server, defineRoute, defineRoutes } from 'vafast'
-import { vafastHelmet, permission } from '@vafast/helmet'
-
-const helmet = vafastHelmet({
-  csp: {
-    defaultSrc: [permission.SELF],
-    scriptSrc: [
-      permission.SELF,
-      permission.UNSAFE_INLINE,
-      'https://cdn.jsdelivr.net',
-      'https://unpkg.com'
-    ],
-    styleSrc: [
-      permission.SELF,
-      permission.UNSAFE_INLINE,
-      'https://fonts.googleapis.com'
-    ],
-    fontSrc: [
-      permission.SELF,
-      'https://fonts.gstatic.com'
-    ],
-    imgSrc: [
-      permission.SELF,
-      permission.DATA,
-      permission.BLOB,
-      'https:'
-    ],
-    connectSrc: [
-      permission.SELF,
-      'https://api.example.com',
-      'wss://ws.example.com'
-    ],
-    frameSrc: [permission.SELF],
-    objectSrc: [permission.NONE],
-    baseUri: [permission.SELF],
-    reportUri: '/csp-report'
-  }
-})
-
-const routes = defineRoutes([
-  defineRoute({
-    method: 'GET',
-    path: '/',
-    middleware: [helmet],
-    handler: () => {
-      return { message: 'Custom CSP configuration' }
-    }
-  })
-])
-
-const server = new Server(routes)
-export default { fetch: server.fetch }
-```
-
-### 3. 严格的 CSP 配置
-
-```typescript
-import { Server, defineRoute, defineRoutes } from 'vafast'
-import { vafastHelmet, permission } from '@vafast/helmet'
-
-const strictHelmet = vafastHelmet({
-  csp: {
-    defaultSrc: [permission.SELF],
-    scriptSrc: [permission.SELF], // 不允许内联脚本
-    styleSrc: [permission.SELF],  // 不允许内联样式
-    imgSrc: [permission.SELF],
-    fontSrc: [permission.SELF],
-    connectSrc: [permission.SELF],
-    frameSrc: [permission.NONE],  // 禁止所有框架
-    objectSrc: [permission.NONE], // 禁止所有对象
-    baseUri: [permission.SELF],
-    useNonce: true // 启用 nonce 支持
-  },
-  frameOptions: 'DENY',
-  xssProtection: true,
-  referrerPolicy: 'strict-origin',
-  corp: 'same-origin',
-  coop: 'same-origin'
-})
-
-const routes = defineRoutes([
-  defineRoute({
-    method: 'GET',
-    path: '/secure',
-    middleware: [strictHelmet],
-    handler: () => {
-      return { message: 'Strict security configuration' }
-    }
-  })
-])
-
-const server = new Server(routes)
-export default { fetch: server.fetch }
-```
-
-### 4. 生产环境 HSTS 配置
-
-```typescript
-import { Server, defineRoute, defineRoutes } from 'vafast'
-import { vafastHelmet } from '@vafast/helmet'
-
-const productionHelmet = vafastHelmet({
-  hsts: {
-    maxAge: 31536000,        // 1 年
-    includeSubDomains: true, // 包含子域名
-    preload: true            // 预加载到浏览器
-  },
-  referrerPolicy: 'strict-origin-when-cross-origin',
-  permissionsPolicy: {
-    camera: [],
-    microphone: [],
-    geolocation: [],
-    'interest-cohort': [], // 禁用 FLoC
-    'payment': [],
-    'usb': []
-  }
-})
-
-const routes = defineRoutes([
-  defineRoute({
-    method: 'GET',
-    path: '/api',
-    middleware: [productionHelmet],
-    handler: () => {
-      return { message: 'Production security headers' }
-    }
-  })
-])
-
-const server = new Server(routes)
-export default { fetch: server.fetch }
-```
-
-### 5. 自定义头部和报告配置
-
-```typescript
-import { Server, defineRoute, defineRoutes } from 'vafast'
-import { vafastHelmet } from '@vafast/helmet'
-
-const advancedHelmet = vafastHelmet({
-  csp: {
-    defaultSrc: ["'self'"],
-    scriptSrc: ["'self'"],
-    reportUri: '/csp-report'
-  },
-  reportTo: [
-    {
-      group: 'csp-endpoint',
-      maxAge: 86400, // 24 小时
-      endpoints: [
-        {
-          url: 'https://reports.example.com/csp',
-          priority: 1,
-          weight: 1
-        }
-      ],
-      includeSubdomains: true
-    }
-  ],
-  customHeaders: {
-    'X-Custom-Security': 'enabled',
-    'X-Security-Level': 'high',
-    'X-Content-Security': 'strict'
-  }
-})
-
-const routes = defineRoutes([
-  defineRoute({
-    method: 'GET',
-    path: '/advanced',
-    middleware: [advancedHelmet],
-    handler: () => {
-      return { message: 'Advanced security configuration' }
-    }
-  })
-])
-
-const server = new Server(routes)
-export default { fetch: server.fetch }
-```
-
-### 6. 条件安全配置
-
-```typescript
-import { Server, defineRoute, defineRoutes } from 'vafast'
-import { vafastHelmet } from '@vafast/helmet'
-
-// 根据环境选择不同的安全配置
-const getSecurityConfig = () => {
-  if (process.env.NODE_ENV === 'production') {
-    return {
-      csp: {
-        defaultSrc: ["'self'"],
-        scriptSrc: ["'self'"],
-        styleSrc: ["'self'"],
-        imgSrc: ["'self'", "https:"],
-        connectSrc: ["'self'", "https://api.example.com"]
-      },
-      hsts: {
-        maxAge: 31536000,
-        includeSubDomains: true,
-        preload: true
-      },
-      frameOptions: 'DENY',
-      xssProtection: true
-    }
-  } else {
-    // 开发环境：更宽松的配置
-    return {
-      csp: {
-        defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
-        styleSrc: ["'self'", "'unsafe-inline'"],
-        imgSrc: ["'self'", "data:", "https:"],
-        connectSrc: ["'self'", "http://localhost:*", "ws://localhost:*"]
-      },
-      frameOptions: 'SAMEORIGIN',
-      xssProtection: false
-    }
-  }
-}
-
-const helmet = vafastHelmet(getSecurityConfig())
-
-const routes = defineRoutes([
-  defineRoute({
-    method: 'GET',
-    path: '/',
-    middleware: [helmet],
-    handler: () => {
-      return { 
-        message: 'Environment-aware security',
-        environment: process.env.NODE_ENV || 'development'
-      }
-    }
-  })
-])
-
-const server = new Server(routes)
-export default { fetch: server.fetch }
-```
-
-## 完整示例
-
-```typescript
-import { Server, defineRoute, defineRoutes } from 'vafast'
-import { vafastHelmet, permission } from '@vafast/helmet'
-
-// 创建不同安全级别的中间件
-const basicHelmet = vafastHelmet({
-  frameOptions: 'DENY',
-  xssProtection: true,
-  referrerPolicy: 'strict-origin-when-cross-origin'
-})
-
-const standardHelmet = vafastHelmet({
-  csp: {
-    defaultSrc: [permission.SELF],
-    scriptSrc: [permission.SELF, permission.UNSAFE_INLINE],
-    styleSrc: [permission.SELF, permission.UNSAFE_INLINE],
-    imgSrc: [permission.SELF, permission.DATA, permission.BLOB],
-    fontSrc: [permission.SELF],
-    connectSrc: [permission.SELF],
-    frameSrc: [permission.SELF],
-    objectSrc: [permission.NONE],
-    baseUri: [permission.SELF]
-  },
-  frameOptions: 'DENY',
-  xssProtection: true,
-  referrerPolicy: 'strict-origin-when-cross-origin',
-  dnsPrefetch: false,
-  corp: 'same-origin',
-  coop: 'same-origin'
-})
-
-const strictHelmet = vafastHelmet({
-  csp: {
-    defaultSrc: [permission.SELF],
-    scriptSrc: [permission.SELF],
-    styleSrc: [permission.SELF],
-    imgSrc: [permission.SELF],
-    fontSrc: [permission.SELF],
-    connectSrc: [permission.SELF],
-    frameSrc: [permission.NONE],
-    objectSrc: [permission.NONE],
-    baseUri: [permission.SELF],
-    useNonce: true
-  },
-  frameOptions: 'DENY',
-  xssProtection: true,
-  referrerPolicy: 'strict-origin',
-  dnsPrefetch: false,
-  corp: 'same-origin',
-  coop: 'same-origin',
-  permissionsPolicy: {
-    camera: [],
-    microphone: [],
-    geolocation: [],
-    'interest-cohort': [],
-    payment: [],
-    usb: [],
-    magnetometer: [],
-    gyroscope: [],
-    accelerometer: []
-  }
-})
-
-// 定义路由
-const routes = defineRoutes([
-  defineRoute({
-    method: 'GET',
-    path: '/',
-    handler: () => {
-      return { 
-        message: 'Vafast Security Headers API',
-        endpoints: [
-          '/basic - 基本安全头部',
-          '/standard - 标准安全配置',
-          '/strict - 严格安全配置',
-          '/custom - 自定义安全配置'
-        ]
-      }
-    }
-  }),
-  defineRoute({
-    method: 'GET',
-    path: '/basic',
-    middleware: [basicHelmet],
-    handler: () => {
-      return { 
-        message: 'Basic security headers applied',
-        security: 'Basic level'
-      }
-    }
-  }),
-  defineRoute({
-    method: 'GET',
-    path: '/standard',
-    middleware: [standardHelmet],
-    handler: () => {
-      return { 
-        message: 'Standard security configuration applied',
-        security: 'Standard level',
-        csp: 'Enabled',
-        frameOptions: 'DENY',
-        xssProtection: 'Enabled'
-      }
-    }
-  }),
-  defineRoute({
-    method: 'GET',
-    path: '/strict',
-    middleware: [strictHelmet],
-    handler: () => {
-      return { 
-        message: 'Strict security configuration applied',
-        security: 'Strict level',
-        csp: 'Strict mode',
-        frameOptions: 'DENY',
-        xssProtection: 'Enabled',
-        permissionsPolicy: 'Restricted'
-      }
-    }
-  }),
-  defineRoute({
-    method: 'GET',
-    path: '/custom',
-    middleware: [
-      vafastHelmet({
-        csp: {
-          defaultSrc: [permission.SELF],
-          scriptSrc: [permission.SELF, 'https://cdn.example.com'],
-          styleSrc: [permission.SELF, 'https://fonts.googleapis.com'],
-          imgSrc: [permission.SELF, 'https:', permission.DATA],
-          connectSrc: [permission.SELF, 'https://api.example.com'],
-          reportUri: '/csp-report'
-        },
-        hsts: {
-          maxAge: 31536000,
-          includeSubDomains: true,
-          preload: true
-        },
-        customHeaders: {
-          'X-Security-Version': '2.0',
-          'X-Content-Security': 'enabled'
-        }
-      })
-    ],
-    handler: () => {
-      return { 
-        message: 'Custom security configuration applied',
-        security: 'Custom level'
-      }
-    }
-  }),
-  defineRoute({
-    method: 'POST',
-    path: '/csp-report',
-    handler: async (req: Request) => {
-      const report = await req.json()
-      console.log('CSP Violation Report:', report)
-      
-      // 这里可以记录到日志系统或数据库
-      // logCSPViolation(report)
-      
-      return { 
-        message: 'CSP report received',
-        timestamp: new Date().toISOString()
-      }
-    }
-  })
-])
-
-// 创建服务器
-const server = new Server(routes)
-
-// 导出 fetch 函数
-export default { fetch: server.fetch }
-```
-
-console.log('Vafast Security Headers API 服务器启动成功！')
-console.log('基本安全: GET /basic')
-console.log('标准安全: GET /standard')
-console.log('严格安全: GET /strict')
-console.log('自定义安全: GET /custom')
-console.log('CSP 报告: POST /csp-report')
-```
-
-## 测试示例
-
-```typescript
-import { describe, expect, it } from 'bun:test'
-import { Server, defineRoute, defineRoutes } from 'vafast'
-import { vafastHelmet, permission } from '@vafast/helmet'
-
-describe('Vafast Helmet Security Headers', () => {
-  it('should add basic security headers', async () => {
-    const helmet = vafastHelmet({
-      frameOptions: 'DENY',
-      xssProtection: true,
-    })
-
-    const app = new Server(defineRoutes([
-      defineRoute({
-        method: 'GET',
-        path: '/',
-        middleware: [helmet],
-        handler: () => {
-          return { message: 'Hello World with Security Headers!' }
-        }
-      })
-    ]))
-
-    const res = await app.fetch(new Request('http://localhost/'))
-    
-    expect(res.headers.get('X-Frame-Options')).toBe('DENY')
-    expect(res.headers.get('X-XSS-Protection')).toBe('1; mode=block')
-    expect(res.headers.get('X-Content-Type-Options')).toBe('nosniff')
-  })
-
-  it('should add CSP headers', async () => {
-    const helmet = vafastHelmet({
-      csp: {
-        defaultSrc: [permission.SELF],
-        scriptSrc: [permission.SELF, permission.UNSAFE_INLINE],
-        styleSrc: [permission.SELF, permission.UNSAFE_INLINE],
-      },
-    })
-
-    const app = new Server(defineRoutes([
-      defineRoute({
-        method: 'GET',
-        path: '/',
-        middleware: [helmet],
-        handler: () => {
-          return { message: 'Hello World!' }
-        }
-      })
-    ]))
-
-    const res = await app.fetch(new Request('http://localhost/'))
-    
-    const csp = res.headers.get('Content-Security-Policy')
-    expect(csp).toContain("default-src 'self'")
-    expect(csp).toContain("script-src 'self' 'unsafe-inline'")
-    expect(csp).toContain("style-src 'self' 'unsafe-inline'")
-  })
-
-  it('should handle custom headers', async () => {
-    const helmet = vafastHelmet({
-      customHeaders: {
-        'X-Custom-Header': 'custom-value',
-        'X-Another-Header': 'another-value',
-      },
-    })
-
-    const app = new Server(defineRoutes([
-      defineRoute({
-        method: 'GET',
-        path: '/',
-        middleware: [helmet],
-        handler: () => {
-          return { message: 'Hello World!' }
-        }
-      })
-    ]))
-
-    const res = await app.fetch(new Request('http://localhost/'))
-    
-    expect(res.headers.get('X-Custom-Header')).toBe('custom-value')
-    expect(res.headers.get('X-Another-Header')).toBe('another-value')
-  })
-
-  it('should handle HSTS headers in production', async () => {
-    // 模拟生产环境
-    const originalEnv = process.env.NODE_ENV
-    process.env.NODE_ENV = 'production'
-
-    const helmet = vafastHelmet({
-      hsts: {
-        maxAge: 31536000,
-        includeSubDomains: true,
-        preload: true,
-      },
-    })
-
-    const app = new Server(defineRoutes([
-      defineRoute({
-        method: 'GET',
-        path: '/',
-        middleware: [helmet],
-        handler: () => {
-          return { message: 'Hello World!' }
-        }
-      })
-    ]))
-
-    const res = await app.fetch(new Request('http://localhost/'))
-    
-    expect(res.headers.get('Strict-Transport-Security')).toBe('max-age=31536000; includeSubDomains; preload')
-
-    // 恢复环境变量
-    process.env.NODE_ENV = originalEnv
-  })
-
-  it('should handle nonce generation', async () => {
-    const helmet = vafastHelmet({
-      csp: {
-        defaultSrc: [permission.SELF],
-        scriptSrc: [permission.SELF],
-        useNonce: true,
-      },
-    })
-
-    const app = new Server(defineRoutes([
-      defineRoute({
-        method: 'GET',
-        path: '/',
-        middleware: [helmet],
-        handler: () => {
-          return { message: 'Hello World!' }
-        }
-      })
-    ]))
-
-    const res = await app.fetch(new Request('http://localhost/'))
-    
-    const csp = res.headers.get('Content-Security-Policy')
-    const nonce = res.headers.get('X-Nonce')
-    
-    expect(csp).toContain("'nonce-")
-    expect(nonce).toBeTruthy()
-    expect(nonce?.length).toBeGreaterThan(10)
-  })
-})
-```
-
-## 特性
-
-- ✅ **内容安全策略 (CSP)**: 防止 XSS 攻击和资源注入
-- ✅ **HTTP 严格传输安全 (HSTS)**: 强制 HTTPS 连接
-- ✅ **XSS 保护**: 启用浏览器内置的 XSS 保护
-- ✅ **框架选项**: 防止点击劫持攻击
-- ✅ **引用策略**: 控制引用信息的泄露
-- ✅ **权限策略**: 限制浏览器功能的访问
-- ✅ **跨域策略**: 控制跨域资源的访问
-- ✅ **报告机制**: 支持 CSP 违规报告
-- ✅ **Nonce 支持**: 安全的内联脚本和样式支持
-- ✅ **性能优化**: 高效的头部分析和生成
-- ✅ **类型安全**: 完整的 TypeScript 类型支持
+也可在数组里直接写具体源，如 `'https://cdn.example.com'`。
 
 ## 最佳实践
 
-### 1. 渐进式安全策略
-
-```typescript
-// 开发环境：宽松配置
-const devHelmet = vafastHelmet({
-  csp: {
-    defaultSrc: ["'self'"],
-    scriptSrc: ["'self'", "'unsafe-inline'"],
-    styleSrc: ["'self'", "'unsafe-inline'"],
-  }
-})
-
-// 生产环境：严格配置
-const prodHelmet = vafastHelmet({
-  csp: {
-    defaultSrc: ["'self'"],
-    scriptSrc: ["'self'"],
-    styleSrc: ["'self'"],
-    useNonce: true
-  },
-  hsts: {
-    maxAge: 31536000,
-    includeSubDomains: true,
-    preload: true
-  }
-})
-```
-
-### 2. CSP 监控和报告
-
-```typescript
-const monitoredHelmet = vafastHelmet({
-  csp: {
-    defaultSrc: ["'self'"],
-    scriptSrc: ["'self'"],
-    reportUri: '/csp-report',
-    reportOnly: false // 生产环境设为 false
-  },
-  reportTo: [
-    {
-      group: 'csp-violations',
-      maxAge: 86400,
-      endpoints: [
-        {
-          url: 'https://reports.example.com/csp',
-          priority: 1
-        }
-      ]
-    }
-  ]
-})
-```
-
-### 3. 资源白名单管理
-
-```typescript
-const resourceHelmet = vafastHelmet({
-  csp: {
-    defaultSrc: ["'self'"],
-    scriptSrc: [
-      "'self'",
-      'https://cdn.jsdelivr.net',
-      'https://unpkg.com'
-    ],
-    styleSrc: [
-      "'self'",
-      'https://fonts.googleapis.com',
-      'https://cdn.jsdelivr.net'
-    ],
-    fontSrc: [
-      "'self'",
-      'https://fonts.gstatic.com'
-    ],
-    imgSrc: [
-      "'self'",
-      'data:',
-      'https:',
-      'blob:'
-    ],
-    connectSrc: [
-      "'self'",
-      'https://api.example.com',
-      'wss://ws.example.com'
-    ]
-  }
-})
-```
-
-### 4. 安全头部组合
-
-```typescript
-const comprehensiveHelmet = vafastHelmet({
-  csp: {
-    defaultSrc: ["'self'"],
-    scriptSrc: ["'self'"],
-    styleSrc: ["'self'"],
-    imgSrc: ["'self'", "data:", "https:"],
-    connectSrc: ["'self'", "https://api.example.com"],
-    frameSrc: ["'self'"],
-    objectSrc: ["'none'"],
-    baseUri: ["'self'"]
-  },
-  frameOptions: 'DENY',
-  xssProtection: true,
-  referrerPolicy: 'strict-origin-when-cross-origin',
-  dnsPrefetch: false,
-  corp: 'same-origin',
-  coop: 'same-origin',
-  permissionsPolicy: {
-    camera: [],
-    microphone: [],
-    geolocation: [],
-    'interest-cohort': [],
-    payment: [],
-    usb: []
-  }
-})
-```
+- 生产环境再依赖 HSTS；本地开发不要强行模拟 `NODE_ENV=production`，除非已全站 HTTPS。
+- CSP 按业务收紧：尽量去掉 `'unsafe-inline'`，需要内联脚本时用 `useNonce`。
+- 对外嵌入第三方页面时，按需放宽 `frameOptions` / `corp` / `coop`，避免误伤合法跨域。
+- 新策略可先用 `csp.reportOnly: true` 收集违规，再切正式拦截。
+- 使用 CDN / 第三方埋点时，把对应域名加进 `scriptSrc` / `connectSrc` / `imgSrc`，否则会被浏览器拦掉。
 
 ## 注意事项
 
-1. **CSP 配置**: 过于严格的 CSP 可能会破坏现有功能，建议逐步收紧
-2. **HSTS 设置**: 一旦启用 HSTS，很难撤销，确保 HTTPS 配置正确
-3. **性能影响**: 安全头部会增加响应大小，但影响通常很小
-4. **兼容性**: 某些安全头部在旧浏览器中可能不被支持
-5. **测试**: 在生产环境部署前，充分测试安全配置
+- HSTS **只在生产环境**写出；非 production 即使配置了 `hsts` 也不会设置该头。
+- `hsts.maxAge < 0` 或 `reportTo` 配置非法（`maxAge < 0`、endpoints 为空）会在**初始化时**抛错。
+- 中间件在 `next()` 之后包装 `Response` 写入头；下游若返回不可变 Headers，行为取决于运行时。
+- `frameOptions: 'ALLOW-FROM'` 已过时，现代浏览器请优先用 CSP 的 `frame-ancestors`（本包 CSP 配置未单独暴露该指令字段；若需要可考虑 `customHeaders` 或收紧其它策略）。
+- Nonce 每次请求重新生成；SSR 页面必须把当次响应的 `X-Nonce` 注入到 HTML，不能写死。
 
 ## 相关链接
 
-- [Content Security Policy - MDN](https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP)
-- [HTTP Strict Transport Security - MDN](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Strict-Transport-Security)
-- [X-Frame-Options - MDN](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options)
-- [Referrer Policy - MDN](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Referrer-Policy)
-- [Permissions Policy - MDN](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Permissions-Policy)
-- [Vafast 官方文档](https://vafast.dev)
+- [CORS](/middleware/cors)
+- [MDN · CSP](https://developer.mozilla.org/docs/Web/HTTP/CSP)
+- [MDN · HSTS](https://developer.mozilla.org/docs/Web/HTTP/Headers/Strict-Transport-Security)
+- [中间件系统](/middleware)

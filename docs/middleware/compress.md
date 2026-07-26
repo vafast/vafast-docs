@@ -2,648 +2,214 @@
 title: Compress 中间件 - Vafast
 ---
 
-# Compress 中间件
+# Compress
 
-用于 [Vafast](https://github.com/vafastjs/vafast) 的压缩中间件，支持 Brotli、GZIP 和 Deflate 压缩算法。
+`@vafast/compress` 根据客户端请求头 `Accept-Encoding`，在响应返回前压缩响应体，从而减小传输体积。支持 **Brotli（`br`）/ gzip / deflate**。
+
+导出名是 **`compression`**（不是 `compress`）：
+
+```typescript
+import { compression } from '@vafast/compress'
+// 也可用 default：import compression from '@vafast/compress'
+```
+
+## 先搞清几个概念（给新用户）
+
+### 响应压缩是做什么的？
+
+浏览器或 HTTP 客户端在请求里声明「我能解压哪些格式」，服务端若同意，就把响应体压小后再发送，并在响应头里写上实际用了哪种算法。常见效果：JSON / HTML / 文本体积明显变小，带宽与加载时间下降。
+
+### `Accept-Encoding` 协商（本包如何选算法）
+
+1. 客户端例如发送：`Accept-Encoding: br, gzip, deflate`
+2. 中间件读取该头，按 **逗号+空格**（`, `）拆成列表
+3. 用你配置的 `encodings`（默认 `['br', 'gzip', 'deflate']`）去过滤：只保留**同时出现在客户端列表里**的项
+4. 过滤后的列表**保留 `encodings` 的顺序**，取**第一个**作为最终算法
+
+因此：**服务端数组顺序 = 优先级**。默认优先 Brotli，其次 gzip，再次 deflate。
+
+注意（与完整 HTTP 协商的差异，以源码为准）：
+
+- 匹配是「字符串是否在拆分后的列表中」，**不会**解析 `q` 权重（如 `gzip;q=0.8`）
+- 若客户端写成 `br,gzip`（逗号后无空格），拆分结果可能对不上，导致不压缩
+- 没有 `Accept-Encoding`，或与 `encodings` **无交集** → **不压缩**
+
+### `threshold`（阈值）是什么？
+
+对**已经读成一整块缓冲区**的响应：若 `byteLength < threshold`（默认 **1024** 字节），跳过压缩。
+
+原因：很小的响应压完可能差不多大，还浪费 CPU。流式路径（见下）不走这个字节数判断。
+
+### zlib `level` / Brotli `quality` 白话
+
+| 选项 | 作用 | 默认（本包） |
+|------|------|----------------|
+| `zlibOptions.level` | gzip / deflate 的压缩级别，大致 **0–9**：越高越省体积、越费 CPU | **`6`** |
+| `brotliOptions.params[BROTLI_PARAM_QUALITY]` | Brotli 质量，大致 **0–11**：越高越省体积、越费 CPU | Node 的 **`BROTLI_DEFAULT_QUALITY`**（通常为 11） |
+
+调优经验：API JSON 常用默认或略降 quality；CPU 紧张时可把 Brotli quality 降到 4–6，或干脆只用 gzip。
+
+### `compressStream`：类型注释 vs 运行时默认
+
+| 来源 | 默认值 |
+|------|--------|
+| `types.ts` 的 JSDoc（`@default false`） | 写的是 `false` |
+| **运行时** `options?.compressStream ?? true` | **`true`** |
+
+以**运行时为准：默认会压缩 `ReadableStream` body**。SSE（`text/event-stream`）等长连接建议显式设 `compressStream: false`。
 
 ## 安装
-
-通过以下命令安装：
 
 ```bash
 npm install @vafast/compress
 ```
 
-## 基本用法
+## 快速开始
 
 ```typescript
-import { Server, defineRoute, defineRoutes } from 'vafast'
+import { Server, defineRoute, defineRoutes, json, serve } from 'vafast'
 import { compression } from '@vafast/compress'
 
-// 定义路由处理器
 const routes = defineRoutes([
   defineRoute({
     method: 'GET',
     path: '/',
-    middleware: [
-      compression({
-        encodings: ['br', 'gzip', 'deflate'],
-        threshold: 1024,
-        compressStream: false
-      })
-    ],
-    handler: () => {
-      return { message: 'Hello World!'.repeat(100) } // 生成足够长的响应以触发压缩
-    }
-  })
-])
-
-// 创建服务器
-const server = new Server(routes)
-
-// 导出 fetch 函数
-export default { fetch: server.fetch }
-```
-
-## 配置选项
-
-### CompressionOptions
-
-```typescript
-interface CompressionOptions {
-  /**
-   * Brotli 压缩选项
-   * @see https://nodejs.org/api/zlib.html#compressor-options
-   */
-  brotliOptions?: BrotliOptions
-
-  /**
-   * GZIP 或 Deflate 压缩选项
-   * @see https://nodejs.org/api/zlib.html#class-options
-   */
-  zlibOptions?: ZlibOptions
-
-  /**
-   * 支持的压缩编码
-   * 默认优先级：1. br (Brotli) 2. gzip 3. deflate
-   * 如果客户端不支持某个编码或缺少 accept-encoding 头部，将不会压缩
-   * 示例：encodings: ['gzip', 'deflate']
-   */
-  encodings?: CompressionEncoding[]
-
-  /**
-   * 是否通过 x-no-compression 头部禁用压缩
-   * 默认情况下，如果请求包含 x-no-compression 头部，将不会压缩响应
-   * @default true
-   */
-  disableByHeader?: boolean
-
-  /**
-   * 触发压缩的最小字节大小
-   * @default 1024
-   */
-  threshold?: number
-
-  /**
-   * 是否压缩流数据
-   * 通常用于 Server-Sent Events
-   * @link https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events
-   * @default false
-   */
-  compressStream?: boolean
-}
-```
-
-### LifeCycleOptions
-
-```typescript
-interface LifeCycleOptions {
-  /**
-   * 中间件执行顺序和作用域
-   * @default 'after'
-   */
-  as?: 'before' | 'after'
-}
-```
-
-### CacheOptions
-
-```typescript
-interface CacheOptions {
-  /**
-   * 缓存的生存时间（秒）
-   * @default 86400 (24 小时)
-   */
-  TTL?: number
-}
-```
-
-## 压缩算法
-
-### 支持的编码
-
-- **Brotli (`br`)**: 现代压缩算法，通常提供最佳的压缩比
-- **GZIP (`gzip`)**: 广泛支持的压缩算法，兼容性好
-- **Deflate (`deflate`)**: 轻量级压缩算法
-
-### 默认优先级
-
-1. `br` (Brotli) - 最高优先级
-2. `gzip` - 中等优先级  
-3. `deflate` - 最低优先级
-
-## 使用模式
-
-### 1. 基本压缩配置
-
-```typescript
-import { Server, defineRoute, defineRoutes } from 'vafast'
-import { compression } from '@vafast/compress'
-
-const routes = defineRoutes([
-  defineRoute({
-    method: 'GET',
-    path: '/api/data',
-    middleware: [
-      compression({
-        encodings: ['br', 'gzip'],
-        threshold: 512, // 降低阈值，更容易触发压缩
-        compressStream: false
-      })
-    ],
-    handler: () => {
-      // 返回大量数据，触发压缩
-      return {
-        data: Array.from({ length: 1000 }, (_, i) => ({
-          id: i,
-          name: `Item ${i}`,
-          description: `This is a description for item ${i}`.repeat(10)
-        }))
-      }
-    }
-  })
+    handler: () => json({ message: 'Hello '.repeat(200) }),
+  }),
 ])
 
 const server = new Server(routes)
-export default { fetch: server.fetch }
+server.use(compression())
+serve({ fetch: server.fetch, port: 3000 })
 ```
 
-### 2. 自定义压缩选项
+用支持压缩的客户端访问时，响应会带上 `Content-Encoding`（如 `br`）以及 `Vary: accept-encoding`。
+
+## 用法
+
+### 基础用法
+
+推荐**全局挂载**：中间件先 `await next()`，再按需改写 body / 响应头。
 
 ```typescript
-import { Server, defineRoute, defineRoutes } from 'vafast'
-import { compression } from '@vafast/compress'
+server.use(compression())
+```
+
+客户端需带可协商编码，例如：
+
+```http
+Accept-Encoding: br, gzip, deflate
+```
+
+### 常见场景
+
+#### 1. 只启用 gzip / deflate，并提高阈值
+
+```typescript
+server.use(
+  compression({
+    encodings: ['gzip', 'deflate'],
+    threshold: 2048,
+  }),
+)
+```
+
+#### 2. SSE / 流式响应：关闭流压缩
+
+```typescript
+server.use(
+  compression({
+    compressStream: false,
+  }),
+)
+```
+
+说明：当 `compressStream === true` 且 `response.body instanceof ReadableStream` 时，走 `pipeThrough(CompressionStream(...))`，**不检查** `threshold` / Content-Type 正则。SSE 请关掉流压缩。
+
+#### 3. 客户端跳过压缩
+
+默认 `disableByHeader: true`：请求带任意值的 `x-no-compression` 头时直接透传。
+
+```http
+GET /large-json
+x-no-compression: 1
+```
+
+#### 4. 调优压缩级别与内存缓存
+
+非流式路径会对「算法 + 原文」做 MD5 键的**进程内缓存**（`TTL` 秒，默认 24 小时）。
+
+```typescript
 import { constants } from 'node:zlib'
-
-const routes = defineRoutes([
-  defineRoute({
-    method: 'GET',
-    path: '/optimized',
-    middleware: [
-      compression({
-        encodings: ['br', 'gzip'],
-        threshold: 100, // 非常低的阈值
-        compressStream: true, // 启用流压缩
-        brotliOptions: {
-          params: {
-            [constants.BROTLI_PARAM_QUALITY]: 11, // 最高质量
-            [constants.BROTLI_PARAM_MODE]: constants.BROTLI_MODE_GENERIC
-          }
-        },
-        zlibOptions: {
-          level: 9, // 最高压缩级别
-          memLevel: 9 // 最高内存使用
-        },
-        TTL: 3600 // 1 小时缓存
-      })
-    ]
-  }
-]
-
-const server = new Server(routes)
-export default { fetch: server.fetch }
-```
-
-### 3. 条件压缩
-
-```typescript
-import { Server, defineRoute, defineRoutes } from 'vafast'
 import { compression } from '@vafast/compress'
 
-const routes = defineRoutes([
-  defineRoute({
-    method: 'GET',
-    path: '/public',
-    handler: () => {
-      return { message: 'Public endpoint - no compression' }
-    }
-    // 不应用压缩中间件
+server.use(
+  compression({
+    zlibOptions: { level: 6 },
+    brotliOptions: {
+      params: {
+        [constants.BROTLI_PARAM_QUALITY]: 4,
+      },
+    },
+    TTL: 3600,
   }),
-  defineRoute({
-    method: 'GET',
-    path: '/api/large',
-    middleware: [
-      compression({
-        encodings: ['br'],
-        threshold: 100,
-        compressStream: false
-      })
-    ],
-    handler: () => {
-      return { 
-        data: 'Large response data'.repeat(1000),
-        timestamp: Date.now()
-      }
-    }
-    ]
-  }
-]
-
-const server = new Server(routes)
-export default { fetch: server.fetch }
+)
 ```
 
-### 4. 流数据压缩
+## API
+
+### 导出
+
+| 导出 | 说明 |
+|------|------|
+| `compression` | 中间件工厂（主入口） |
+| `default` | 同 `compression` |
+| `CompressionStream` | 把 Node zlib Transform 桥成 Web Streams，供流式 `pipeThrough` |
+| `CompressionOptions` / `CompressionEncoding` / `LifeCycleOptions` / `CacheOptions` 等 | 类型 |
+
+### 选项 / 参数
 
 ```typescript
-import { Server, defineRoute, defineRoutes } from 'vafast'
-import { compression } from '@vafast/compress'
-
-const routes = defineRoutes([
-  defineRoute({
-    method: 'GET',
-    path: '/stream',
-    middleware: [
-      compression({
-        encodings: ['br', 'gzip'],
-        compressStream: true
-      })
-    ],
-    handler: () => {
-      // 创建 Server-Sent Events 流
-      const stream = new ReadableStream({
-        start(controller) {
-          let count = 0
-          const interval = setInterval(() => {
-            if (count >= 100) {
-              clearInterval(interval)
-              controller.close()
-              return
-            }
-            
-            const data = `data: ${JSON.stringify({
-              id: count,
-              message: `Event ${count}`,
-              timestamp: Date.now()
-            })}\n\n`
-            
-            controller.enqueue(new TextEncoder().encode(data))
-            count++
-          }, 100)
-        }
-      })
-
-      return new Response(stream, {
-        headers: {
-          'Content-Type': 'text/event-stream',
-          'Cache-Control': 'no-cache',
-          'Connection': 'keep-alive'
-        }
-      })
-    }),
-    middleware: [
-      compression({
-        encodings: ['gzip'],
-        threshold: 1,
-        compressStream: true, // 启用流压缩
-        zlibOptions: { level: 6 }
-      })
-    ]
-  }
-]
-
-const server = new Server(routes)
-export default { fetch: server.fetch }
+compression(options?: CompressionOptions & LifeCycleOptions & CacheOptions)
 ```
 
-### 5. 全局压缩配置
+| 参数 | 类型 | 默认 | 说明 |
+|------|------|------|------|
+| `encodings` | `('br' \| 'gzip' \| 'deflate')[]` | `['br', 'gzip', 'deflate']` | 服务端优先级；与 `Accept-Encoding` 求交后取第一个 |
+| `threshold` | `number` | `1024` | 缓冲响应小于该字节数则不压缩 |
+| `disableByHeader` | `boolean` | `true` | 为 `true` 时，请求含 `x-no-compression` 则跳过 |
+| `compressStream` | `boolean` | **运行时 `true`**（类型 JSDoc 仍写 `false`，以运行为准） | 是否对 `ReadableStream` body 做流式压缩 |
+| `brotliOptions` | `BrotliOptions` | 缓冲路径：GENERIC + 默认 quality；流式路径默认 MODE_TEXT + 默认 quality | 传给 `brotliCompressSync` / `createBrotliCompress` |
+| `zlibOptions` | `ZlibOptions` | `{ level: 6 }` | 传给 gzip / deflate |
+| `TTL` | `number` | `86400`（24h） | 压缩结果内存缓存 TTL（秒）；仅非流式 `getOrCompress` |
+| `as` | `'before' \| 'after'` | `'after'` | 类型保留字段；**当前实现读取后未使用**，可忽略 |
 
-```typescript
-import { Server, defineRoute, defineRoutes } from 'vafast'
-import { compression } from '@vafast/compress'
+### 相关方法
 
-const routes = defineRoutes([
-  defineRoute({
-    method: 'GET',
-    path: '/api/users',
-    handler: () => {
-      return { users: generateLargeUserList() }
-    }
-  }),
-  defineRoute({
-    method: 'GET',
-    path: '/api/products',
-    handler: () => {
-      return { products: generateLargeProductList() }
-    }
-  })
-])
+#### `CompressionStream(encoding, options?)`
 
-const server = new Server(routes)
+供流式路径内部 `pipeThrough` 使用。一般业务代码不必直接调用。
 
-// 创建全局压缩中间件
-server.use(compression({
-  encodings: ['br', 'gzip'],
-  threshold: 1024,
-  compressStream: false,
-  TTL: 7200 // 2 小时缓存
-}))
+## 最佳实践
 
-export default { fetch: server.fetch }
-```
-
-## 完整示例
-
-```typescript
-import { Server, defineRoute, defineRoutes } from 'vafast'
-import { compression } from '@vafast/compress'
-import { constants } from 'node:zlib'
-
-// 模拟数据生成函数
-const generateLargeDataset = (size: number) => {
-  return Array.from({ length: size }, (_, i) => ({
-    id: i,
-    name: `Item ${i}`,
-    description: `This is a detailed description for item ${i}`.repeat(5),
-    metadata: {
-      category: `Category ${i % 10}`,
-      tags: [`tag${i}`, `tag${i + 1}`, `tag${i + 2}`],
-      createdAt: new Date(Date.now() - i * 86400000).toISOString()
-    }
-  }))
-}
-
-const generateMarkdownContent = () => {
-  return `# 大型文档内容
-
-## 章节 1
-${'这是章节 1 的详细内容，包含大量文本信息。'.repeat(100)}
-
-## 章节 2
-${'这是章节 2 的详细内容，同样包含大量文本信息。'.repeat(100)}
-
-## 章节 3
-${'这是章节 3 的详细内容，继续包含大量文本信息。'.repeat(100)}
-
-## 总结
-${'这是一个包含大量内容的文档，用于演示压缩效果。'.repeat(50)}
-`
-}
-
-// 定义路由
-const routes = defineRoutes([
-  defineRoute({
-    method: 'GET',
-    path: '/',
-    handler: () => {
-      return { 
-        message: 'Vafast Compression API',
-        endpoints: [
-          '/api/data - 获取大型数据集',
-          '/api/markdown - 获取 Markdown 文档',
-          '/api/stream - 获取流式数据',
-          '/api/optimized - 获取优化压缩的数据'
-        ]
-      }
-    }
-  }),
-  defineRoute({
-    method: 'GET',
-    path: '/api/data',
-    middleware: [
-      compression({
-        encodings: ['br', 'gzip'],
-        threshold: 1024,
-        compressStream: false,
-        TTL: 3600 // 1 小时缓存
-      })
-    ],
-    handler: () => {
-      return {
-        message: 'Large dataset retrieved successfully',
-        data: generateLargeDataset(500),
-        totalItems: 500,
-        timestamp: Date.now()
-      }
-    }
-  }),
-  defineRoute({
-    method: 'GET',
-    path: '/api/markdown',
-    middleware: [
-      compression({
-        encodings: ['br', 'gzip', 'deflate'],
-        threshold: 512,
-        compressStream: false
-      })
-    ],
-    handler: () => {
-      return {
-        content: generateMarkdownContent(),
-        format: 'markdown',
-        size: generateMarkdownContent().length,
-        timestamp: Date.now()
-      }
-    }
-  }),
-  defineRoute({
-    method: 'GET',
-    path: '/api/stream',
-    middleware: [
-      compression({
-        encodings: ['gzip'],
-        threshold: 1,
-        compressStream: true,
-        zlibOptions: { level: 6 }
-      })
-    ],
-    handler: () => {
-      const stream = new ReadableStream({
-        start(controller) {
-          let count = 0
-          const interval = setInterval(() => {
-            if (count >= 50) {
-              clearInterval(interval)
-              controller.close()
-              return
-            }
-            
-            const data = `data: ${JSON.stringify({
-              id: count,
-              message: `Stream event ${count}`,
-              data: `Event data ${count}`.repeat(20),
-              timestamp: Date.now()
-            })}\n\n`
-            
-            controller.enqueue(new TextEncoder().encode(data))
-            count++
-          }, 200)
-        }
-      })
-
-      return new Response(stream, {
-        headers: {
-          'Content-Type': 'text/event-stream',
-          'Cache-Control': 'no-cache',
-          'Connection': 'keep-alive'
-        }
-      })
-    }
-  }),
-  defineRoute({
-    method: 'GET',
-    path: '/api/optimized',
-    middleware: [
-      compression({
-        encodings: ['br'],
-        threshold: 100,
-        compressStream: false,
-        brotliOptions: {
-          params: {
-            [constants.BROTLI_PARAM_QUALITY]: 11,
-            [constants.BROTLI_PARAM_MODE]: constants.BROTLI_MODE_GENERIC
-          }
-        },
-        TTL: 7200 // 2 小时缓存
-      })
-    ],
-    handler: () => {
-      return {
-        message: 'Optimized compression response',
-        data: generateLargeDataset(200),
-        compression: {
-          algorithm: 'brotli',
-          quality: 'maximum',
-          cache: 'enabled'
-        }
-      }
-    }
-  })
-])
-
-// 创建服务器
-const server = new Server(routes)
-
-// 导出 fetch 函数
-export default { fetch: server.fetch }
-```
-
-console.log('Vafast Compression API 服务器启动成功！')
-console.log('数据端点: GET /api/data (启用 Brotli/GZIP 压缩)')
-console.log('文档端点: GET /api/markdown (启用多种压缩算法)')
-console.log('🌊 流式端点: GET /api/stream (启用流压缩)')
-console.log('优化端点: GET /api/optimized (启用 Brotli 最高质量压缩)')
-```
-
-## 测试示例
-
-```typescript
-import { describe, expect, it } from 'bun:test'
-
-describe('Vafast Compression API', () => {
-  it('should compress large responses', async () => {
-    const res = await app.fetch(new Request('http://localhost/api/data'))
-    
-    expect(res.headers.get('Content-Encoding')).toBeTruthy()
-    expect(res.headers.get('Vary')).toBe('accept-encoding')
-    expect(res.ok).toBe(true)
-  })
-  
-  it('should not compress small responses below threshold', async () => {
-    const res = await app.fetch(new Request('http://localhost/'))
-    
-    expect(res.headers.get('Content-Encoding')).toBeNull()
-    expect(res.headers.get('Vary')).toBeNull()
-    expect(res.ok).toBe(true)
-  })
-  
-  it('should respect x-no-compression header', async () => {
-    const res = await app.fetch(new Request('http://localhost/api/data', {
-      headers: { 'x-no-compression': 'true' }
-    }))
-    
-    expect(res.headers.get('Content-Encoding')).toBeNull()
-    expect(res.ok).toBe(true)
-  })
-  
-  it('should handle different accept-encoding preferences', async () => {
-    const res = await app.fetch(new Request('http://localhost/api/data', {
-      headers: { 'accept-encoding': 'gzip, deflate' }
-    }))
-    
-    expect(res.headers.get('Content-Encoding')).toBe('gzip')
-    expect(res.ok).toBe(true)
-  })
-})
-```
-
-## 特性
-
-- ✅ **多种压缩算法**: 支持 Brotli、GZIP 和 Deflate
-- ✅ **智能编码选择**: 根据客户端的 `accept-encoding` 头部自动选择最佳压缩方式
-- ✅ **可配置阈值**: 可设置最小压缩字节大小
-- ✅ **流数据支持**: 支持压缩 Server-Sent Events 等流数据
-- ✅ **缓存机制**: 内置压缩结果缓存，提高性能
-- ✅ **HTTP 标准兼容**: 自动设置 `Content-Encoding` 和 `Vary` 头部
-- ✅ **条件压缩**: 支持通过请求头部禁用压缩
-- ✅ **类型安全**: 完整的 TypeScript 类型支持
-
-## 性能优化建议
-
-### 1. 压缩级别选择
-
-```typescript
-// 生产环境 - 平衡压缩比和性能
-compression({
-  zlibOptions: { level: 6 }, // 默认级别
-  brotliOptions: {
-    params: {
-      [constants.BROTLI_PARAM_QUALITY]: 6 // 平衡质量
-    }
-  }
-})
-
-// 开发环境 - 快速压缩
-compression({
-  zlibOptions: { level: 1 },
-  brotliOptions: {
-    params: {
-      [constants.BROTLI_PARAM_QUALITY]: 3
-    }
-  }
-})
-```
-
-### 2. 缓存策略
-
-```typescript
-// 静态内容 - 长缓存
-compression({
-  TTL: 86400 * 7 // 7 天
-})
-
-// 动态内容 - 短缓存
-compression({
-  TTL: 3600 // 1 小时
-})
-```
-
-### 3. 阈值优化
-
-```typescript
-// 文本内容 - 低阈值
-compression({
-  threshold: 256 // 256 字节
-})
-
-// 二进制内容 - 高阈值
-compression({
-  threshold: 2048 // 2KB
-})
-```
+1. API JSON / HTML 适合全局开压缩；已经是 `.zip` / 图片等二进制时，常因 Content-Type 不被匹配而自动跳过
+2. SSE / 长连接流式响应建议 `compressStream: false`
+3. 用 `threshold` 避免小响应白耗 CPU
+4. `TTL` 缓存适合热点、内容重复的响应；注意进程内存占用，多实例各自一份缓存
+5. 调试体积时可让客户端带 `x-no-compression` 对比原文
 
 ## 注意事项
 
-1. **压缩开销**: 压缩会增加 CPU 开销，对于小文件可能得不偿失
-2. **缓存策略**: 合理设置 TTL 值，避免内存泄漏
-3. **流压缩**: 启用 `compressStream` 时注意内存使用
-4. **内容类型**: 某些二进制格式（如图片、视频）不适合压缩
-5. **HTTPS 影响**: 在 HTTPS 连接中，压缩可能被 TLS 层处理
+- 仅压缩 **`response.ok`**（状态码 200–299）的响应
+- 无交集的 `Accept-Encoding`、或缺失该头 → 不压缩
+- 缓冲路径下，`Content-Type` 需匹配可压缩类型（大致：非 event-stream 的 `text/*`、`json`、`xml`、`octet-stream` 等）；**无 Content-Type 时按可压缩处理**
+- `text/event-stream` 不在默认可压缩 Content-Type 正则内，但若 `compressStream: true` 且 body 是 `ReadableStream`，仍可能走流压缩——SSE 请关 `compressStream`
+- 会设置 `Content-Encoding`，并合并 `Vary: accept-encoding`（已有 `Vary: *` 则不追加）
+- 依赖 Node `zlib` / `crypto`（非纯 Edge 环境请自行确认兼容性）
 
 ## 相关链接
 
-- [HTTP 压缩 - MDN](https://developer.mozilla.org/en-US/docs/Web/HTTP/Compression)
-- [Accept-Encoding - MDN](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Encoding)
-- [Content-Encoding - MDN](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Encoding)
-- [Brotli 压缩算法](https://en.wikipedia.org/wiki/Brotli)
-- [Vafast 官方文档](https://vafast.dev)
+- [SSE](/essential/sse)
+- [中间件系统](/middleware/overview)
+- [MDN: Accept-Encoding](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Encoding)
+- [Node.js zlib](https://nodejs.org/api/zlib.html)
