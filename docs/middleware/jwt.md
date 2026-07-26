@@ -54,8 +54,6 @@ await req.jwt.verify(token)
 npm install @vafast/jwt
 ```
 
-若要用 `schema` 做 TypeBox 校验，用 **`vafast` 导出的 `Type`**（框架已集成 TypeBox，脚手架也是这么写的）。**不必**再单独安装 `@sinclair/typebox`。
-
 ## 快速开始
 
 ```typescript
@@ -137,14 +135,14 @@ defineRoute({
 
 #### 1. TypeBox schema 约束 payload
 
-`schema` 已接入 vafast 重导出的 TypeBox `Value.Check`：
+`schema` 使用 TypeBox 做 payload 校验：
 
 - `sign`：不符合 → **抛错** `JWT payload does not match schema`
 - `verify`：不符合 → 返回 **`false`**（不抛错）
 - jose 附带的 `iss` / `exp` / `iat` 等标准 claims 不会误杀业务 schema（会同时试「完整 payload」与「去掉标准 claims 后的业务字段」）
 
 ```typescript
-import { Type } from 'vafast'
+import { Type } from '@sinclair/typebox'
 import { jwt } from '@vafast/jwt'
 
 const Payload = Type.Object({
@@ -158,10 +156,6 @@ const jwtMiddleware = jwt({
   schema: Payload,
 })
 ```
-
-::: tip 为什么不要 `import { Type } from '@sinclair/typebox'`？
-`vafast` 依赖并重导出 TypeBox（`import { Type } from 'vafast'`）。`@vafast/jwt` 将 TypeBox 作为 **peerDependency（^0.34）**，与框架共用同一份实例。若再直接装另一份（尤其大版本不一致），`schema` 可能因内部 `Kind` 符号不同而校验失败。请始终与路由 schema 一样，从 `vafast` 取 `Type`。
-:::
 
 #### 2. 登录后把 JWT 写入 Cookie
 
