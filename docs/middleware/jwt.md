@@ -185,10 +185,14 @@ defineRoute({
 
 #### 3. 在路由内自行做鉴权
 
+给鉴权中间件标上上下文泛型，**同一条叶子路由**上挂 `middleware` 时，handler 能直接推断 `user`：
+
 ```typescript
 import { defineMiddleware, err } from 'vafast'
 
-const requireUser = defineMiddleware(async (req, next) => {
+type AuthUser = { id: string }
+
+const requireUser = defineMiddleware<{ user: AuthUser }>(async (req, next) => {
   const header = req.headers.get('authorization')
   const token = header?.startsWith('Bearer ') ? header.slice(7) : undefined
   const payload = await (req as JwtRequest).jwt.verify(token)
@@ -200,13 +204,57 @@ defineRoute({
   method: 'GET',
   path: '/profile',
   middleware: [jwtMiddleware, requireUser],
-  handler: ({ user }) => json({ id: user.id }),
+  handler: ({ user }) => json({ id: user.id }), // user 有类型
 })
 ```
 
 也可先用 [@vafast/bearer](/middleware/bearer) 提取 token，再 `verify`。
 
-#### 4. 多套密钥（access / refresh）
+#### 4. 嵌套路由 / 拆文件时用 `withContext`（类型安全）
+
+`@vafast/jwt` **本身不注入** `user`，只挂 `sign` / `verify`。  
+`withContext` 解决的是另一件事：你自己的鉴权中间件用 `next({ user })` 注入上下文后，**父级挂中间件、子路由写在 `children` 或别的文件里**时，TypeScript **推不出**父级注入的字段。
+
+| 场景 | 要不要 `withContext` |
+|------|----------------------|
+| 只用 `req.jwt.sign` / `verify` | **不必**。继续用 `JwtRequest`（或小 helper）标注即可 |
+| `middleware: [jwt, requireUser]` 写在**同一条叶子路由**上 | **通常不必**。给 `defineMiddleware<{ user }>` 标泛型即可推断 |
+| 组路由挂鉴权，叶子在 `children` / 多文件复用 | **需要**。用 `withContext<{ user }>()` 封装路由定义器 |
+
+```typescript
+import { withContext, defineRoute, defineRoutes, defineMiddleware, err } from 'vafast'
+
+type AuthUser = { id: string }
+
+const requireUser = defineMiddleware<{ user: AuthUser }>(async (req, next) => {
+  const token = req.headers.get('authorization')?.replace(/^Bearer\s+/i, '')
+  const payload = await (req as JwtRequest).jwt.verify(token)
+  if (!payload?.userId) throw err.unauthorized('请先登录')
+  return next({ user: { id: payload.userId } })
+})
+
+// 纯类型包装，零运行时开销
+const defineAuthedRoute = withContext<{ user: AuthUser }>()
+
+const profileRoute = defineAuthedRoute({
+  method: 'GET',
+  path: '/profile',
+  handler: ({ user }) => json({ id: user.id }), // 子路由也能拿到类型
+})
+
+defineRoutes([
+  defineRoute({
+    path: '/api',
+    middleware: [jwtMiddleware, requireUser], // 运行时在父级注入
+    children: [profileRoute],                 // 类型靠 withContext 接上
+  }),
+])
+```
+
+更完整的说明见 [最佳实践 · withContext](/essential/best-practice#9-用-withcontext-封装类型安全路由) 与 [中间件 · withContext](/middleware#父级中间件类型注入withcontext)。  
+若走独立认证服务，可直接用 [@vafast/auth-middleware](/middleware/auth-middleware) 自带的 `defineAuthRouteWithApp` 等，不必手写。
+
+#### 5. 多套密钥（access / refresh）
 
 `name` 不同即可挂多实例：
 
@@ -234,7 +282,7 @@ defineRoute({
 })
 ```
 
-#### 5. 配置标准声明（issuer / audience / 过期）
+#### 6. 配置标准声明（issuer / audience / 过期）
 
 ```typescript
 const jwtMiddleware = jwt({
@@ -396,6 +444,7 @@ Header 描述「这个 JWT 怎么签、用哪把钥匙」，多数应用只需�
 5. Cookie 存 JWT 时加 **`HttpOnly` + `Secure` + `SameSite`**；跨站场景再仔细评估 `SameSite=None`。
 6. 需要吊销能力时，给 token 加 **`jti`**，并在服务端维护黑名单 / 版本号。
 7. 多服务架构建议明确配置 **`iss` / `aud`**，避免 token 被串用到错误服务。
+8. 自写 `next({ user })` 且路由拆到 `children` / 多文件时，用 **`withContext`** 保证 handler 类型；不要把 `withContext` 误当成 jwt 包的必需步骤。
 
 ## 注意事项
 
@@ -403,12 +452,14 @@ Header 描述「这个 JWT 怎么签、用哪把钥匙」，多数应用只需�
 - `verify` 失败返回 `false`，不会抛错；请在业务里显式处理
 - `secret` 为空会在**创建中间件时**立即抛错（不是等第一次请求）
 - Payload **可被解码阅读**，签名只防篡改，不防窥视——HTTPS 仍然必要
-- 类型上方法挂在 `Request` 上，需要自行扩展类型（如示例中的 `JwtRequest`）
+- `req.jwt` 的类型需自行扩展（如示例中的 `JwtRequest`）；`withContext` **不能**替代这一步
 - 默认算法是 **HS256（对称密钥）**；改 `alg` 时请确认 `secret` / 密钥材料与算法匹配
 
 ## 相关链接
 
 - [Bearer](/middleware/bearer) — 从请求提取 token
 - [Cookie](/middleware/cookie) — 用 Cookie 传递 JWT
+- [Auth Middleware](/middleware/auth-middleware) — 生产鉴权与 `defineAuthRouteWithApp`
+- [withContext](/essential/best-practice#9-用-withcontext-封装类型安全路由) — 跨 children 的上下文类型
 - [中间件系统](/middleware/overview)
 - [jose](https://github.com/panva/jose) · [RFC 7519](https://www.rfc-editor.org/rfc/rfc7519)
