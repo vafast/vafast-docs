@@ -121,6 +121,11 @@ requestLogger({
 - `appId` ← header `app-id`
 - `authType` ← `Authorization` 前缀启发式（`Bearer ak_` → apiKey，`Bearer eyJ` → jwt）
 - `userId` ← 未验签解析 JWT payload 的 `sub` / `userId` / `id`
+- `clientKey` ← header `client-key`（Ones App Client）
+- `platform` ← header `x-platform`
+- `appVersion` ← header `x-app-version`
+
+端字段在 headers 脱敏前解析并写入 ingest **顶层**；缺失或空串为 `null`。log-server 不再从 headers 兜底。
 
 ### 采样与熔断
 
@@ -227,7 +232,8 @@ requestLogger(options: RequestLoggerOptions): Middleware
 {
   method, url, path, headers, body, query,
   status, duration, service,
-  appId, authType, userId, ip, traceId, userAgent,
+  appId, authType, userId, clientKey, platform, appVersion,
+  ip, traceId, userAgent,
   createdAt, response,
   clientIp?, requestId?
 }
