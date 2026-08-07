@@ -57,12 +57,37 @@ title: Permission 中间件 - Vafast
 
 业务侧封装一次 `createPermissionMiddleware`；需要管控的路由写 `permission: true`。未声明则只认证、不查权限。
 
+### 推荐分层（长期固定）
+
+| 层 | 职责 | 写法 |
+|----|------|------|
+| 认证 | 你是谁、哪个 app | `authWithApp` |
+| 硬授权 | 整个接口进不进门 | 路由 `permission` + 中间件 |
+| 业务规则 | 条件字段 / 数据范围 | handler / assert 辅助函数 |
+
+硬授权的 grants 可以来自多处，在**同一个中间件**合并：
+
+```ts
+createPermissionMiddleware({
+  roles: defineRoles({ owner: ['*'], admin: ['*'], member: [] }),
+  getRole,           // 组织角色 → 角色表
+  getExtraGrants,    // 平台/应用权限串，与角色并集（OR）
+})
+```
+
+| 场景 | 怎么做 |
+|------|--------|
+| 管理接口必须组织 admin | `permission: true`（角色表给 `*`） |
+| 组织 admin **或** 平台权限 | 同上 + `getExtraGrants`；或显式 `permission: 'platform_xxx'` |
+| 仅当 body 某字段才要权限（如 `accessScope=all_apps`） | **不要**整路由挂 permission；handler 里用与中间件同一套 grants 判断 |
+| 能进门但数据范围不同 | **不写** permission；handler 软过滤 |
+
 ### 失败码：401 vs 403
 
 | 场景 | 状态码 |
 |------|--------|
-| `getRole` 返回 `null`（无主体） | **401** |
-| 有角色但 grants 不覆盖需求 | **403** |
+| 无角色且无额外 grants（无主体） | **401** |
+| 有主体但 grants 不覆盖需求 | **403** |
 
 ## 安装
 
@@ -192,6 +217,34 @@ defineRoute({
 ```
 
 组织 / 租户只需在 `getRole` 里调自己的用户中心，**不必**把组织概念写进本包。
+
+### 复合权限（组织角色 OR 平台权限）
+
+```typescript
+export const orgPermission = createPermissionMiddleware({
+  pathPrefix: '/onesRestfulApi',
+  roles: defineRoles({
+    owner: ['*'],
+    admin: ['*'],
+    member: [],
+    app_member: [],
+  }),
+  async getRole(req) { /* getOrgRole → owner/admin/... */ },
+  async getExtraGrants(req) {
+    // 查 auth-server checkPermission
+    if (await hasPlatformManage(req)) {
+      return ['platform_resource_access:manage']
+    }
+    return []
+  },
+})
+
+// 整路由硬拦截：
+permission: 'platform_resource_access:manage'
+// owner/admin 有 * 也能过；仅有平台权限的人靠 getExtraGrants
+```
+
+条件场景（例如只有 `accessScope === 'all_apps'` 才校验）请在 handler 里复用同一套 grants 解析，而不是给整个 create/update 挂 `permission`。
 
 ### 可选缓存
 
