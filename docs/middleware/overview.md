@@ -22,6 +22,7 @@ Vafast 官方插件按需安装。多数是 `server.use(...)` 中间件；少数
 | [JWT](/middleware/jwt) | JWT 签发 / 校验工具 | `npm i @vafast/jwt` |
 | [Logger](/middleware/logger) | Pino 日志工厂（非请求中间件） | `npm i @vafast/logger` |
 | [OpenTelemetry](/middleware/opentelemetry) | 分布式追踪（tracing） | `npm i @vafast/opentelemetry` |
+| [Permission](/middleware/permission) | 声明式权限 / RBAC（可插拔 Resolver） | `npm i @vafast/permission` |
 | [Rate Limit](/middleware/rate-limit) | 速率限制 | `npm i @vafast/rate-limit` |
 | [Request ID](/middleware/request-id) | 请求 ID 生成与透传 | `npm i @vafast/request-id` |
 | [Request Logger](/middleware/request-logger) | HTTP 访问日志中间件 | `npm i @vafast/request-logger` |

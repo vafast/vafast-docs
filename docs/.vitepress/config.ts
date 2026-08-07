@@ -385,6 +385,10 @@ export default defineConfig({
                         link: '/middleware/opentelemetry'
                     },
                     {
+                        text: 'Permission',
+                        link: '/middleware/permission'
+                    },
+                    {
                         text: 'Rate Limit',
                         link: '/middleware/rate-limit'
                     },
