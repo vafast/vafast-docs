@@ -14,15 +14,20 @@ title: Permission - Vafast
 
 ### Permission key
 
-建议使用点分三级（可更长）：
+点分字符串，建议：
 
 ```text
 {domain}.{module}.{action}
 ```
 
-例如：`billing.points.adjust`、`users.invite`。
+与 [Webhook](/middleware/webhook) 一样：**默认从路径自动生成**，也可显式覆盖。
 
-**Grant（持有）** 可以带通配；**路由需求** 通常写精确 key：
+| 路径 | `pathPrefix` | 自动 key |
+|------|--------------|----------|
+| `/billing/points/adjust` | （无） | `billing.points.adjust` |
+| `/restfulApi/auth/signIn` | `/restfulApi` | `auth.signIn` |
+
+**Grant（持有）** 可以带通配：
 
 | Grant | 能匹配的需求 |
 |-------|----------------|
@@ -87,37 +92,41 @@ const resolve = createRoleResolver({
 const routes = defineRoutes([
   defineRoute({
     method: 'GET',
-    path: '/billing/points',
+    path: '/billing/points/read',
     name: '积分余额',
-    permission: 'billing.points.read',
+    permission: true, // → billing.points.read
     handler: () => ({ balance: 100 }),
   }),
   defineRoute({
     method: 'POST',
     path: '/billing/points/adjust',
     name: '调整积分',
-    permission: 'billing.points.adjust',
+    permission: true, // → billing.points.adjust
     handler: () => ({ ok: true }),
   }),
 ])
 
 const server = new Server(routes)
 server.use(permission({ resolve }))
+// 统一 API 前缀时：permission({ resolve, pathPrefix: '/restfulApi' })
 serve({ fetch: server.fetch, port: 3000 })
 ```
 
 ```bash
-curl -H 'x-role: finance' http://localhost:3000/billing/points
+curl -H 'x-role: finance' http://localhost:3000/billing/points/read
 curl -H 'x-role: member' -X POST http://localhost:3000/billing/points/adjust
 # member → 403
 ```
 
 ## 用法
 
-### 路由字段
+### 路由字段（与 webhook 同构）
 
 ```typescript
-permission: 'billing.points.adjust'
+permission: true                      // 推荐：路径推导
+permission: {}                        // 同 true
+permission: 'billing.points.adjust'   // 显式单 key
+permission: { key: 'billing.points.adjust' }
 
 permission: {
   anyOf: ['billing.points.adjust', 'billing.points.batchAdjust'],
@@ -128,7 +137,8 @@ permission: {
 }
 ```
 
-未声明 `permission` 的路由：全局中间件**直接放行**。
+未声明 `permission` 的路由：全局中间件**直接放行**。  
+路径会变但角色表要保持稳定时，再用显式 `key`（对标 webhook 的 `eventKey`）。
 
 ### 类型扩展（withContext）
 
@@ -143,8 +153,8 @@ const defineAppRoute = withContext<
 
 defineAppRoute({
   method: 'POST',
-  path: '/admin',
-  permission: 'users.invite',
+  path: '/users/invite',
+  permission: true,
   handler: ({ userInfo }) => ({ id: userInfo.id }),
 })
 ```
@@ -234,7 +244,8 @@ const tree = buildPermissionTree([
 | `matchPermission(grant, required)` | 单 grant 是否覆盖 |
 | `hasPermission(grants, required)` | 集合是否覆盖 |
 | `checkRequirement(grants, requirement)` | 含 anyOf / allOf |
-| `parsePermissionConfig(value)` | 解析路由字段 |
+| `generatePermissionKey(path)` | 路径 → key |
+| `resolvePermissionConfig(value, path)` | 解析路由字段（含 `true` 推导） |
 
 ## 失败响应
 
@@ -257,6 +268,7 @@ const tree = buildPermissionTree([
 ## 注意事项
 
 - **授权 ≠ 认证**：请先挂登录 / API Key 中间件。
+- 推荐 `permission: true`；与 webhook 一样用 `pathPrefix` 去掉统一 API 前缀。
 - 通配规则与 webhook 订阅的 `eventKey` 通配一致（`*` / `prefix.*`）。
 - 全局 `permission()` 依赖 RouteRegistry；未初始化时放行，避免开发期误伤。
 - 包本身不包含 Ones / 组织模型；那是业务 Resolver 的实现细节。
