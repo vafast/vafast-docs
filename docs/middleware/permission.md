@@ -86,6 +86,8 @@ export const orgPermission = createPermissionMiddleware({
     member: ['billing.points.read'],
   }),
   getRole: (req) => req.headers.get('x-role'), // 生产环境改为查组织角色
+  // 默认不缓存。需要时可开：
+  // cache: { cacheKey: cacheKeyFromUserAndApp, ttlMs: 60_000 },
 })
 
 const routes = defineRoutes([
