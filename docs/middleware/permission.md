@@ -228,12 +228,16 @@ export const orgPermission = createPermissionMiddleware({
     admin: ['*'],
     member: [],
     app_member: [],
+    none: [], // 已认证无组织 → 403（不是 401）
   }),
-  async getRole(req) { /* getOrgRole → owner/admin/... */ },
-  async getExtraGrants(req) {
+  async getRole(req) { /* getOrgRole → owner/admin/none */ },
+  async getExtraGrants(req, role) {
+    if (role === 'owner' || role === 'admin') return []
     // 查 auth-server checkPermission
     if (await hasPlatformManage(req)) {
-      return ['platform_resource_access:manage']
+      // 目录写服务可再并入路径通配，使平台管理员能过 permission: true
+      // 例如 billing: businessLine.* / ai: modelCatalog.*
+      return ['platform_resource_access:manage', 'modelCatalog.*']
     }
     return []
   },
@@ -244,7 +248,9 @@ permission: 'platform_resource_access:manage'
 // owner/admin 有 * 也能过；仅有平台权限的人靠 getExtraGrants
 ```
 
-条件场景（例如只有 `accessScope === 'all_apps'` 才校验）请在 handler 里复用同一套 grants 解析，而不是给整个 create/update 挂 `permission`。
+条件场景（例如只有 `accessScope === 'all_apps'` 才校验）请在 handler 里复用同一套 grants 解析（`assertCanManageAllAppsResourceAccess`），**写库前预检**，而不是给整个 create/update 挂 `permission`。
+
+Ones 平台落地分层见仓库 `misc/docs/permission-system.md` 第十二节。
 
 ### 可选缓存
 
