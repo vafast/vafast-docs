@@ -72,49 +72,52 @@ npm install @vafast/permission
 ```typescript
 import { Server, defineRoute, defineRoutes, serve } from 'vafast'
 import {
-  permission,
+  createPermissionMiddleware,
   defineRoles,
-  createRoleResolver,
 } from '@vafast/permission'
 
-const roles = defineRoles({
-  owner: ['*'],
-  admin: ['billing.*', 'users.*'],
-  finance: ['billing.points.*', 'billing.orders.*'],
-  member: ['billing.points.read'],
-})
-
-const resolve = createRoleResolver({
-  getRole: (req) => req.headers.get('x-role'),
-  roles,
+/** 业务封装一次；挂在认证之后的路由组上 */
+export const orgPermission = createPermissionMiddleware({
+  pathPrefix: '/billingRestfulApi', // 有统一前缀才写，对齐 webhook
+  roles: defineRoles({
+    owner: ['*'],
+    admin: ['billing.*', 'users.*'],
+    finance: ['billing.points.*', 'billing.orders.*'],
+    member: ['billing.points.read'],
+  }),
+  getRole: (req) => req.headers.get('x-role'), // 生产环境改为查组织角色
 })
 
 const routes = defineRoutes([
   defineRoute({
-    method: 'GET',
-    path: '/billing/points/read',
-    name: '积分余额',
-    permission: true, // → billing.points.read
-    handler: () => ({ balance: 100 }),
-  }),
-  defineRoute({
-    method: 'POST',
-    path: '/billing/points/adjust',
-    name: '调整积分',
-    permission: true, // → billing.points.adjust
-    handler: () => ({ ok: true }),
+    path: '/billingRestfulApi',
+    middleware: [/* authWithApp, */ orgPermission],
+    children: [
+      defineRoute({
+        method: 'GET',
+        path: '/billing/points/read',
+        permission: true, // → billing.points.read
+        handler: () => ({ balance: 100 }),
+      }),
+      defineRoute({
+        method: 'POST',
+        path: '/billing/points/adjust',
+        permission: true, // → billing.points.adjust
+        handler: () => ({ ok: true }),
+      }),
+    ],
   }),
 ])
 
 const server = new Server(routes)
-server.use(permission({ resolve }))
-// 统一 API 前缀时：permission({ resolve, pathPrefix: '/restfulApi' })
 serve({ fetch: server.fetch, port: 3000 })
 ```
 
+> **挂载位置：** 不要 `server.use(orgPermission)`（全局早于路由 auth）。写成 `middleware: [authWithApp, orgPermission]`。webhook 可以 `server.use`，因为它在 `next()` 之后跑。
+
 ```bash
-curl -H 'x-role: finance' http://localhost:3000/billing/points/read
-curl -H 'x-role: member' -X POST http://localhost:3000/billing/points/adjust
+curl -H 'x-role: finance' http://localhost:3000/billingRestfulApi/billing/points/read
+curl -H 'x-role: member' -X POST http://localhost:3000/billingRestfulApi/billing/points/adjust
 # member → 403
 ```
 
@@ -137,7 +140,7 @@ permission: {
 }
 ```
 
-未声明 `permission` 的路由：全局中间件**直接放行**。  
+未声明 `permission` 的路由：**直接放行**（即使挂了 orgPermission）。  
 路径会变但角色表要保持稳定时，再用显式 `key`（对标 webhook 的 `eventKey`）。
 
 ### 类型扩展（withContext）
