@@ -51,6 +51,7 @@
         "vue": "^3.5.18"
     },
     "overrides": {
+        "floating-vue": "5.2.2",
         "vite": "npm:rolldown-vite@latest",
         "vitepress": "^2.0.0-alpha.9",
         "vue": "^3.5.18"

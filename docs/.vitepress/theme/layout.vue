@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { nextTick, provide, onMounted, computed } from 'vue'
+import { nextTick, provide, onMounted } from 'vue'
 import { useData, useRouter } from 'vitepress'
 import DefaultTheme from 'vitepress/theme-without-fonts'
 
@@ -17,8 +17,6 @@ const asset = (path: string) => {
     const normalized = path.startsWith('/') ? path.slice(1) : path
     return `${base}${normalized}`
 }
-
-const shigureMaskUrl = computed(() => asset('assets/shigure-ui-smol.gif'))
 
 const enableTransitions = () =>
     'startViewTransition' in document &&
@@ -136,7 +134,8 @@ router.onAfterRouteChange = () => {
 }
 
 ::view-transition-new(root) {
-    mask: v-bind(shigureMaskUrl) center / 0 no-repeat;
+    /* 纯 CSS 圆形遮罩（原 shigure-ui-smol.gif 已随旧品牌资源删除）/ CSS-only circular mask, no image asset */
+    mask: radial-gradient(circle closest-side, #000 99%, transparent 100%) center / 0 no-repeat;
     animation: var(--switch-name) var(--switch-duration);
 }
 
