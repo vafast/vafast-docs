@@ -12,7 +12,7 @@
         "type": "git",
         "url": "https://github.com/vafast/vafast-docs"
     },
-    "homepage": "https://vafast.huyooo.com",
+    "homepage": "https://vafast.okayok.ai",
     "dependencies": {
         "@iconify/json": "^2.2.365",
         "@number-flow/vue": "^0.4.8",

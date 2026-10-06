@@ -12,7 +12,7 @@ import { analyzer } from 'vite-bundle-analyzer'
 const description =
     'Vafast 是一个高性能、类型安全的 TypeScript Web 框架，专为现代 Web 应用设计，提供优秀的开发者体验和灵活的中间件系统。'
 
-// 自定义域名部署：https://vafast.huyooo.com/
+// 自定义域名部署：https://vafast.okayok.ai/
 const base = '/'
 
 export default defineConfig({
@@ -22,7 +22,7 @@ export default defineConfig({
     titleTemplate: ':title - Vafast 中文文档',
 
     sitemap: {
-        hostname: 'https://vafast.huyooo.com'
+        hostname: 'https://vafast.okayok.ai'
     },
     locales: {
         root: {
@@ -112,7 +112,7 @@ export default defineConfig({
             'meta',
             {
                 property: 'og:image',
-                content: 'https://vafast.huyooo.com/assets/vafast.svg'
+                content: 'https://vafast.okayok.ai/assets/vafast.svg'
             }
         ],
         [
@@ -126,7 +126,7 @@ export default defineConfig({
             'meta',
             {
                 property: 'twitter:image',
-                content: 'https://vafast.huyooo.com/assets/vafast.png'
+                content: 'https://vafast.okayok.ai/assets/vafast.png'
             }
         ],
         [

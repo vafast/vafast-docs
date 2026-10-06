@@ -22,7 +22,7 @@
 
 ### 访问地址
 
-- **自定义域名**: https://vafast.huyooo.com
+- **自定义域名**: https://vafast.okayok.ai
 - **GitHub Pages**: https://vafast.github.io/vafast-docs/
 
 ## 手动发布步骤
@@ -70,7 +70,7 @@ gh pr merge <PR_NUMBER> --merge --delete-branch
 gh run list --workflow="Deploy to GitHub Pages" --limit 1
 
 # 访问网站验证
-open https://vafast.huyooo.com
+open https://vafast.okayok.ai
 ```
 
 ## 自定义域名配置
@@ -86,7 +86,7 @@ open https://vafast.huyooo.com
 ### GitHub Pages 配置
 
 1. 访问仓库设置：https://github.com/vafast/vafast-docs/settings/pages
-2. 在 "Custom domain" 输入：`vafast.huyooo.com`
+2. 在 "Custom domain" 输入：`vafast.okayok.ai`
 3. 勾选 "Enforce HTTPS"
 4. 保存
 

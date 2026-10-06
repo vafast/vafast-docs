@@ -24,4 +24,4 @@ npm run preview
 ## 相关链接
 
 - [Vafast GitHub](https://github.com/vafast/vafast)
-- [在线文档](https://vafast.huyooo.com)
+- [在线文档](https://vafast.okayok.ai)
