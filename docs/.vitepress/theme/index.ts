@@ -38,6 +38,8 @@ export default {
                 emitMetadata: '0',
                 inputPosition: 'bottom',
                 lang: 'zh-CN',
+                // 按页面语言切换 giscus 界面语言 / follow the page locale
+                locales: { 'zh-CN': 'zh-CN', 'en-US': 'en' },
                 crossorigin: 'anonymous',
                 lightTheme: 'light',
                 darkTheme: 'transparent_dark',

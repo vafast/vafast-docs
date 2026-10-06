@@ -352,7 +352,7 @@ Vafast 社区是一个充满活力的开发者社区，我们致力于：
 
 - **立即加入**: [GitHub Discussions](https://github.com/vafast/vafast/discussions)
 - **实时交流**: [Discord 服务器](https://discord.gg/vafast)
-- **贡献代码**: [贡献指南](/contributing)
-- **学习资源**: [文档中心](/docs)
+- **贡献代码**: [贡献指南](https://github.com/vafast/vafast/blob/main/CONTRIBUTING.md)
+- **学习资源**: [文档中心](/at-glance)
 
 让我们一起构建更好的 Web 开发体验！

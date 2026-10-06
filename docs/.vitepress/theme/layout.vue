@@ -7,6 +7,7 @@ import mediumZoom from 'medium-zoom'
 
 import useDark from './use-dark'
 import Ray from '../../components/fern/ray.vue'
+import LocaleToggle from './locale-toggle.vue'
 
 const isDark = useDark()
 const { isDark: darkTheme, site } = useData()
@@ -79,23 +80,14 @@ router.onAfterRouteChange = () => {
     <link
         rel="preload"
         as="image"
-        :href="asset('assets/vafast_v.webp')"
-        fetchpriority="high"
-    />
-    <link
-        rel="preload"
-        as="image"
         :href="asset('assets/vafast.svg')"
         fetchpriority="high"
     />
-    <link
-        rel="preload"
-        as="image"
-        :href="asset('assets/shigure-ui-smol.gif')"
-        fetchpriority="low"
-    />
     <meta name="theme-color" :content="isDark ? '#0f172a' : '#ffffff'" />
     <DefaultTheme.Layout>
+        <template #nav-bar-content-after>
+            <LocaleToggle />
+        </template>
         <template #doc-top>
             <Ray
                 class="h-[220px] top-0 left-0 opacity-25 dark:opacity-[.55] pointer-events-none"

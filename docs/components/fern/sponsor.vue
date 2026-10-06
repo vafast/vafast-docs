@@ -3,7 +3,7 @@
         class="relative max-w-5xl w-full mx-auto py-20 px-6"
         ref="scope"
     >
-        <!-- 标题 -->
+        <!-- Title -->
         <div class="text-center mb-12">
             <motion.h2
                 class="text-4xl md:text-5xl font-bold mb-4"
@@ -12,26 +12,25 @@
                 <span
                     class="text-transparent bg-clip-text bg-gradient-to-r from-rose-400 to-pink-500"
                 >
-                    由你实现
+                    {{ m.sponsor.heading }}
                 </span>
             </motion.h2>
             <motion.p
                 class="text-lg text-gray-500 dark:text-gray-400 max-w-xl mx-auto"
                 v-bind="flyIn(0.1)"
             >
-                Vafast 不是由某个组织拥有，而是由社区推动。您的支持让 Vafast
-                得以持续发展。
+                {{ m.sponsor.description }}
             </motion.p>
         </div>
 
-        <!-- CTA 按钮 -->
+        <!-- CTA button -->
         <motion.div class="flex justify-center mb-16" v-bind="flyIn(0.2)">
             <a
                 class="inline-flex items-center gap-2 px-8 py-3 text-white font-semibold bg-gradient-to-r from-rose-500 to-pink-500 rounded-full shadow-lg shadow-pink-500/25 hover:shadow-xl hover:shadow-pink-500/30 transition-all duration-300 hover:scale-105"
                 href="https://github.com/vafast/vafast"
                 target="_blank"
             >
-                成为赞助商
+                {{ m.sponsor.cta }}
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="20"
@@ -173,12 +172,12 @@
             </motion.ul>
         </section>
 
-        <!-- 感谢语 -->
+        <!-- Thank-you note -->
         <motion.p
             class="text-center text-sm font-medium text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-rose-400 mt-12"
             v-bind="flyIn(0.7)"
         >
-            Thank you for making Vafast possible
+            {{ m.sponsor.thanks }}
         </motion.p>
     </section>
 </template>
@@ -189,6 +188,9 @@ import { useInView, motion } from 'motion-v'
 import { useFlyIn } from './animate'
 
 import { data, type Sponsor } from './sponsor.data'
+import { useI18n } from '../../.vitepress/i18n'
+
+const { m } = useI18n()
 
 const scope = ref(null)
 const isInView = useInView(scope, {

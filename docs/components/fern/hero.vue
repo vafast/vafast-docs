@@ -20,37 +20,37 @@
                 />
             </div>
 
-            <!-- 主标题 -->
+            <!-- Main title -->
             <h1
                 class="text-4xl md:text-6xl lg:text-7xl font-bold text-center leading-tight md:leading-tight lg:leading-tight mb-6 text-gray-800 dark:text-gray-100"
             >
-                <span class="sr-only">Vafast – 高性能 TypeScript Web 框架：</span>轻量、快速、类型安全
+                <span class="sr-only">{{ m.hero.srOnly }}</span>{{ m.hero.title }}
             </h1>
 
-            <!-- 副标题 -->
+            <!-- Subtitle -->
             <p
                 class="text-lg md:text-xl text-gray-500 dark:text-gray-400 text-center max-w-2xl mb-4 leading-relaxed"
             >
-                基于 TypeScript 的现代 Web 框架，声明式路由、自动类型推断、内置 Schema 验证
+                {{ m.hero.subtitle }}
             </p>
 
-            <!-- 支持的运行时 -->
+            <!-- Supported runtimes -->
             <p
                 class="text-sm md:text-base text-gray-400 dark:text-gray-500 text-center mb-10"
             >
-                支持 Node.js、Bun、Cloudflare Workers
+                {{ m.hero.runtimes }}
             </p>
 
-            <!-- CTA 区域 -->
+            <!-- CTA area -->
             <section
                 class="flex flex-col sm:flex-row items-center w-full md:w-auto gap-4 mb-12"
             >
                 <a
                     class="hero-btn text-white font-semibold text-lg bg-gradient-to-r from-violet-500 to-sky-500 px-8 py-3 rounded-full transform hover:scale-105 shadow-lg shadow-violet-500/25"
                     id="hero-get-started"
-                    href="/at-glance"
+                    :href="localePath('/at-glance')"
                 >
-                    快速开始
+                    {{ m.hero.getStarted }}
                 </a>
                 <div class="relative flex items-center gap-2">
                     <code
@@ -60,6 +60,9 @@
                     </code>
                     <button
                         id="hero-copy"
+                        type="button"
+                        :aria-label="m.hero.copyCommand"
+                        :title="m.hero.copyCommand"
                         class="hero-btn p-2.5 rounded-full bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-500 hover:text-violet-500 hover:border-violet-300 dark:hover:border-violet-500 transition-colors"
                         :class="{ 'text-green-500 border-green-300': copied }"
                         @click="copied = true"
@@ -106,9 +109,9 @@
                 </div>
             </section>
 
-            <!-- 向下滚动提示 -->
+            <!-- Scroll hint -->
             <div class="flex flex-col items-center gap-2 text-gray-400 text-sm">
-                <span>向下滚动了解更多</span>
+                <span>{{ m.hero.scrollHint }}</span>
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="20"
@@ -134,6 +137,9 @@ import { ref, watch } from 'vue'
 import { useData } from 'vitepress'
 
 import Ray from './ray.vue'
+import { useI18n } from '../../.vitepress/i18n'
+
+const { m, localePath } = useI18n()
 
 const { site } = useData()
 const asset = (path: string) => {

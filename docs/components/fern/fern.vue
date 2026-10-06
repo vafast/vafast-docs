@@ -18,18 +18,18 @@ import BuiltWithLove from './built-with-love.vue'
         <article
             class="flex flex-col text-gray-500/80 dark:text-gray-400/90 leading-normal text-lg"
         >
-            <!-- 核心特性 4 卡片 -->
+            <!-- Core features, 4 cards -->
             <Features />
 
-            <!-- 性能对比 - 最吸引眼球的数据 -->
+            <!-- Performance comparison - the most eye-catching numbers -->
             <Benchmark />
 
-            <!-- 设计以人为本 -->
+            <!-- Designed for humans -->
             <Easy>
                 <slot name="easy" />
             </Easy>
 
-            <!-- 类型安全展示 -->
+            <!-- Type-safety showcase -->
             <TypeIntegrity>
                 <template v-slot:type-1>
                     <slot name="type-1" />
@@ -45,7 +45,7 @@ import BuiltWithLove from './built-with-love.vue'
                 </template>
             </TypeIntegrity>
 
-            <!-- 端到端类型同步 -->
+            <!-- End-to-end type sync -->
             <E2E>
                 <template v-slot:server>
                     <slot name="e2e-server" />
@@ -55,7 +55,7 @@ import BuiltWithLove from './built-with-love.vue'
                 </template>
             </E2E>
 
-            <!-- 测试展示 - 与类型安全形成连贯 -->
+            <!-- Testing showcase - continues the type-safety story -->
             <Test>
                 <template v-slot:test-code>
                     <slot name="test-code" />
@@ -65,16 +65,16 @@ import BuiltWithLove from './built-with-love.vue'
                 </template>
             </Test>
 
-            <!-- 跨运行时部署 -->
+            <!-- Cross-runtime deployment -->
             <Deploy />
 
-            <!-- 社区/赞助 -->
+            <!-- Community/sponsors -->
             <Sponsors />
 
             <!-- CTA -->
             <Future />
 
-            <!-- 页脚 -->
+            <!-- Footer -->
             <BuiltWithLove />
         </article>
     </div>

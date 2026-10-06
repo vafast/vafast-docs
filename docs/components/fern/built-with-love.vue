@@ -29,7 +29,13 @@
             >
                 Vafast
             </a>
-            - 高性能 TypeScript Web 框架
+            {{ m.footer.tagline }}
         </p>
     </footer>
 </template>
+
+<script setup lang="ts">
+import { useI18n } from '../../.vitepress/i18n'
+
+const { m } = useI18n()
+</script>

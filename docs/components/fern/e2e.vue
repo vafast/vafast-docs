@@ -4,62 +4,62 @@
         class="relative max-w-5xl w-full mx-auto py-20 px-6"
         ref="scope"
     >
-        <!-- 标题 -->
+        <!-- Title -->
         <div class="text-center mb-12">
             <motion.h2
                 class="text-4xl md:text-5xl font-bold text-gray-800 dark:text-gray-100"
                 v-bind="flyIn()"
             >
-                类型自动同步
+                {{ m.e2e.heading }}
             </motion.h2>
             <motion.p
                 class="mt-4 text-gray-500 dark:text-gray-400 max-w-2xl mx-auto"
                 v-bind="flyIn(0.1)"
             >
-                服务端定义好接口，客户端自动获得完整类型提示，不用手动写类型、不用生成代码。
+                {{ m.e2e.description }}
             </motion.p>
         </div>
 
-        <!-- 代码展示 -->
+        <!-- Code showcase -->
         <div class="grid md:grid-cols-2 gap-6">
-            <!-- 服务端代码 -->
+            <!-- Server code -->
             <motion.div
                 class="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden"
                 v-bind="flyIn(0.2)"
             >
-                <!-- 窗口头部 -->
+                <!-- Window header -->
                 <div class="flex items-center gap-2 px-4 py-3 border-b border-gray-200 dark:border-gray-700">
                     <div class="w-3 h-3 rounded-full bg-red-400" />
                     <div class="w-3 h-3 rounded-full bg-yellow-400" />
                     <div class="w-3 h-3 rounded-full bg-green-400" />
                     <span class="ml-2 text-sm text-gray-500 dark:text-gray-400 font-mono">server.ts</span>
                 </div>
-                <!-- 代码内容 -->
+                <!-- Code content -->
                 <div class="code-body">
                     <slot name="server" />
                 </div>
             </motion.div>
 
-            <!-- 客户端代码 -->
+            <!-- Client code -->
             <motion.div
                 class="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden"
                 v-bind="flyIn(0.3)"
             >
-                <!-- 窗口头部 -->
+                <!-- Window header -->
                 <div class="flex items-center gap-2 px-4 py-3 border-b border-gray-200 dark:border-gray-700">
                     <div class="w-3 h-3 rounded-full bg-red-400" />
                     <div class="w-3 h-3 rounded-full bg-yellow-400" />
                     <div class="w-3 h-3 rounded-full bg-green-400" />
                     <span class="ml-2 text-sm text-gray-500 dark:text-gray-400 font-mono">client.ts</span>
                 </div>
-                <!-- 代码内容 -->
+                <!-- Code content -->
                 <div class="code-body">
                     <slot name="client" />
                 </div>
             </motion.div>
         </div>
 
-        <!-- 说明文字 -->
+        <!-- Caption -->
         <motion.div
             class="mt-8 flex flex-wrap justify-center gap-6 text-sm"
             v-bind="flyIn(0.4)"
@@ -68,19 +68,19 @@
                 <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                 </svg>
-                <span>自动类型推断</span>
+                <span>{{ m.e2e.points[0] }}</span>
             </div>
             <div class="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                 <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                 </svg>
-                <span>零配置同步</span>
+                <span>{{ m.e2e.points[1] }}</span>
             </div>
             <div class="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                 <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                 </svg>
-                <span>编译时检查</span>
+                <span>{{ m.e2e.points[2] }}</span>
             </div>
         </motion.div>
     </section>
@@ -90,6 +90,9 @@
 import { ref } from 'vue'
 import { useInView, motion } from 'motion-v'
 import { useFlyIn } from './animate'
+import { useI18n } from '../../.vitepress/i18n'
+
+const { m } = useI18n()
 
 const scope = ref(null)
 const isInView = useInView(scope, {
@@ -112,7 +115,7 @@ const flyIn = useFlyIn(isInView)
     background: transparent !important;
 }
 
-/* 确保所有代码容器填充高度 */
+/* Make all code containers fill height */
 .code-body :deep(div[class*='language-']),
 .code-body :deep([class*='shiki']),
 .code-body :deep([class*='github-light']),
@@ -125,7 +128,7 @@ const flyIn = useFlyIn(isInView)
     min-height: 100% !important;
 }
 
-/* Pre 元素填充高度 */
+/* Pre element fills height */
 .code-body :deep(div[class*='language-'] > pre),
 .code-body :deep([class*='shiki'] > pre),
 .code-body :deep(.twoslash > pre),
@@ -140,7 +143,7 @@ const flyIn = useFlyIn(isInView)
     overflow: visible !important;
 }
 
-/* Code 元素 */
+/* Code element */
 .code-body :deep(div[class*='language-'] > pre > code),
 .code-body :deep(pre > code),
 .code-body :deep(code[class*='language-']) {
@@ -149,7 +152,7 @@ const flyIn = useFlyIn(isInView)
     flex: 1 !important;
 }
 
-/* Twoslash 特定元素 */
+/* Twoslash-specific elements */
 .code-body :deep(.twoslash-popup),
 .code-body :deep(.twoslash-query),
 .code-body :deep(.twoslash-error) {

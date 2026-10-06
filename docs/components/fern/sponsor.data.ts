@@ -20,7 +20,7 @@ export { data }
 
 export default defineLoader({
     async load(): Promise<Sponsor[]> {
-        // Vafast 目前没有赞助者列表
+        // Vafast currently has no sponsor list
         return []
     }
 })

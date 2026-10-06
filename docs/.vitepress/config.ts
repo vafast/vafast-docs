@@ -12,18 +12,54 @@ import tailwindcss from '@tailwindcss/vite'
 import llmstxt from 'vitepress-plugin-llms'
 import { analyzer } from 'vite-bundle-analyzer'
 
+import { buildThemeConfig, searchLocales } from './i18n/theme'
+
 // 站点域名（sitemap / canonical / og:url / robots.txt / JSON-LD 统一使用此常量）
 // 自定义域名部署：https://vafast.okayok.ai/
 const SITE_URL = 'https://vafast.okayok.ai'
 
 const SITE_NAME = 'Vafast 中文文档'
+const SITE_NAME_EN = 'Vafast Docs'
 const OG_IMAGE = `${SITE_URL}/assets/vafast.png`
 const VAFAST_VERSION = '0.8.5'
 
 const description =
     'Vafast 是高性能、类型安全的 TypeScript Web 框架，支持 Node.js、Bun 与 Cloudflare Workers，提供声明式路由、自动类型推断、内置 Schema 验证和丰富的中间件生态，是 Hono、Elysia、Express 的轻量替代方案。'
 
+const descriptionEn =
+    'Vafast is a high-performance, type-safe TypeScript web framework for Node.js, Bun and Cloudflare Workers, with declarative routing, automatic type inference, built-in schema validation and a rich middleware ecosystem: a lightweight alternative to Hono, Elysia and Express.'
+
 const base = '/'
+
+/** 语言配置：root = 简体中文，en = English（/en/） */
+const LOCALES = {
+    root: {
+        lang: 'zh-CN',
+        hreflang: 'zh-CN',
+        ogLocale: 'zh_CN',
+        siteName: SITE_NAME,
+        description,
+        keywords:
+            'Vafast, TypeScript Web 框架, Node.js 框架, Bun 框架, 类型安全, Schema 验证, 声明式路由, Cloudflare Workers, Hono 替代, Elysia 替代, Express 替代'
+    },
+    en: {
+        lang: 'en-US',
+        hreflang: 'en',
+        ogLocale: 'en_US',
+        siteName: SITE_NAME_EN,
+        description: descriptionEn,
+        keywords:
+            'Vafast, TypeScript web framework, Node.js framework, Bun framework, type-safe API, schema validation, declarative routing, Cloudflare Workers, Hono alternative, Elysia alternative, Express alternative'
+    }
+} as const
+type LocaleKey = keyof typeof LOCALES
+
+const localeOf = (relativePath: string): LocaleKey =>
+    relativePath.startsWith('en/') ? 'en' : 'root'
+
+/** 某页面在另一语言中的对应路径 / counterpart page path in the other locale */
+const counterpartOf = (relativePath: string) =>
+    localeOf(relativePath) === 'en' ? relativePath.slice(3) : `en/${relativePath}`
 
 // 统计脚本仅在生产构建（vitepress build）中注入，vitepress dev 不加载
 const isProd = process.env.NODE_ENV === 'production'
@@ -78,34 +114,35 @@ const jsonLd = (data: Record<string, unknown>): HeadConfig => [
     JSON.stringify(data)
 ]
 
-const softwareApplicationLd = {
+const softwareApplicationLd = (locale: LocaleKey) => ({
     '@context': 'https://schema.org',
     '@type': 'SoftwareApplication',
     name: 'Vafast',
-    description,
+    description: LOCALES[locale].description,
+    inLanguage: LOCALES[locale].lang,
     applicationCategory: 'DeveloperApplication',
     operatingSystem: 'Cross-platform (Node.js, Bun, Cloudflare Workers)',
     offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
     license: 'https://opensource.org/licenses/MIT',
     softwareVersion: VAFAST_VERSION,
-    url: SITE_URL,
+    url: pageUrl(locale === 'en' ? 'en/index.md' : 'index.md'),
     image: OG_IMAGE,
     codeRepository: 'https://github.com/vafast/vafast',
     sameAs: [
         'https://github.com/vafast/vafast',
         'https://www.npmjs.com/package/vafast'
     ]
-}
+})
 
-const webSiteLd = {
+const webSiteLd = (locale: LocaleKey) => ({
     '@context': 'https://schema.org',
     '@type': 'WebSite',
-    name: SITE_NAME,
+    name: LOCALES[locale].siteName,
     alternateName: 'Vafast',
-    url: SITE_URL,
-    inLanguage: 'zh-CN',
-    description
-}
+    url: pageUrl(locale === 'en' ? 'en/index.md' : 'index.md'),
+    inLanguage: LOCALES[locale].lang,
+    description: LOCALES[locale].description
+})
 
 export default defineConfig({
     base,
@@ -120,12 +157,17 @@ export default defineConfig({
     locales: {
         root: {
             label: '简体中文',
-            lang: 'zh-CN'
+            lang: 'zh-CN',
+            themeConfig: buildThemeConfig('root')
         },
         en: {
             label: 'English',
-            lang: 'en',
-            link: 'https://vafast.dev/'
+            lang: 'en-US',
+            link: '/en/',
+            title: SITE_NAME_EN,
+            titleTemplate: ':title - Vafast Docs',
+            description: descriptionEn,
+            themeConfig: buildThemeConfig('en')
         }
     },
     ignoreDeadLinks: true,
@@ -167,6 +209,7 @@ export default defineConfig({
                     ignoreFiles: [
                         'index.md',
                         'blog/*',
+                        'en/**',
                         'public/*'
                     ],
                     domain: 'https://vafast.dev'
@@ -200,8 +243,6 @@ export default defineConfig({
                 type: 'image/svg+xml'
             }
         ],
-        ['meta', { property: 'og:site_name', content: SITE_NAME }],
-        ['meta', { property: 'og:locale', content: 'zh_CN' }],
         ['meta', { property: 'og:image', content: OG_IMAGE }],
         ['meta', { property: 'og:image:width', content: '512' }],
         ['meta', { property: 'og:image:height', content: '512' }],
@@ -210,17 +251,22 @@ export default defineConfig({
         ['meta', { name: 'twitter:image', content: OG_IMAGE }],
         ...analyticsHead
     ],
-    // 每页 SEO：canonical、Open Graph、Twitter Card、JSON-LD
-    transformHead({ pageData, title, description: pageDescription }) {
+    // 每页 SEO：canonical、hreflang、Open Graph、Twitter Card、JSON-LD（按语言区分）
+    transformHead({ pageData, title, description: pageDescription, siteConfig }) {
         if (pageData.isNotFound) return
 
-        const url = pageUrl(pageData.relativePath)
-        const desc = pageDescription || description
-        const isHome = pageData.relativePath === 'index.md'
-        const isBlogPost = pageData.relativePath.startsWith('blog/')
+        const relativePath = pageData.relativePath
+        const locale = localeOf(relativePath)
+        const meta = LOCALES[locale]
+        const url = pageUrl(relativePath)
+        const desc = pageDescription || meta.description
+        const isHome = relativePath === 'index.md' || relativePath === 'en/index.md'
+        const isBlogPost = /^(en\/)?blog\//.test(relativePath)
 
         const head: HeadConfig[] = [
             ['link', { rel: 'canonical', href: url }],
+            ['meta', { property: 'og:site_name', content: meta.siteName }],
+            ['meta', { property: 'og:locale', content: meta.ogLocale }],
             ['meta', { property: 'og:type', content: isBlogPost ? 'article' : 'website' }],
             ['meta', { property: 'og:title', content: title }],
             ['meta', { property: 'og:description', content: desc }],
@@ -229,7 +275,26 @@ export default defineConfig({
             ['meta', { name: 'twitter:description', content: desc }]
         ]
 
-        if (isHome) head.push(jsonLd(softwareApplicationLd), jsonLd(webSiteLd))
+        // hreflang：仅当另一语言存在对应页面时输出；x-default 指向中文根路径
+        const counterpart = counterpartOf(relativePath)
+        if (siteConfig.pages.includes(counterpart)) {
+            const zhPath = locale === 'root' ? relativePath : counterpart
+            const enPath = locale === 'en' ? relativePath : counterpart
+            const alternateLocale = locale === 'root' ? LOCALES.en.ogLocale : LOCALES.root.ogLocale
+            head.push(
+                ['link', { rel: 'alternate', hreflang: LOCALES.root.hreflang, href: pageUrl(zhPath) }],
+                ['link', { rel: 'alternate', hreflang: LOCALES.en.hreflang, href: pageUrl(enPath) }],
+                ['link', { rel: 'alternate', hreflang: 'x-default', href: pageUrl(zhPath) }],
+                ['meta', { property: 'og:locale:alternate', content: alternateLocale }]
+            )
+        }
+
+        if (isHome)
+            head.push(
+                ['meta', { name: 'keywords', content: meta.keywords }],
+                jsonLd(softwareApplicationLd(locale)),
+                jsonLd(webSiteLd(locale))
+            )
 
         return head
     },
@@ -245,397 +310,12 @@ export default defineConfig({
             provider: 'local',
             options: {
                 detailedView: true,
-                locales: {
-                    root: {
-                        translations: {
-                            button: {
-                                buttonText: 'Search Docs',
-                                buttonAriaLabel: 'Search Docs'
-                            },
-                            modal: {
-                                noResultsText: 'No results found',
-                                resetButtonTitle: 'Clear query',
-                                footer: {
-                                    selectText: 'Select',
-                                    navigateText: 'Navigate'
-                                }
-                            }
-                        }
-                    }
-                }
+                locales: searchLocales
             }
         },
         logo: '/assets/vafast.svg',
-        nav: [
-            {
-                text: '生态',
-                items: [
-                    {
-                        text: '中间件',
-                        link: '/middleware/overview'
-                    },
-                    {
-                        text: 'API 客户端',
-                        link: '/api-client/overview'
-                    },
-                    {
-                        text: '集成',
-                        link: '/integrations/drizzle'
-                    }
-                ]
-            },
-            {
-                text: '社区',
-                link: '/community'
-            },
-            {
-                text: '博客',
-                link: '/blog'
-            }
-        ],
-        sidebar: [
-            {
-                text: '入门',
-                collapsed: false,
-                items: [
-                    {
-                        text: '概览',
-                        link: '/at-glance'
-                    },
-                    {
-                        text: '快速开始',
-                        link: '/quick-start'
-                    },
-                    {
-                        text: '教程',
-                        link: '/tutorial'
-                    },
-                    {
-                        text: '关键概念',
-                        link: '/key-concept'
-                    }
-                ]
-            },
-            {
-                text: '核心',
-                collapsed: true,
-                items: [
-                    {
-                        text: '路由',
-                        link: '/routing'
-                    },
-                    {
-                        text: '处理程序',
-                        link: '/essential/handler'
-                    },
-                    {
-                        text: '验证',
-                        link: '/essential/validation'
-                    },
-                    {
-                        text: '中间件系统',
-                        link: '/middleware'
-                    },
-                    {
-                        text: 'SSE 流式响应',
-                        link: '/essential/sse'
-                    },
-                    {
-                        text: '组件路由',
-                        link: '/component-routing'
-                    }
-                ]
-            },
-            {
-                text: '进阶',
-                collapsed: true,
-                items: [
-                    {
-                        text: '最佳实践',
-                        link: '/essential/best-practice'
-                    },
-                    {
-                        text: '类型系统',
-                        link: '/patterns/type'
-                    },
-                    {
-                        text: '单元测试',
-                        link: '/patterns/unit-test'
-                    },
-                    {
-                        text: '部署指南',
-                        link: '/patterns/deploy'
-                    },
-                    {
-                        text: '链路追踪',
-                        link: '/patterns/trace'
-                    }
-                ]
-            },
-            {
-                text: '迁移指南',
-                collapsed: true,
-                items: [
-                    {
-                        text: '从 Express 迁移',
-                        link: '/migrate/from-express'
-                    },
-                    {
-                        text: '从 Fastify 迁移',
-                        link: '/migrate/from-fastify'
-                    },
-                    {
-                        text: '从 Hono 迁移',
-                        link: '/migrate/from-hono'
-                    },
-                    {
-                        text: '从 Elysia 迁移',
-                        link: '/migrate/from-elysia'
-                    }
-                ]
-            },
-            {
-                text: 'API 客户端',
-                collapsed: true,
-                items: [
-                    {
-                        text: '概述',
-                        link: '/api-client/overview'
-                    },
-                    {
-                        text: '对比',
-                        link: '/api-client/comparison'
-                    },
-                    {
-                        text: '安装',
-                        link: '/api-client/installation'
-                    },
-                    {
-                        text: '基础用法',
-                        link: '/api-client/fetch'
-                    },
-                    {
-                        text: '高级用法',
-                        link: '/api-client/advanced'
-                    },
-                    {
-                        text: '测试',
-                        link: '/api-client/test'
-                    }
-                ]
-            },
-            {
-                text: '中间件',
-                collapsed: true,
-                items: [
-                    {
-                        text: '概述',
-                        link: '/middleware/overview'
-                    },
-                    {
-                        text: 'Bearer',
-                        link: '/middleware/bearer'
-                    },
-                    {
-                        text: 'Compress',
-                        link: '/middleware/compress'
-                    },
-                    {
-                        text: 'Cookie',
-                        link: '/middleware/cookie'
-                    },
-                    {
-                        text: 'CORS',
-                        link: '/middleware/cors'
-                    },
-                    {
-                        text: 'Cron',
-                        link: '/middleware/cron'
-                    },
-                    {
-                        text: 'Helmet',
-                        link: '/middleware/helmet'
-                    },
-                    {
-                        text: 'HTML',
-                        link: '/middleware/html'
-                    },
-                    {
-                        text: 'IP',
-                        link: '/middleware/ip'
-                    },
-                    {
-                        text: 'Auth Middleware',
-                        link: '/middleware/auth-middleware'
-                    },
-                    {
-                        text: 'JWT',
-                        link: '/middleware/jwt'
-                    },
-                    {
-                        text: 'Logger',
-                        link: '/middleware/logger'
-                    },
-                    {
-                        text: 'OpenTelemetry',
-                        link: '/middleware/opentelemetry'
-                    },
-                    {
-                        text: 'Permission',
-                        link: '/middleware/permission'
-                    },
-                    {
-                        text: 'Rate Limit',
-                        link: '/middleware/rate-limit'
-                    },
-                    {
-                        text: 'Request ID',
-                        link: '/middleware/request-id'
-                    },
-                    {
-                        text: 'Request Logger',
-                        link: '/middleware/request-logger'
-                    },
-                    {
-                        text: 'Server Timing',
-                        link: '/middleware/server-timing'
-                    },
-                    {
-                        text: 'Static',
-                        link: '/middleware/static'
-                    },
-                    {
-                        text: 'Swagger',
-                        link: '/middleware/swagger'
-                    },
-                    {
-                        text: 'Webhook',
-                        link: '/middleware/webhook'
-                    }
-                ]
-            },
-            {
-                text: '数据库',
-                collapsed: true,
-                items: [
-                    {
-                        text: 'Drizzle',
-                        link: '/integrations/drizzle'
-                    },
-                    {
-                        text: 'Prisma',
-                        link: '/integrations/prisma'
-                    }
-                ]
-            },
-            {
-                text: '前端框架',
-                collapsed: true,
-                items: [
-                    {
-                        text: 'Next.js',
-                        link: '/integrations/nextjs'
-                    },
-                    {
-                        text: 'Nuxt',
-                        link: '/integrations/nuxt'
-                    },
-                    {
-                        text: 'Astro',
-                        link: '/integrations/astro'
-                    },
-                    {
-                        text: 'SvelteKit',
-                        link: '/integrations/sveltekit'
-                    },
-                    {
-                        text: 'Expo',
-                        link: '/integrations/expo'
-                    }
-                ]
-            },
-            {
-                text: '工具',
-                collapsed: true,
-                items: [
-                    {
-                        text: '脚手架工具',
-                        link: '/tools/create-app'
-                    },
-                    {
-                        text: 'CLI 工具',
-                        link: '/tools/cli'
-                    },
-                    {
-                        text: 'Claude Skill',
-                        link: '/tools/skill'
-                    }
-                ]
-            },
-            {
-                text: '工具集成',
-                collapsed: true,
-                items: [
-                    {
-                        text: 'OpenAPI',
-                        link: '/integrations/openapi'
-                    },
-                    {
-                        text: 'OpenTelemetry',
-                        link: '/integrations/opentelemetry'
-                    },
-                    {
-                        text: 'Better Auth',
-                        link: '/integrations/better-auth'
-                    },
-                    {
-                        text: 'React Email',
-                        link: '/integrations/react-email'
-                    },
-                    {
-                        text: '速查表',
-                        link: '/integrations/cheat-sheet'
-                    }
-                ]
-            },
-            {
-                text: 'API 参考',
-                collapsed: true,
-                items: [
-                    {
-                        text: 'API 文档',
-                        link: '/api'
-                    }
-                ]
-            }
-        ],
-        outline: {
-            level: 2,
-            label: 'Page Navigation'
-        },
         socialLinks: [
             { icon: 'github', link: 'https://github.com/vafast/vafast' }
-        ],
-        editLink: {
-            text: 'Edit this page on GitHub',
-            pattern: 'https://github.com/vafast/vafast-docs/tree/main/docs/:path'
-        },
-        docFooter: {
-            prev: 'Previous',
-            next: 'Next'
-        },
-        lastUpdated: {
-            text: 'Last updated',
-            formatOptions: {
-                dateStyle: 'short',
-                timeStyle: 'medium'
-            }
-        },
-        langMenuLabel: 'Languages',
-        returnToTopLabel: 'Back to top',
-        sidebarMenuLabel: 'Menu',
-        darkModeSwitchLabel: 'Theme',
-        lightModeSwitchTitle: 'Switch to light mode',
-        darkModeSwitchTitle: 'Switch to dark mode'
+        ]
     }
 })

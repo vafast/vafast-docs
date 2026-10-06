@@ -35,6 +35,7 @@ body {
 
 @font-face {
     font-family: 'Geist Mono';
+    font-display: swap;
     src: url('/assets/GeistMono-Regular.woff2') format('woff2'),
         url('/assets/GeistMono-Regular.woff') format('woff');
 }
@@ -861,6 +862,13 @@ button.copy::after {
     & > .button {
         @apply h-10.5 backdrop-blur-lg !rounded-r-3xl;
     }
+}
+
+/* 语言切换改用 .vitepress/theme/locale-toggle.vue（仿 okayok.ai 的图标下拉菜单，与其他导航胶囊同高，菜单项为可点击链接）。
+   默认的下拉切换器未纳入上面的胶囊样式（64px 高、无背景），会导致导航项视觉上错位，因此在导航栏中隐藏；
+   窄屏的 "..." 菜单与移动端菜单仍保留 VitePress 自带的语言切换。 */
+.VPNavBar .VPNavBarTranslations {
+    display: none !important;
 }
 
 /* end navbar leftside group */

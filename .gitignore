@@ -174,3 +174,7 @@ dist
 
 **/.vitepress/cache
 **/.vitepress/dist
+
+# local i18n worktree helpers (symlinked deps, preview logs/screenshots)
+node_modules
+.local-logs/

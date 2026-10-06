@@ -2,6 +2,9 @@
 import { ref } from 'vue'
 import { useInView, motion } from 'motion-v'
 import { useFlyIn } from './animate'
+import { useI18n } from '../../.vitepress/i18n'
+
+const { m } = useI18n()
 
 const scope = ref(null)
 const isInView = useInView(scope, {
@@ -18,23 +21,22 @@ const flyIn = useFlyIn(isInView)
         ref="scope"
     >
         <div class="flex flex-col items-center gap-10">
-            <!-- 顶部文案 -->
+            <!-- Top copy -->
             <div class="text-center max-w-2xl">
                 <motion.h2
                     class="text-4xl md:text-5xl font-bold mb-6 text-gray-800 dark:text-gray-100"
                     v-bind="flyIn()"
                 >
-                    错误提前暴露
+                    {{ m.test.heading }}
                 </motion.h2>
                 <motion.p
                     class="text-gray-500 dark:text-gray-400 leading-relaxed"
                     v-bind="flyIn(0.1)"
-                >
-                    缺少字段、类型不对？写代码时 IDE 就会提示，不用等到运行才发现问题。配合 <code class="text-violet-500 font-mono text-sm">@vafast/api-client</code>，测试代码也能享受完整的类型推断。
-                </motion.p>
+                    v-html="m.test.descriptionHtml"
+                />
             </div>
 
-            <!-- 代码展示 -->
+            <!-- Code showcase -->
             <motion.div
                 class="w-full"
                 v-bind="flyIn(0.4)"
@@ -42,7 +44,7 @@ const flyIn = useFlyIn(isInView)
                 <div
                     class="rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700"
                 >
-                    <!-- 窗口控制按钮 -->
+                    <!-- Window control buttons -->
                     <div class="flex items-center gap-2 px-4 py-3 border-b border-gray-200 dark:border-gray-700">
                         <div class="w-3 h-3 rounded-full bg-red-400" />
                         <div class="w-3 h-3 rounded-full bg-yellow-400" />

@@ -1,7 +1,10 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useInView, motion } from 'motion-v'
 import { useFlyIn } from './animate'
+import { useI18n } from '../../.vitepress/i18n'
+
+const { m } = useI18n()
 
 const scope = ref(null)
 const isInView = useInView(scope, {
@@ -10,36 +13,15 @@ const isInView = useInView(scope, {
 } as Parameters<typeof useInView>[1])
 const flyIn = useFlyIn(isInView)
 
-const features = [
-    {
-        icon: 'zap',
-        title: '极致性能',
-        subtitle: '比 Express 快 1.8x',
-        color: 'violet',
-        description: 'JIT 编译验证器 · Radix Tree 路由'
-    },
-    {
-        icon: 'shield',
-        title: '类型安全',
-        subtitle: '端到端类型推断',
-        color: 'sky',
-        description: 'Schema → Type · 跨文件类型'
-    },
-    {
-        icon: 'list',
-        title: '声明式路由',
-        subtitle: '结构即真相',
-        color: 'teal',
-        description: '路由即数组 · 显式中间件'
-    },
-    {
-        icon: 'globe',
-        title: '跨运行时',
-        subtitle: '一套代码，任意环境',
-        color: 'orange',
-        description: 'Node.js · Bun · Cloudflare Workers'
-    }
+const meta = [
+    { icon: 'zap', color: 'violet' },
+    { icon: 'shield', color: 'sky' },
+    { icon: 'list', color: 'teal' },
+    { icon: 'globe', color: 'orange' }
 ]
+const features = computed(() =>
+    m.value.features.items.map((item, i) => ({ ...meta[i], ...item }))
+)
 
 const iconMap: Record<string, string> = {
     zap: 'M13 2L3 14h9l-1 8 10-12h-9l1-8z',
@@ -79,23 +61,23 @@ const colorMap: Record<string, { icon: string; subtitle: string; bg: string }> =
         class="relative max-w-5xl w-full mx-auto py-20 px-6"
         ref="scope"
     >
-        <!-- 标题 -->
+        <!-- Title -->
         <div class="text-center mb-16">
             <motion.h2
                 class="text-4xl md:text-5xl font-bold text-gray-800 dark:text-gray-100 mb-4"
                 v-bind="flyIn()"
             >
-                核心特性
+                {{ m.features.heading }}
             </motion.h2>
             <motion.p
                 class="text-lg text-gray-500 dark:text-gray-400 max-w-2xl mx-auto"
                 v-bind="flyIn(0.1)"
             >
-                简洁的 API、强大的类型推断、内置验证，专为高效开发设计
+                {{ m.features.description }}
             </motion.p>
         </div>
 
-        <!-- 4 卡片网格 -->
+        <!-- 4-card grid -->
         <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             <motion.article
                 v-for="(feature, index) in features"
@@ -103,7 +85,7 @@ const colorMap: Record<string, { icon: string; subtitle: string; bg: string }> =
                 class="feature-card group relative flex flex-col p-6 rounded-2xl bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
                 v-bind="flyIn(0.1 + index * 0.1)"
             >
-                <!-- 图标 -->
+                <!-- Icon -->
                 <div
                     class="w-12 h-12 rounded-xl flex items-center justify-center mb-4"
                     :class="colorMap[feature.color].bg"
@@ -124,19 +106,19 @@ const colorMap: Record<string, { icon: string; subtitle: string; bg: string }> =
                     </svg>
                 </div>
 
-                <!-- 标题 -->
+                <!-- Title -->
                 <h3
                     class="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-1"
                 >
                     {{ feature.title }}
                 </h3>
 
-                <!-- 副标题 -->
+                <!-- Subtitle -->
                 <p class="text-sm font-medium mb-3" :class="colorMap[feature.color].subtitle">
                     {{ feature.subtitle }}
                 </p>
 
-                <!-- 描述 -->
+                <!-- Description -->
                 <p class="text-sm text-gray-500 dark:text-gray-400">
                     {{ feature.description }}
                 </p>

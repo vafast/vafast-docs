@@ -3,7 +3,7 @@
         class="flex flex-col-reverse lg:flex-row justify-center items-center gap-16 md:gap-8 lg:gap-20 max-w-5xl w-full px-6 py-20 mx-auto"
         ref="scope"
     >
-        <!-- 左侧圆形图标阵列 -->
+        <!-- Left-side circular icon array -->
         <div
             class="relative flex justify-center items-center size-72 sm:size-96 md:size-128"
         >
@@ -18,19 +18,21 @@
                 <motion.div v-bind="fadeIn()" class="hidden lg:block absolute size-148 border-l border-t border-gray-200 dark:border-gray-700 rounded-full" />
             </div>
 
-            <!-- 中心 Vafast Logo -->
+            <!-- Center Vafast logo -->
             <motion.img
                 v-bind="fadeIn()"
                 :src="asset('assets/vafast.svg')"
+                alt="Vafast"
                 class="absolute z-10 size-20 sm:size-24"
             />
 
-            <!-- 周围的运行时 Logo -->
+            <!-- Surrounding runtime logos -->
             <template v-for="(item, index) in items" :key="index">
                 <motion.img
                     v-if="typeof item === 'string'"
                     v-bind="fadeIn(index * 0.05)"
                     :src="`/logo/${item}`"
+                    :alt="logoName(item)"
                     class="circle-item"
                     :style="{
                         '--angle': (360 / items.length) * index - 90 + 'deg'
@@ -40,6 +42,7 @@
                     <motion.img
                         v-bind="fadeIn(index * 0.05)"
                         :src="`/logo/${item[0]}`"
+                        :alt="logoName(item[0])"
                         class="circle-item dark:hidden"
                         :style="{
                             '--angle': (360 / items.length) * index - 90 + 'deg'
@@ -48,6 +51,7 @@
                     <motion.img
                         v-bind="fadeIn(index * 0.05)"
                         :src="`/logo/${item[1]}`"
+                        :alt="logoName(item[1])"
                         class="circle-item hidden dark:block"
                         :style="{
                             '--angle': (360 / items.length) * index - 90 + 'deg'
@@ -57,16 +61,16 @@
             </template>
         </div>
 
-        <!-- 右侧文案 -->
+        <!-- Right-side copy -->
         <div class="text-xl max-w-md">
             <motion.h2
                 class="text-4xl md:text-5xl font-bold mb-6 text-gray-800 dark:text-gray-100"
                 v-bind="flyIn()"
             >
-                一套代码，到处运行
+                {{ m.deploy.heading }}
             </motion.h2>
             <motion.p class="text-gray-500 dark:text-gray-400 text-base leading-relaxed" v-bind="flyIn(0.1)">
-                基于 Web 标准 Fetch API 构建，不绑定任何运行时。同一份代码可以部署到 Node.js、Bun、Cloudflare Workers 等任意平台。
+                {{ m.deploy.description }}
             </motion.p>
             <motion.div class="flex flex-wrap gap-2 mt-8" v-bind="flyIn(0.3)">
                 <span class="px-3 py-1 text-sm bg-gray-100 dark:bg-gray-800 rounded-full text-gray-600 dark:text-gray-300">Node.js</span>
@@ -85,6 +89,9 @@ import { ref } from 'vue'
 import { useInView, motion } from 'motion-v'
 import { useData } from 'vitepress'
 import { useFadeIn, useFlyIn } from './animate'
+import { useI18n } from '../../.vitepress/i18n'
+
+const { m } = useI18n()
 
 const { site } = useData()
 const asset = (path: string) => {
@@ -101,7 +108,7 @@ const isInView = useInView(scope, {
 const flyIn = useFlyIn(isInView)
 const fadeIn = useFadeIn(isInView)
 
-// 运行时/平台 Logo 列表
+// Runtime/platform logo list
 const items = [
     'bun.svg',
     ['deno-light.svg', 'deno-dark.svg'],
@@ -116,6 +123,17 @@ const items = [
     'cloudflare-workers.svg',
     'nodejs.svg'
 ] as const
+
+// Logo alt text (brand names, identical in every locale)
+const LOGO_NAMES: Record<string, string> = {
+    bun: 'Bun', deno: 'Deno', vercel: 'Vercel', railway: 'Railway', svelte: 'Svelte', expo: 'Expo',
+    next: 'Next.js', tanstack: 'TanStack', nuxt: 'Nuxt', netlify: 'Netlify',
+    'cloudflare-workers': 'Cloudflare Workers', nodejs: 'Node.js'
+}
+const logoName = (file: string) => {
+    const key = file.replace(/(-light|-dark)?\.svg$/, '')
+    return LOGO_NAMES[key] ?? key
+}
 </script>
 
 <style scoped>

@@ -4,17 +4,17 @@
         class="relative max-w-5xl w-full mx-auto py-20 px-6"
         ref="scope"
     >
-        <!-- 标题 -->
+        <!-- Title -->
         <div class="text-center mb-12">
             <motion.h2
                 class="text-4xl md:text-5xl font-bold text-gray-800 dark:text-gray-100"
                 v-bind="flyIn()"
             >
-                从请求到响应，全程有类型
+                {{ m.typeIntegrity.heading }}
             </motion.h2>
         </div>
 
-        <!-- 代码展示窗口 -->
+        <!-- Code window -->
         <motion.div
             layout
             class="mx-auto w-full rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden"
@@ -24,13 +24,13 @@
                 ease: cubicBezier(0.16, 1, 0.3, 1)
             }"
         >
-            <!-- 窗口控制按钮 -->
+            <!-- Window control buttons -->
             <div class="flex items-center gap-2 px-4 py-3 border-b border-gray-200 dark:border-gray-700">
                 <div class="w-3 h-3 rounded-full bg-red-400" />
                 <div class="w-3 h-3 rounded-full bg-yellow-400" />
                 <div class="w-3 h-3 rounded-full bg-green-400" />
             </div>
-            <!-- 代码内容 -->
+            <!-- Code content -->
             <div class="code-body">
                 <div v-if="form === 1"><slot name="type-1" /></div>
                 <div v-else-if="form === 2"><slot name="type-2" /></div>
@@ -39,7 +39,7 @@
             </div>
         </motion.div>
 
-        <!-- 选项卡 -->
+        <!-- Tabs -->
         <div class="flex justify-center mt-8">
             <div
                 class="inline-flex items-center gap-1 p-1 bg-gray-100 dark:bg-gray-800 rounded-full"
@@ -63,9 +63,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useInView, motion, cubicBezier } from 'motion-v'
 import { useFlyIn } from './animate'
+import { useI18n } from '../../.vitepress/i18n'
+
+const { m } = useI18n()
 
 const scope = ref(null)
 const isInView = useInView(scope, {
@@ -75,9 +78,9 @@ const isInView = useInView(scope, {
 const flyIn = useFlyIn(isInView)
 
 const form = ref(0)
-const labels = ['路径参数', 'Schema 验证', '错误处理', '额外上下文']
+const labels = computed(() => m.value.typeIntegrity.labels)
 
-// 进入视图后默认选中第一个 tab
+// Select the first tab once in view
 watch(isInView, () => {
     if (isInView) {
         setTimeout(() => {

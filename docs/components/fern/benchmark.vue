@@ -2,6 +2,9 @@
 import { ref } from 'vue'
 import { useInView, motion } from 'motion-v'
 import { useFlyIn, useExpandWidth } from './animate'
+import { useI18n } from '../../.vitepress/i18n'
+
+const { m } = useI18n()
 
 const scope = ref(null)
 const isInView = useInView(scope, {
@@ -25,13 +28,13 @@ const benchmarks = [
         class="relative max-w-5xl w-full mx-auto py-20 px-6"
         ref="scope"
     >
-        <!-- 背景网格 -->
+        <!-- Background grid -->
         <div class="grid-bg absolute inset-0 pointer-events-none">
             <div class="fog absolute inset-0" />
         </div>
 
         <div class="relative z-10 flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
-            <!-- 左侧数据展示 -->
+            <!-- Left-side stats -->
             <div class="flex flex-col items-center lg:items-start gap-8">
                 <div class="text-center lg:text-left">
                     <motion.div
@@ -44,7 +47,7 @@ const benchmarks = [
                         class="text-lg text-gray-500 dark:text-gray-400 mt-2"
                         v-bind="flyIn(0.2)"
                     >
-                        比 Express 更快
+                        {{ m.benchmark.fasterThanExpress }}
                     </motion.p>
                 </div>
                 <div class="text-center lg:text-left">
@@ -58,12 +61,12 @@ const benchmarks = [
                         class="text-lg text-gray-500 dark:text-gray-400 mt-2"
                         v-bind="flyIn(0.4)"
                     >
-                        请求/秒
+                        {{ m.benchmark.requestsPerSecond }}
                     </motion.p>
                 </div>
             </div>
 
-            <!-- 右侧图表 -->
+            <!-- Right-side chart -->
             <div class="flex-1 w-full max-w-xl">
                 <ol class="flex flex-col gap-4">
                     <li
@@ -117,7 +120,7 @@ const benchmarks = [
                     class="text-sm text-gray-400 mt-6"
                     v-bind="flyIn(0.8)"
                 >
-                    测试环境：Bun 1.2.20, macOS, wrk (4线程, 100连接, 30s)
+                    {{ m.benchmark.environment }}
                 </motion.p>
             </div>
         </div>

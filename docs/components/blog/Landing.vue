@@ -25,7 +25,7 @@
         >
             <div class="mb-2 rounded-xl aspect-16/9 bg-slate-100 dark:bg-slate-800 group-interact:shadow-2xl group-interact:-translate-y-1 shadow-black/15 duration-300 ease-out transition-all">
                 <img
-                    :src="blog.cover.startsWith('http') ? blog.cover : `${blog.href}/${blog.cover}`"
+                    :src="/^(https?:)?\/\//.test(blog.cover) || blog.cover.startsWith('/') ? blog.cover : `${blog.href}/${blog.cover}`"
                     loading="lazy"
                     class="rounded-xl aspect-16/9 object-cover"
                 />
