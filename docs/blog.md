@@ -1,5 +1,6 @@
 ---
 title: Vafast 博客
+description: 'Vafast 博客：TypeScript Web 框架实践、Hono 与 Elysia 对比、中间件设计模式、Drizzle 与 Prisma 集成等技术文章。'
 layout: page
 sidebar: false
 editLink: false

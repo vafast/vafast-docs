@@ -1,5 +1,6 @@
 ---
 title: 用 Vafast 加速你的下一个 Prisma 服务器
+description: '用 Vafast 搭建高性能 Prisma 服务器：结合 Prisma ORM 的类型安全数据库访问与 Vafast 的声明式路由，快速构建 TypeScript 后端 API。'
 sidebar: false
 editLink: false
 search: false

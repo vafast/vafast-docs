@@ -1,5 +1,6 @@
 ---
 title: Node.js 框架的 10 个写法痛点，以及更优雅的解决方案
+description: '盘点 Express、Koa、Fastify、Hono、Elysia 等 Node.js 框架的 10 个常见写法痛点，以及如何用 Vafast 的声明式路由与类型安全优雅解决。'
 sidebar: false
 editLink: false
 search: false

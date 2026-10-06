@@ -1,5 +1,6 @@
 ---
 title: OpenTelemetry 集成 - Vafast
+description: 'Vafast OpenTelemetry 集成：使用 @vafast/opentelemetry 实现分布式追踪、自定义追踪、指标收集与日志聚合，提升 TypeScript 服务可观测性。'
 ---
 
 # OpenTelemetry 集成

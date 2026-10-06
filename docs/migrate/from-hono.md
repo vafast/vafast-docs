@@ -1,5 +1,6 @@
 ---
-title: 从 Hono 迁移 - Vafast
+title: '从 Hono 迁移到 Vafast：Hono 替代方案迁移指南'
+description: '从 Hono 迁移到 Vafast 的完整指南：性能对比、路由与中间件写法差异、迁移步骤与完整示例，了解 Vafast 作为 Hono 替代方案的优势。'
 prev:
   text: '快速开始'
   link: '/quick-start'

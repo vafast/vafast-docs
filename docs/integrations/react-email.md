@@ -1,5 +1,6 @@
 ---
 title: React Email 集成 - Vafast
+description: 'Vafast 与 React Email 集成指南：编写类型安全的邮件模板组件、配置邮件服务、在 Vafast 路由中发送邮件与邮件队列。'
 ---
 
 # React Email 集成

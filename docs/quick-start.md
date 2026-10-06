@@ -1,11 +1,12 @@
 ---
-title: 快速入门 - Vafast
+title: 'Vafast 快速入门：几分钟创建 TypeScript API 服务'
+description: 'Vafast 快速入门教程：使用 create-vafast-app 脚手架创建项目，编写 Hello 接口、Schema 验证、常见请求类型与简单中间件，几分钟跑起 TypeScript Web 服务。'
 next:
   text: '教程'
   link: '/tutorial'
 ---
 
-# 快速入门
+# Vafast 快速入门
 
 用几分钟跑起一个 Vafast 服务。本页覆盖 **安装 → Hello → Schema → 常见请求类型 → 简单中间件**。CRUD 拆分与嵌套路由请跟 [教程](/tutorial) 做。
 

@@ -1,5 +1,6 @@
 ---
 title: Astro 集成 - Vafast
+description: 'Vafast 与 Astro 集成指南：项目结构、创建 Vafast API 服务器、定义类型安全的 API 路由，并在 Astro 前端中调用。'
 ---
 
 # Astro 集成

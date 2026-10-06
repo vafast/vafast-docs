@@ -1,5 +1,6 @@
 ---
 title: Vafast：一个让我放弃 Express 和 Hono 的 TypeScript Web 框架
+description: '为什么选择 Vafast：声明式路由、端到端类型安全、比 Express 更快的 TypeScript Web 框架，对比 Express、Koa、Fastify、Hono、Elysia 的真实体验。'
 sidebar: false
 editLink: false
 search: false

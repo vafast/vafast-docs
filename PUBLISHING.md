@@ -105,6 +105,14 @@ const base = '/'
 const base = '/vafast-docs/'
 ```
 
+## SEO 与站点地图提交
+
+- 构建时 VitePress 自动生成 `https://vafast.okayok.ai/sitemap.xml`，并生成 `robots.txt`（包含 `Sitemap: https://vafast.okayok.ai/sitemap.xml`）。
+- 站点域名统一由 `docs/.vitepress/config.ts` 中的 `SITE_URL` 常量控制（sitemap、canonical、og:url、robots.txt、JSON-LD）。
+- 首次上线或域名变更后，手动提交站点地图：
+  - **Google Search Console**：添加资源 `https://vafast.okayok.ai/`（或域名资源 `okayok.ai`）→「站点地图」→ 提交 `https://vafast.okayok.ai/sitemap.xml`
+  - **Bing Webmaster Tools**：添加网站 `https://vafast.okayok.ai/`（可从 Google Search Console 导入）→「Sitemaps」→ 提交 `https://vafast.okayok.ai/sitemap.xml`
+
 ## 故障排除
 
 ### 资源路径 404

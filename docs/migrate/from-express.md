@@ -1,5 +1,6 @@
 ---
-title: 从 Express 迁移 - Vafast
+title: '从 Express 迁移到 Vafast：TypeScript 框架迁移指南'
+description: '从 Express 迁移到 Vafast 的完整指南：性能对比、路由写法差异、迁移步骤与完整示例，获得更高性能与端到端类型安全的 TypeScript Web 开发体验。'
 prev:
   text: '快速开始'
   link: '/quick-start'

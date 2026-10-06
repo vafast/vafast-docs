@@ -1,5 +1,6 @@
 ---
 title: Drizzle 集成 - Vafast
+description: 'Vafast 与 Drizzle ORM 集成指南：数据库配置、定义 schema、类型安全查询、在 Vafast 路由中使用、数据库迁移、事务与连接池管理。'
 ---
 
 # Drizzle 集成

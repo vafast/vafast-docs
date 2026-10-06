@@ -1,5 +1,6 @@
 ---
 title: 用了半年 Hono 和 Elysia，我总结了这些坑
+description: '使用 Hono 和 Elysia 半年后的踩坑总结：类型推断、中间件、运行时兼容等实际开发问题，以及在 TypeScript Web 框架选型时如何提前避坑。'
 sidebar: false
 editLink: false
 search: false

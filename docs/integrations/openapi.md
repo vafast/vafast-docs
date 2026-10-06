@@ -1,5 +1,6 @@
 ---
 title: OpenAPI - Vafast
+description: 'Vafast OpenAPI 支持：通过 Swagger 中间件自动生成 API 文档，类型安全的路由与响应模式定义、自定义配置与最佳实践。'
 ---
 
 # OpenAPI

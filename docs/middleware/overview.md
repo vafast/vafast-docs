@@ -1,8 +1,9 @@
 ---
-title: 中间件概述 - Vafast
+title: 'Vafast 中间件生态概述：JWT、CORS、限流、Swagger 等官方插件'
+description: 'Vafast 官方中间件与插件一览：JWT、Bearer、CORS、Cookie、Compress、Helmet、Rate Limit、Swagger、OpenTelemetry、Static 等，按需安装，一行 server.use 即可启用。'
 ---
 
-# 概述
+# Vafast 中间件概述
 
 Vafast 官方插件按需安装。多数是 `server.use(...)` 中间件；少数是工具库（见说明列）。
 

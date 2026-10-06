@@ -1,8 +1,9 @@
 ---
-title: 路由指南 - Vafast
+title: 'Vafast 路由指南：声明式路由、动态路由与嵌套路由'
+description: 'Vafast 路由指南：叶子路由与路由组、基本路由、路由匹配规则、动态路由参数、嵌套路由、路由中间件与响应处理，构建类型安全的 TypeScript API。'
 ---
 
-# 路由指南
+# Vafast 路由指南
 
 Vafast 的路由系统是框架的核心，它提供了强大而灵活的方式来定义 API 端点。本指南将详细介绍 Vafast 的路由功能。
 

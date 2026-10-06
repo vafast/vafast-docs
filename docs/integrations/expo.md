@@ -1,5 +1,6 @@
 ---
 title: Expo 集成 - Vafast
+description: 'Vafast 与 Expo React Native 集成指南：创建类型安全的 Vafast API 客户端、API 服务函数与 React Hooks，构建跨平台移动应用后端。'
 ---
 
 # Expo 集成

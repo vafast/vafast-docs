@@ -1,5 +1,6 @@
 ---
 title: Vafast + Drizzle：轻量高效的全栈类型安全方案
+description: 'Vafast + Drizzle ORM 全栈类型安全方案：无代码生成、从 schema 直接推断类型，轻量高效地构建 TypeScript API 与数据库访问层。'
 sidebar: false
 editLink: false
 search: false

@@ -1,5 +1,6 @@
 ---
-title: 从 Elysia 迁移 - Vafast
+title: '从 Elysia 迁移到 Vafast：Elysia 替代方案迁移指南'
+description: '从 Elysia 迁移到 Vafast 的完整指南：性能对比、路由写法与主要差异、迁移步骤与完整示例，了解 Vafast 作为 Elysia 替代方案、同时支持 Node.js 与 Bun 的优势。'
 prev:
   text: '快速开始'
   link: '/quick-start'

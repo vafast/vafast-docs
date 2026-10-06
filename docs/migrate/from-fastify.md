@@ -1,5 +1,6 @@
 ---
-title: 从 Fastify 迁移 - Vafast
+title: '从 Fastify 迁移到 Vafast：TypeScript 框架迁移指南'
+description: '从 Fastify 迁移到 Vafast 的完整指南：性能对比、路由与 Schema 写法差异、迁移步骤与完整示例，用声明式路由和自动类型推断简化 TypeScript API 开发。'
 prev:
   text: '快速开始'
   link: '/quick-start'

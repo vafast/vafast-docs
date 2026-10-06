@@ -1,5 +1,6 @@
 ---
 title: Prisma 集成 - Vafast
+description: 'Vafast 与 Prisma ORM 集成指南：初始化 Prisma、定义数据库模式、客户端配置、服务层封装、在 Vafast 路由中使用、迁移与种子数据。'
 ---
 
 # Prisma 集成

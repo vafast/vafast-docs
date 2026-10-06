@@ -1,5 +1,6 @@
 ---
 title: Nuxt 集成 - Vafast
+description: 'Vafast 与 Nuxt 集成指南：创建 Vafast API 服务器与 Nuxt 服务器路由、类型定义、前端集成与组合式函数。'
 ---
 
 # Nuxt 集成

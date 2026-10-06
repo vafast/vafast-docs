@@ -1,5 +1,6 @@
 ---
 title: Better Auth 集成 - Vafast
+description: 'Vafast 集成 Better Auth 身份验证：安装与基本设置、认证中间件、路由保护、OAuth 登录与会话管理，以及与 @vafast/auth-middleware 的区别。'
 ---
 
 # Better Auth 集成

@@ -1,5 +1,6 @@
 ---
 title: Next.js 集成 - Vafast
+description: 'Vafast 与 Next.js 集成指南：项目结构、创建 Vafast API 服务器与 Next.js API 路由处理器、类型定义与前端集成。'
 ---
 
 # Next.js 集成

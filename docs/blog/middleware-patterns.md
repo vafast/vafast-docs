@@ -1,5 +1,6 @@
 ---
 title: Vafast 中间件设计模式与最佳实践
+description: 'Vafast 中间件设计模式与最佳实践：使用 defineMiddleware 与 next 传递上下文，实现认证、日志、错误处理等常见中间件模式。'
 sidebar: false
 editLink: false
 search: false

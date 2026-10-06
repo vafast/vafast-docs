@@ -1,5 +1,6 @@
 ---
 title: SvelteKit 集成 - Vafast
+description: 'Vafast 与 SvelteKit 集成指南：项目结构、创建 Vafast API 服务器与 SvelteKit API 路由、类型定义与前端集成。'
 ---
 
 # SvelteKit 集成

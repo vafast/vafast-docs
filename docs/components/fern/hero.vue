@@ -24,7 +24,7 @@
             <h1
                 class="text-4xl md:text-6xl lg:text-7xl font-bold text-center leading-tight md:leading-tight lg:leading-tight mb-6 text-gray-800 dark:text-gray-100"
             >
-                轻量、快速、类型安全
+                <span class="sr-only">Vafast – 高性能 TypeScript Web 框架：</span>轻量、快速、类型安全
             </h1>
 
             <!-- 副标题 -->

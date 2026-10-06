@@ -1,5 +1,6 @@
 ---
-title: 简介 - Vafast
+title: 'Vafast 简介：高性能、类型安全的 TypeScript Web 框架'
+description: '了解 Vafast 的设计哲学、核心特性、性能表现与架构特点：一个面向 Node.js 与 Bun 的高性能、端到端类型安全的 TypeScript Web 框架。'
 ---
 
 <script setup>
@@ -8,7 +9,7 @@ import Deck from './components/nearl/card-deck.vue'
 import Playground from './components/nearl/playground.vue'
 </script>
 
-# 简介
+# Vafast 简介
 
 Vafast 不只是一个框架，更是一种 **结构、清晰、可控** 的开发哲学。
 

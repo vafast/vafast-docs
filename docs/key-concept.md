@@ -1,8 +1,9 @@
 ---
-title: 关键概念 - Vafast
+title: 'Vafast 关键概念：Server、声明式路由、中间件与类型系统'
+description: 'Vafast 核心概念详解：Server 类、叶子路由与路由组、路由系统、中间件系统、类型系统与 SSE 流式响应，帮助你理解这个 TypeScript Web 框架的架构。'
 ---
 
-# 关键概念
+# Vafast 关键概念
 
 Vafast 是一个高性能的 TypeScript Web 框架，支持 Node.js、Bun 等多种运行时。了解这些核心概念将帮助你更好地使用 Vafast 构建应用。
 
