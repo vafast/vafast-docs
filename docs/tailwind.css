@@ -826,23 +826,34 @@ button.copy::after {
 }
 
 /* navbar left side group in order */
+/* VitePress <= 2.0.0-alpha.15 renders nav items as direct children of the nav;
+   newer versions wrap them in ul.list > li and give links min-height: var(--vp-nav-height) (64px),
+   which pushed them below the 44px pill row. Both structures are styled here. */
 .VPNavBarMenu.menu {
     @apply h-11 rounded-l-3xl;
 
-    & > .VPFlyout.VPNavBarMenuGroup {
-        & > .button {
-            @apply h-11;
-        }
+    & > .VPFlyout.VPNavBarMenuGroup > .button,
+    & > .list > li > .VPFlyout.VPNavBarMenuGroup > .button,
+    & > .list > li > .VPNavBarMenuLink {
+        @apply h-11 min-h-0;
+    }
+
+    & > .list {
+        @apply h-11 items-center;
     }
 
     & > .VPFlyout.VPNavBarMenuGroup > .button,
-    & > a {
+    & > a,
+    & > .list > li > .VPFlyout.VPNavBarMenuGroup > .button,
+    & > .list > li > a {
         @apply backdrop-blur-lg bg-white/80 dark:bg-gray-900/70;
     }
 
     /* Skip screen reader content */
     & > *:nth-child(2),
-    & > *:nth-child(2) > .button {
+    & > *:nth-child(2) > .button,
+    & > .list > li:first-child > a,
+    & > .list > li:first-child > .VPFlyout > .button {
         @apply !rounded-l-3xl;
     }
 }
