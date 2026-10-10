@@ -177,12 +177,12 @@ const lang = (locale: LocaleKey) => (locale === 'root' ? 'zh' : 'en')
 const prefix = (locale: LocaleKey, link: string) =>
     locale === 'root' ? link : `/${locale}${link}`
 
-/** 导航末尾的 okayok.ai 外链（各语言指向对应语言的首页） / trailing external okayok.ai link, per-locale home */
-const okayokNav: Record<LocaleKey, string> = {
-    root: 'https://okayok.ai/zh',
-    en: 'https://okayok.ai'
-}
-
+/**
+ * 顶部导航只放本站（Vafast 文档）自己的入口；okayok.ai 主站和其他 OK 产品的链接
+ * 只放在页脚（okayok-footer.vue，数据来自 okayok_products）。
+ * Header nav lists only this site's own sections; main-site / product-family
+ * links live only in the footer.
+ */
 export function buildNav(locale: LocaleKey): DefaultTheme.NavItem[] {
     const l = lang(locale)
     return [
@@ -193,14 +193,7 @@ export function buildNav(locale: LocaleKey): DefaultTheme.NavItem[] {
                       items: entry.items.map((i) => ({ text: i[l], link: prefix(locale, i.link) }))
                   }
                 : { text: entry[l], link: prefix(locale, entry.link!) }
-        ),
-        {
-            text: 'Okay OK',
-            link: okayokNav[locale],
-            target: '_blank',
-            rel: 'noopener noreferrer',
-            noIcon: true
-        }
+        )
     ]
 }
 
