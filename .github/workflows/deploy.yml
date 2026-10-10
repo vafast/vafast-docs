@@ -1,8 +1,12 @@
-name: Deploy to GitHub Pages
+name: Deploy
 
+# Production deploys run ONLY when a v* tag is pushed (e.g. v1.0.2), same rule
+# as every other Okayok site. Pushes to main do not deploy.
+# vafast.okayok.ai is served by GitHub Pages (custom domain), not Vercel.
 on:
   push:
-    branches: [main]
+    tags:
+      - 'v*'
   workflow_dispatch:
 
 permissions:
