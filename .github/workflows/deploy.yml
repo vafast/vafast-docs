@@ -61,3 +61,19 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+  # After a successful production deploy, push this site's sitemap URLs to
+  # IndexNow (Bing, Yandex...). Never fails the deploy.
+  indexnow:
+    name: IndexNow
+    needs: deploy
+    if: ${{ success() }}
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Submit sitemap URLs to IndexNow (vafast.okayok.ai)
+        continue-on-error: true
+        run: bash scripts/indexnow.sh vafast.okayok.ai
