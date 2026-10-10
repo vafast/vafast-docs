@@ -58,7 +58,7 @@
     },
     "scripts": {
         "dev": "vitepress dev docs",
-        "build": "vitepress build docs",
+        "build": "node scripts/sync-okayok-family.mjs && vitepress build docs",
         "serve": "vitepress serve docs",
         "preview": "vitepress preview docs",
         "release": "npx bumpp"

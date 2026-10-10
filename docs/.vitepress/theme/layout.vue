@@ -8,6 +8,7 @@ import mediumZoom from 'medium-zoom'
 import useDark from './use-dark'
 import Ray from '../../components/fern/ray.vue'
 import LocaleToggle from './locale-toggle.vue'
+import OkayokFooter from './okayok-footer.vue'
 
 const isDark = useDark()
 const { isDark: darkTheme, site } = useData()
@@ -97,6 +98,9 @@ router.onAfterRouteChange = () => {
         </template>
         <template #doc-footer-before>
             <div class="wwads-cn wwads-horizontal" data-id="354"></div>
+        </template>
+        <template #layout-bottom>
+            <OkayokFooter />
         </template>
     </DefaultTheme.Layout>
 </template>

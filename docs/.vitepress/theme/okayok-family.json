@@ -1,0 +1,267 @@
+{
+  "products": [
+    {
+      "slug": "tools",
+      "name": "OK Tools",
+      "name_zh": "OK Tools",
+      "url": "https://tools.okayok.ai",
+      "description": "Browser-based PDF and utility tools. Fast, private, and free to try.",
+      "description_zh": "浏览器端 PDF 与实用工具，快捷、注重隐私，可免费试用。",
+      "cta": "Open OK Tools",
+      "cta_zh": "打开 OK Tools",
+      "icon": "FileStack",
+      "icon_url": null,
+      "sort_order": 10,
+      "show_in_footer": true,
+      "show_in_products": true
+    },
+    {
+      "slug": "video",
+      "name": "OK Video",
+      "name_zh": "OK Video",
+      "url": "https://video.okayok.ai",
+      "description": "Video utilities in your browser — trim, convert, compress, and more.",
+      "description_zh": "浏览器端视频工具 — 裁剪、转换、压缩等。",
+      "cta": "Open OK Video",
+      "cta_zh": "打开 OK Video",
+      "icon": "Video",
+      "icon_url": null,
+      "sort_order": 20,
+      "show_in_footer": true,
+      "show_in_products": true
+    },
+    {
+      "slug": "images",
+      "name": "OK Images",
+      "name_zh": "OK Images",
+      "url": "https://images.okayok.ai",
+      "description": "Image tools and services under the OK Images brand.",
+      "description_zh": "OK Images 品牌下的图片工具与服务。",
+      "cta": "Open OK Images",
+      "cta_zh": "打开 OK Images",
+      "icon": "ImageIcon",
+      "icon_url": null,
+      "sort_order": 30,
+      "show_in_footer": true,
+      "show_in_products": true
+    },
+    {
+      "slug": "vafast",
+      "name": "Vafast",
+      "name_zh": "Vafast",
+      "url": "https://vafast.okayok.ai",
+      "description": "High-performance TypeScript web framework. Open source, MIT licensed.",
+      "description_zh": "高性能 TypeScript Web 框架，开源，MIT 许可。",
+      "cta": "Open Vafast",
+      "cta_zh": "打开 Vafast",
+      "icon": "Server",
+      "icon_url": null,
+      "sort_order": 40,
+      "show_in_footer": true,
+      "show_in_products": true
+    },
+    {
+      "slug": "atlas",
+      "name": "AI Atlas",
+      "name_zh": "AI Atlas",
+      "url": "https://atlas.okayok.ai",
+      "description": "A directory of AI tools, MCP servers, and MCP clients — search and browse in one place.",
+      "description_zh": "AI 工具、MCP 服务器与客户端目录 — 一站式搜索与浏览。",
+      "cta": "Open AI Atlas",
+      "cta_zh": "打开 AI Atlas",
+      "icon": "Compass",
+      "icon_url": null,
+      "sort_order": 50,
+      "show_in_footer": true,
+      "show_in_products": true
+    },
+    {
+      "slug": "okayok",
+      "name": "Okay OK",
+      "name_zh": "Okay OK",
+      "url": "https://okayok.ai",
+      "description": "Official home of the OK product family.",
+      "description_zh": "OK 产品家族官方网站。",
+      "cta": null,
+      "cta_zh": null,
+      "icon": null,
+      "icon_url": null,
+      "sort_order": 60,
+      "show_in_footer": true,
+      "show_in_products": false
+    }
+  ],
+  "footerLinks": [
+    {
+      "column_key": "memwork",
+      "column_title": "Memwork",
+      "column_title_zh": "Memwork",
+      "column_order": 10,
+      "label": "Features",
+      "label_zh": "功能",
+      "url": "/#features",
+      "sort_order": 10,
+      "open_in_new_tab": false,
+      "site_slugs": [
+        "memwork"
+      ]
+    },
+    {
+      "column_key": "memwork",
+      "column_title": "Memwork",
+      "column_title_zh": "Memwork",
+      "column_order": 10,
+      "label": "Use cases",
+      "label_zh": "使用场景",
+      "url": "/#use-cases",
+      "sort_order": 20,
+      "open_in_new_tab": false,
+      "site_slugs": [
+        "memwork"
+      ]
+    },
+    {
+      "column_key": "memwork",
+      "column_title": "Memwork",
+      "column_title_zh": "Memwork",
+      "column_order": 10,
+      "label": "Pricing",
+      "label_zh": "价格",
+      "url": "/pricing",
+      "sort_order": 30,
+      "open_in_new_tab": false,
+      "site_slugs": [
+        "memwork"
+      ]
+    },
+    {
+      "column_key": "memwork",
+      "column_title": "Memwork",
+      "column_title_zh": "Memwork",
+      "column_order": 10,
+      "label": "FAQ",
+      "label_zh": "常见问题",
+      "url": "/#faq",
+      "sort_order": 40,
+      "open_in_new_tab": false,
+      "site_slugs": [
+        "memwork"
+      ]
+    },
+    {
+      "column_key": "resources",
+      "column_title": "Resources",
+      "column_title_zh": "资源",
+      "column_order": 20,
+      "label": "MCP integration",
+      "label_zh": "MCP 集成",
+      "url": "/#features",
+      "sort_order": 10,
+      "open_in_new_tab": false,
+      "site_slugs": [
+        "memwork"
+      ]
+    },
+    {
+      "column_key": "resources",
+      "column_title": "Resources",
+      "column_title_zh": "资源",
+      "column_order": 20,
+      "label": "Blog",
+      "label_zh": "博客",
+      "url": "/blog",
+      "sort_order": 20,
+      "open_in_new_tab": false,
+      "site_slugs": [
+        "okayok",
+        "images",
+        "memwork"
+      ]
+    },
+    {
+      "column_key": "legal",
+      "column_title": "Legal",
+      "column_title_zh": "法律信息",
+      "column_order": 30,
+      "label": "Privacy Policy",
+      "label_zh": "隐私政策",
+      "url": "/privacy-policy",
+      "sort_order": 10,
+      "open_in_new_tab": false,
+      "site_slugs": [
+        "okayok",
+        "images",
+        "tools",
+        "video",
+        "memwork"
+      ]
+    },
+    {
+      "column_key": "legal",
+      "column_title": "Legal",
+      "column_title_zh": "法律信息",
+      "column_order": 30,
+      "label": "Terms of Service",
+      "label_zh": "服务条款",
+      "url": "/terms-of-service",
+      "sort_order": 20,
+      "open_in_new_tab": false,
+      "site_slugs": [
+        "okayok",
+        "images",
+        "tools",
+        "video",
+        "memwork"
+      ]
+    },
+    {
+      "column_key": "legal",
+      "column_title": "Legal",
+      "column_title_zh": "法律信息",
+      "column_order": 30,
+      "label": "License",
+      "label_zh": "许可协议",
+      "url": "/license",
+      "sort_order": 30,
+      "open_in_new_tab": false,
+      "site_slugs": [
+        "okayok",
+        "images",
+        "tools",
+        "video"
+      ]
+    },
+    {
+      "column_key": "legal",
+      "column_title": "Legal",
+      "column_title_zh": "法律信息",
+      "column_order": 30,
+      "label": "Refund Policy",
+      "label_zh": "退款政策",
+      "url": "/refund-policy",
+      "sort_order": 40,
+      "open_in_new_tab": false,
+      "site_slugs": [
+        "okayok",
+        "images",
+        "tools",
+        "video"
+      ]
+    },
+    {
+      "column_key": "legal",
+      "column_title": "Legal",
+      "column_title_zh": "法律信息",
+      "column_order": 30,
+      "label": "support@okayok.ai",
+      "label_zh": "support@okayok.ai",
+      "url": "mailto:support@okayok.ai",
+      "sort_order": 50,
+      "open_in_new_tab": false,
+      "site_slugs": [
+        "okayok",
+        "images"
+      ]
+    }
+  ]
+}
