@@ -1,5 +1,5 @@
 ---
-title: 'Okayok Vafast 中文文档 – 高性能 TypeScript Web 框架 | Hono/Elysia 替代'
+title: 'Vafast 中文文档 – 高性能 TypeScript Web 框架 | Hono/Elysia 替代'
 description: 'Vafast 官方中文文档：高性能、类型安全的 TypeScript Web 框架，支持 Node.js、Bun 和 Cloudflare Workers，声明式路由、自动类型推断、内置 Schema 验证，是 Hono、Elysia、Express 的轻量替代。'
 titleTemplate: false
 layout: page

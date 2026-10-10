@@ -47,8 +47,8 @@
     },
     {
       "slug": "vafast",
-      "name": "Okayok Vafast",
-      "name_zh": "Okayok Vafast",
+      "name": "Vafast",
+      "name_zh": "Vafast",
       "url": "https://vafast.okayok.ai",
       "description": "High-performance TypeScript web framework. Open source, MIT licensed.",
       "description_zh": "高性能 TypeScript Web 框架，开源，MIT 许可。",

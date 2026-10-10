@@ -1,5 +1,5 @@
 ---
-title: 'Okayok Vafast — Type-Safe TypeScript Web Framework for Node.js & Bun'
+title: 'Vafast: Type-Safe TypeScript Web Framework for Node.js & Bun'
 description: 'Vafast is a fast, type-safe TypeScript web framework for Node.js, Bun and Workers, with declarative routing and schema validation: a Hono/Elysia alternative.'
 titleTemplate: false
 layout: page
