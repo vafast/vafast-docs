@@ -2,8 +2,8 @@
   "products": [
     {
       "slug": "tools",
-      "name": "OK Tools",
-      "name_zh": "OK Tools",
+      "name": "Okayok Tools",
+      "name_zh": "Okayok Tools",
       "url": "https://tools.okayok.ai",
       "description": "Browser-based PDF and utility tools. Fast, private, and free to try.",
       "description_zh": "浏览器端 PDF 与实用工具，快捷、注重隐私，可免费试用。",
@@ -17,8 +17,8 @@
     },
     {
       "slug": "video",
-      "name": "OK Video",
-      "name_zh": "OK Video",
+      "name": "Okayok Video",
+      "name_zh": "Okayok Video",
       "url": "https://video.okayok.ai",
       "description": "Video utilities in your browser — trim, convert, compress, and more.",
       "description_zh": "浏览器端视频工具 — 裁剪、转换、压缩等。",
@@ -32,8 +32,8 @@
     },
     {
       "slug": "images",
-      "name": "OK Images",
-      "name_zh": "OK Images",
+      "name": "Okayok Images",
+      "name_zh": "Okayok Images",
       "url": "https://images.okayok.ai",
       "description": "Image tools and services under the OK Images brand.",
       "description_zh": "OK Images 品牌下的图片工具与服务。",
@@ -47,8 +47,8 @@
     },
     {
       "slug": "vafast",
-      "name": "Vafast",
-      "name_zh": "Vafast",
+      "name": "Okayok Vafast",
+      "name_zh": "Okayok Vafast",
       "url": "https://vafast.okayok.ai",
       "description": "High-performance TypeScript web framework. Open source, MIT licensed.",
       "description_zh": "高性能 TypeScript Web 框架，开源，MIT 许可。",
@@ -62,8 +62,8 @@
     },
     {
       "slug": "atlas",
-      "name": "AI Atlas",
-      "name_zh": "AI Atlas",
+      "name": "Okayok Atlas",
+      "name_zh": "Okayok Atlas",
       "url": "https://atlas.okayok.ai",
       "description": "A directory of AI tools, MCP servers, and MCP clients — search and browse in one place.",
       "description_zh": "AI 工具、MCP 服务器与客户端目录 — 一站式搜索与浏览。",
@@ -77,8 +77,8 @@
     },
     {
       "slug": "okayok",
-      "name": "Okay OK",
-      "name_zh": "Okay OK",
+      "name": "Okayok",
+      "name_zh": "Okayok",
       "url": "https://okayok.ai",
       "description": "Official home of the OK product family.",
       "description_zh": "OK 产品家族官方网站。",
@@ -89,6 +89,21 @@
       "sort_order": 60,
       "show_in_footer": true,
       "show_in_products": false
+    },
+    {
+      "slug": "memwork",
+      "name": "Okayok Memwork",
+      "name_zh": "Okayok Memwork",
+      "url": "https://memwork.okayok.ai",
+      "description": "A shared memory space for many agents.",
+      "description_zh": "多智能体的共享记忆空间。",
+      "cta": "Open Memwork",
+      "cta_zh": "打开 Memwork",
+      "icon": "Brain",
+      "icon_url": null,
+      "sort_order": 70,
+      "show_in_footer": true,
+      "show_in_products": true
     }
   ],
   "footerLinks": [

@@ -18,8 +18,9 @@ import { buildThemeConfig, searchLocales } from './i18n/theme'
 // 自定义域名部署：https://vafast.okayok.ai/
 const SITE_URL = 'https://vafast.okayok.ai'
 
-const SITE_NAME = 'Vafast 中文文档'
-const SITE_NAME_EN = 'Vafast Docs'
+// 站点品牌（2026-10-10 起各站统一为 "Okayok …"）；框架/npm 包名仍是 vafast
+const SITE_NAME = 'Okayok Vafast 中文文档'
+const SITE_NAME_EN = 'Okayok Vafast Docs'
 const OG_IMAGE = `${SITE_URL}/assets/vafast.png`
 const VAFAST_VERSION = '0.8.5'
 
@@ -117,13 +118,15 @@ const jsonLd = (data: Record<string, unknown>): HeadConfig => [
 const softwareApplicationLd = (locale: LocaleKey) => ({
     '@context': 'https://schema.org',
     '@type': 'SoftwareApplication',
-    name: 'Vafast',
+    name: 'Okayok Vafast',
+    alternateName: 'Vafast',
     description: LOCALES[locale].description,
     inLanguage: LOCALES[locale].lang,
     applicationCategory: 'DeveloperApplication',
     operatingSystem: 'Cross-platform (Node.js, Bun, Cloudflare Workers)',
     offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
     license: 'https://opensource.org/licenses/MIT',
+    publisher: { '@type': 'Organization', name: 'Okayok', url: 'https://okayok.ai' },
     softwareVersion: VAFAST_VERSION,
     url: pageUrl(locale === 'en' ? 'en/index.md' : 'index.md'),
     image: OG_IMAGE,
@@ -148,7 +151,7 @@ export default defineConfig({
     base,
     lang: 'zh-CN',
     title: SITE_NAME,
-    titleTemplate: ':title - Vafast 中文文档',
+    titleTemplate: ':title - Okayok Vafast 中文文档',
     description,
 
     sitemap: {
@@ -165,7 +168,7 @@ export default defineConfig({
             lang: 'en-US',
             link: '/en/',
             title: SITE_NAME_EN,
-            titleTemplate: ':title - Vafast Docs',
+            titleTemplate: ':title - Okayok Vafast Docs',
             description: descriptionEn,
             themeConfig: buildThemeConfig('en')
         }
