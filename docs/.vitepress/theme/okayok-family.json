@@ -2,8 +2,8 @@
   "products": [
     {
       "slug": "tools",
-      "name": "Okayok Tools",
-      "name_zh": "Okayok Tools",
+      "name": "Tools",
+      "name_zh": "Tools",
       "url": "https://tools.okayok.ai",
       "description": "Browser-based PDF and utility tools. Fast, private, and free to try.",
       "description_zh": "浏览器端 PDF 与实用工具，快捷、注重隐私，可免费试用。",
@@ -17,8 +17,8 @@
     },
     {
       "slug": "video",
-      "name": "Okayok Video",
-      "name_zh": "Okayok Video",
+      "name": "Video",
+      "name_zh": "Video",
       "url": "https://video.okayok.ai",
       "description": "Video utilities in your browser — trim, convert, compress, and more.",
       "description_zh": "浏览器端视频工具 — 裁剪、转换、压缩等。",
@@ -32,8 +32,8 @@
     },
     {
       "slug": "images",
-      "name": "Okayok Images",
-      "name_zh": "Okayok Images",
+      "name": "Images",
+      "name_zh": "Images",
       "url": "https://images.okayok.ai",
       "description": "Image tools and services under the OK Images brand.",
       "description_zh": "OK Images 品牌下的图片工具与服务。",
@@ -62,8 +62,8 @@
     },
     {
       "slug": "atlas",
-      "name": "Okayok Atlas",
-      "name_zh": "Okayok Atlas",
+      "name": "Atlas",
+      "name_zh": "Atlas",
       "url": "https://atlas.okayok.ai",
       "description": "A directory of AI tools, MCP servers, and MCP clients — search and browse in one place.",
       "description_zh": "AI 工具、MCP 服务器与客户端目录 — 一站式搜索与浏览。",
@@ -92,8 +92,8 @@
     },
     {
       "slug": "memwork",
-      "name": "Okayok Memwork",
-      "name_zh": "Okayok Memwork",
+      "name": "Memwork",
+      "name_zh": "Memwork",
       "url": "https://memwork.okayok.ai",
       "description": "A shared memory space for many agents.",
       "description_zh": "多智能体的共享记忆空间。",
@@ -102,6 +102,81 @@
       "icon": "Brain",
       "icon_url": null,
       "sort_order": 70,
+      "show_in_footer": true,
+      "show_in_products": true
+    },
+    {
+      "slug": "lightokay",
+      "name": "Lightokay",
+      "name_zh": "Lightokay",
+      "url": "https://lightokay.okayok.ai",
+      "description": "A local-first photo manager and RAW editor for your Mac.",
+      "description_zh": "本地优先的 Mac 照片管理与 RAW 编辑工具。",
+      "cta": "Open Lightokay",
+      "cta_zh": "打开 Lightokay",
+      "icon": "Aperture",
+      "icon_url": null,
+      "sort_order": 80,
+      "show_in_footer": true,
+      "show_in_products": true
+    },
+    {
+      "slug": "learnokay",
+      "name": "Learnokay",
+      "name_zh": "Learnokay",
+      "url": "https://learnokay.okayok.ai",
+      "description": "Learn languages from real videos with accurate bilingual subtitles.",
+      "description_zh": "用真实视频学语言 — 精准双语字幕。",
+      "cta": "Open LearnOkay",
+      "cta_zh": "打开 LearnOkay",
+      "icon": "Captions",
+      "icon_url": null,
+      "sort_order": 85,
+      "show_in_footer": true,
+      "show_in_products": true
+    },
+    {
+      "slug": "storyboard",
+      "name": "Storyboard",
+      "name_zh": "Storyboard",
+      "url": "https://storyboard.okayok.ai",
+      "description": "Turn scripts into AI storyboards, frames and video shots.",
+      "description_zh": "把脚本变成 AI 分镜、画面和视频镜头。",
+      "cta": "Open Storyboard",
+      "cta_zh": "打开 Storyboard",
+      "icon": "Clapperboard",
+      "icon_url": null,
+      "sort_order": 87,
+      "show_in_footer": true,
+      "show_in_products": true
+    },
+    {
+      "slug": "browseokay",
+      "name": "Browseokay",
+      "name_zh": "Browseokay",
+      "url": "https://browseokay.okayok.ai",
+      "description": "A Chromium-based browser for you and your AI agents.",
+      "description_zh": "给你和 AI 代理一起用的浏览器，基于开源 Chromium。",
+      "cta": "Open Browseokay",
+      "cta_zh": "打开 Browseokay",
+      "icon": "Globe",
+      "icon_url": null,
+      "sort_order": 90,
+      "show_in_footer": true,
+      "show_in_products": true
+    },
+    {
+      "slug": "sumusic",
+      "name": "SuMusic",
+      "name_zh": "SuMusic",
+      "url": "https://sumusic.okayok.ai",
+      "description": "AI music and sound effects for your videos, podcasts and games.",
+      "description_zh": "为视频、播客和游戏生成 AI 音乐与音效。",
+      "cta": "Open SuMusic",
+      "cta_zh": "打开 SuMusic",
+      "icon": "Music",
+      "icon_url": null,
+      "sort_order": 100,
       "show_in_footer": true,
       "show_in_products": true
     }
@@ -122,6 +197,48 @@
       ]
     },
     {
+      "column_key": "sumusic",
+      "column_title": "SuMusic",
+      "column_title_zh": "SuMusic",
+      "column_order": 10,
+      "label": "Create",
+      "label_zh": "创作",
+      "url": "/create",
+      "sort_order": 10,
+      "open_in_new_tab": false,
+      "site_slugs": [
+        "sumusic"
+      ]
+    },
+    {
+      "column_key": "learnokay",
+      "column_title": "LearnOkay",
+      "column_title_zh": "LearnOkay",
+      "column_order": 10,
+      "label": "Features",
+      "label_zh": "功能",
+      "url": "/#features",
+      "sort_order": 10,
+      "open_in_new_tab": false,
+      "site_slugs": [
+        "learnokay"
+      ]
+    },
+    {
+      "column_key": "storyboard",
+      "column_title": "Storyboard",
+      "column_title_zh": "分镜",
+      "column_order": 10,
+      "label": "Features",
+      "label_zh": "功能",
+      "url": "/#features",
+      "sort_order": 10,
+      "open_in_new_tab": false,
+      "site_slugs": [
+        "storyboard"
+      ]
+    },
+    {
       "column_key": "memwork",
       "column_title": "Memwork",
       "column_title_zh": "Memwork",
@@ -133,6 +250,48 @@
       "open_in_new_tab": false,
       "site_slugs": [
         "memwork"
+      ]
+    },
+    {
+      "column_key": "sumusic",
+      "column_title": "SuMusic",
+      "column_title_zh": "SuMusic",
+      "column_order": 10,
+      "label": "Library",
+      "label_zh": "音乐库",
+      "url": "/music",
+      "sort_order": 20,
+      "open_in_new_tab": false,
+      "site_slugs": [
+        "sumusic"
+      ]
+    },
+    {
+      "column_key": "learnokay",
+      "column_title": "LearnOkay",
+      "column_title_zh": "LearnOkay",
+      "column_order": 10,
+      "label": "How it works",
+      "label_zh": "使用方法",
+      "url": "/#how-it-works",
+      "sort_order": 20,
+      "open_in_new_tab": false,
+      "site_slugs": [
+        "learnokay"
+      ]
+    },
+    {
+      "column_key": "storyboard",
+      "column_title": "Storyboard",
+      "column_title_zh": "分镜",
+      "column_order": 10,
+      "label": "How it works",
+      "label_zh": "使用方法",
+      "url": "/#how-it-works",
+      "sort_order": 20,
+      "open_in_new_tab": false,
+      "site_slugs": [
+        "storyboard"
       ]
     },
     {
@@ -150,6 +309,48 @@
       ]
     },
     {
+      "column_key": "sumusic",
+      "column_title": "SuMusic",
+      "column_title_zh": "SuMusic",
+      "column_order": 10,
+      "label": "Use cases",
+      "label_zh": "使用场景",
+      "url": "/#use-cases",
+      "sort_order": 30,
+      "open_in_new_tab": false,
+      "site_slugs": [
+        "sumusic"
+      ]
+    },
+    {
+      "column_key": "learnokay",
+      "column_title": "LearnOkay",
+      "column_title_zh": "LearnOkay",
+      "column_order": 10,
+      "label": "Pricing",
+      "label_zh": "价格",
+      "url": "/pricing",
+      "sort_order": 30,
+      "open_in_new_tab": false,
+      "site_slugs": [
+        "learnokay"
+      ]
+    },
+    {
+      "column_key": "storyboard",
+      "column_title": "Storyboard",
+      "column_title_zh": "分镜",
+      "column_order": 10,
+      "label": "Pricing",
+      "label_zh": "价格",
+      "url": "/pricing",
+      "sort_order": 30,
+      "open_in_new_tab": false,
+      "site_slugs": [
+        "storyboard"
+      ]
+    },
+    {
       "column_key": "memwork",
       "column_title": "Memwork",
       "column_title_zh": "Memwork",
@@ -161,6 +362,48 @@
       "open_in_new_tab": false,
       "site_slugs": [
         "memwork"
+      ]
+    },
+    {
+      "column_key": "sumusic",
+      "column_title": "SuMusic",
+      "column_title_zh": "SuMusic",
+      "column_order": 10,
+      "label": "Playlists",
+      "label_zh": "歌单",
+      "url": "/playlists",
+      "sort_order": 40,
+      "open_in_new_tab": false,
+      "site_slugs": [
+        "sumusic"
+      ]
+    },
+    {
+      "column_key": "learnokay",
+      "column_title": "LearnOkay",
+      "column_title_zh": "LearnOkay",
+      "column_order": 10,
+      "label": "FAQ",
+      "label_zh": "常见问题",
+      "url": "/#faq",
+      "sort_order": 40,
+      "open_in_new_tab": false,
+      "site_slugs": [
+        "learnokay"
+      ]
+    },
+    {
+      "column_key": "storyboard",
+      "column_title": "Storyboard",
+      "column_title_zh": "分镜",
+      "column_order": 10,
+      "label": "FAQ",
+      "label_zh": "常见问题",
+      "url": "/#faq",
+      "sort_order": 40,
+      "open_in_new_tab": false,
+      "site_slugs": [
+        "storyboard"
       ]
     },
     {
@@ -182,6 +425,20 @@
       "column_title": "Resources",
       "column_title_zh": "资源",
       "column_order": 20,
+      "label": "User guide",
+      "label_zh": "使用指南",
+      "url": "/guide",
+      "sort_order": 10,
+      "open_in_new_tab": false,
+      "site_slugs": [
+        "sumusic"
+      ]
+    },
+    {
+      "column_key": "resources",
+      "column_title": "Resources",
+      "column_title_zh": "资源",
+      "column_order": 20,
       "label": "Blog",
       "label_zh": "博客",
       "url": "/blog",
@@ -190,7 +447,10 @@
       "site_slugs": [
         "okayok",
         "images",
-        "memwork"
+        "memwork",
+        "sumusic",
+        "learnokay",
+        "storyboard"
       ]
     },
     {
@@ -208,7 +468,10 @@
         "images",
         "tools",
         "video",
-        "memwork"
+        "memwork",
+        "sumusic",
+        "learnokay",
+        "storyboard"
       ]
     },
     {
@@ -226,7 +489,10 @@
         "images",
         "tools",
         "video",
-        "memwork"
+        "memwork",
+        "sumusic",
+        "learnokay",
+        "storyboard"
       ]
     },
     {
